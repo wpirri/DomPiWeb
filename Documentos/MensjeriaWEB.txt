@@ -1,0 +1,60 @@
+Requerimieto entrante en ESP
+---------------------------------------
+
++IPD,0,683:POST /exstatus.cgi HTTP/1.1
+Host: 192.168.10.52
+Connection: keep-alive
+Content-Length: 61
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://192.168.10.52
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.10.52/exstatus.cgi
+Accept-Encoding: gzip, deflate
+Accept-Language: es-ES,es;q=0.9,en;q=0.8
+
+EXP1=on&EXP3=off&EXP4=off&EXP5=off&EXP7=off&EXP8=off&EXP9=offAT+CIPSEND=0,1237
+
+
+
+
+Requerimiento minimo
+---------------------------------------
+ * 1.- %s: URI
+ * 2.- %s: Host
+ * 3.- %d: Content-Length
+ * 4.- %s: datos  
+"POST %s HTTP/1.1\r\n"
+"Host: %s\r\n"
+"Connection: keep-alive\r\n"
+"Content-Length: %d\r\n"
+"User-Agent: Dom32io/1.00 (Microchip;PIC32)\r\n"
+"Accept: text/html,text/xml\r\n"
+"Content-Type: application/x-www-form-urlencoded\r\n\r\n%s";
+
+ * 1.- %s: URI
+ * 2.- %s: Host
+ * 3.- %s: datos  
+"GET %s HTTP/1.1\r\n"
+"Host: %s\r\n"
+"Connection: close\r\n"
+"User-Agent: Dom32io/1.00 (Microchip;PIC32)\r\n"
+"Accept: text/html,text/xml\r\n\r\n%s";
+
+Respuesta mnima
+---------------------------------------
+
+"HTTP/1.1 200 OK\r\nConnection: close\r\n"
+"Content-Type: text/xml\r\n\r\n";
+                            
+"HTTP/1.1 200 OK\r\n"
+"Connection: close\r\n"
+"Content-Type: text/html\r\n"
+"Cache-Control: no-cache\r\n\r\n";
+
+"HTTP/1.1 404 Not found\r\n"
+"Connection: close\r\n\r\n"
+"404: File not found\r\n";
+

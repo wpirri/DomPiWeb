@@ -1,0 +1,6 @@
+Instalar
+---------------------------------------
+build-essential
+apache2 
+php5
+sqlite3
