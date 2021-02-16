@@ -16,7 +16,7 @@ padding: 0; margin: 0;}
 </style>
 <body>
 <script type="text/javascript">
-window.onclick = function() {window.location.replace('pinpad.html');}
+window.onclick = function() {window.location.replace('test.php');}
 </script>
 </body>
 </html>
