@@ -3,7 +3,7 @@
 <html>
 <head>
 <title>SYSHOME V 3.0</title>
-<link href="/css/gmh.css" rel="stylesheet" type="text/css" />
+<link href="/css/dompiweb.css" rel="stylesheet" type="text/css" />
 <meta name="author" content="Walter Pirri" >
 <meta name="keywords" content="SMART HOME, SYSHOME, DOMOTIC, SECURITY SYSTEM">
 <meta name="description" content="Sistema integrado de monitoreo, alarma y domotica">
