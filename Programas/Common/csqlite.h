@@ -18,21 +18,9 @@
 #include <cstdio>
 
 #include <sqlite3.h>
+#include <cjson/cJSON.h>
 
 #define CSQLITE_MAX_ERROR_TEXT 256
-
-typedef struct _sql_result_data
-{
-    char *name;
-    char *value;
-    struct _sql_result_data *next;
-} sql_result_data;
-
-typedef struct _sql_result
-{
-    sql_result_data *data;
-    struct _sql_result *next;
-} sql_result;
 
 class CSQLite
 {
@@ -45,16 +33,12 @@ public:
     int Open(const char *filename);
     void Close( void );
 
-    int Query(sql_result **query_rslt, const char *query_fmt, ...);
-
-    void FreeResult(sql_result *query_rslt);
+    int Query(cJSON *json_array, const char *query_fmt, ...);
 
     char m_last_error_text[CSQLITE_MAX_ERROR_TEXT+1];
 private:
     sqlite3 *m_db;
     char m_db_file[FILENAME_MAX+1];
-
-    void FreeResultData(sql_result_data *rslt_data);
 
 };
 #endif /* _CSQLITE_H_ */

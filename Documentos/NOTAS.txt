@@ -2,5 +2,5 @@ Instalar
 ---------------------------------------
 build-essential
 apache2 
-php5
+php
 sqlite3

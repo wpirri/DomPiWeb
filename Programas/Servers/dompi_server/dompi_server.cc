@@ -113,9 +113,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char message[4096];
 	unsigned long message_len;
 	char db_filename[FILENAME_MAX+1];
-    sql_result *q = NULL, *p;
     cJSON *json_obj;
-	cJSON *json_reg;
     cJSON *json_arr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -236,35 +234,19 @@ int main(/*int argc, char** argv, char** env*/void)
 								{ "nombre":"Jacinto", "apellido":"Benavente" } ]
 				}
 				*/
-				rc = pDB->Query(&q, "SELECT * FROM TB_DOM_USER;");
+				json_arr = cJSON_CreateArray();
+				rc = pDB->Query(json_arr, "SELECT user_id, name, last_access_ok, access_error_count, last_access_error FROM TB_DOM_USER;");
 				if(rc == 0)
-				{
-					p = q;
-					json_arr = cJSON_CreateArray();
-					while(p && p->data)
-					{
-						rc++;
-						json_reg = cJSON_CreateObject();
-						while(p->data && p->data->name)
-						{
-							cJSON_AddStringToObject(json_reg, p->data->name, p->data->value);
-							p->data = p->data->next;
-						}
-						cJSON_AddItemToArray(json_arr, json_reg);
-						p = p->next;
-					}
-				}
-
-				pDB->FreeResult(q);
-
-				if(json_arr)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "usuarios", json_arr);
 					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 					cJSON_Delete(json_obj);
 				}
-
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */

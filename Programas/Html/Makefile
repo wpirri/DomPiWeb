@@ -18,5 +18,5 @@ install:
 	$(CP) css $(DOCUMENT_ROOT)
 	$(CP) central $(DOCUMENT_ROOT)
 	$(CP) images $(DOCUMENT_ROOT)
-	$(CP) index.php $(DOCUMENT_ROOT)
+	$(CP) *.php $(DOCUMENT_ROOT)
 

@@ -27,70 +27,20 @@ using namespace std;
 #include <time.h>
 #include <string.h>
 
-/*
-void CSQLite_Dump( sql_result *r )
-{
-  sql_result_data *d;
-  printf("CSQLite::Dump() - Begin\n");
-  while(r)
-  {
-    printf("CSQLite::Dump() -> sql_result\n");
-    d = r->data;
-    while(d)
-    {
-      printf("CSQLite::Dump() -> sql_result_data\n");
-      printf("CSQLite::Dump() -> query_rslt->data->name : %s\n", (d->name)?d->name:"NULL");
-      printf("CSQLite::Dump() -> query_rslt->data->value: %s\n", (d->value)?d->value:"NULL");
-      d = d->next;
-    }
-    r = r->next;
-  }
-  printf("CSQLite::Dump() - End\n");
-}
-*/
-
-int CSQLite_Query_Callback(void *rslt, int argc, char **argv, char **azColName)
+int CSQLite_Query_Callback(void *arg4, int argc, char **argv, char **azColName)
 {
   int i;
-  sql_result *r;
-  sql_result_data *d, *e;
+  cJSON *json_array = (cJSON*)arg4;
+  cJSON *json_record;
 
-  if( !rslt) return 0;
+  if( !json_array) return 0;
 
-  r = (sql_result*)rslt;
-
-  while(r->next) r = r->next;
-
-  r->data = (sql_result_data*)calloc(1, sizeof(sql_result_data));
-
-  d = r->data;
-  e = NULL;
-
+  json_record = cJSON_CreateObject();
   for(i = 0; i < argc; i++)
   {
-    if(azColName[i])
-    {
-      d->name = (char*)calloc(strlen(azColName[i])+1, sizeof(char));
-      strcpy(d->name, azColName[i]);
-      if(argv[i])
-      {
-        d->value = (char*)calloc(strlen(argv[i])+1, sizeof(char));
-        strcpy(d->value, argv[i]);
-      }
-    }
-    e = d;  /* me guardo el puntero anterior */
-    d->next = (sql_result_data*)calloc(1, sizeof(sql_result_data));
-    d = d->next;
+    cJSON_AddStringToObject(json_record, azColName[i], (argv[i])?argv[i]:"NULL");
   }
-  if(e && e->next)
-  {
-    /* Libero el último next data no usado */
-    free(e->next);
-    e->next = NULL;
-  }
-  /* asigno el proximo next result */
-  r->next = (sql_result*)calloc(1, sizeof(sql_result));
-
+  cJSON_AddItemToArray(json_array, json_record);
   return 0; 
 }
 
@@ -132,7 +82,7 @@ void CSQLite::Close( void )
   }
 }
 
-int CSQLite::Query(sql_result **query_rslt, const char *query_fmt, ...)
+int CSQLite::Query(cJSON *json_array, const char *query_fmt, ...)
 {
   int rc;
   char query[1024];
@@ -145,12 +95,7 @@ int CSQLite::Query(sql_result **query_rslt, const char *query_fmt, ...)
   vsprintf(query, query_fmt, arg);
   va_end(arg);
 
-  if(query_rslt)
-  {
-    (*query_rslt) = (sql_result*)calloc(1, sizeof(sql_result));
-  }
-
-  rc = sqlite3_exec(m_db, query, CSQLite_Query_Callback, (query_rslt)?(*query_rslt):NULL, &msg);
+  rc = sqlite3_exec(m_db, query, CSQLite_Query_Callback, json_array, &msg);
   if(rc == SQLITE_OK)
   {
     if(query[0] != 's' && query[0] != 'S')
@@ -164,35 +109,9 @@ int CSQLite::Query(sql_result **query_rslt, const char *query_fmt, ...)
   }
   else
   {
-    if(query_rslt)
-    {
-      FreeResult(*query_rslt);
-      (*query_rslt) = NULL;
-    }
     strncpy(m_last_error_text, msg, CSQLITE_MAX_ERROR_TEXT);
     sqlite3_free(msg);
     rc = (-1);
   }
   return rc;
-}
-
-void CSQLite::FreeResult(sql_result *query_rslt)
-{
-  if(query_rslt)
-  {
-    if(query_rslt->next) FreeResult(query_rslt->next);
-    if(query_rslt->data) FreeResultData(query_rslt->data);
-    free(query_rslt);
-  }
-}
-
-void CSQLite::FreeResultData(sql_result_data *rslt_data)
-{
-  if(rslt_data)
-  {
-    FreeResultData(rslt_data->next);
-    if(rslt_data->name)  free(rslt_data->name);
-    if(rslt_data->value) free(rslt_data->value);
-    free(rslt_data);
-  }
 }

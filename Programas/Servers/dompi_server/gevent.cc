@@ -87,8 +87,6 @@ using namespace std;
 #include <syslog.h>
 #endif
 
-#include "cjson.h"
-
 GEvent::GEvent(CSQLite *pDB)
 {
     m_pDB = pDB;
