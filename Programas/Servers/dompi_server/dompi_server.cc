@@ -111,9 +111,11 @@ int main(/*int argc, char** argv, char** env*/void)
 	char fn[33];
 	char typ[1];
 	char message[4096];
+	char query[4096];
 	unsigned long message_len;
 	char db_filename[FILENAME_MAX+1];
     cJSON *json_obj;
+    cJSON *json_un_obj;
     cJSON *json_arr = NULL;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -163,21 +165,37 @@ int main(/*int argc, char** argv, char** env*/void)
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_infoio", rc);
 		OnClose(0);
 	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_list");
 	if(( rc =  m_pServer->Suscribe("dompi_user_list", GM_MSG_TYPE_CR)) != GME_OK)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
 		OnClose(0);
 	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_list_all");
+	if(( rc =  m_pServer->Suscribe("dompi_user_list_all", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_get");
+	if(( rc =  m_pServer->Suscribe("dompi_user_get", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_add");
 	if(( rc =  m_pServer->Suscribe("dompi_user_add", GM_MSG_TYPE_CR)) != GME_OK)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_add", rc);
 		OnClose(0);
 	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_delete");
 	if(( rc =  m_pServer->Suscribe("dompi_user_delete", GM_MSG_TYPE_CR)) != GME_OK)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_delete", rc);
 		OnClose(0);
 	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_update");
 	if(( rc =  m_pServer->Suscribe("dompi_user_update", GM_MSG_TYPE_CR)) != GME_OK)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_update", rc);
@@ -190,9 +208,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		if(rc > 0)
 		{
-#ifdef __DEBUG__
-		    syslog(LOG_DEBUG, "Query recibido fn = [%s] rc = %i", fn, rc);
-#endif  
+			message[message_len] = 0;
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 			if( !strcmp(fn, "dompi_infoio"))
 			{
 				rc = pEV->ExtIOEvent(message);
@@ -215,6 +232,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Otro Error */
 					strcpy(message, "{RC=1}");
 				}
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
@@ -225,17 +243,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				message[0] = 0;
 
-				/*
-				Ej.
-				{ "departamento":8,
-				"nombredepto":"Ventas",
-				"director": "Juan Rodríguez",
-				"empleados":[ { "nombre":"Pedro", "apellido":"Fernández" },
-								{ "nombre":"Jacinto", "apellido":"Benavente" } ]
-				}
-				*/
 				json_arr = cJSON_CreateArray();
-				rc = pDB->Query(json_arr, "SELECT user_id, name, last_access_ok, access_error_count, last_access_error FROM TB_DOM_USER;");
+				sprintf(query, "SELECT user_id, name, last_access_ok, access_error_count, last_access_error FROM TB_DOM_USER;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
 				{
 					json_obj = cJSON_CreateObject();
@@ -247,6 +258,68 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_Delete(json_arr);
 				}
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			else if( !strcmp(fn, "dompi_user_list_all"))
+			{
+				message[0] = 0;
+
+				json_arr = cJSON_CreateArray();
+				sprintf(query, "SELECT * FROM TB_DOM_USER;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "usuarios", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			else if( !strcmp(fn, "dompi_user_get"))				/* ***** dompi_user_get ***** */
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE user_id = \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					cJSON_Delete(json_obj);
+					if(rc == 0)
+					{
+						json_obj = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_obj, "usuario", json_arr);
+						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_Delete(json_obj);
+					}
+					else
+					{
+						cJSON_Delete(json_arr);
+					}
+				}
+				else
+				{
+					cJSON_Delete(json_obj);
+				}
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
@@ -260,6 +333,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 
 				
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
@@ -273,6 +347,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 
 				
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
@@ -286,6 +361,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 
 				
+				m_pServer->m_pLog->Add(50, "%s:[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
@@ -295,6 +371,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else
 			{
 				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");
+				m_pServer->m_pLog->Add(50, "[%s][R][GME_SVC_NOTFOUND]");
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
 		}

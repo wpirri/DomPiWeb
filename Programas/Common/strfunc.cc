@@ -36,11 +36,6 @@ STRFunc::~STRFunc()
 
 }
 
-/*  Separa en campos segun el separador y devuelve el número de campo solicitado
-    en count. El primer campo es el 1.
-    Si count e 0 devuelve lo que hay antes del separador
-    El dato devuelto se termina al encntrar un separador o cualquier caracter que no se número o letra
-*/
 int STRFunc::Section(char *in, char sep, unsigned int count, char *out)
 {
     char *p;
@@ -97,3 +92,39 @@ int STRFunc::ParseData(char *buffer, const char *label, char *value)
     return len;
 }
 
+int STRFunc::ParseDataIdx(char *buffer, char *label, char *value, int idx)
+{
+    char *p;
+    int found = 0;
+    
+    p = buffer;
+    /* Avanzo hasta el indice */
+    while(*p && idx)
+    {
+        if(*p == '&') idx--;
+        p++;
+    }
+    /* Copio el label */
+    while(*p && *p != '=')
+    {
+        *label = *p;
+        label++;
+        p++;
+    }
+    *label = 0;
+    if(*p == '=')
+    {
+        p++;
+        /* copio el value */
+        while(*p && *p != '&')
+        {
+            *value = *p;
+            value++;
+            p++;
+        }
+        found = 1;
+    }
+    *value = 0;
+    
+    return found;
+}

@@ -1,0 +1,101 @@
+/* == Pantallas de ABM == */
+.abm-div {
+	position: absolute; 
+	left: 255px; 
+	top: 10px; 
+	border: 1px dotted #fff;
+	padding: 2px;
+	color: white;
+	background: black;
+	overflow: auto;
+	overflow-x: hidden;
+	}
+
+  .abm-list-table {
+	background: rgb(145, 145, 145);
+	color: rgb(0, 0, 0);
+	font-family: Arial, Helvetica, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+	left: 255px; 
+	top: 10px; 
+  }
+  
+  .abm-list-table td, #abm-table th {
+	border: 1px solid rgb(85, 85, 85);
+	text-align: left;
+	padding: 8px;
+  }
+  
+  .abm-list-table tr:nth-child(even){background-color: #686868;}
+  
+  .abm-list-table tr:hover {background-color: rgb(33, 130, 38);}
+  
+  .abm-list-table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: center;
+	background-color: #070049;
+	color: white;
+
+  }
+
+  .abm-back-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 10px; 
+	top: 10px; 
+	width: 150px;
+	height: 75px;
+	padding: 2px;
+	border: 1px dotted #fff;
+	background: green;
+	color: white;
+	cursor: pointer;
+	}
+
+  .abm-add-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 95px; 
+	top: 350px; 
+	width: 150px;
+	height: 75px;
+	padding: 2px;
+	border: 1px dotted #fff;
+	background: red;
+	color: white;
+	cursor: pointer;
+	}
+
+  .submit-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 95px; 
+	top: 350px; 
+	width: 150px;
+	height: 75px;
+	padding: 2px;
+	border: 1px dotted #fff;
+	background: blue;
+	color: white;
+	cursor: pointer;
+	}
+
+  .abm-title {
+        font-weight: bold;
+        color: red;
+        }
+/* == Pantallas de ABM == */
+
+
+/* == ABM de usuarios == */
+  #user_list_back_btn {
+  }
+
+  #user_list_add_btn {
+  }
+
+  #user_list_table_div {
+  }
+/* == ABM de usuarios == */

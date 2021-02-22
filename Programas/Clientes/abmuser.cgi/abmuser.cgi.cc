@@ -47,11 +47,16 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char server_address[16];
   
   char remote_addr[16];
-  char request_uri[32];
+  char request_uri[256];
   char request_method[8];
   int content_length;
   char s_content_length[8];
   char post_data[1024];
+  char buffer[4096];
+  char label[64];
+  char value[64];
+  char funcion[64];
+  char funcion_call[64];
   int rc;
 
   signal(SIGALRM, SIG_IGN);
@@ -72,7 +77,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
-      strncpy(request_uri, env[i]+12, 31);
+      strncpy(request_uri, env[i]+12, 255);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
@@ -95,6 +100,9 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
   openlog("abmuser.cgi", 0, LOG_USER);
+  syslog(LOG_DEBUG, "REMOTE_ADDR=%s - REQUEST_URI=%s - REQUEST_METHOD=%s - CONTENT_LENGTH=%i", 
+              remote_addr, request_uri, request_method,content_length );
+
 
   pConfig = new DPConfig("/etc/dompiweb.config");
 
@@ -113,13 +121,52 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   response.Clear();
 
   json_obj = cJSON_CreateObject();
-  cJSON_AddStringToObject(json_obj, "user", "*");
 
-  query = cJSON_PrintUnformatted(json_obj);
+  if(strchr(request_uri, '?'))
+  {
+    strcpy(buffer, strchr(request_uri, '?')+1);
+    syslog(LOG_DEBUG, "Section 1: %s", buffer);
+    i = 0;
+    while(Str.ParseDataIdx(buffer, label, value, i))
+    {
+      if( !strcmp(label, "funcion"))
+      {
+        strcpy(funcion, value);
+      }
+      cJSON_AddStringToObject(json_obj, label, value);
+      i++;
+    }
+  }
+
+  if( !strcmp(funcion, "edit"))
+  {
+    strcpy(funcion_call, "dompi_user_get");
+  }
+  else if( !strcmp(funcion, "add"))
+  {
+    strcpy(funcion_call, "dompi_user_add");
+  }
+  else if( !strcmp(funcion, "upd"))
+  {
+    strcpy(funcion_call, "dompi_user_upd");
+  }
+  else if( !strcmp(funcion, "del"))
+  {
+    strcpy(funcion_call, "dompi_user_del");
+  }
+  else
+  {
+    strcpy(funcion_call, "dompi_user_list");
+  }
+
+  cJSON_PrintPreallocated(json_obj, buffer, 4095, 0);
+
+  query = buffer;
 
   cJSON_Delete(json_obj);
 
-  rc = pClient->Call("dompi_user_list", query, response, 100);
+  syslog(LOG_DEBUG, "Call %s [%s]", funcion, query.C_Str()); 
+  rc = pClient->Call(funcion_call, query, response, 100);
   if(rc == 0)
   {
     fprintf(stdout, "%s\r\n", response.Data());

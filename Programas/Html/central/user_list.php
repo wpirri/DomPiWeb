@@ -1,23 +1,24 @@
 <?php
 $TITLE='Usuarios'; 
-include('head.php');
+include('head-abm.php');
 ?>
 
 <body onload='GetUserList();'>
 
 <div id='user_list_back_btn' class='abm-back-btn' onclick="window.location.replace('/');" >
-	<img id='user_list_back_icon' class='btn-icon' src='/images/back.png'>&nbsp;Volver
+	<img id='user_list_back_icon' class='icon-btn' src='/images/back.png'>&nbsp;Volver
 </div>
 
 <div id='user_list_add_btn' class='abm-add-btn' onclick="window.location.replace('/');" >
-	<img id='user_list_add__icon' class='btn-icon' src='/images/add.png'>&nbsp;Nuevo
+	<img id='user_list_add__icon' class='icon-btn' src='/images/add.png'>&nbsp;Nuevo
 </div>
 
-<div id='user_list_table_div' class='abm-list-div'></div>
+<p class="abm-title">&nbsp; <?php echo $TITLE; ?> </p>
+<div id='user_list_table_div' class='abm-div'></div>
 
 <script type="text/javascript" >
     function LoadUserList(msg) {
-        fillAbmTable(JSON.parse(msg).usuarios, 'user_list_table_div', 'user_id', 'user_edit.php', 'user_delete.php');
+        fillAbmList(JSON.parse(msg).usuarios, 'user_list_table_div', 'user_id', 'user_edit.php', 'user_delete.php');
     }
 
     function GetUserList() {

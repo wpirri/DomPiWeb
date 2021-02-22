@@ -47,7 +47,7 @@ function getJsonHeaders(json_list) {
 	return headers; 
 }
 
-function fillAbmTable(json_list, dst_div, index_label, edit_link, delete_link) { 
+function fillAbmList(json_list, dst_div, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getJsonHeaders(json_list);
 	var table = '<table class=abm-list-table>';
@@ -87,6 +87,29 @@ function fillAbmTable(json_list, dst_div, index_label, edit_link, delete_link) {
 		table += val;
 		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="/images/delete.png"></a></td>' 
 		table += val;
+		table += '</tr>';
+	}
+	table += '</table>';
+	document.getElementById(dst_div).innerHTML = table;
+} 
+
+function fillAbmEdit(json_list, dst_div) { 
+	// Getting the all column names 
+	var headers = getJsonHeaders(json_list);
+	var table = '<table class=abm-edit-table>';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) { 
+		table += '<tr>';
+		table += '<th>';
+		table += headers[i];
+		table += '</th>';
+		var val = json_list[0][headers[i]]; 
+		if (val == null || val == 'NULL') val = '';   
+		table += '<td>';
+		table += val;
+		table += '</th>';
 		table += '</tr>';
 	}
 	table += '</table>';

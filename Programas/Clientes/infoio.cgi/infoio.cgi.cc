@@ -292,11 +292,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     syslog(LOG_DEBUG, "<<<<: %s", response.C_Str());
     /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
+    json_obj = cJSON_Parse(response.C_Str());
 
-    strcpy(buffer, "msg=FALTA");
+    // cJSON_ArrayForEach(element, array)
+
+    strcpy(buffer, "msg=FALTA JSON->POST");
 
     /* Contenido de la página */
     fprintf(stdout, "%s\r\n", buffer);
+    cJSON_Delete(json_obj);
   }
   else
   {
