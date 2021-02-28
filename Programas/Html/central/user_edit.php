@@ -3,11 +3,13 @@ $TITLE='Editar Usuario';
 include('head-abm.php');
 ?>
 
-<body onload="GetUser( '<?php echo $_GET['user_id']; ?>' );">
+<body onload="GetUser();">
 
-<form method="post" action="user_update.php" name="edit">
+<form id="edit_form" name="edit_form" method="post">
 
-<div id='user_edit_back_btn' class='abm-back-btn' onclick="window.location.replace('user_list.php');" >
+<input type="hidden" id="abm_edit_input_saved_user_id" name="saved_user_id" value="<?php echo $_GET['user_id']; ?>" />
+
+<div id='user_edit_back_btn' class='back-btn' onclick="window.location.replace('user_list.php');" >
 	<img id='user_edit_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
 </div>
 
@@ -24,14 +26,23 @@ include('head-abm.php');
     }
 
     function SaveUserData() {
+        /* Send form data to /cgi-bin/abmuser.cgi?funcion=update */
 
+        var kvpairs = [];
+        var form = document.getElementById('edit_form');
 
+        for ( var i = 0; i < form.elements.length; i++ ) {
+            var e = form.elements[i];
+            kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(e.value));
+        }
+
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=update&' + kvpairs.join('&'), null, false);
 
         window.location.replace('user_list.php');
     }
 
-    function GetUser(user_id) {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=edit&user_id=' + user_id, LoadUserData, false);
+    function GetUser() {
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&user_id=<?php echo $_GET['user_id']; ?>', LoadUserData, false);
     }
 </script>
 

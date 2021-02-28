@@ -26,3 +26,95 @@ body {
 	width: 32px;
 	height: 32px;
 	}
+
+.back-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 10px; 
+	top: 10px; 
+	width: 150px;
+	height: 75px;
+	padding: 2px;
+	border: 1px dotted #fff;
+	background: green;
+	color: white;
+	cursor: pointer;
+	}
+
+.normal-btn {
+	z-index: 10;
+	position: absolute; 
+	width: 150px;
+	height: 75px;
+	padding: 2px;
+	border: 1px dotted #fff;
+	cursor: pointer;
+	color: white;
+	}
+	
+#btn-config-usuarios {
+	left: 255px; 
+	top: 95px; 
+	background: black;
+}
+
+#btn-config-net {
+	left: 415px; 
+	top: 95px; 
+	background: red;
+	}
+
+#btn-config-hard {
+	left: 575px; 
+	top: 95px; 
+	background: olive;
+	}
+
+#btn-config-groups {
+	left: 95px; 
+	top: 180px; 
+	background: olive;
+	}
+
+#btn-config-events {
+	left: 255px; 
+	top: 180px; 
+	background: maroon;
+	}
+
+#btn-config-flags {
+	left: 415px; 
+	top: 180px; 
+	background: green;
+	}
+
+#btn-config-alarm {
+	left: 575px; 
+	top: 180px; 
+	background: lime;
+	}
+
+#btn-config-cameras {
+	left: 95px; 
+	top: 265px; 
+	background: teal;
+	}
+
+#btn-config-crono {
+	left: 255px; 
+	top: 265px; 
+	background: black;
+	}
+
+#btn-config-upload {
+	left: 415px; 
+	top: 265px; 
+	background: purple;
+	}
+
+#btn-config-download {
+	left: 575px; 
+	top: 265px; 
+	background: orange;
+	}
+

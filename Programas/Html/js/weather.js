@@ -1,5 +1,6 @@
 // https://github.com/noazark/weather
 // APY KEY: Se obtiene dando de alta un usuario en https://home.openweathermap.org/
+// img: http://openweathermap.org/img/w/[name].png
 
 var isModule = typeof module !== "undefined" && module.exports;
 

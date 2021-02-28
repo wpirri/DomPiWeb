@@ -14,12 +14,8 @@
 
 <div id="reloj">reloj</div>
 
-<div id='temp_actual'>temp_actual</div>
-<div id='humedad'>humedad</div>
-<div id='presion'>humedad</div>
-
-<div id='temp_max'>temp_max</div>
-<div id='temp_min'>temp_min</div>
+<div id="clima_interior" class="clima">interior</div>
+<div id="clima_exterior" class="clima">exterior</div>
 
 
 
@@ -27,14 +23,19 @@
 /* Clima */
 function setCurrentWeather( current ) {
     //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
-    document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C';
-    document.getElementById('humedad').innerHTML = 'Humedad ' + current.data.main.humidity + ' %';
-    document.getElementById('presion').innerHTML = 'Presion ' + current.data.main.pressure + ' hPA';
+    document.getElementById('clima_exterior').innerHTML =
+                                                    '<img src="http://openweathermap.org/img/w/' + current.data.weather[0].icon + '.png" /><br />' +
+                                                    'T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C<br />Hr ' + 
+                                                    current.data.main.humidity + ' %<br />P ' +
+                                                    current.data.main.pressure + ' hPA<br />' +
+                                                    current.data.weather[0].description;
+    
+    
 }
 
 function setForecasttWeather( forecast ) {
-    document.getElementById('temp_max').innerHTML = 'Temperatura Maxima ' + Weather.kelvinToCelsius(forecast.high()).toFixed(1) + ' °C';
-    document.getElementById('temp_min').innerHTML = 'Temperatura Minima ' + Weather.kelvinToCelsius(forecast.low()).toFixed(1) + ' °C';
+    //document.getElementById('temp_max').innerHTML = 'Temperatura Maxima ' + Weather.kelvinToCelsius(forecast.high()).toFixed(1) + ' °C';
+    //document.getElementById('temp_min').innerHTML = 'Temperatura Minima ' + Weather.kelvinToCelsius(forecast.low()).toFixed(1) + ' °C';
 }
 // API Key methods
 var apiKey = '0b39d49d1a75d80d40e7f32edf2cc7c1';
@@ -70,7 +71,7 @@ function setCurrentTime( ) {
 setCurrentTime();
 
 /* On Click de la página */
-window.onclick = function() {window.location.replace('test.php');}
+window.onclick = function() {window.location.replace('config.php');}
 
 /* Reload para actualizaciones */
 setTimeout("window.location.replace('/');", 600000);

@@ -93,10 +93,10 @@ function fillAbmList(json_list, dst_div, index_label, edit_link, delete_link) {
 	document.getElementById(dst_div).innerHTML = table;
 } 
 
-function fillAbmEdit(json_list, dst_div) { 
+function fillAbmDelete(json_list, dst_div) { 
 	// Getting the all column names 
 	var headers = getJsonHeaders(json_list);
-	var table = '<table class=abm-edit-table>';
+	var table = '<table class=abm-table id=abm_delete_table>';
 	var i = 0;
 
 	// Header
@@ -115,3 +115,56 @@ function fillAbmEdit(json_list, dst_div) {
 	table += '</table>';
 	document.getElementById(dst_div).innerHTML = table;
 } 
+
+function fillAbmEdit(json_list, dst_div) { 
+	// Getting the all column names 
+	var headers = getJsonHeaders(json_list);
+	var table = '<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) { 
+		table += '<tr>';
+		table += '<th>';
+		table += headers[i];
+		table += '</th>';
+		var val = json_list[0][headers[i]]; 
+		if (val == null || val == 'NULL') val = '';   
+		table += '<td>';
+		table += '<input type="text" id="abm_edit_input_';
+		table += headers[i] + '" name="';
+		table += headers[i] + '" ';
+		table += 'class="abm-edit-input-text" value="';
+		table += val;
+		table += '" />';
+		table += '</th>';
+		table += '</tr\n>';
+	}
+	table += '</table>\n';
+	document.getElementById(dst_div).innerHTML = table;
+} 
+
+function fillAbmForm(json_list, dst_div)
+{
+	// Getting the all column names 
+	var headers = getJsonHeaders(json_list);
+	var table = '<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) { 
+		table += '<tr>';
+		table += '<th>';
+		table += headers[i];
+		table += '</th>';
+		table += '<td>';
+		table += '<input type="text" id="abm_edit_input_';
+		table += headers[i] + '" name="';
+		table += headers[i] + '" ';
+		table += 'class="abm-edit-input-text" value="" />';
+		table += '</th>';
+		table += '</tr\n>';
+	}
+	table += '</table>\n';
+	document.getElementById(dst_div).innerHTML = table;
+}

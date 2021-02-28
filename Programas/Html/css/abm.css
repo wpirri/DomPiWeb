@@ -40,20 +40,6 @@
 
   }
 
-  .abm-back-btn {
-	z-index: 10;
-	position: absolute; 
-	left: 10px; 
-	top: 10px; 
-	width: 150px;
-	height: 75px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: green;
-	color: white;
-	cursor: pointer;
-	}
-
   .abm-add-btn {
 	z-index: 10;
 	position: absolute; 

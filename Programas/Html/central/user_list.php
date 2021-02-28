@@ -5,11 +5,11 @@ include('head-abm.php');
 
 <body onload='GetUserList();'>
 
-<div id='user_list_back_btn' class='abm-back-btn' onclick="window.location.replace('/');" >
+<div id='user_list_back_btn' class='back-btn' onclick="window.location.replace('config.php');" >
 	<img id='user_list_back_icon' class='icon-btn' src='/images/back.png'>&nbsp;Volver
 </div>
 
-<div id='user_list_add_btn' class='abm-add-btn' onclick="window.location.replace('/');" >
+<div id='user_list_add_btn' class='abm-add-btn' onclick="window.location.replace('user_add.php');" >
 	<img id='user_list_add__icon' class='icon-btn' src='/images/add.png'>&nbsp;Nuevo
 </div>
 

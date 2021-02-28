@@ -2,7 +2,7 @@
 DOCUMENT_ROOT=/var/www/html/
 CGI_ROOT=/usr/lib/cgi-bin/
 
-CP=cp -va
+CP=cp -uva
 
 
 #.cc.o:

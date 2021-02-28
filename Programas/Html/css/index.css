@@ -17,109 +17,37 @@ body {
 	position: absolute; 
 	left: 25px; 
 	top: 25px; 
-	width: 250px;
-	height: 75px;
+	width: 280px;
+	height: 90px;
 	padding: 2px;
 	border: 1px dotted #fff;
 	background: black;
 	color: white;
 	cursor: pointer;
-    font-size: 64px;
+    font-size: 75px;
     text-align: center;
 }
 
-#temp_actual {
+.clima {
 	z-index: 10;
 	position: absolute; 
+	width: 100px;
+	height: 200px;
+	padding: 2px;
+	border: 1px dotted blue;
+	background: white;
+	color: black;
+	cursor: pointer;
+    font-size: 18px;
+    text-align: center;
+}
+
+#clima_interior {
 	left: 25px; 
 	top: 200px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
 }
 
-#humedad {
-	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 230px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
-}
-
-#presion {
-	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 260px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
-}
-
-#condiciones {
-	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 310px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
-}
-
-#temp_max {
-	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 340px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
-}
-
-#temp_min {
-	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 370px; 
-	width: 250px;
-	height: 20px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: black;
-	color: white;
-	cursor: pointer;
-    font-size: 14px;
-    text-align: center;
+#clima_exterior {
+	left: 225px; 
+	top: 200px; 
 }
