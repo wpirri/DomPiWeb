@@ -4,5 +4,5 @@
 <head>
 <title>SYSHOME V 3.0 - <?php echo $TITLE; ?></title>
 <link href="/css/dompiweb.css" rel="stylesheet" type="text/css" />
-<script src="/js/dompiweb.js" type="text/javascript"></script>
+<script src="/js/ajax.js" type="text/javascript"></script>
 </head>

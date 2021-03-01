@@ -24,7 +24,7 @@
 function setCurrentWeather( current ) {
     //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
     document.getElementById('clima_exterior').innerHTML =
-                                                    '<img src="http://openweathermap.org/img/w/' + current.data.weather[0].icon + '.png" /><br />' +
+                                                    '<img src="/images/w/' + current.data.weather[0].icon + '.png" /><br />' +
                                                     'T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C<br />Hr ' + 
                                                     current.data.main.humidity + ' %<br />P ' +
                                                     current.data.main.pressure + ' hPA<br />' +

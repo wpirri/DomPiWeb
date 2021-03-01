@@ -100,6 +100,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
   openlog("abmuser.cgi", 0, LOG_USER);
+
+  Str.EscapeHttp(request_uri, request_uri);
+  Str.EscapeHttp(post_data, post_data);
+
   syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
               remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
 

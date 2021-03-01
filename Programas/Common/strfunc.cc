@@ -128,3 +128,27 @@ int STRFunc::ParseDataIdx(char *buffer, char *label, char *value, int idx)
     
     return found;
 }
+
+int STRFunc::EscapeHttp(char* in, char* out)
+{
+    int len = 0;
+
+    if(!in || !out) return (-1);
+    while(*in)
+    {
+        if(*in == '%')
+        {
+            *out = ' ';
+            in += 2;
+        }
+        else if(in != out) /* Por si se usa el mismo buffer de entradad y salida */
+        {
+            *out = *in;
+        }
+        in++;
+        out++;
+        len++;
+    }
+    *out = 0;
+    return len;
+}

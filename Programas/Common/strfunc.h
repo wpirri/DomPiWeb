@@ -37,6 +37,11 @@ public:
 */
   int ParseDataIdx(char *buffer, char *label, char *value, int idx);
 
+/*
+  Elimina las secuencias de escape HTTP %xx
+*/
+  int EscapeHttp(char* in, char* out);
+
 private:
 
 };

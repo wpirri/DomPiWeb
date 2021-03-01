@@ -1,6 +1,24 @@
 // https://github.com/noazark/weather
 // APY KEY: Se obtiene dando de alta un usuario en https://home.openweathermap.org/
 // img: http://openweathermap.org/img/w/[name].png
+// local: /images/w/[name].png
+// 01d - Sol
+// 01n - Luna
+// 02d - Algo Nublado de dia
+// 02n - Algo Nublado de noche
+// 03d - Algo Nublado
+// 03n - Algo Nublado 
+// 07d - Muy Nublado
+// 07n - Muy Nublado 
+// 09d - Lluvioso muy nublado
+// 09n - Lluvioso muy nublado
+// 10d - LLuvia de dia
+// 10n - LLuvia de noche
+// 11d - Tormenta electrica
+// 11n - Tormenta electrica
+// 13d - Nieve
+// 13n - Nieve
+//
 
 var isModule = typeof module !== "undefined" && module.exports;
 

@@ -14,9 +14,5 @@ none:
 	echo "implementado solamente make install"
 
 install:
-	$(CP) js $(DOCUMENT_ROOT)
-	$(CP) css $(DOCUMENT_ROOT)
-	$(CP) central $(DOCUMENT_ROOT)
-	$(CP) images $(DOCUMENT_ROOT)
-	$(CP) *.php $(DOCUMENT_ROOT)
+	$(CP) * $(DOCUMENT_ROOT)
 

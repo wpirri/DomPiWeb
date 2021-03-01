@@ -7,8 +7,6 @@ include('head-abm.php');
 
 <form id="edit_form" name="edit_form" method="post">
 
-<input type="hidden" id="abm_edit_input_saved_user_id" name="saved_user_id" value="<?php echo $_GET['user_id']; ?>" />
-
 <div id='user_edit_back_btn' class='back-btn' onclick="window.location.replace('user_list.php');" >
 	<img id='user_edit_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
 </div>
