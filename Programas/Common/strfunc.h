@@ -42,6 +42,8 @@ public:
 */
   int EscapeHttp(char* in, char* out);
 
+  int StrHex2Int(const char *str_hex);
+
 private:
 
 };

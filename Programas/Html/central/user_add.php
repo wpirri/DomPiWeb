@@ -20,7 +20,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadUserForm(msg) {
-        fillAbmForm(JSON.parse(msg).usuario, 'user_add_div');
+        fillAbmForm(JSON.parse(msg).response, 'user_add_div');
     }
 
     function SaveUserData() {

@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS TB_DOM_USER;
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
 user_id varchar(16) primary key,         -- NIC Name
-name varchar(64) NOT NULL,
+user_name varchar(64) NOT NULL,
 pin_keypad varchar(32),
 pin_sms varchar(32),
 pin_web varchar(32),
@@ -24,9 +24,10 @@ email varchar(64),
 access_mask varchar(128),
 days_of_week varchar(8),
 hours_of_day varchar(32),
+user_status varchar(32), -- Habilitado, Bloqueado [motivo] 
 access_error_count integer DEFAULT 0,
-last_access_ok DATETIME DEFAULT 0,
-last_access_error DATETIME DEFAULT 0,
+last_access_ok varchar(32),
+last_access_error varchar(32),
 user_flags integer DEFAULT 0
 );
 

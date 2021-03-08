@@ -106,6 +106,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     char delta_b[8];
     char remote_addr[16];
     time_t t;
+    int rc;
     cJSON *json_obj;
     cJSON *json_hw_id;
     cJSON *json_status_a;
@@ -118,6 +119,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
     status_b[0] = 0;
     delta_a[0] = 0;
     delta_b[0] = 0;
+
+    rc = 0;
 
 #ifdef __DEBUG__
     syslog(LOG_DEBUG, "GEvent::ExtIOEvent");
@@ -160,25 +163,15 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
-            return m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
-                                    "SET last_ok = %lu, ip_address = \"%s\" "
-                                    "WHERE hw_id = \"%s\";",
-                                    t, remote_addr, hw_id);
+            m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
+                                "SET last_ok = %lu, ip_address = \"%s\" "
+                                "WHERE hw_id = \"%s\";",
+                                t, remote_addr, hw_id);
 
 
 
-
-
-
-
-            if(json_hw_id) cJSON_Delete(json_obj);
-            if(json_status_a) cJSON_Delete(json_obj);
-            if(json_status_b) cJSON_Delete(json_obj);
-            if(json_delta_a) cJSON_Delete(json_obj);
-            if(json_delta_b) cJSON_Delete(json_obj);
-            if(remote_addr) cJSON_Delete(json_obj);
         }
         cJSON_Delete(json_obj);
     }
-    return (-1);
+    return rc;
 }

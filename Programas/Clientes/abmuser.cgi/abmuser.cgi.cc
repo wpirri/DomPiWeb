@@ -47,11 +47,11 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char server_address[16];
   
   char remote_addr[16];
-  char request_uri[256];
+  char request_uri[4096];
   char request_method[8];
   int content_length;
   char s_content_length[8];
-  char post_data[1024];
+  char post_data[4096];
   char buffer[4096];
   char label[64];
   char value[64];
@@ -77,7 +77,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
-      strncpy(request_uri, env[i]+12, 255);
+      strncpy(request_uri, env[i]+12, 4095);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
@@ -92,7 +92,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(content_length)
   {
-    fgets(post_data, content_length+1, stdin);
+    fgets(post_data, ((content_length+1)<4096)?(content_length+1):4095, stdin);
   }
 
   fputs("Connection: close\r\n", stdout);

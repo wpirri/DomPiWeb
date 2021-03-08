@@ -50,7 +50,7 @@ function getJsonHeaders(json_list) {
 function fillAbmList(json_list, dst_div, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getJsonHeaders(json_list);
-	var table = '<table class=abm-list-table>';
+	var table = '<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -65,7 +65,7 @@ function fillAbmList(json_list, dst_div, index_label, edit_link, delete_link) {
 	// Agrego las columnas de edición y borrado
 	table += '<th>Edit</th>';
 	table += '<th>Delete</th>';
-	table += '</tr>';
+	table += '</tr>\n';
 	// Datos
 	for (i = 0; i < json_list.length; i++) { 
 		table += '<tr>';
@@ -87,16 +87,16 @@ function fillAbmList(json_list, dst_div, index_label, edit_link, delete_link) {
 		table += val;
 		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="/images/delete.png"></a></td>' 
 		table += val;
-		table += '</tr>';
+		table += '</tr>\n';
 	}
-	table += '</table>';
+	table += '</table>\n';
 	document.getElementById(dst_div).innerHTML = table;
 } 
 
 function fillAbmDelete(json_list, dst_div) { 
 	// Getting the all column names 
 	var headers = getJsonHeaders(json_list);
-	var table = '<table class=abm-table id=abm_delete_table>';
+	var table = '<table class=abm-table id=abm_delete_table>\n';
 	var i = 0;
 
 	// Header
@@ -110,9 +110,9 @@ function fillAbmDelete(json_list, dst_div) {
 		table += '<td>';
 		table += val;
 		table += '</th>';
-		table += '</tr>';
+		table += '</tr>\n';
 	}
-	table += '</table>';
+	table += '</table>\n';
 	document.getElementById(dst_div).innerHTML = table;
 } 
 
@@ -131,14 +131,14 @@ function fillAbmEdit(json_list, dst_div) {
 		var val = json_list[0][headers[i]]; 
 		if (val == null || val == 'NULL') val = '';   
 		table += '<td>';
-		table += '<input type="text" id="abm_edit_input_';
+		table += '<input type="text" id="';
 		table += headers[i] + '" name="';
 		table += headers[i] + '" ';
 		table += 'class="abm-edit-input-text" value="';
 		table += val;
 		table += '" />';
 		table += '</th>';
-		table += '</tr\n>';
+		table += '</tr>\n';
 	}
 	table += '</table>\n';
 	document.getElementById(dst_div).innerHTML = table;
@@ -158,12 +158,12 @@ function fillAbmForm(json_list, dst_div)
 		table += headers[i];
 		table += '</th>';
 		table += '<td>';
-		table += '<input type="text" id="abm_edit_input_';
+		table += '<input type="text" id="';
 		table += headers[i] + '" name="';
 		table += headers[i] + '" ';
-		table += 'class="abm-edit-input-text" value="" />';
+		table += 'class="abm-edit-input-text" />';
 		table += '</th>';
-		table += '</tr\n>';
+		table += '</tr>\n';
 	}
 	table += '</table>\n';
 	document.getElementById(dst_div).innerHTML = table;

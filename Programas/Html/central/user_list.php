@@ -18,7 +18,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadUserList(msg) {
-        fillAbmList(JSON.parse(msg).usuarios, 'user_list_table_div', 'user_id', 'user_edit.php', 'user_delete.php');
+        fillAbmList(JSON.parse(msg).response, 'user_list_table_div', 'user_id', 'user_edit.php', 'user_delete.php');
     }
 
     function GetUserList() {

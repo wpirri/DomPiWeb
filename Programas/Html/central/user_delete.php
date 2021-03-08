@@ -18,7 +18,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadUserData(msg) {
-        fillAbmDelete(JSON.parse(msg).usuario, 'user_delete_div');
+        fillAbmDelete(JSON.parse(msg).response, 'user_delete_div');
     }
 
     function DeleteUser() {

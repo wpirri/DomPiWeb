@@ -120,9 +120,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	char query_where[512];
 	unsigned long message_len;
 	char db_filename[FILENAME_MAX+1];
+	int checked;
     cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_arr = NULL;
+    cJSON *json_user;
+    cJSON *json_pass;
+    cJSON *json_channel;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -200,6 +204,12 @@ int main(/*int argc, char** argv, char** env*/void)
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_update", rc);
 		OnClose(0);
 	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_check");
+	if(( rc =  m_pServer->Suscribe("dompi_user_check", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_check", rc);
+		OnClose(0);
+	}
 
 	m_pServer->m_pLog->Add(1, "Inicializacion OK");
 	m_pServer->SetLogLevel(20);
@@ -250,13 +260,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT user_id, name, last_access_ok, access_error_count, last_access_error FROM TB_DOM_USER;");
+				sprintf(query, "SELECT user_id, user_name, user_status, last_access_ok FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "usuarios", json_arr);
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
 					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 					cJSON_Delete(json_obj);
 				}
@@ -286,7 +296,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc == 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "usuarios", json_arr);
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
 					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 					cJSON_Delete(json_obj);
 				}
@@ -320,7 +330,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "usuario", json_arr);
+						cJSON_AddItemToObject(json_obj, "response", json_arr);
 						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 					}
 				}
@@ -519,6 +529,61 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
 			}
+			/* ****************************************************************
+			*		dompi_user_check
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_user_check"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				checked = 0;
+				json_user = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
+				json_pass = cJSON_GetObjectItemCaseSensitive(json_obj, "password");
+				json_channel = cJSON_GetObjectItemCaseSensitive(json_obj, "channel");
+
+				if(json_user && json_pass && json_channel)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT access_mask,days_of_week,hours_of_day,user_status,access_error_count,"
+					"pin_keypad,pin_sms,pin_web FROM TB_DOM_USER WHERE user_id = \'%s\';", json_user->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						if( !strcmp(json_channel->valuestring, "web"))
+						{
+
+						}
+						else if( !strcmp(json_channel->valuestring, "sms"))
+						{
+
+						}
+						else if( !strcmp(json_channel->valuestring, "pad"))
+						{
+
+						}
+						else
+						{
+
+						}
+
+
+
+
+
+
+					}
+				}
+				cJSON_Delete(json_obj);
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+
+
 			else
 			{
 				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");

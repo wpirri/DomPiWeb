@@ -20,7 +20,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadUserData(msg) {
-        fillAbmEdit(JSON.parse(msg).usuario, 'user_edit_div');
+        fillAbmEdit(JSON.parse(msg).response, 'user_edit_div');
     }
 
     function SaveUserData() {
@@ -34,7 +34,7 @@ include('head-abm.php');
             kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(e.value));
         }
 
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=update&' + kvpairs.join('&'), null, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=update', null, false, kvpairs.join('&'));
 
         window.location.replace('user_list.php');
     }

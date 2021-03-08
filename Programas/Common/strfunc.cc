@@ -138,8 +138,9 @@ int STRFunc::EscapeHttp(char* in, char* out)
     {
         if(*in == '%')
         {
-            *out = ' ';
-            in += 2;
+            in++;
+            *out = (unsigned char)StrHex2Int(in);
+            in++;
         }
         else if(in != out) /* Por si se usa el mismo buffer de entradad y salida */
         {
@@ -151,4 +152,29 @@ int STRFunc::EscapeHttp(char* in, char* out)
     }
     *out = 0;
     return len;
+}
+
+int STRFunc::StrHex2Int(const char *str_hex)
+{
+    int rc = 0;
+
+    if(*str_hex >= '0' && *str_hex <= '9')
+    {
+        rc += (*str_hex)-'0';    
+    }
+    else if(*str_hex >= 'A' && *str_hex <= 'F')
+    {
+        rc += (*str_hex)-'A'+10;    
+    }
+    rc *= 16;
+    str_hex++;
+    if(*str_hex >= '0' && *str_hex <= '9')
+    {
+        rc += (*str_hex)-'0';    
+    }
+    else if(*str_hex >= 'A' && *str_hex <= 'F')
+    {
+        rc += (*str_hex)-'A'+10;    
+    }
+    return rc;
 }
