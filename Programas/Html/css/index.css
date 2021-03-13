@@ -1,7 +1,9 @@
+/* https://www.w3schools.com/css/default.asp */
+
 body {
     color: white; 
     background-color: black; 
-    background-image: url("/images/power.gif"); 
+    /*background-image: url("/images/power.gif");*/ 
     background-repeat: no-repeat;
     background-attachment: fixed; 
     background-position: center; 
@@ -14,40 +16,80 @@ body {
 
 #reloj {
 	z-index: 10;
-	position: absolute; 
-	left: 25px; 
-	top: 25px; 
-	width: 280px;
-	height: 90px;
-	padding: 2px;
-	border: 1px dotted #fff;
+	margin:auto;
+	margin-top: 10px;
+	text-align: center;
+	width: 600px;
+	/*height: 50%;*/
+	padding: 10px;
+	border: 1px dotted white;
+	background: darkslategray;
+	color: white;
+	font-family: 'Courier New', monospace;
+	font-weight: bold;
+    font-size: 100px;
+}
+
+#info_container {
+	z-index: 10;
+	margin:auto;
+	margin-top: 20px;
+	width: 600px;
+	/*height: 50%;*/
+	padding: 10px;
+	border: 1px dotted white;
+	background: darkslategray;
+}
+
+#calendario {
+	z-index: 10;
+	width: 175px;
+	height: 250px;
+	border: 1px dotted green;
 	background: black;
 	color: white;
 	cursor: pointer;
-    font-size: 75px;
-    text-align: center;
+	font-size: 18px;
+	text-align: center;
 }
 
 .clima {
 	z-index: 10;
-	position: absolute; 
-	width: 100px;
-	height: 200px;
-	padding: 2px;
-	border: 1px dotted blue;
-	background: white;
-	color: black;
-	cursor: pointer;
-    font-size: 18px;
+	width: 175px;
+	height: 250px;
+	border: 1px dotted green;
+	background: black;
+	color: white;
+    font-size: 24px;
     text-align: center;
 }
 
+/*
 #clima_interior {
-	left: 25px; 
-	top: 200px; 
+
 }
 
 #clima_exterior {
-	left: 225px; 
-	top: 200px; 
+
+}
+*/
+
+#dia_semana {
+	color:darkorange;
+    text-align: center;
+    font-size: 40px;
+}
+
+#fecha {
+	color: white;
+	text-align: center;
+	font-family: 'Courier New', monospace;
+	font-weight: bold;
+    font-size: 80px;
+}
+
+#mes {
+	color:skyblue;
+    text-align: center;
+    font-size: 40px;
 }

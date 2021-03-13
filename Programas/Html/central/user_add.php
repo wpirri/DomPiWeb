@@ -15,12 +15,11 @@ include('head-abm.php');
 	<img id='user_add_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Guardar
 </div>
 
-<p class="abm-title">&nbsp; <?php echo $TITLE; ?> </p>
 <div id='user_add_div' class='abm-div'></div>
 
 <script type="text/javascript" >
     function LoadUserForm(msg) {
-        fillAbmForm(JSON.parse(msg).response, 'user_add_div');
+        fillAbmForm(JSON.parse(msg).response, 'user_add_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveUserData() {
@@ -34,7 +33,7 @@ include('head-abm.php');
             kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(e.value));
         }
 
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=add&' + kvpairs.join('&'), null, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=add', null, false, kvpairs.join('&'));
 
         window.location.replace('user_list.php');
     }

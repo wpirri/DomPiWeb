@@ -13,12 +13,11 @@ include('head-abm.php');
 	<img id='user_list_add__icon' class='icon-btn' src='/images/add.png'>&nbsp;Nuevo
 </div>
 
-<p class="abm-title">&nbsp; <?php echo $TITLE; ?> </p>
 <div id='user_list_table_div' class='abm-div'></div>
 
 <script type="text/javascript" >
     function LoadUserList(msg) {
-        fillAbmList(JSON.parse(msg).response, 'user_list_table_div', 'user_id', 'user_edit.php', 'user_delete.php');
+        fillAbmList(JSON.parse(msg).response, 'user_list_table_div', '<?php echo $TITLE; ?>', 'user_id', 'user_edit.php', 'user_delete.php');
     }
 
     function GetUserList() {

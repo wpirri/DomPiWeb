@@ -13,12 +13,11 @@ include('head-abm.php');
 	<img id='user_delete_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Borrar
 </div>
 
-<p class="abm-title">&nbsp; <?php echo $TITLE; ?> </p>
 <div id='user_delete_div' class='abm-div'></div>
 
 <script type="text/javascript" >
     function LoadUserData(msg) {
-        fillAbmDelete(JSON.parse(msg).response, 'user_delete_div');
+        fillAbmDelete(JSON.parse(msg).response, 'user_delete_div', '<?php echo $TITLE; ?>');
     }
 
     function DeleteUser() {

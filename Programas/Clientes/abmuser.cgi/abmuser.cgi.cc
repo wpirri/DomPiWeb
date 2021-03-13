@@ -168,6 +168,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_user_delete");
   }
+  else if( !strcmp(funcion, "struct"))
+  {
+    strcpy(funcion_call, "dompi_db_struct");
+  }
   else
   {
     strcpy(funcion_call, "dompi_user_list");

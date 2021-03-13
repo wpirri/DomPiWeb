@@ -96,49 +96,28 @@ int main(/*int argc, char** argv, char** env*/void)
 {
     int rc;
     CSQLite *pDB;
-    sql_result *q = NULL, *p;
     cJSON *json_obj;
-	cJSON *json_reg;
     cJSON *json_arr = NULL;
 
     pDB = new CSQLite("/var/lib/DomPiWeb/.DomPiWebDB.sqll3");
 
     pDB->Open();
 
-    /*
-    Ej.
-    { "departamento":8,
-    "nombredepto":"Ventas",
-    "director": "Juan Rodríguez",
-    "empleados":[ { "nombre":"Pedro", "apellido":"Fernández" },
-                    { "nombre":"Jacinto", "apellido":"Benavente" } ]
-    }
-    */
-    rc = pDB->Query(&q, "SELECT * FROM TB_DOM_USER;");
+    json_arr = cJSON_CreateArray();
+//  ".schema"
+    rc = pDB->Query(json_arr, "pragma table_info('TB_DOM_USER');");
     if(rc == 0)
     {
-        p = q;
-        json_arr = cJSON_CreateArray();
-        while(p && p->data)
-        {
-            rc++;
-            json_reg = cJSON_CreateObject();
-            while(p->data && p->data->name)
-            {
-                cJSON_AddStringToObject(json_reg, p->data->name, p->data->value);
-                p->data = p->data->next;
-            }
-            cJSON_AddItemToArray(json_arr, json_reg);
-            p = p->next;
-        }
-    }
-    if(json_arr)
-    {
         json_obj = cJSON_CreateObject();
-        cJSON_AddItemToObject(json_obj, "usuarios", json_arr);
+        cJSON_AddItemToObject(json_obj, "response", json_arr);
         printf("JSON: |%s|\n", cJSON_PrintUnformatted(json_obj));
         cJSON_Delete(json_obj);
     }
-    pDB->FreeResult(q);
+    else
+    {
+        printf("Error: %s\n", pDB->m_last_error_text);
+        cJSON_Delete(json_arr);
+    }
+
     return 0;
 }

@@ -13,22 +13,23 @@
 <body>
 
 <div id="reloj">reloj</div>
-
-<div id="clima_interior" class="clima">interior</div>
-<div id="clima_exterior" class="clima">exterior</div>
-
-
-
+<div id="info_container">
+<table width="100%" border="0"><tr>
+  <td align="center"><div id="calendario" class="calendario">calendario</div></td>
+  <td align="center"><div id="clima_exterior" class="clima">exterior</div></td>
+  <td align="center"><div id="clima_interior" class="clima">interior</div></td>
+</tr></table>
+</div>
 <script type="text/javascript">
 /* Clima */
 function setCurrentWeather( current ) {
     //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
     document.getElementById('clima_exterior').innerHTML =
-                                                    '<img src="/images/w/' + current.data.weather[0].icon + '.png" /><br />' +
-                                                    'T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C<br />Hr ' + 
-                                                    current.data.main.humidity + ' %<br />P ' +
-                                                    current.data.main.pressure + ' hPA<br />' +
-                                                    current.data.weather[0].description;
+        '<br /><img src="/images/w/' + current.data.weather[0].icon + '.png" />' +
+        '<br />T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C' + 
+        '<br />Hr ' + current.data.main.humidity + ' %' +
+        '<br />P ' + current.data.main.pressure + ' hPA' + 
+        '<br /><br />' + current.data.weather[0].description;
     
     
 }
@@ -58,14 +59,33 @@ function twoDigits(i) {
   return i;
 }
 function setCurrentTime( ) {
+    var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    var day_of_week = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
     var today = new Date();
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
+    var yy = today.getFullYear();
+    var mm = today.getMonth();
+    var dd = today.getDate();
+    var dw = today.getDay();
     // add a zero in front of numbers<10
     m = twoDigits(m);
     s = twoDigits(s);
-    document.getElementById('reloj').innerHTML = h + ":" + m + ":" + s;
+    if(s & 1)
+    {
+      document.getElementById('reloj').innerHTML = h + ":" + m;// + ":" + s;
+    }
+    else
+    {
+      document.getElementById('reloj').innerHTML = h + " " + m;// + ":" + s;
+    }
+
+    document.getElementById('calendario').innerHTML = 
+              '<div id="dia_semana">' + day_of_week[dw] + '</div>' +
+              '<br /><div id="fecha">' + dd + '</div>' +
+              '<br /><div id="mes">' + months[mm] + '</div>';
+
     setTimeout("setCurrentTime()", 500);
 }
 setCurrentTime();

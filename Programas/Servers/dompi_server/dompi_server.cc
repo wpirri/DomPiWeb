@@ -127,6 +127,9 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_user;
     cJSON *json_pass;
     cJSON *json_channel;
+    cJSON *json_response;
+    cJSON *json_response_password;
+
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -166,6 +169,12 @@ int main(/*int argc, char** argv, char** env*/void)
 	if(( rc =  m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR)) != GME_OK)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_infoio", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_db_struct");
+	if(( rc =  m_pServer->Suscribe("dompi_db_struct", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_db_struct", rc);
 		OnClose(0);
 	}
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_list");
@@ -232,17 +241,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc == 1)
 				{
 					/* OK */
-					strcpy(message, "{RC=0}");
+					strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
 				}
 				else if(rc == 0)
 				{
 					/* NOT FOUND */
-					strcpy(message, "{RC=2}");
+					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
 				}
 				else
 				{
 					/* Otro Error */
-					strcpy(message, "{RC=1}");
+					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}]}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -251,6 +260,38 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
+			}
+			/* ****************************************************************
+			*		dompi_db_struct
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_db_struct"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "table");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, ".schema", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						cJSON_Delete(json_obj);
+						json_obj = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_obj, "response", json_arr);
+						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+
 			}
 			/* ****************************************************************
 			*		dompi_user_list
@@ -349,7 +390,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_add"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{RC=0}");
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -408,7 +449,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				if(rc != 0)
 				{
-					strcpy(message, "{RC=1}");
+					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -424,7 +465,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_delete"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{RC=0}");
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
 				if(json_un_obj)
 				{
@@ -435,12 +476,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
 						{
-							strcpy(message, "{RC=1}");
+							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{RC=1}");
+						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -458,7 +499,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_update"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{RC=0}");
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -514,12 +555,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					if(rc != 0)
 					{
-						strcpy(message, "{RC=1}");
+						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
 					}
 				}
 				else
 				{
-					strcpy(message, "{RC=2}");
+					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -535,7 +576,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_check"))
 			{
 				json_obj = cJSON_Parse(message);
-				message[0] = 0;
+				strcpy(message, "{\"response\":[{\"resp_code\":\"99\", \"resp_msg\":\"General Error\"}]}");
 				checked = 0;
 				json_user = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
 				json_pass = cJSON_GetObjectItemCaseSensitive(json_obj, "password");
@@ -550,9 +591,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
+						json_response = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
+
 						if( !strcmp(json_channel->valuestring, "web"))
 						{
-
+							json_response_password = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
 						}
 						else if( !strcmp(json_channel->valuestring, "sms"))
 						{
@@ -566,11 +609,14 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 
 						}
+						if(rc == 0)
+						{
+							strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+						}
+						else
+						{
 
-
-
-
-
+						}
 
 					}
 				}

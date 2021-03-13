@@ -15,12 +15,11 @@ include('head-abm.php');
 	<img id='user_edit_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Guardar
 </div>
 
-<p class="abm-title">&nbsp; <?php echo $TITLE; ?> </p>
 <div id='user_edit_div' class='abm-div'></div>
 
 <script type="text/javascript" >
     function LoadUserData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'user_edit_div');
+        fillAbmEdit(JSON.parse(msg).response, 'user_edit_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveUserData() {
