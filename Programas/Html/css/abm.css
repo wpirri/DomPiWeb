@@ -9,6 +9,8 @@
 	background: black;
 	overflow: auto;
 	overflow-x: hidden;
+	width: 550px;
+	height: 415px;
 	}
 
   .abm-list-table {
@@ -21,7 +23,7 @@
 	top: 10px; 
   }
   
-  .abm-list-table td, #abm-table th {
+  .abm-list-table td {
 	border: 1px solid rgb(85, 85, 85);
 	text-align: left;
 	padding: 8px;
@@ -37,7 +39,11 @@
 	text-align: center;
 	background-color: #070049;
 	color: white;
+  }
 
+  .abm-table th {
+	text-align: left;
+	color: white;
   }
 
   .abm-add-btn {
@@ -68,11 +74,17 @@
 	cursor: pointer;
 	}
 
-  .abm-title {
-        font-weight: bold;
-        color: red;
-        }
-/* == Pantallas de ABM == */
+.abm-table-title {
+	text-align: left;
+	font-size: 22px;
+	font-weight: bold;
+	color: orange;	  
+	}
+
+.abm-edit-input-text {
+	background: darkgrey;
+}
+ /* == Pantallas de ABM == */
 
 
 /* == ABM de usuarios == */
@@ -85,8 +97,3 @@
   #user_list_table_div {
   }
 /* == ABM de usuarios == */
-  .abm-table-title {
-	text-align: center;
-    font-weight: bold;
-    color: orange;	  
-  }

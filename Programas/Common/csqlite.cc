@@ -26,6 +26,10 @@ using namespace std;
 #include <sys/msg.h>
 #include <time.h>
 #include <string.h>
+#ifdef __DEBUG__
+#include <syslog.h>
+#endif
+
 
 int CSQLite_Query_Callback(void *arg4, int argc, char **argv, char **azColName)
 {
@@ -94,6 +98,10 @@ int CSQLite::Query(cJSON *json_array, const char *query_fmt, ...)
   va_start(arg, query_fmt);
   vsprintf(query, query_fmt, arg);
   va_end(arg);
+
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "QUERY: [%s]", query);
+#endif  
 
   rc = sqlite3_exec(m_db, query, CSQLite_Query_Callback, json_array, &msg);
   if(rc == SQLITE_OK)

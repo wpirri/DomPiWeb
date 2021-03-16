@@ -129,6 +129,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
     cJSON *json_response;
     cJSON *json_response_password;
+    cJSON *json_hw_id;
 
 
 	signal(SIGPIPE, SIG_IGN);
@@ -220,6 +221,43 @@ int main(/*int argc, char** argv, char** env*/void)
 		OnClose(0);
 	}
 
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_list");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_list", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_list_all");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_list_all", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_get");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_get", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_add");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_add", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_add", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_delete");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_delete", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_delete", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_update");
+	if(( rc =  m_pServer->Suscribe("dompi_hw_update", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_update", rc);
+		OnClose(0);
+	}
+
 	m_pServer->m_pLog->Add(1, "Inicializacion OK");
 	m_pServer->SetLogLevel(20);
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
@@ -234,7 +272,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_infoio"))
 			{
 				rc = pEV->ExtIOEvent(message);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					m_pServer->m_pLog->Add(100, "Error %i en ExtIOEvent()", rc);
 				}
@@ -246,6 +284,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				else if(rc == 0)
 				{
 					/* NOT FOUND */
+					json_obj = cJSON_Parse(message);
+					if(json_obj)
+					{
+						json_hw_id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
+						m_pServer->m_pLog->Add(1, "HW: %s No encontrado en la base", json_hw_id->valuestring);
+						cJSON_Delete(json_obj);
+					}
 					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
 				}
 				else
@@ -272,7 +317,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, ".schema", json_un_obj->valuestring);
+					sprintf(query, ".schema %s", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -609,7 +654,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 
 						}
-						if(rc == 0)
+
+
+						if(checked == 1)
 						{
 							strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
 						}
@@ -628,7 +675,284 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
 			}
+			/* ****************************************************************
+			*		dompi_hw_list
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_list"))
+			{
+				message[0] = 0;
 
+				json_arr = cJSON_CreateArray();
+				sprintf(query, "SELECT hw_id, hw_name, hw_typ, hw_status FROM TB_DOM_PERIF;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_hw_list_all
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_list_all"))
+			{
+				message[0] = 0;
+
+				json_arr = cJSON_CreateArray();
+				sprintf(query, "SELECT * FROM TB_DOM_PERIF;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_hw_get
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_get"))				/* ***** dompi_hw_get ***** */
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE hw_id = \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						cJSON_Delete(json_obj);
+						json_obj = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_obj, "response", json_arr);
+						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_hw_add
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_add"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+// cJSON_ArrayForEach(element, array) for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
+				json_un_obj = json_obj;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									/* Dato */
+									if(strlen(query_into) == 0)
+									{
+										strcpy(query_into, "(");
+									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				strcat(query_into, ")");
+				strcat(query_values, ")");
+				sprintf(query, "INSERT INTO TB_DOM_PERIF %s VALUES %s;", query_into, query_values);
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+
+				rc = pDB->Query(NULL, query);
+				if(rc != 0)
+				{
+					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_hw_delete
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_delete"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				if(json_un_obj)
+				{
+					if( memcmp(json_un_obj->valuestring, "00", 2) )
+					{
+						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE hw_id = \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						if(rc != 0)
+						{
+							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						}
+					}
+					else
+					{
+						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_hw_update
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_hw_update"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+				query_where[0] = 0;
+
+				json_un_obj = json_obj;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									if( !strcmp(json_un_obj->string, "hw_id") )
+									{
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+				if(strlen(query_where))
+				{
+					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s;", query_values, query_where);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+
+					rc = pDB->Query(NULL, query);
+					if(rc != 0)
+					{
+						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
 
 			else
 			{
@@ -647,11 +971,22 @@ int main(/*int argc, char** argv, char** env*/void)
 void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
+
+	m_pServer->UnSuscribe("dompi_hw_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_list", GM_MSG_TYPE_CR);
+
+	m_pServer->UnSuscribe("dompi_user_check", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_list_all", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_list", GM_MSG_TYPE_CR);
+
 	m_pServer->UnSuscribe("dompi_infoio", GM_MSG_TYPE_CR);
+
 	delete pEV;
 	delete pConfig;
 	delete pDB;

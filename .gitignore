@@ -1,10 +1,5 @@
 
-*.cgi
-*.o
-*.o
+**/*.cgi
+**/*.o
+**/*.cgi
 Programas/Servers/dompi_server/dompi_server
-Programas/Clientes/abmuser.cgi/abmuser.cgi
-Programas/Clientes/abmuser.cgi/abmuser.cgi
-Programas/Clientes/abmuser.cgi/abmuser.cgi
-*.o
-*.o

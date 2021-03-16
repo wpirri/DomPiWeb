@@ -3,7 +3,7 @@ $TITLE='Editar Usuario';
 include('head-abm.php');
 ?>
 
-<body onload="GetUser();">
+<body onload="OnLoad();">
 
 <form id="edit_form" name="edit_form" method="post">
 
@@ -11,18 +11,18 @@ include('head-abm.php');
 	<img id='user_edit_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
 </div>
 
-<div id='user_edit_save_btn' class='submit-btn' onclick="SaveUserData();" >
+<div id='user_edit_save_btn' class='submit-btn' onclick="SaveData();" >
 	<img id='user_edit_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Guardar
 </div>
 
 <div id='user_edit_div' class='abm-div'></div>
 
 <script type="text/javascript" >
-    function LoadUserData(msg) {
+    function LoadData(msg) {
         fillAbmEdit(JSON.parse(msg).response, 'user_edit_div', '<?php echo $TITLE; ?>');
     }
 
-    function SaveUserData() {
+    function SaveData() {
         /* Send form data to /cgi-bin/abmuser.cgi?funcion=update */
 
         var kvpairs = [];
@@ -38,8 +38,8 @@ include('head-abm.php');
         window.location.replace('user_list.php');
     }
 
-    function GetUser() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&user_id=<?php echo $_GET['user_id']; ?>', LoadUserData, false);
+    function OnLoad() {
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&user_id=<?php echo $_GET['user_id']; ?>', LoadData, false);
     }
 </script>
 

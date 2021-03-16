@@ -33,7 +33,7 @@ user_flags integer DEFAULT 0
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 hw_id varchar(16) primary key,              -- MAC Address
-name varchar(128) NOT NULL,
+hw_name varchar(128) NOT NULL,
 hw_typ integer DEFAULT 0,
 hw_status integer DEFAULT 0,                -- 0=Disable
 config_porta_ana integer DEFAULT 0,         -- 0=Digital 1=Analogico
@@ -43,7 +43,7 @@ config_portb_io	 integer DEFAULT 255,
 config_portc_ana integer DEFAULT 0,
 config_portc_io	 integer DEFAULT 255,
 ip_address varchar(16) DEFAULT "0.0.0.0",
-last_ok DATETIME DEFAULT 0,                  -- UNIX Time
+last_ok varchar(32),
 status_porta integer DEFAULT 0,
 status_portb integer DEFAULT 0,
 status_portc integer DEFAULT 0,

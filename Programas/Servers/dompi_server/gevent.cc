@@ -100,13 +100,15 @@ GEvent::~GEvent()
 int GEvent::ExtIOEvent(const char* json_evt)
 {
     char hw_id[16];
-    char status_a[8];
-    char status_b[8];
-    char delta_a[8];
-    char delta_b[8];
+    int status_a;
+    int status_b;
+    int delta_a;
+    int delta_b;
     char remote_addr[16];
     time_t t;
+    struct tm *p_tm;
     int rc;
+    char sql_set[4096];
     cJSON *json_obj;
     cJSON *json_hw_id;
     cJSON *json_status_a;
@@ -115,16 +117,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_delta_b;
     cJSON *json_raddr;
 
-    status_a[0] = 0;
-    status_b[0] = 0;
-    delta_a[0] = 0;
-    delta_b[0] = 0;
+    status_a = (-1);
+    status_b = (-1);
+    delta_a = (-1);
+    delta_b = (-1);
+    sql_set[0] = 0;
 
     rc = 0;
-
-#ifdef __DEBUG__
-    syslog(LOG_DEBUG, "GEvent::ExtIOEvent");
-#endif  
 
     json_obj = cJSON_Parse(json_evt);
     if(json_obj)
@@ -133,6 +132,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
         if(json_hw_id)
         {
             t = time(&t);
+            p_tm = localtime(&t);
             json_status_a = cJSON_GetObjectItemCaseSensitive(json_obj, "STATUS_PORTA");
             json_status_b = cJSON_GetObjectItemCaseSensitive(json_obj, "STATUS_PORTB");
             json_delta_a = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTA");
@@ -144,32 +144,57 @@ int GEvent::ExtIOEvent(const char* json_evt)
             }
             if(json_status_a && cJSON_IsString(json_status_a))
             {
-                strcpy(status_a, json_status_a->valuestring);
+                status_a = atoi(json_status_a->valuestring);
+                strcat(sql_set, ",status_porta=\"");
+                strcat(sql_set, json_status_a->valuestring);
+                strcat(sql_set, "\"");
             }
             if(json_status_b && cJSON_IsString(json_status_b))
             {
-                strcpy(status_b, json_status_b->valuestring);
+                status_b = atoi(json_status_b->valuestring);
+                strcat(sql_set, ",status_portb=\"");
+                strcat(sql_set, json_status_b->valuestring);
+                strcat(sql_set, "\"");
             }
             if(json_delta_a && cJSON_IsString(json_delta_a))
             {
-                strcpy(delta_a, json_delta_a->valuestring);
+                delta_a = atoi(json_delta_a->valuestring);
             }
             if(json_delta_b && cJSON_IsString(json_delta_b))
             {
-                strcpy(delta_b, json_delta_b->valuestring);
+                delta_b = atoi(json_delta_b->valuestring);
             }
             if(json_raddr && cJSON_IsString(json_raddr))
             {
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
-            m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
-                                "SET last_ok = %lu, ip_address = \"%s\" "
+            rc = m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
+                                "SET last_ok = \"%04i-%02i-%02i %02i:%02i:%02i\", "
+                                  "ip_address = \"%s\""
+                                  "%s "
                                 "WHERE hw_id = \"%s\";",
-                                t, remote_addr, hw_id);
+                                p_tm->tm_year+1900, p_tm->tm_mon+1, p_tm->tm_mday,
+                                p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec, 
+                                remote_addr,
+                                sql_set,
+                                hw_id);
+            if(delta_a >= 0)
+            {
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "DELTA-PORTA: 0x%02X", delta_a);
+#endif  
 
+                
+            }
+            if(delta_b >= 0)
+            {
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "DELTA-PORTB: 0x%02X", delta_b);
+#endif  
 
-
+                
+            }
         }
         cJSON_Delete(json_obj);
     }
