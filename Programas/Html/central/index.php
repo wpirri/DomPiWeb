@@ -25,7 +25,7 @@
 function setCurrentWeather( current ) {
     //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
     document.getElementById('clima_exterior').innerHTML =
-        '<br /><img src="/images/w/' + current.data.weather[0].icon + '.png" />' +
+        '<br /><img class "weather-icon" src="/images/w/' + current.data.weather[0].icon + '.png" />' +
         '<br />T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C' + 
         '<br />Hr ' + current.data.main.humidity + ' %' +
         '<br />P ' + current.data.main.pressure + ' hPA' + 
@@ -38,6 +38,15 @@ function setForecasttWeather( forecast ) {
     //document.getElementById('temp_max').innerHTML = 'Temperatura Maxima ' + Weather.kelvinToCelsius(forecast.high()).toFixed(1) + ' °C';
     //document.getElementById('temp_min').innerHTML = 'Temperatura Minima ' + Weather.kelvinToCelsius(forecast.low()).toFixed(1) + ' °C';
 }
+
+function setLocalData( local ) {
+    //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
+    document.getElementById('clima_interior').innerHTML =
+        '<br /><img class "weather-icon" src="/images/home.png" />' +
+        '<br />T 0,0 °C' + 
+        '<br />Hr 0 %';
+}
+
 // API Key methods
 var apiKey = '0b39d49d1a75d80d40e7f32edf2cc7c1';
 Weather.setApiKey( apiKey );
@@ -50,7 +59,8 @@ var tempLanguage = Weather.getLanguage();
 Weather.getCurrent( 'Buenos Aires', setCurrentWeather );
 // Get the forecast for a given city
 Weather.getForecast( 'Buenos Aires', setForecasttWeather );
-
+// Get Local data
+setLocalData();
 /* Reloj */
 function twoDigits(i) {
   if (i < 10) {

@@ -1,5 +1,5 @@
 <?php
-$TITLE='Editar Usuario'; 
+$TITLE='Editar Dispositivo'; 
 include('head-abm.php');
 ?>
 

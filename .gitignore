@@ -3,3 +3,6 @@
 **/*.o
 **/*.cgi
 Programas/Servers/dompi_server/dompi_server
+*.lib
+*.sch-bak
+*.o

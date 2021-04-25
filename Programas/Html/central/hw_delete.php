@@ -1,5 +1,5 @@
 <?php
-$TITLE='Borrar Usuario'; 
+$TITLE='Borrar Dispositivo'; 
 include('head-abm.php');
 ?>
 

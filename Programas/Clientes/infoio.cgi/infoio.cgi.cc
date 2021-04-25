@@ -22,7 +22,9 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/wait.h>
+#ifdef __DEBUG__
 #include <syslog.h>
+#endif
 #include <time.h>
 #include <cjson/cJSON.h>
 
@@ -77,24 +79,30 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   content_length = 0;
   s_content_length[0] = 0;
 
+  json_obj = cJSON_CreateObject();
+
   for(i = 0; env[i]; i++)
   {
     if( !memcmp(env[i], "REMOTE_ADDR=", 12))
     {
       strncpy(remote_addr, env[i]+12, 15);
+      cJSON_AddStringToObject(json_obj, "REMOTE_ADDR", remote_addr);
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
       strncpy(request_uri, env[i]+12, 31);
+      cJSON_AddStringToObject(json_obj, "REQUEST_URI", request_uri);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
       strncpy(request_method, env[i]+15, 7);
+      cJSON_AddStringToObject(json_obj, "REQUEST_METHOD", request_method);
     }
     else if( !memcmp(env[i], "CONTENT_LENGTH=", 15))
     {
       strncpy(s_content_length, env[i]+15, 7);
       content_length = atoi(s_content_length);
+      cJSON_AddStringToObject(json_obj, "CONTENT_LENGTH", s_content_length);
     }
   }
 
@@ -107,21 +115,39 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
+#ifdef __DEBUG__
   openlog("infoio.cgi", 0, LOG_USER);
+
+  syslog(LOG_DEBUG, "REMOTE_ADDR: %s",remote_addr);
+  syslog(LOG_DEBUG, "REQUEST_URI: [%s]",request_uri);
+  syslog(LOG_DEBUG, "REQUEST_METHOD: %s",request_method);
+  syslog(LOG_DEBUG, "CONTENT_LENGTH: %s",s_content_length);
+  syslog(LOG_DEBUG, "CONFIG_FILE: /etc/dompiweb.config");
+#endif
 
   pConfig = new DPConfig("/etc/dompiweb.config");
 
   if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
   {
     fputs("error=99&msg=Config Error\r\n", stdout);
+    cJSON_Delete(json_obj);
     return 0;
   }
+
+#ifdef __DEBUG__
+  syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
+#endif
 
   if(content_length == 0)
   {
     fputs("error=99&msg=Sin Datos\r\n", stdout);
+    cJSON_Delete(json_obj);
     return 0;
   }
+
+#ifdef __DEBUG__
+  syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
+#endif
 
   Str.ParseData(post_data, "ID", hw_id);
 
@@ -229,15 +255,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     if(str[10] == '1') delta_portb += 0x40;
   }
 
-  json_obj = cJSON_CreateObject();
-  cJSON_AddStringToObject(json_obj, "CONTENT_LENGTH", s_content_length);
-  cJSON_AddStringToObject(json_obj, "REMOTE_ADDR", remote_addr);
-  cJSON_AddStringToObject(json_obj, "REQUEST_URI", request_uri);
-  cJSON_AddStringToObject(json_obj, "REQUEST_METHOD", request_method);
+  if(Str.ParseData(post_data, "GETCONF", str))
+  {
+    cJSON_AddStringToObject(json_obj, "GETCONF", str);
+  }
 
   if(strlen(hw_id) == 0)
   {
     fputs("error=99&msg=Id Not Found\r\n", stdout);
+    cJSON_Delete(json_obj);
     return 0;
   }
 
@@ -250,7 +276,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(status_portb != (-1))
   {
     sprintf(str, "%i", status_portb);
-    cJSON_AddStringToObject(json_obj, "STATUS_PORTB", str);
   }
   if(status_portc != (-1))
   {
@@ -285,12 +310,16 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   cJSON_Delete(json_obj);
 
-  syslog(LOG_DEBUG, ">>>>: %s", query.C_Str());
+#ifdef __DEBUG__
+  syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
+#endif
 
   rc = pClient->Call("dompi_infoio", query, response, 100);
   if(rc == 0)
   {
-    syslog(LOG_DEBUG, "<<<<: %s", response.C_Str());
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "Call R: [%s]", response.C_Str());
+#endif
     /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
     json_obj = cJSON_Parse(response.C_Str());
 

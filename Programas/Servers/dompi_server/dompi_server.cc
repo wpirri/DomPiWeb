@@ -91,7 +91,6 @@ using namespace std;
 
 #include <unistd.h>
 #include <time.h>
-#include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -121,6 +120,10 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	char db_filename[FILENAME_MAX+1];
 	int checked;
+	char hw_id[16];
+	char update_hw_config[16];
+	char update_hw_status[16];
+
     cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_arr = NULL;
@@ -131,6 +134,8 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_response_password;
     cJSON *json_hw_id;
 
+	update_hw_config[0] = 0;
+	update_hw_status[0] = 0;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -258,6 +263,24 @@ int main(/*int argc, char** argv, char** env*/void)
 		OnClose(0);
 	}
 
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_snd_hw_config");
+	if(( rc =  m_pServer->Suscribe("dompi_snd_hw_config", GM_MSG_TYPE_MSG)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_snd_hw_config", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_snd_hw_status");
+	if(( rc =  m_pServer->Suscribe("dompi_snd_hw_status", GM_MSG_TYPE_MSG)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_snd_hw_status", rc);
+		OnClose(0);
+	}
+
+
+
+
+
+
 	m_pServer->m_pLog->Add(1, "Inicializacion OK");
 	m_pServer->SetLogLevel(20);
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
@@ -271,40 +294,56 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			if( !strcmp(fn, "dompi_infoio"))
 			{
-				rc = pEV->ExtIOEvent(message);
-				if(rc != 1)
+				json_obj = cJSON_Parse(message);
+
+				json_hw_id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
+				if(json_hw_id)
 				{
-					m_pServer->m_pLog->Add(100, "Error %i en ExtIOEvent()", rc);
-				}
-				if(rc == 1)
-				{
-					/* OK */
-					strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
-				}
-				else if(rc == 0)
-				{
-					/* NOT FOUND */
-					json_obj = cJSON_Parse(message);
-					if(json_obj)
+					rc = pEV->ExtIOEvent(message);
+					if(rc != 1)
 					{
-						json_hw_id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
-						m_pServer->m_pLog->Add(1, "HW: %s No encontrado en la base", json_hw_id->valuestring);
-						cJSON_Delete(json_obj);
+						m_pServer->m_pLog->Add(100, "Error %i en ExtIOEvent()", rc);
 					}
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
+					if(rc == 1)
+					{
+						/* OK */
+						strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+						/* Si está todo bien me fijo si pidio enviar configuracion */
+						json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "GETCONF");
+						if(json_un_obj)
+						{
+							if( atoi(json_un_obj->valuestring) > 0 )
+							{
+								strcpy(update_hw_config, json_hw_id->valuestring);
+							}
+						}
+					}
+					else if(rc == 0)
+					{
+						/* NOT FOUND */
+						m_pServer->m_pLog->Add(1, "HW: %s No encontrado en la base", json_hw_id->valuestring);
+						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
+					}
+					else
+					{
+						/* Otro Error */
+						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}]}");
+					}
 				}
 				else
 				{
-					/* Otro Error */
-					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}]}");
+					/* El mensaje vino sin HWID */
+					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
 				}
-
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
+
+				cJSON_Delete(json_obj);
+
 			}
 			/* ****************************************************************
 			*		dompi_db_struct
@@ -910,6 +949,8 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_where, "='");
 										strcat(query_where, json_un_obj->valuestring);
 										strcat(query_where, "'");
+
+										strcpy(hw_id, json_un_obj->valuestring);
 									}
 									else
 									{
@@ -922,6 +963,16 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "='");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
+
+										if( !memcmp("config_", json_un_obj->string, 7))
+										{
+											strcpy(update_hw_config, hw_id);
+										}
+										if( !memcmp("status_", json_un_obj->string, 6))
+										{
+											strcpy(update_hw_status, hw_id);
+										}
+										
 									}
 								}
 							}
@@ -952,6 +1003,30 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
+
+			}
+			/* ****************************************************************
+			*		dompi_snd_hw_config
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_snd_hw_config"))
+			{
+				json_obj = cJSON_Parse(message);
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				if(json_un_obj)
+				{
+					strcpy(hw_id, json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "Solicitud de configuracion para: %s", hw_id);
+
+
+
+				}
+				cJSON_Delete(json_obj);
+			}
+			/* ****************************************************************
+			*		dompi_snd_hw_status
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_snd_hw_status"))
+			{
 			}
 
 			else
@@ -960,8 +1035,22 @@ int main(/*int argc, char** argv, char** env*/void)
 				m_pServer->m_pLog->Add(50, "[%s][R][GME_SVC_NOTFOUND]");
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
+
+			if(update_hw_config[0] != 0)
+			{
+				sprintf(message, "{\"hw_id\":\"%s\"}", update_hw_config);
+				m_pServer->Post("dompi_snd_hw_config", message, strlen(message)+1);
+				update_hw_config[0] = 0;
+			}
+
+			if(update_hw_status[0] != 0)
+			{
+				sprintf(message, "{\"hw_id\":\"%s\"}", update_hw_status);
+				m_pServer->Post("dompi_snd_hw_status", message, strlen(message)+1);
+				update_hw_status[0] = 0;
+			}
+
 		}
-		
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
 	OnClose(0);
