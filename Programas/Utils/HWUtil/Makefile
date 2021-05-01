@@ -3,7 +3,7 @@
 INCLUDE=-I../../Common/ -I/usr/include/gmonitor
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared
-OBJECTS=hwutil.o qtcp.o dom32iowifi.o ctcp.o
+OBJECTS=hwutil.o qtcp.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=hwutil
 DEFINE=-D __DEBUG__
 CC=g++
@@ -20,6 +20,8 @@ ctcp.o: ../../Common/ctcp.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/ctcp.cc
 qtcp.o: ../../Common/qtcp.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/qtcp.cc
+strfunc.o: ../../Common/strfunc.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 dom32iowifi.o: ../../Common/dom32iowifi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iowifi.cc
 
