@@ -26,21 +26,21 @@ public:
     Si count e 0 devuelve lo que hay antes del separador
     El dato devuelto se termina al encntrar un separador o cualquier caracter que no se número o letra
 */
-  int Section(char *in, char sep, unsigned int count, char *out);
+  int Section(const char *in, char sep, unsigned int count, char *out);
 /*
   En una cadena label=val&label=val devuelvel el val  segun el label
 */
-  int ParseData(char *buffer, const char *label, char *value);
+  int ParseData(const char *buffer, const char *label, char *value);
 
 /*
   En una cadena label=val&label=val devuelvel el par label, value del orden indicado por el indice donde 0 es el primero
 */
-  int ParseDataIdx(char *buffer, char *label, char *value, int idx);
+  int ParseDataIdx(const char *buffer, char *label, char *value, int idx);
 
 /*
   Elimina las secuencias de escape HTTP %xx
 */
-  int EscapeHttp(char* in, char* out);
+  int EscapeHttp(const char* in, char* out);
 
   int StrHex2Int(const char *str_hex);
 

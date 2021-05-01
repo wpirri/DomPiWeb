@@ -6,3 +6,6 @@ Programas/Servers/dompi_server/dompi_server
 *.lib
 *.sch-bak
 *.o
+Programas/Clientes/infoio.cgi/infoio.cgi.o
+Programas/Clientes/infoio.cgi/infoio.cgi.o
+Programas/Clientes/infoio.cgi/strfunc.o

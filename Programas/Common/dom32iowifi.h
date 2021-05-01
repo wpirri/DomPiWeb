@@ -18,19 +18,54 @@
 class Dom32IoWifi
 {
 public:
+    typedef struct
+    {
+        char wifi_ap1[33];
+        char wifi_ap1_pass[33];
+        char wifi_ap2[33];
+        char wifi_ap2_pass[33];
+        char wifi_host1[33];
+        char wifi_host2[33];
+        unsigned int wifi_host1_port;
+        unsigned int wifi_host2_port;
+        char rqst_path[33];
+    } wifi_config_data;
+
 	Dom32IoWifi();
 	virtual ~Dom32IoWifi();
 
     int GetIOStatus(const char *raddr, int *iostatus);
+    int GetEXStatus(const char *raddr, int *exstatus);
+    int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
+    int ConfigIO(const char *raddr, int ioconfig, int *config);
+    int ConfigEX(const char *raddr, int exconfig, int *config);
+    int SetIO(const char *raddr, int mask, int *iostatus);
+    int SetEX(const char *raddr, int mask, int *exstatus);
+    int ResetIO(const char *raddr, int mask, int *iostatus);
+    int ResetEX(const char *raddr, int mask, int *exstatus);
+    int GetWifi(const char *raddr, wifi_config_data *config);
+    int SetWifi(const char *raddr, wifi_config_data *config);
+
+    int m_verbose;
 
 protected:
-    char *http_post;
-    char *http_get;
+    const char *http_post;
+    const char *http_get;
 
     const char *url_get_iostatus;
     const char *url_set_iostatus;
+    const char *url_set_ioconfig;
     const char *url_get_exstatus;
     const char *url_set_exstatus;
+    const char *url_set_exconfig;
+    const char *url_get_config;
+    const char *url_get_ioconfig;
+    const char *url_get_exconfig;
+    const char *url_get_wifi;
+    const char *url_set_wifi;
+
+    int IO2Int(const char* str);
+    int EXP2Int(const char* str);
 
 };
 

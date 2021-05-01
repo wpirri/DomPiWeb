@@ -60,6 +60,7 @@ int QTcp::Query(const char* raddr, const char* snd, char* rcv, int rcv_max_len)
     if(m_socket->Send(snd, strlen(snd)) == 0)
     {
         rc = m_socket->Receive(rcv, rcv_max_len, 3000);
+        *((char*)(rcv + rc)) = 0;
     }
 
     delete m_socket;

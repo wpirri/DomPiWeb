@@ -1,0 +1,27 @@
+root@LNX3003:/winmount/walter/Proyectos/Domotica-IoT/DomPiWeb/Programas/Utils/HWUtil# ./hwutil -a 192.168.10.87 --iostatus
+GetIOStatus: [HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/xml
+
+<?xml version="1.0"?>
+<response>
+<IO1>on</IO1>
+<IO2>on</IO2>
+<IO3>on</IO3>
+<IO4>on</IO4>
+</response>]
+Status: 0x0000
+root@LNX3003:/winmount/walter/Proyectos/Domotica-IoT/DomPiWeb/Programas/Utils/HWUtil# ./hwutil -a 192.168.10.87 --iostatus
+GetIOStatus: [HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/xml
+
+<?xml version="1.0"?>
+<response>
+<IO1>off</IO1>
+<IO2>on</IO2>
+<IO3>on</IO3>
+<IO4>on</IO4>
+</response>]
+Status: 0x0000
+root@LNX3003:/winmount/walter/Proyectos/Domotica-IoT/DomPiWeb/Programas/Utils/HWUtil# 

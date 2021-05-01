@@ -36,9 +36,9 @@ STRFunc::~STRFunc()
 
 }
 
-int STRFunc::Section(char *in, char sep, unsigned int count, char *out)
+int STRFunc::Section(const char *in, char sep, unsigned int count, char *out)
 {
-    char *p;
+    const char *p;
     int len = 0;
     
     p = in;
@@ -62,9 +62,9 @@ int STRFunc::Section(char *in, char sep, unsigned int count, char *out)
     return len;
 }
 
-int STRFunc::ParseData(char *buffer, const char *label, char *value)
+int STRFunc::ParseData(const char *buffer, const char *label, char *value)
 {
-    char *p;
+    const char *p;
     int len = 0;
     
     p = buffer;
@@ -92,9 +92,9 @@ int STRFunc::ParseData(char *buffer, const char *label, char *value)
     return len;
 }
 
-int STRFunc::ParseDataIdx(char *buffer, char *label, char *value, int idx)
+int STRFunc::ParseDataIdx(const char *buffer, char *label, char *value, int idx)
 {
-    char *p;
+    const char *p;
     int found = 0;
     
     p = buffer;
@@ -129,7 +129,7 @@ int STRFunc::ParseDataIdx(char *buffer, char *label, char *value, int idx)
     return found;
 }
 
-int STRFunc::EscapeHttp(char* in, char* out)
+int STRFunc::EscapeHttp(const char* in, char* out)
 {
     int len = 0;
 
