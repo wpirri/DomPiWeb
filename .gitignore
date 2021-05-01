@@ -9,3 +9,6 @@ Programas/Servers/dompi_server/dompi_server
 Programas/Clientes/infoio.cgi/infoio.cgi.o
 Programas/Clientes/infoio.cgi/infoio.cgi.o
 Programas/Clientes/infoio.cgi/strfunc.o
+Programas/Utils/HWUtil/qtcp.d
+Programas/Utils/HWUtil/hwutil.d
+Programas/Utils/HWUtil/hwutil
