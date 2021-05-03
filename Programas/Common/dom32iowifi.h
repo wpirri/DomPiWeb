@@ -66,6 +66,7 @@ protected:
 
     int IO2Int(const char* str);
     int EXP2Int(const char* str);
+    int HttpRespCode(const char* http);
 
 };
 

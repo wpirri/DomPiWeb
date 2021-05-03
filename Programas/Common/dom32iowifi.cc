@@ -92,6 +92,7 @@ int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
     char buffer[4096];
     char *p;
     QTcp q;
+    int rc;
 
     sprintf(buffer, http_get, url_get_iostatus, raddr);
     if(m_verbose)
@@ -105,6 +106,8 @@ int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -127,6 +130,7 @@ int Dom32IoWifi::GetEXStatus(const char *raddr, int *exstatus)
     char buffer[4096];
     char *p;
     QTcp q;
+    int rc;
 
     sprintf(buffer, http_get, url_get_exstatus, raddr);
     if(m_verbose)
@@ -140,6 +144,8 @@ int Dom32IoWifi::GetEXStatus(const char *raddr, int *exstatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -162,6 +168,7 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
     char buffer[4096];
     char *p;
     QTcp q;
+    int rc;
 
     sprintf(buffer, http_get, url_get_config, raddr);
     if(m_verbose)
@@ -176,6 +183,8 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -203,6 +212,7 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     sprintf(data, "IO1=%s&IO2=%s&IO3=%s&IO4=%s",
             (ioconfig&0x01)?"in":"out",
@@ -220,6 +230,8 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -242,6 +254,7 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     sprintf(data, "EXP1=%s&EXP3=%s&EXP4=%s&EXP5=%s&EXP7=%s&EXP8=%s&EXP9=%s",
             (exconfig&0x01)?"in":"out",
@@ -262,6 +275,8 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -284,6 +299,7 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     data[0] = 0;
 
@@ -317,6 +333,8 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -339,6 +357,7 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     data[0] = 0;
 
@@ -387,6 +406,8 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -409,6 +430,7 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     data[0] = 0;
 
@@ -442,6 +464,8 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -464,6 +488,7 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
     char data[256];
     char *p;
     QTcp q;
+    int rc;
 
     data[0] = 0;
 
@@ -512,6 +537,8 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -534,6 +561,7 @@ int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
     char *p;
     QTcp q;
     STRFunc Str;
+    int rc;
 
     sprintf(buffer, http_post, url_get_wifi, raddr, 0, " ");
     if(m_verbose)
@@ -546,6 +574,8 @@ int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -576,6 +606,7 @@ int Dom32IoWifi::SetWifi(const char *raddr, wifi_config_data *config)
     char *p;
     QTcp q;
     STRFunc Str;
+    int rc;
 
     data[0] = 0;
     if(config->wifi_ap1[0])
@@ -624,6 +655,8 @@ int Dom32IoWifi::SetWifi(const char *raddr, wifi_config_data *config)
         {
             printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
         }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -741,4 +774,16 @@ int Dom32IoWifi::EXP2Int(const char* str)
         }
     }
     return rc;
+}
+
+int Dom32IoWifi::HttpRespCode(const char* http)
+{
+    char tmp[16];
+    int rc;
+    STRFunc Str;
+
+    Str.Section(http, ' ', 1, tmp);
+
+    rc = atoi(tmp);
+    return (rc == 200)?0:rc;
 }

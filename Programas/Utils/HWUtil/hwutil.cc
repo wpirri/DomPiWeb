@@ -30,7 +30,7 @@ typedef enum {
 
 int main(int argc, char** argv/*, char** env*/)
 {
-    int i;
+    int i, rc;
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
     char *addr = NULL;
@@ -203,12 +203,14 @@ int main(int argc, char** argv/*, char** env*/)
     switch(cmd)
     {
         case cmd_iostatus:
-            pD32W->GetIOStatus(addr, &ioval);
-            printf("I/O Status: 0x%02X\n", ioval);
+            rc = pD32W->GetIOStatus(addr, &ioval);
+            if(rc == 0) printf("I/O Status: 0x%02X\n", ioval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_exstatus:
-            pD32W->GetEXStatus(addr, &exval);
-            printf("Exp Status: 0x%02X\n", exval);
+            rc = pD32W->GetEXStatus(addr, &exval);
+            if(rc == 0) printf("Exp Status: 0x%02X\n", exval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_ioconfig:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -223,8 +225,9 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->ConfigIO(addr, lval, &ioval);
-            printf("I/O Config: 0x%02X\n", ioval);
+            rc = pD32W->ConfigIO(addr, lval, &ioval);
+            if(rc == 0) printf("I/O Config: 0x%02X\n", ioval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_exconfig:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -239,13 +242,18 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->ConfigEX(addr, lval, &exval);
-            printf("Exp Config: 0x%02X\n", exval);
+            rc = pD32W->ConfigEX(addr, lval, &exval);
+            if(rc == 0) printf("Exp Config: 0x%02X\n", exval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_getconfig:
-            pD32W->GetConfig(addr, &ioval, &exval);
-            printf("I/O Config: 0x%02X\n", ioval);
-            printf("Exp Config: 0x%02X\n", exval);
+            rc = pD32W->GetConfig(addr, &ioval, &exval);
+            if(rc == 0)
+            {
+                printf("I/O Config: 0x%02X\n", ioval);
+                printf("Exp Config: 0x%02X\n", exval);
+            }
+            else printf("Error %i.\n", rc);
             break;
         case cmd_ioset:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -260,8 +268,9 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->SetIO(addr, lval, &ioval);
-            printf("I/O Status: 0x%02X\n", ioval);
+            rc = pD32W->SetIO(addr, lval, &ioval);
+            if(rc == 0) printf("I/O Status: 0x%02X\n", ioval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_ioreset:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -276,8 +285,9 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->ResetIO(addr, lval, &ioval);
-            printf("I/O Status: 0x%02X\n", ioval);
+            rc = pD32W->ResetIO(addr, lval, &ioval);
+            if(rc == 0) printf("I/O Status: 0x%02X\n", ioval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_exset:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -292,8 +302,9 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->SetEX(addr, lval, &exval);
-            printf("Exp Status: 0x%02X\n", exval);
+            rc = pD32W->SetEX(addr, lval, &exval);
+            if(rc == 0) printf("Exp Status: 0x%02X\n", exval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_exreset:
             if(*pval == '0' && (*(pval+1) == 'x' ||*(pval+1) == 'X') )
@@ -308,28 +319,37 @@ int main(int argc, char** argv/*, char** env*/)
             {
                 lval = strtol(pval, NULL, 10);
             }
-            pD32W->ResetEX(addr, lval, &exval);
-            printf("Exp Status: 0x%02X\n", exval);
+            rc = pD32W->ResetEX(addr, lval, &exval);
+            if(rc == 0) printf("Exp Status: 0x%02X\n", exval);
+            else printf("Error %i.\n", rc);
             break;
         case cmd_wifiget:
-            pD32W->GetWifi(addr, &wifi_data);
-            printf("Wifi ap1: %s\n", wifi_data.wifi_ap1);
-            printf("    pass: %s\n", wifi_data.wifi_ap1_pass);
-            printf("Wifi ap2: %s\n", wifi_data.wifi_ap2);
-            printf("    pass: %s\n", wifi_data.wifi_ap2_pass);
-            printf("Central1: %s:%i\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
-            printf("Central2: %s:%i\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
-            printf("URI:      %s\n", wifi_data.rqst_path);
+            rc = pD32W->GetWifi(addr, &wifi_data);
+            if(rc == 0)
+            {
+                printf("Wifi ap1: %s\n", wifi_data.wifi_ap1);
+                printf("    pass: %s\n", wifi_data.wifi_ap1_pass);
+                printf("Wifi ap2: %s\n", wifi_data.wifi_ap2);
+                printf("    pass: %s\n", wifi_data.wifi_ap2_pass);
+                printf("Central1: %s:%i\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
+                printf("Central2: %s:%i\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
+                printf("URI:      %s\n", wifi_data.rqst_path);
+            }
+            else printf("Error %i.\n", rc);
             break;
         case cmd_wifiset:
-            pD32W->SetWifi(addr, &wifi_data);
-            printf("Wifi ap1: %s\n", wifi_data.wifi_ap1);
-            printf("    pass: %s\n", wifi_data.wifi_ap1_pass);
-            printf("Wifi ap2: %s\n", wifi_data.wifi_ap2);
-            printf("    pass: %s\n", wifi_data.wifi_ap2_pass);
-            printf("Central1: %s:%ui\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
-            printf("Central2: %s:%ui\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
-            printf("URI:      %s\n", wifi_data.rqst_path);
+            rc = pD32W->SetWifi(addr, &wifi_data);
+            if(rc == 0)
+            {
+                printf("Wifi ap1: %s\n", wifi_data.wifi_ap1);
+                printf("    pass: %s\n", wifi_data.wifi_ap1_pass);
+                printf("Wifi ap2: %s\n", wifi_data.wifi_ap2);
+                printf("    pass: %s\n", wifi_data.wifi_ap2_pass);
+                printf("Central1: %s:%ui\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
+                printf("Central2: %s:%ui\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
+                printf("URI:      %s\n", wifi_data.rqst_path);
+            }
+            else printf("Error %i.\n", rc);
             break;
         default:
             break;
