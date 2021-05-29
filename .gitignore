@@ -12,3 +12,8 @@ Programas/Clientes/infoio.cgi/strfunc.o
 Programas/Utils/HWUtil/qtcp.d
 Programas/Utils/HWUtil/hwutil.d
 Programas/Utils/HWUtil/hwutil
+*.kicad_pcb-bak
+Circuito-IO/fp-info-cache
+*.FCStd1
+*.blend1
+*.d

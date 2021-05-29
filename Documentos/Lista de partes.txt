@@ -1,0 +1,2 @@
+Raspberry Pi 3B+
+Display 5'' Touch Adafruit 2250 (DigiKey 1528-1210-ND)

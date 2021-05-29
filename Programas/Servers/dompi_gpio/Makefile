@@ -23,15 +23,7 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
-	cp $(OUTPUT) /usr/local/sbin/
-	./update-tables.sh . /var/lib/gmonitor server /usr/local/sbin/$(OUTPUT)
-	./update-tables.sh . /var/lib/gmonitor funcion
-
-update:
-	/usr/sbin/gmon_stop $(OUTPUT)
-	sleep 1
-	cp $(OUTPUT) /usr/local/sbin/
-	/usr/sbin/gmon_start $(OUTPUT)
+	./install_server.sh $(OUTPUT)
 
 uninstall:
 	$(RM) /usr/local/sbin/$(OUTPUT)

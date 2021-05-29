@@ -4,3 +4,37 @@ build-essential
 apache2 
 php
 sqlite3
+
+
+
+Alturas y separadores
+---------------------------------------
+
+Altura total Gabinete
+---------------------
+
+
+Espesor tapa gabinete                   2 mm                                x
+Espesor display                         5 mm                        x       x
+Placa display                           2 mm                        x       x
+Componentes back display                3 mm                x       x       x
+Aire I/O Display                        5 mm                x       x       x
+Altura componentes I/O                 10 mm      x         x       x       x
+I/O                                     2 mm      x         x       x       x
+Separación Pi - I/O                    11 mm      x         x       x       x
+Raspberry Pi                            1 mm      x         x       x       x
+Separador Pi                            5 mm      x         x       x       x
+Espesor fondo gabinete                  2 mm                                x
+-------------------------------------------------------------------------------
+Distancia base -> fin placas                      29 mm
+Altura separadores display                                  37 mm
+Altura paredes                                                     44 mm
+Total Gabinete                                                             48 mm
+
+
+Gabinete 160 x 120
+Paredes 2mm
+Soportes Display 115 x 84 x 37 (y = top - 2,5, x = center)
+Soportes Pi       58 x 49 x 5 (y = top - 30, x = l + 27,5)
+Pin 0,75 mm diámetro
+

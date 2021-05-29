@@ -39,6 +39,8 @@ using namespace std;
 CGMServerWait *m_pServer;
 void OnClose(int sig);
 
+#define GPIO_STATUS_LED_PIN 24
+
 int main(/*int argc, char** argv, char** env*/void)
 {
 	int rc;
@@ -65,7 +67,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Iniciando interface GPIO");
 
     wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
-    pinMode(gpio_pin[36], OUTPUT);
+    pinMode(gpio_pin[GPIO_STATUS_LED_PIN], OUTPUT);
 
 	if(( rc =  m_pServer->Suscribe("dompi_setio", GM_MSG_TYPE_CR)) != GME_OK)
 	{
@@ -107,7 +109,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			/* expiracion del timer */
 			blink++;
-			digitalWrite(gpio_pin[36], (blink&0x01)?HIGH:LOW); // Turn LED ON/OFF
+			digitalWrite(gpio_pin[GPIO_STATUS_LED_PIN], (blink&0x01)?HIGH:LOW); // Turn LED ON/OFF
 		}
 		
 	}
