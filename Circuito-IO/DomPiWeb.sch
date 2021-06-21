@@ -1760,7 +1760,7 @@ F0 "Fuente" 50
 F1 "fuente.sch" 50
 $EndSheet
 $Comp
-L Device:CP C2
+L Device:C_Polarized C2
 U 1 1 60C251D7
 P 9150 1150
 F 0 "C2" V 9150 800 50  0000 C CNN
@@ -1771,7 +1771,7 @@ F 3 "~" H 9150 1150 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Device:CP C3
+L Device:C_Polarized C3
 U 1 1 60C26CF2
 P 9150 1400
 F 0 "C3" V 9150 1050 50  0000 C CNN
