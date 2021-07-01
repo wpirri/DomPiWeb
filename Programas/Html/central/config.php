@@ -1,4 +1,5 @@
 <?php
+$TITLE='Configuraciones'; 
 include("head.php");
 ?>
 

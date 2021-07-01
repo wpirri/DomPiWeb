@@ -11,7 +11,7 @@ CC=g++
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: abmuser
+all: abmuser.cgi
 
 abmuser.cgi.o: abmuser.cgi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c abmuser.cgi.cc
@@ -20,7 +20,7 @@ config.o: ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
-abmuser: $(OBJECTS)
+abmuser.cgi: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
 
 clean:

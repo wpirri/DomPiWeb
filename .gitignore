@@ -19,3 +19,6 @@ Circuito-IO/fp-info-cache
 *.d
 Gabinete/DPW-Frente-20210615.FCStd
 Gabinete/DPW-Caja-20210615.FCStd
+*.autosave
+*.dia~
+*.cgi
