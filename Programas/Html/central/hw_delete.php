@@ -21,12 +21,12 @@ include('head-abm.php');
     }
 
     function SaveData() {
-        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=delete&hw_id=<?php echo $_GET['hw_id']; ?>', null, false);
+        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=delete&Id=<?php echo $_GET['Id']; ?>', null, false);
         window.location.replace('hw_list.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&hw_id=<?php echo $_GET['hw_id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 </script>
 

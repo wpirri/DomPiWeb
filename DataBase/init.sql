@@ -1,4 +1,6 @@
-INSERT INTO TB_DOM_ASSIGN (ass_id, hw_id, port_id, io_id, io_typ, name) VALUES(0, '000000000000', 0, 0, 0, '-');
-INSERT INTO TB_DOM_GROUP (grp_id, name) VALUES (0, '-');
-INSERT INTO TB_DOM_FUNCTION (fcn_id, name) VALUES (0, '-');
-INSERT INTO TB_DOM_USER (user_id, user_name, pin_web) VALUES ('admin', 'Administrador del sistema', 'admin');
+INSERT INTO TB_DOM_ASSIGN (Id, Objeto, Dispositivo, Port, E_S, Tipo, Estado, Flags) VALUES(0, 'Ninguno', '0000000000000000', 0, 0, 0, 0, 0);
+INSERT INTO TB_DOM_GROUP (Id, Grupo) VALUES (0, 'Ninguno');
+INSERT INTO TB_DOM_FLAG (Id, Variable) VALUES (0, 'Ninguna');
+INSERT INTO TB_DOM_FUNCTION (Id, Funcion) VALUES (0, 'Ninguna');
+INSERT INTO TB_DOM_USER (Nombre, Usuario, Pin_WEB) VALUES ('admin', 'Administrador del sistema', 'admin');
+INSERT INTO TB_DOM_PERIF (Id, Dispositivo) VALUES ('000000000000', 'Ninguno');

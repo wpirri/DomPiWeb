@@ -1,8 +1,6 @@
 
 DROP TABLE IF EXISTS TB_DOM_AT;
 DROP TABLE IF EXISTS TB_DOM_EVENT_CHANGE;
-DROP TABLE IF EXISTS TB_DOM_EVENT_OFF;
-DROP TABLE IF EXISTS TB_DOM_EVENT_ON;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_FUNCTION;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
@@ -13,166 +11,132 @@ DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
-user_id varchar(16) primary key,         -- NIC Name
-user_name varchar(64) NOT NULL,
-pin_keypad varchar(32),
-pin_sms varchar(32),
-pin_web varchar(32),
-phone_call varchar(32),
-phone_sms varchar(32),
-email varchar(64),
-access_mask varchar(128),
-days_of_week varchar(8),
-hours_of_day varchar(32),
-user_status varchar(32), -- Habilitado, Bloqueado [motivo] 
-access_error_count integer DEFAULT 0,
-last_access_ok varchar(32),
-last_access_error varchar(32),
-user_flags integer DEFAULT 0
+Nombre varchar(16) primary key,         -- NIC Name
+Usuario varchar(64) NOT NULL,
+Pin_Teclado varchar(32),
+Pin_SMS varchar(32),
+Pin_WEB varchar(32),
+Telefono_Voz varchar(32),
+Telefono_SMS varchar(32),
+eMail varchar(64),
+Permisos varchar(128),
+Dias varchar(8),
+Horas varchar(48),
+Estado varchar(32), -- Habilitado, Bloqueado [motivo] 
+Contador_Error integer DEFAULT 0,
+Ultimo_Acceso varchar(32),
+Ultimo_Error varchar(32),
+Flags integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
-hw_id varchar(16) primary key,              -- MAC Address
-hw_name varchar(128) NOT NULL,
-hw_typ integer DEFAULT 0,
-hw_status integer DEFAULT 0,                -- 0=Disable
-config_porta_ana integer DEFAULT 0,         -- 0=Digital 1=Analogico
-config_porta_io	 integer DEFAULT 255,       -- 0=Output 1=Input
-config_portb_ana integer DEFAULT 0,
-config_portb_io	 integer DEFAULT 255,
-config_portc_ana integer DEFAULT 0,
-config_portc_io	 integer DEFAULT 255,
-ip_address varchar(16) DEFAULT "0.0.0.0",
-last_ok varchar(32),
-status_porta integer DEFAULT 0,
-status_portb integer DEFAULT 0,
-status_portc integer DEFAULT 0,
-status_analog1 integer DEFAULT 0,
-status_analog2 integer DEFAULT 0,
-status_analog3 integer DEFAULT 0,
-status_analog4 integer DEFAULT 0,
-status_analog5 integer DEFAULT 0,
-status_analog6 integer DEFAULT 0,
-status_analog7 integer DEFAULT 0,
-status_analog8 integer DEFAULT 0,
-hw_update integer DEFAULT 0,                -- Enviar update de config al HW
-hw_flags integer DEFAULT 0
+Id varchar(16) primary key,              -- MAC Address
+Dispositivo varchar(128) NOT NULL,
+Tipo integer DEFAULT 0,
+Estado integer DEFAULT 0,                -- 0=Disable
+Config_PORT_A_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
+Config_PORT_A_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Config_PORT_B_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
+Config_PORT_B_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Config_PORT_C_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
+Config_PORT_C_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Direccion_IP varchar(16) DEFAULT "0.0.0.0",
+Ultimo_Ok varchar(32),
+Estado_PORT_A integer DEFAULT 0,
+Estado_PORT_B integer DEFAULT 0,
+Estado_PORT_C integer DEFAULT 0,
+Estado_Analog_1 integer DEFAULT 0,
+Estado_Analog_2 integer DEFAULT 0,
+Estado_Analog_3 integer DEFAULT 0,
+Estado_Analog_4 integer DEFAULT 0,
+Estado_Analog_5 integer DEFAULT 0,
+Estado_Analog_6 integer DEFAULT 0,
+Estado_Analog_7 integer DEFAULT 0,
+Estado_Analog_8 integer DEFAULT 0,
+Actualizar integer DEFAULT 0,                -- Enviar update de config al HW
+Flags integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
-ass_id integer primary key,
-hw_id varchar(16) NOT NULL,
-port_id integer NOT NULL,
-io_id integer NOT NULL,
-io_typ integer NOT NULL,
-name varchar(128) NOT NULL,
-ass_status integer DEFAULT 0,
-ass_flags integer DEFAULT 0,
-FOREIGN KEY(hw_id) REFERENCES TB_DOM_PERIF(hw_id)
+Id integer primary key,
+Objeto varchar(128) NOT NULL,
+Dispositivo varchar(16) NOT NULL,
+Port integer NOT NULL,
+E_S integer NOT NULL,
+Tipo integer NOT NULL,
+Estado integer DEFAULT 0,
+Flags integer DEFAULT 0,
+FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP ( 
-grp_id integer primary key,
-name varchar(128) NOT NULL
+Id integer primary key,
+Grupo varchar(128) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP_LIST (
-grp_id integer primary key,
-ass_id integer NOT NULL,
-principal integer DEFAULT 0,            -- Define el estado del resto del grupo
-invertir integer DEFAULT 0,             -- Mantiene estado invertido con respecto al grupo
-FOREIGN KEY(grp_id) REFERENCES TB_DOM_GROUP(grp_id),
-FOREIGN KEY(ass_id) REFERENCES TB_DOM_ASSIGN(ass_id)
+Grupo integer primary key,
+Objeto integer NOT NULL,
+Principal integer DEFAULT 0,            -- Define el estado del resto del grupo
+Invertir integer DEFAULT 0,             -- Mantiene estado invertido con respecto al grupo
+FOREIGN KEY(Grupo) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FLAG (
-flag_id integer primary key,
-name varchar(128) NOT NULL,
-flag_value integer DEFAULT 0
+Id integer primary key,
+Variable varchar(128) NOT NULL,
+Valor integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FUNCTION (
-fcn_id integer primary key,
-name varchar(128) NOT NULL
+Id integer primary key,
+Funcion varchar(128) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
-ev_id integer primary key,
-src_ass_id integer NOT NULL,
-name varchar(128) NOT NULL,
-FOREIGN KEY(src_ass_id) REFERENCES TB_DOM_ASSIGN(ass_id)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_EVENT_ON (
-ev_id integer primary key,
-dst_ass_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_grp_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_fcn_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_flag_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-snd_ev integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso
-snd_ev_param1 integer DEFAULT 0,
-if_id integer DEFAULT 0,                -- Condicion
-if_val integer DEFAULT 0,               -- Valor de condicion
-ev_flags integer DEFAULT 0,
-FOREIGN KEY(dst_ass_id) REFERENCES TB_DOM_ASSIGN(ass_id),
-FOREIGN KEY(dst_grp_id) REFERENCES TB_DOM_GROUP(grp_id),
-FOREIGN KEY(dst_fcn_id) REFERENCES TB_DOM_FUNCTION(fcn_id),
-FOREIGN KEY(dst_flag_id) REFERENCES TB_DOM_FLAG(flag_id)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_EVENT_OFF (
-ev_id integer primary key,
-dst_ass_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_grp_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_fcn_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_flag_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-snd_ev integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso
-snd_ev_param1 integer DEFAULT 0,
-if_id integer DEFAULT 0,                -- Condicion
-if_val integer DEFAULT 0,               -- Valor de condicion
-ev_flags integer DEFAULT 0,
-FOREIGN KEY(dst_ass_id) REFERENCES TB_DOM_ASSIGN(ass_id),
-FOREIGN KEY(dst_grp_id) REFERENCES TB_DOM_GROUP(grp_id),
-FOREIGN KEY(dst_fcn_id) REFERENCES TB_DOM_FUNCTION(fcn_id),
-FOREIGN KEY(dst_flag_id) REFERENCES TB_DOM_FLAG(flag_id)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_EVENT_CHANGE (
-ev_id integer primary key,
-dst_ass_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_grp_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_fcn_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-dst_flag_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-snd_ev integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso
-snd_ev_param1 integer DEFAULT 0,
-if_id integer DEFAULT 0,                -- Condicion
-if_val integer DEFAULT 0,               -- Valor de condicion
-ev_flags integer DEFAULT 0,
-FOREIGN KEY(dst_ass_id) REFERENCES TB_DOM_ASSIGN(ass_id),
-FOREIGN KEY(dst_grp_id) REFERENCES TB_DOM_GROUP(grp_id),
-FOREIGN KEY(dst_fcn_id) REFERENCES TB_DOM_FUNCTION(fcn_id),
-FOREIGN KEY(dst_flag_id) REFERENCES TB_DOM_FLAG(flag_id)
+Id integer primary key,
+Evento varchar(128) NOT NULL,
+Objeto_Origen integer NOT NULL,
+Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+ON_a_OFF integer DEFAULT 0,
+OFF_a_ON integer DEFAULT 0,
+Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objto o Grupo
+Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
+Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
+Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
+Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
+Flags integer DEFAULT 0,
+FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
+FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_AT (
-at_id integer primary key,
-name varchar(128) NOT NULL,
-at_mon integer DEFAULT 0,
-at_day integer DEFAULT 0,
-at_hour integer DEFAULT 0,
-at_min integer DEFAULT 0,
-at_wdays integer DEFAULT 0,
-dst_ass_id integer DEFAULT 0,         -- Solo uno de los trs assign ,grupo o funcion
-dst_grp_id integer DEFAULT 0,         -- Solo uno de los trs assign ,grupo o funcion
-dst_fcn_id integer DEFAULT 0,           -- Solo uno de los trs assign ,grupo o funcion
-dst_flag_id integer NOT NULL,         -- Solo uno de los dos assign o grupo
-snd_ev integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso
-snd_ev_param1 integer DEFAULT 0,
-if_id integer DEFAULT 0,                -- Condicion
-if_val integer DEFAULT 0,               -- Valor de condicion
-ev_flags integer DEFAULT 0,
-FOREIGN KEY(dst_ass_id) REFERENCES TB_DOM_ASSIGN(ass_id),
-FOREIGN KEY(dst_grp_id) REFERENCES TB_DOM_GROUP(grp_id),
-FOREIGN KEY(dst_fcn_id) REFERENCES TB_DOM_FUNCTION(fcn_id),
-FOREIGN KEY(dst_flag_id) REFERENCES TB_DOM_FLAG(flag_id)
+Id integer primary key,
+Agenda varchar(128) NOT NULL,
+Mes integer DEFAULT 0,
+Dia integer DEFAULT 0,
+Hora integer DEFAULT 0,
+Minuto integer DEFAULT 0,
+Dias_Semana varchar(128),
+Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Evento integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objto o Grupo
+Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
+Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
+Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
+Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
+Flags integer DEFAULT 0,
+FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
+FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
 );

@@ -63,8 +63,8 @@ function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_l
 		output += '</th>';
 	}
 	// Agrego las columnas de edición y borrado
-	output += '<th>Edit</th>';
-	output += '<th>Delete</th>';
+	output += '<th>Editar</th>';
+	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos
 	for (i = 0; i < json_list.length; i++) { 

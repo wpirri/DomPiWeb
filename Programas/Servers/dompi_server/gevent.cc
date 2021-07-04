@@ -102,8 +102,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
     char hw_id[16];
     int status_a;
     int status_b;
+    int status_c;
     int delta_a;
     int delta_b;
+    int delta_c;
     char remote_addr[16];
     time_t t;
     struct tm *p_tm;
@@ -113,14 +115,18 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_hw_id;
     cJSON *json_status_a;
     cJSON *json_status_b;
+    cJSON *json_status_c;
     cJSON *json_delta_a;
     cJSON *json_delta_b;
+    cJSON *json_delta_c;
     cJSON *json_raddr;
 
     status_a = (-1);
     status_b = (-1);
+    status_c = (-1);
     delta_a = (-1);
     delta_b = (-1);
+    delta_c = (-1);
     sql_set[0] = 0;
 
     rc = 0;
@@ -135,8 +141,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
             p_tm = localtime(&t);
             json_status_a = cJSON_GetObjectItemCaseSensitive(json_obj, "STATUS_PORTA");
             json_status_b = cJSON_GetObjectItemCaseSensitive(json_obj, "STATUS_PORTB");
+            json_status_c = cJSON_GetObjectItemCaseSensitive(json_obj, "STATUS_PORTC");
             json_delta_a = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTA");
             json_delta_b = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTB");
+            json_delta_c = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTC");
             json_raddr = cJSON_GetObjectItemCaseSensitive(json_obj, "REMOTE_ADDR");
             if(json_hw_id && cJSON_IsString(json_hw_id))
             {
@@ -145,14 +153,21 @@ int GEvent::ExtIOEvent(const char* json_evt)
             if(json_status_a && cJSON_IsString(json_status_a))
             {
                 status_a = atoi(json_status_a->valuestring);
-                strcat(sql_set, ",status_porta=\"");
+                strcat(sql_set, ",Estado_PORT_A=\"");
                 strcat(sql_set, json_status_a->valuestring);
                 strcat(sql_set, "\"");
             }
             if(json_status_b && cJSON_IsString(json_status_b))
             {
                 status_b = atoi(json_status_b->valuestring);
-                strcat(sql_set, ",status_portb=\"");
+                strcat(sql_set, ",Estado_PORT_B=\"");
+                strcat(sql_set, json_status_b->valuestring);
+                strcat(sql_set, "\"");
+            }
+            if(json_status_c && cJSON_IsString(json_status_c))
+            {
+                status_b = atoi(json_status_b->valuestring);
+                strcat(sql_set, ",Estado_PORT_C=\"");
                 strcat(sql_set, json_status_b->valuestring);
                 strcat(sql_set, "\"");
             }
@@ -164,16 +179,20 @@ int GEvent::ExtIOEvent(const char* json_evt)
             {
                 delta_b = atoi(json_delta_b->valuestring);
             }
+            if(json_delta_c && cJSON_IsString(json_delta_c))
+            {
+                delta_c = atoi(json_delta_c->valuestring);
+            }
             if(json_raddr && cJSON_IsString(json_raddr))
             {
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
             rc = m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
-                                "SET last_ok = \"%04i-%02i-%02i %02i:%02i:%02i\", "
-                                  "ip_address = \"%s\""
+                                "SET Ultimo_Ok  = \"%04i-%02i-%02i %02i:%02i:%02i\", "
+                                  "Direccion_IP = \"%s\""
                                   "%s "
-                                "WHERE hw_id = \"%s\";",
+                                "WHERE Id = \"%s\";",
                                 p_tm->tm_year+1900, p_tm->tm_mon+1, p_tm->tm_mday,
                                 p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec, 
                                 remote_addr,
@@ -191,6 +210,14 @@ int GEvent::ExtIOEvent(const char* json_evt)
             {
 #ifdef __DEBUG__
     syslog(LOG_DEBUG, "DELTA-PORTB: 0x%02X", delta_b);
+#endif  
+
+                
+            }
+            if(delta_c >= 0)
+            {
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "DELTA-PORTC: 0x%02X", delta_c);
 #endif  
 
                 

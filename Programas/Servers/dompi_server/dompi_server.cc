@@ -198,7 +198,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_get");
 	if(( rc =  m_pServer->Suscribe("dompi_user_get", GM_MSG_TYPE_CR)) != GME_OK)
 	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_get", rc);
 		OnClose(0);
 	}
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_add");
@@ -235,13 +235,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_list_all");
 	if(( rc =  m_pServer->Suscribe("dompi_hw_list_all", GM_MSG_TYPE_CR)) != GME_OK)
 	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list_all", rc);
 		OnClose(0);
 	}
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_get");
 	if(( rc =  m_pServer->Suscribe("dompi_hw_get", GM_MSG_TYPE_CR)) != GME_OK)
 	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_get", rc);
 		OnClose(0);
 	}
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_add");
@@ -385,7 +385,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT user_id, user_name, user_status, last_access_ok FROM TB_DOM_USER;");
+				sprintf(query, "SELECT Nombre, Usuario, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -444,11 +444,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE user_id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -550,12 +550,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 				if(json_un_obj)
 				{
 					if( strcmp(json_un_obj->valuestring, "admin") )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_USER WHERE user_id = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -565,7 +565,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Usuario Invalido\"}]}");
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -605,7 +605,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "user_id") )
+									if( !strcmp(json_un_obj->string, "Nombre") )
 									{
 										strcpy(query_where, json_un_obj->string);
 										strcat(query_where, "='");
@@ -669,8 +669,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_user && json_pass && json_channel)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT access_mask,days_of_week,hours_of_day,user_status,access_error_count,"
-					"pin_keypad,pin_sms,pin_web FROM TB_DOM_USER WHERE user_id = \'%s\';", json_user->valuestring);
+					sprintf(query, "SELECT Permisos,Dias,Horas,Estado,Contador_Error,"
+					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_user->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -722,7 +722,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT hw_id, hw_name, hw_typ, hw_status FROM TB_DOM_PERIF;");
+				sprintf(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -781,11 +781,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE hw_id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = \'%s\';", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -887,12 +887,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					if( memcmp(json_un_obj->valuestring, "00", 2) )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE hw_id = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE Id = \'%s\';", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -943,7 +943,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "hw_id") )
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
 										strcpy(query_where, json_un_obj->string);
 										strcat(query_where, "='");
@@ -964,11 +964,11 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
 
-										if( !memcmp("config_", json_un_obj->string, 7))
+										if( !memcmp("Config_", json_un_obj->string, 7))
 										{
 											strcpy(update_hw_config, hw_id);
 										}
-										if( !memcmp("status_", json_un_obj->string, 6))
+										if( !memcmp("Estado_", json_un_obj->string, 7))
 										{
 											strcpy(update_hw_status, hw_id);
 										}
@@ -1011,7 +1011,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_snd_hw_config"))
 			{
 				json_obj = cJSON_Parse(message);
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "hw_id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					strcpy(hw_id, json_un_obj->valuestring);

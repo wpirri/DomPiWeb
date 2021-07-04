@@ -21,12 +21,12 @@ include('head-abm.php');
     }
 
     function SaveData() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=delete&user_id=<?php echo $_GET['user_id']; ?>', null, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=delete&Nombre=<?php echo $_GET['Nombre']; ?>', null, false);
         window.location.replace('user_list.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&user_id=<?php echo $_GET['user_id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Nombre=<?php echo $_GET['Nombre']; ?>', LoadData, false);
     }
 </script>
 
