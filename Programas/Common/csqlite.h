@@ -34,6 +34,7 @@ public:
     void Close( void );
 
     int Query(cJSON *json_array, const char *query_fmt, ...);
+    long NextId(const char* table_name, const char* row_name);
 
     char m_last_error_text[CSQLITE_MAX_ERROR_TEXT+1];
 private:

@@ -58,43 +58,45 @@ body {
 	background: black;
 }
 
-#btn-config-net {
+#btn-config-upload {
 	left: 415px; 
 	top: 95px; 
 	background: red;
 	}
 
-#btn-config-hard {
+#btn-config-download {
 	left: 575px; 
 	top: 95px; 
 	background: olive;
 	}
 
-#btn-config-groups {
+
+#btn-config-hard {
 	left: 95px; 
 	top: 180px; 
-	background: olive;
+	background: navy;
 	}
 
-#btn-config-events {
+#btn-config-assign {
 	left: 255px; 
 	top: 180px; 
 	background: maroon;
 	}
 
-#btn-config-flags {
+#btn-config-groups {
 	left: 415px; 
 	top: 180px; 
 	background: green;
 	}
 
-#btn-config-alarm {
+#btn-config-events {
 	left: 575px; 
 	top: 180px; 
 	background: lime;
 	}
 
-#btn-config-cameras {
+
+#btn-config-flags {
 	left: 95px; 
 	top: 265px; 
 	background: teal;
@@ -103,16 +105,16 @@ body {
 #btn-config-crono {
 	left: 255px; 
 	top: 265px; 
-	background: black;
+	background: silver;
 	}
 
-#btn-config-upload {
+#btn-config-alarm {
 	left: 415px; 
 	top: 265px; 
 	background: purple;
 	}
 
-#btn-config-download {
+#btn-config-cameras {
 	left: 575px; 
 	top: 265px; 
 	background: orange;

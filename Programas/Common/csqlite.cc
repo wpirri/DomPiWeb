@@ -26,9 +26,9 @@ using namespace std;
 #include <sys/msg.h>
 #include <time.h>
 #include <string.h>
-#ifdef __DEBUG__
+//#ifdef __DEBUG__
 #include <syslog.h>
-#endif
+//#endif
 
 
 int CSQLite_Query_Callback(void *arg4, int argc, char **argv, char **azColName)
@@ -45,6 +45,28 @@ int CSQLite_Query_Callback(void *arg4, int argc, char **argv, char **azColName)
     cJSON_AddStringToObject(json_record, azColName[i], (argv[i])?argv[i]:"NULL");
   }
   cJSON_AddItemToArray(json_array, json_record);
+  return 0; 
+}
+
+int CSQLite_RowVal_Callback(void *arg4, int argc, char **argv, char **azColName)
+{
+  int i;
+  char *temp = (char*)arg4;
+
+  /* Recibo en arg4 el nombre de la columna y devuelvo el valor */
+
+  for(i = 0; i < argc; i++)
+  {
+//#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "CSQLite_RowVal_Callback: Count: %i [%s] [%s]", i, azColName[i], argv[i]);
+//#endif  
+    if( !strcmp(azColName[i], temp))
+    {
+      strcpy(temp, argv[i]);
+      return 0;
+    }
+  }
+  *temp = 0;
   return 0; 
 }
 
@@ -122,4 +144,38 @@ int CSQLite::Query(cJSON *json_array, const char *query_fmt, ...)
     rc = (-1);
   }
   return rc;
+}
+
+long CSQLite::NextId(const char* table_name, const char* row_name)
+{
+  char query[1024];
+  char *msg;
+  char arg4[64];
+
+  m_last_error_text[0] = 0;
+
+  sprintf(query, "SELECT MAX(%s) FROM %s;", row_name, table_name);
+  sprintf(arg4, "MAX(%s)", row_name);
+
+#ifdef __DEBUG__
+    syslog(LOG_DEBUG, "QUERY: [%s]", query);
+#endif  
+
+  if(sqlite3_exec(m_db, query, CSQLite_RowVal_Callback, arg4, &msg) == SQLITE_OK)
+  {
+    if(strlen(arg4))
+    {
+      return (atol(arg4) + 1);
+    }
+    else
+    {
+      return (-1);
+    }
+  }
+  else
+  {
+    strncpy(m_last_error_text, msg, CSQLITE_MAX_ERROR_TEXT);
+    sqlite3_free(msg);
+    return (-1);
+  }
 }
