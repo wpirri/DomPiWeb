@@ -36,7 +36,7 @@ include("head.php");
 	<img id="group-icon" class="icon-btn" src="/images/group.png">&nbsp;Grupos
 </div>
 
-<div class="normal-btn" id="btn-config-events" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-events" onclick="window.location.replace('event_list.php');">
 	<img id="event-icon" class="icon-btn" src="/images/event.png">&nbsp;Eventos
 </div>
 

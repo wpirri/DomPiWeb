@@ -302,6 +302,43 @@ int main(/*int argc, char** argv, char** env*/void)
 		OnClose(0);
 	}
 
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_list");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_list", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_list_all");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_list_all", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_get");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_get", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_get", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_add");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_add", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_add", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_delete");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_delete", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_delete", rc);
+		OnClose(0);
+	}
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_update");
+	if(( rc =  m_pServer->Suscribe("dompi_ev_update", GM_MSG_TYPE_CR)) != GME_OK)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_update", rc);
+		OnClose(0);
+	}
+
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_snd_hw_config");
 	if(( rc =  m_pServer->Suscribe("dompi_snd_hw_config", GM_MSG_TYPE_MSG)) != GME_OK)
 	{
@@ -424,7 +461,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT Nombre, Usuario, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
+				strcpy(query, "SELECT Nombre, Usuario, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -454,7 +491,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT * FROM TB_DOM_USER;");
+				strcpy(query, "SELECT * FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -761,7 +798,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF;");
+				strcpy(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -791,7 +828,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT * FROM TB_DOM_PERIF;");
+				strcpy(query, "SELECT * FROM TB_DOM_PERIF;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1052,7 +1089,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT Id, Objeto, Dispositivo, E_S, Tipo FROM TB_DOM_ASSIGN;");
+				strcpy(query, "SELECT Id, Objeto, Dispositivo, E_S, Tipo FROM TB_DOM_ASSIGN;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1082,7 +1119,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT * FROM TB_DOM_ASSIGN;");
+				strcpy(query, "SELECT * FROM TB_DOM_ASSIGN;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1311,6 +1348,296 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s;", query_values, query_where);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+
+					rc = pDB->Query(NULL, query);
+					if(rc != 0)
+					{
+						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+
+			}
+			/* ****************************************************************
+			*		dompi_ev_list
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_list"))
+			{
+				message[0] = 0;
+
+				json_arr = cJSON_CreateArray();
+				strcpy(query, "SELECT EV.Id, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
+				               "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
+							   "WHERE EV.Objeto_Origen = ASS.Id;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ev_list_all
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_list_all"))
+			{
+				message[0] = 0;
+
+				json_arr = cJSON_CreateArray();
+				strcpy(query, "SELECT * FROM TB_DOM_EVENT;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ev_get
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_get"))				/* ***** dompi_hw_get ***** */
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						cJSON_Delete(json_obj);
+						json_obj = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_obj, "response", json_arr);
+						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ev_add
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_add"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+// cJSON_ArrayForEach(element, array) for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
+				json_un_obj = json_obj;
+
+				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
+				temp_l = pDB->NextId("TB_DOM_EVENT", "Id");
+				sprintf(temp_s, "%li", temp_l);
+				cJSON_AddStringToObject(json_un_obj, "Id", temp_s);
+  
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									/* Dato */
+									if(strlen(query_into) == 0)
+									{
+										strcpy(query_into, "(");
+									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				strcat(query_into, ")");
+				strcat(query_values, ")");
+				sprintf(query, "INSERT INTO TB_DOM_EVENT %s VALUES %s;", query_into, query_values);
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+
+				rc = pDB->Query(NULL, query);
+				if(rc != 0)
+				{
+					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ev_delete
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_delete"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				if(json_un_obj)
+				{
+					if( atoi(json_un_obj->valuestring) != 0 )
+					{
+						sprintf(query, "DELETE FROM TB_DOM_EVENT WHERE Id = \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						if(rc != 0)
+						{
+							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						}
+					}
+					else
+					{
+						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ev_update
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ev_update"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+				query_where[0] = 0;
+
+				json_un_obj = json_obj;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									if( !strcmp(json_un_obj->string, "Id") )
+									{
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
+
+										strcpy(hw_id, json_un_obj->valuestring);
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+				if(strlen(query_where))
+				{
+					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 					rc = pDB->Query(NULL, query);
