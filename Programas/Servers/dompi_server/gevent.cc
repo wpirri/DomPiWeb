@@ -82,14 +82,12 @@ using namespace std;
 #include <time.h>
 #include <string.h>
 #include <cjson/cJSON.h>
+#include <math.h>
 
-#ifdef __DEBUG__
-#include <syslog.h>
-#endif
-
-GEvent::GEvent(CSQLite *pDB)
+GEvent::GEvent(CSQLite *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
+    m_pServer = pServer;
 }
 
 GEvent::~GEvent()
@@ -99,6 +97,8 @@ GEvent::~GEvent()
 
 int GEvent::ExtIOEvent(const char* json_evt)
 {
+    int i;
+    int mask;
     char hw_id[16];
     int status_a;
     int status_b;
@@ -188,6 +188,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
+            m_pServer->m_pLog->Add(10, "Reporte de HW: %s", hw_id);
             rc = m_pDB->Query(NULL, "UPDATE TB_DOM_PERIF "
                                 "SET Ultimo_Ok  = \"%04i-%02i-%02i %02i:%02i:%02i\", "
                                   "Direccion_IP = \"%s\""
@@ -200,30 +201,95 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                 hw_id);
             if(delta_a >= 0)
             {
-#ifdef __DEBUG__
-    syslog(LOG_DEBUG, "DELTA-PORTA: 0x%02X", delta_a);
-#endif  
-
-                
+                /* Para los bits 0 a 15 */
+                for(i = 0; i < 16; i++)
+                {
+                    mask = pow(2, i);   /* Armo la mascara */
+                    if(delta_a & mask)  /* Si cambió .... */
+                    {
+                        /* Busco si hay evento */
+                        CheckEvent(hw_id, 1 /* PORT A */, i, (status_a & mask)?1:0);
+                    }
+                }
             }
             if(delta_b >= 0)
             {
-#ifdef __DEBUG__
-    syslog(LOG_DEBUG, "DELTA-PORTB: 0x%02X", delta_b);
-#endif  
-
-                
+                /* Para los bits 0 a 15 */
+                for(i = 0; i < 16; i++)
+                {
+                    mask = pow(2, i);   /* Armo la mascara */
+                    if(delta_b & mask)  /* Si cambió .... */
+                    {
+                        /* Busco si hay evento */
+                        CheckEvent(hw_id, 2 /* PORT B */, i, (status_b & mask)?1:0);
+                    }
+                }
             }
             if(delta_c >= 0)
             {
-#ifdef __DEBUG__
-    syslog(LOG_DEBUG, "DELTA-PORTC: 0x%02X", delta_c);
-#endif  
-
-                
+                /* Para los bits 0 a 15 */
+                for(i = 0; i < 16; i++)
+                {
+                    mask = pow(2, i);   /* Armo la mascara */
+                    if(delta_b & mask)  /* Si cambió .... */
+                    {
+                        /* Busco si hay evento */
+                        CheckEvent(hw_id, 3 /* PORT C */, i, (status_c & mask)?1:0);
+                    }
+                }
             }
+
+
+
+
+
+
         }
         cJSON_Delete(json_obj);
     }
     return rc;
+}
+
+int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
+{
+    cJSON *json_arr;
+    cJSON *json_obj;
+	char query[4096];
+    int rc;
+
+    m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
+                                hw_id, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
+                                e_s, (estado)?"ON":"OFF");
+    /* Busco si hay un assign */
+
+    /* Busco si hay evento para ese assign */
+
+    json_arr = cJSON_CreateArray();
+    sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino "
+                    "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS, TB_DOM_EVENT AS EV "
+                    "WHERE EV.Objeto_Origen = ASS.Id AND ASS.Dispositivo = HW.Id AND "
+                    "HW.Id = \'%s\' AND ASS.Port = %i AND ASS.E_S = %i AND %s;",
+                    hw_id, port, e_s, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_arr, query);
+    if(rc == 0)
+    {
+        json_obj = cJSON_CreateObject();
+        cJSON_AddItemToObject(json_obj, "response", json_arr);
+        cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+        cJSON_Delete(json_obj);
+
+
+
+        m_pServer->m_pLog->Add(10, "Eventos: %s", query); 
+
+
+
+
+    }
+    else
+    {
+        cJSON_Delete(json_arr);
+    }
+    return 0;
 }

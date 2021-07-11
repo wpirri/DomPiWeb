@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,
 Dispositivo varchar(16) NOT NULL,
-Port integer NOT NULL,
-E_S integer NOT NULL,
-Tipo integer NOT NULL,
+Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
+E_S integer NOT NULL,                       -- Bit 0 a 15
+Tipo integer NOT NULL,                      -- 0=Analog, 1=Digital, 2=Alarma
 Estado integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)

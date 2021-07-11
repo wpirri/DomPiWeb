@@ -171,7 +171,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		m_pServer->m_pLog->Add(1, "Conectado a la base de datos %s", db_filename);
 	}
 
-	pEV = new GEvent(pDB);
+	pEV = new GEvent(pDB, m_pServer);
 
 	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_infoio");
 	if(( rc =  m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR)) != GME_OK)
@@ -366,7 +366,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(50, "%s:(Q)[%s]", fn, message);
 			/* ****************************************************************
-			*		dompi_infoio
+			*		dompi_infoio - Notificacion de estado y/o cambio de I/O
 			**************************************************************** */
 			if( !strcmp(fn, "dompi_infoio"))
 			{
@@ -1377,7 +1377,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT EV.Id, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
+				strcpy(query, "SELECT EV.Id, EV.Evento, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
 				               "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
 							   "WHERE EV.Objeto_Origen = ASS.Id;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);

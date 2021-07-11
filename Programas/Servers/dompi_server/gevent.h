@@ -16,17 +16,21 @@
 #define _GEVENT_H_
 
 #include "csqlite.h"
+#include <gmonitor/gmswaited.h>
 
 class GEvent
 {
 public:
-    GEvent(CSQLite *pDB);
+    GEvent(CSQLite *pDB, CGMServerWait *pServer);
     virtual ~GEvent();
 
     int ExtIOEvent(const char* json_evt);
 
+    int CheckEvent(const char *hw_id, int port, int e_s, int estado);
+
 private:
     CSQLite *m_pDB;
+    CGMServerWait *m_pServer;
 
 };
 #endif /* _GEVENT_H_ */
