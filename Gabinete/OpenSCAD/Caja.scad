@@ -30,20 +30,22 @@ profundidad=45;
 pared=2;
 
 // Detalles de la caja
-profundidad_calado=2;
-ancho_ventana=40;
+profundidad_calado=2;   // Calado superior en los borede
+ancho_ventana=40;       // ventana lateral para acceso a puertos de Raspberry Pi
 posicion_ventana=29;
 
-pos_tornillo_y=17;
+pos_tornillo_y=17;      // Tornillos de sujeccion para las pestañas de la tapa
 pos_tornillo_h=36;
 separacion_tornillos=60;
-
-espesor_guias=1;
+espesor_guias=1;        // Guias para las pestañas de la tapa
 separacion_guias=11;
 
-x_rbpi=58;
+h_rbpi=3;               // Altura del soporte de Raspberry Pi
+x_rbpi=58;              // Posicion del soporte superios derecho de Raspberry Pi
 y_rbpi=30;
-x_display=23.45;
+
+h_display=35;           // Altura del soporte del display
+x_display=23.45;        // Posicion del soporte superios derecho del display
 y_display=5;
 
 module guias_tapa(xyz)
@@ -89,27 +91,27 @@ module soporte_placa(xyz, h)
 
 module soportes_rbpi(xyz)
 {
-    soporte_placa(xyz, 5);    
-    soporte_placa(xyz + [58,0,0], 5);    
-    soporte_placa(xyz + [0,49,0], 5);    
-    soporte_placa(xyz + [58,49,0], 5);    
+    soporte_placa(xyz, h_rbpi);    
+    soporte_placa(xyz + [58,0,0], h_rbpi);    
+    soporte_placa(xyz + [0,49,0], h_rbpi);    
+    soporte_placa(xyz + [58,49,0], h_rbpi);    
     
 }
 
 module soportes_dysplay(xyz)
 {
-    soporte_placa(xyz, 37);    
-    soporte_placa(xyz + [113.11,0,0], 37);    
-    soporte_placa(xyz + [0,85.92,0], 37);    
-    soporte_placa(xyz + [113.11,85.92,0], 37);    
+    soporte_placa(xyz, h_display);    
+    soporte_placa(xyz + [113.11,0,0], h_display);    
+    soporte_placa(xyz + [0,85.92,0], h_display);    
+    soporte_placa(xyz + [113.11,85.92,0], h_display);    
     
 }
 
 module caja(xyz)
 {
     cajon(xyz, ancho, alto, profundidad, pared);
-    soportes_rbpi(xyz + [x_rbpi,y_rbpi,2]);
-    soportes_dysplay(xyz + [x_display,y_display,2]);
+    soportes_rbpi(xyz + [x_rbpi,y_rbpi,pared]);
+    soportes_dysplay(xyz + [x_display,y_display,pared]);
 }
 
 module calado_borde(xyz, b, h)

@@ -30,23 +30,28 @@ espesor=2;
 
 // Detalles de la tapa
 ancho_borde=1;          // (pared/2) de caja
-altura_borde=1.5;  // 1/2 mm menos que en la caja
-altura_protector=20;
+altura_borde=1.5;       // 1/2 mm menos que profundidad_calado en la caja
+altura_protector=20;    // Pared de separacion que queda detrás de las borneras
 
+// Altura sobre la pestaña donde va el orificio del tornillo de sujeccion
+// Relacionado con pos_tornillo_h de la caja
 pos_tornillo_h=10;
 
+// Pestañas de sujeccion
 espesor_guias=2;
 largo_guias=15;
 ancho_guias=10;
 
+// Tapa lateral que oculta parcialmente la ventana de acceso a los puertos
+// de la Raspberry Pi. Relacionados con ancho_ventana y 
+// posicion_ventana de la caja
 posicion_tapa_lateral=29;
 ancho_tapa_lateral=40;
 altura_tapa_lateral=18;
 
-// x_display de Caja.scad + 1.56
-x_display=25;
-// y_display de Caja.scad + 10
-y_display=15;
+// Pocoion del angulo superios derecho del display
+x_display=25;   // x_display de Caja.scad + 1.56
+y_display=15;   // y_display de Caja.scad + 10
 ancho_display=110;
 alto_display=70;
 
