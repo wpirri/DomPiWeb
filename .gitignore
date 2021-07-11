@@ -1,5 +1,4 @@
 
-**/*.cgi
 **/*.o
 **/*.d
 **/*.lib
@@ -17,3 +16,7 @@ Gabinete/FreeCAD/DPW-Caja (copia).FCStd
 Gabinete/FreeCAD/DPW-Caja-20210615.FCStd
 Gabinete/FreeCAD/DPW-Frente-20210615.FCStd
 Programas/Servers/dompi_server/dompi_server
+Programas/Clientes/abmassign.cgi/abmassign.cgi
+Programas/Clientes/abmuser.cgi/abmuser.cgi
+Programas/Clientes/abmhw.cgi/abmhw.cgi
+Programas/Clientes/abmev.cgi/abmev.cgi
