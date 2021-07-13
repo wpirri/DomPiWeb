@@ -28,6 +28,11 @@ public:
 
     int CheckEvent(const char *hw_id, int port, int e_s, int estado);
 
+    int SendEventObj(int id, int ev, int val);
+    int SendEventGrp(int id, int ev, int val);
+    int SendEventFun(int id, int ev, int val);
+    int SendEventVar(int id, int ev, int val);
+
 private:
     CSQLite *m_pDB;
     CGMServerWait *m_pServer;

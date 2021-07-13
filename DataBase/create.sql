@@ -62,7 +62,7 @@ Id integer primary key,
 Objeto varchar(128) NOT NULL,
 Dispositivo varchar(16) NOT NULL,
 Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
-E_S integer NOT NULL,                       -- Bit 0 a 15
+E_S integer NOT NULL,                       -- Bit 1 a 16
 Tipo integer NOT NULL,                      -- 0=Analog, 1=Digital, 2=Alarma
 Estado integer DEFAULT 0,
 Flags integer DEFAULT 0,
@@ -104,10 +104,10 @@ Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo
 Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 ON_a_OFF integer DEFAULT 0,
 OFF_a_ON integer DEFAULT 0,
-Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objto o Grupo
+Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
-Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
+Condicion_Igualdad integer DEFAULT 0,             -- 0 ==, 1 >, 2 <
 Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
@@ -134,6 +134,7 @@ Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
 Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
+Ultima_Ejecucion varchar(32),
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
