@@ -99,6 +99,7 @@ using namespace std;
 #include "config.h"
 #include "csqlite.h"
 #include "gevent.h"
+#include "strfunc.h"
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
@@ -113,6 +114,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char fn[33];
 	char typ[1];
 	char message[4096];
+	char cmdline[1024];
 	char query[4096];
 	char query_into[1024];
 	char query_values[2048];
@@ -126,15 +128,25 @@ int main(/*int argc, char** argv, char** env*/void)
 	long temp_l;
 	char temp_s[64];
 
+	char comando[1024];
+	char objeto[1024];
+	char parametro[1024];
+
+	STRFunc Strf;
+	CGMServerBase::GMIOS call_resp;
+
     cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_arr = NULL;
     cJSON *json_user;
     cJSON *json_pass;
     cJSON *json_channel;
+    cJSON *json_query;
+    cJSON *json_query_result;
     cJSON *json_response;
-    cJSON *json_response_password;
+    //cJSON *json_response_password;
     cJSON *json_hw_id;
+    cJSON *json_cmdline;
 
 	update_hw_config[0] = 0;
 	update_hw_status[0] = 0;
@@ -339,30 +351,21 @@ int main(/*int argc, char** argv, char** env*/void)
 		OnClose(0);
 	}
 
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_snd_hw_config");
-	if(( rc =  m_pServer->Suscribe("dompi_snd_hw_config", GM_MSG_TYPE_MSG)) != GME_OK)
+	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_cmdline");
+	if(( rc =  m_pServer->Suscribe("dompi_cmdline", GM_MSG_TYPE_CR)) != GME_OK)
 	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_snd_hw_config", rc);
+		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_cmdline", rc);
 		OnClose(0);
 	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_snd_hw_status");
-	if(( rc =  m_pServer->Suscribe("dompi_snd_hw_status", GM_MSG_TYPE_MSG)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_snd_hw_status", rc);
-		OnClose(0);
-	}
-
-
-
-
-
 
 	m_pServer->m_pLog->Add(1, "Inicializacion OK");
 	m_pServer->SetLogLevel(20);
+
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
 	{
 		if(rc > 0)
 		{
+			json_query_result = NULL;
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(50, "%s:(Q)[%s]", fn, message);
 			/* ****************************************************************
@@ -397,7 +400,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					else if(rc == 0)
 					{
 						/* NOT FOUND */
-						m_pServer->m_pLog->Add(1, "HW: %s No encontrado en la base", json_hw_id->valuestring);
+						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_hw_id->valuestring);
 						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
 					}
 					else
@@ -755,7 +758,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if( !strcmp(json_channel->valuestring, "web"))
 						{
-							json_response_password = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
+							//json_response_password = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
 						}
 						else if( !strcmp(json_channel->valuestring, "sms"))
 						{
@@ -1088,20 +1091,22 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				message[0] = 0;
 
-				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT Id, Objeto, Dispositivo, E_S, Tipo FROM TB_DOM_ASSIGN;");
+				json_query_result = cJSON_CreateArray();
+				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.E_S, ASS.Tipo "
+								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
+								"WHERE ASS.Dispositivo = HW.Id;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-				rc = pDB->Query(json_arr, query);
+				rc = pDB->Query(json_query_result, query);
 				if(rc == 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_AddItemToObject(json_obj, "response", json_query_result);
 					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
 				{
-					cJSON_Delete(json_arr);
+					cJSON_Delete(json_query_result);
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1657,30 +1662,121 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
 				}
-
 			}
 			/* ****************************************************************
-			*		dompi_snd_hw_config
+			*		dompi_cmdline
 			**************************************************************** */
-			else if( !strcmp(fn, "dompi_snd_hw_config"))
+			else if( !strcmp(fn, "dompi_cmdline"))
 			{
 				json_obj = cJSON_Parse(message);
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
-				if(json_un_obj)
+				message[0] = 0;
+				/* *********************************************************** */
+				json_query = cJSON_GetObjectItemCaseSensitive(json_obj, "query");
+				if(json_query)
 				{
-					strcpy(hw_id, json_un_obj->valuestring);
-					m_pServer->m_pLog->Add(50, "Solicitud de configuracion para: %s", hw_id);
+					json_cmdline = cJSON_GetObjectItemCaseSensitive(json_query, "CmdLine");
+					if(json_cmdline)
+					{
+						strcpy(cmdline, json_cmdline->valuestring);
+
+						Strf.ParseCommand(cmdline, comando, objeto, parametro);
+
+						m_pServer->m_pLog->Add(100, "[dompi_cmdline] Comando: %s - Objeto: %s - Parametro: %s", 
+											(comando)?comando:"NULL", 
+											(objeto)?objeto:"NULL", 
+											(parametro)?parametro:"NULL");
+
+						if( !strcmp(comando, "help") || !strcmp(comando, "?"))
+						{
+							strcpy(message, "No hay ayuda.");
+						}
+						else if( !strcmp(comando, "encender") )
+						{
+							json_arr = cJSON_CreateArray();
+							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+											"WHERE HW.Id = ASS.Dispositivo AND "
+											"ASS.Objeto =  \'%s\';", objeto);
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr, query);
+							if(rc == 0)
+							{
+								/* Creo un objeto con el primer item del array */
+								json_un_obj = json_arr->child;
+								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
+								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+								m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								strcpy(message, (const char*)call_resp.data);
+								m_pServer->Free(call_resp);
+							}
+						}
+						else if( !strcmp(comando, "apagar") )
+						{
+							json_arr = cJSON_CreateArray();
+							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+											"WHERE HW.Id = ASS.Dispositivo AND "
+											"ASS.Objeto =  \'%s\';", objeto);
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr, query);
+							if(rc == 0)
+							{
+								/* Creo un objeto con el primer item del array */
+								json_un_obj = json_arr->child;
+								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
+								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+								m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								strcpy(message, (const char*)call_resp.data);
+								m_pServer->Free(call_resp);
+							}
+						}
+						else if( !strcmp(comando, "estado") )
+						{
+							json_arr = cJSON_CreateArray();
+							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+											"WHERE HW.Id = ASS.Dispositivo AND "
+											"ASS.Objeto =  \'%s\';", objeto);
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr, query);
+							if(rc == 0)
+							{
+								/* Creo un objeto con el primer item del array */
+								json_un_obj = json_arr->child;
+								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+								m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, 500);
+								strcpy(message, (const char*)call_resp.data);
+								m_pServer->Free(call_resp);
+							}
+						}
 
 
 
+
+
+
+
+
+
+
+						json_response = cJSON_CreateObject();
+						cJSON_AddStringToObject(json_response, "ReturnMessage", message);
+						message[0] = 0;
+						cJSON_AddItemToObject(json_obj, "response", json_response);
+						cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+					}
 				}
+				/* *********************************************************** */
 				cJSON_Delete(json_obj);
-			}
-			/* ****************************************************************
-			*		dompi_snd_hw_status
-			**************************************************************** */
-			else if( !strcmp(fn, "dompi_snd_hw_status"))
-			{
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+				}
 			}
 
 			else
@@ -1688,20 +1784,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");
 				m_pServer->m_pLog->Add(50, "[%s][R][GME_SVC_NOTFOUND]");
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
-			}
-
-			if(update_hw_config[0] != 0)
-			{
-				sprintf(message, "{\"hw_id\":\"%s\"}", update_hw_config);
-				m_pServer->Post("dompi_snd_hw_config", message, strlen(message)+1);
-				update_hw_config[0] = 0;
-			}
-
-			if(update_hw_status[0] != 0)
-			{
-				sprintf(message, "{\"hw_id\":\"%s\"}", update_hw_status);
-				m_pServer->Post("dompi_snd_hw_status", message, strlen(message)+1);
-				update_hw_status[0] = 0;
 			}
 
 		}
@@ -1729,6 +1811,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_user_list", GM_MSG_TYPE_CR);
 
 	m_pServer->UnSuscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_cmdline", GM_MSG_TYPE_CR);
 
 	delete pEV;
 	delete pConfig;

@@ -30,6 +30,7 @@
 #include "config.h"
 #include "strfunc.h"
 
+#define MAX_INPUT_BUFFER_LEN 1024
 
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
@@ -41,7 +42,13 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   DPConfig *pConfig;
   STRFunc Str;
   cJSON *json_obj;
-  
+  cJSON *json_query;
+  cJSON *json_response;
+  cJSON *json_return_message;
+  char input_buffer[MAX_INPUT_BUFFER_LEN+1];
+  char prompt[20];
+  char clear[12];
+
   int i;
   char server_address[16];
   int rc;
@@ -49,16 +56,30 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   signal(SIGALRM, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
 
+  strcpy(prompt, "DOMCLI > ");
+  clear[0] = 0x1b;
+  clear[1] = 0x5b;
+  clear[2] = 0x48;
+  clear[3] = 0x1b;
+  clear[4] = 0x5b;
+  clear[5] = 0x32;
+  clear[6] = 0x4a;
+  clear[7] = 0x1b;
+  clear[8] = 0x5b;
+  clear[9] = 0x33;
+  clear[10] = 0x4a;
+  clear[11] = 0x00;
+
   for(i = 0; env[i]; i++)
   {
 
   }
 
-  pConfig = new DPConfig("/etc/dompi_manager.config");
+  pConfig = new DPConfig("/etc/dompiweb.config");
 
   if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
   {
-    fputs("{ \"rc\":\"01\", \"msg\":\"Error de configuracion\" }\r\n", stdout);
+    fputs("*** Error: 01 - Error de configuracion\r\n", stdout);
     return 0;
   }
 
@@ -67,25 +88,63 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   pClient = new CGMClient(&gminit);
 
-  json_obj = cJSON_CreateObject();
-
-  
-  
-
-
-  query.Clear();
-  response.Clear();
-  query = buffer;
-  syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
-  rc = pClient->Call(funcion_call, query, response, 100);
-  if(rc == 0)
+  fprintf(stdout, "%s", prompt);
+  while( fgets(input_buffer, MAX_INPUT_BUFFER_LEN, stdin) )
   {
-    fprintf(stdout, "%s\r\n", response.Data());
+    if(strchr(input_buffer, '\r')) *(strchr(input_buffer, '\r')) = 0;
+    if(strchr(input_buffer, '\n')) *(strchr(input_buffer, '\n')) = 0;
+
+    if( !strcmp(input_buffer, "exit")) break;
+    if( !strcmp(input_buffer, "clear") )
+    {
+      fputs(clear, stdout);
+    }
+    else if(strlen(input_buffer))
+    {
+      json_obj = cJSON_CreateObject();
+
+      cJSON_AddStringToObject(json_obj, "UserName", "general");
+      cJSON_AddStringToObject(json_obj, "UserPass", "********");
+      cJSON_AddStringToObject(json_obj, "CmdLine", input_buffer);
+
+      json_query = cJSON_CreateObject();
+      cJSON_AddItemToObject(json_query, "query", json_obj);
+
+      query.Clear();
+      response.Clear();
+
+      cJSON_PrintPreallocated(json_query, input_buffer, MAX_INPUT_BUFFER_LEN, 0);
+      cJSON_Delete(json_query);
+      query = input_buffer;
+      rc = pClient->Call("dompi_cmdline", query, response, 100);
+      if(rc == 0)
+      {
+        json_obj = cJSON_Parse(response.Data());
+        if(json_obj)
+        {
+          json_response = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+          if(json_response)
+          {
+            json_return_message = cJSON_GetObjectItemCaseSensitive(json_response, "ReturnMessage");
+            if(json_return_message)
+            {
+              fprintf(stdout, "%s\r\n", json_return_message->valuestring);
+              //cJSON_Delete(json_return_message);
+            }
+            //cJSON_Delete(json_response);
+          }
+        }
+        cJSON_Delete(json_obj);
+      }
+      else
+      {
+        fprintf(stdout, "*** Error: %02i - %s\r\n", rc, gmerror.Message(rc).c_str());
+      }
+    }
+    input_buffer[0] = 0;
+    fprintf(stdout, "%s", prompt);
   }
-  else
-  {
-    fprintf(stdout, "{ \"rc\":\"%02i\", \"msg\":\"%s\" }\r\n", rc, gmerror.Message(rc).c_str());
-  }
+
   delete pClient;
   return 0;
 }

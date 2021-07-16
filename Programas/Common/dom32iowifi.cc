@@ -175,8 +175,8 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    *ioconfig = 0;
-    *exconfig = 0;
+    if(ioconfig) *ioconfig = 0;
+    if(exconfig) *exconfig = 0;
     if(q.Query(raddr, buffer, buffer, 4096) > 0)
     {
         if(m_verbose)

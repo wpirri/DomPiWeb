@@ -44,6 +44,9 @@ public:
 
   int StrHex2Int(const char *str_hex);
 
+  int ParseCommand(const char *buffer, char *comando, char *objeto, char *parametro);
+
+
 private:
 
 };

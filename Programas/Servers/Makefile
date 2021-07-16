@@ -19,3 +19,4 @@ uninstall:
 	make -C dompi_gpio uninstall
 	make -C dompi_netcomm uninstall
 	make -C dompi_server uninstall
+

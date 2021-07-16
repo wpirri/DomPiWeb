@@ -178,3 +178,40 @@ int STRFunc::StrHex2Int(const char *str_hex)
     }
     return rc;
 }
+
+int STRFunc::ParseCommand(const char *buffer, char *comando, char *objeto, char *parametro)
+{
+   
+    if(!buffer) return (-1);
+    if(!comando) return (-1);
+
+    while(*buffer && *buffer != ' ' && *buffer != '\r' && *buffer != '\n')
+    {
+        *comando = *buffer;
+        comando++;
+        buffer++;
+    }
+    *comando = 0;
+
+    while(*buffer && (*buffer == ' ' || *buffer == '\r' || *buffer == '\n')) buffer++;
+
+    while(*buffer && *buffer != ',' && *buffer != '\r' && *buffer != '\n')
+    {
+        *objeto = *buffer;
+        objeto++;
+        buffer++;
+    }
+    *objeto = 0;
+
+    while(*buffer && (*buffer == ' ' || *buffer == '\r' || *buffer == '\n')) buffer++;
+
+    while(*buffer && *buffer != '\r' && *buffer != '\n')
+    {
+        *parametro = *buffer;
+        parametro++;
+        buffer++;
+    }
+    *parametro = 0;
+
+    return 0;
+}

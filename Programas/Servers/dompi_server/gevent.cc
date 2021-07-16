@@ -190,7 +190,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
-            m_pServer->m_pLog->Add(10, "Reporte de HW: %s", hw_id);
+            m_pServer->m_pLog->Add(10, "[HW] %s %s", hw_id, remote_addr);
 
             /* Actualizo la tabla de Dispositivos */
             sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -345,7 +345,7 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
         cJSON_AddItemToObject(json_obj, "response", json_arr);
         cJSON_PrintPreallocated(json_obj, query, 4095, 0);
 
-        m_pServer->m_pLog->Add(10, "[RESULT]: %s", query); 
+        m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
 
         Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto_Destino");
         Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Grupo_Destino");
@@ -425,7 +425,7 @@ int GEvent::SendEventObj(int id, int ev, int val)
         cJSON_AddItemToObject(json_obj, "response", json_arr);
         cJSON_PrintPreallocated(json_obj, query, 4095, 0);
 
-        m_pServer->m_pLog->Add(10, "[RESULT]: %s", query); 
+        m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
 
 
 

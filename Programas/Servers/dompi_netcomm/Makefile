@@ -2,7 +2,7 @@
 
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lwiringPi
+LIBS=-lgmqw -lgmshared -lstdc++ -lwiringPi -lcjson
 OBJECTS=dompi_netcomm.o qtcp.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=dompi_netcomm
 DEFINE=-D N__DEBUG__
@@ -13,7 +13,7 @@ CC=g++
 
 all: dompi_netcomm
 
-dompi_gpio.o: dompi_netcomm.cc
+dompi_netcomm.o: dompi_netcomm.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_netcomm.cc
 
 ctcp.o: ../../Common/ctcp.cc
@@ -32,15 +32,7 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
-	cp $(OUTPUT) /usr/local/sbin/
-	./update-tables.sh . /var/lib/gmonitor server /usr/local/sbin/$(OUTPUT)
-	./update-tables.sh . /var/lib/gmonitor funcion
-
-update:
-	/usr/sbin/gmon_stop $(OUTPUT)
-	sleep 1
-	cp $(OUTPUT) /usr/local/sbin/
-	/usr/sbin/gmon_start $(OUTPUT)
+	./install_server.sh $(OUTPUT)
 
 uninstall:
 	$(RM) /usr/local/sbin/$(OUTPUT)
