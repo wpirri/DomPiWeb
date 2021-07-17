@@ -203,7 +203,7 @@ int STRFunc::ParseCommand(const char *buffer, char *comando, char *objeto, char 
     }
     *objeto = 0;
 
-    while(*buffer && (*buffer == ' ' || *buffer == '\r' || *buffer == '\n')) buffer++;
+    while(*buffer && (*buffer == ' ' || *buffer == ',' || *buffer == '\r' || *buffer == '\n')) buffer++;
 
     while(*buffer && *buffer != '\r' && *buffer != '\n')
     {

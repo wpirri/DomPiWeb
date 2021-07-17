@@ -125,16 +125,35 @@ int main(int /*argc*/, char** /*argv*/, char** env)
           json_response = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
           if(json_response)
           {
-            json_return_message = cJSON_GetObjectItemCaseSensitive(json_response, "ReturnMessage");
+            json_return_message = cJSON_GetObjectItemCaseSensitive(json_response, "resp_msg");
             if(json_return_message)
             {
               fprintf(stdout, "%s\r\n", json_return_message->valuestring);
-              //cJSON_Delete(json_return_message);
             }
-            //cJSON_Delete(json_response);
+            else
+            {
+              if(response.Data())
+              {
+                fprintf(stdout, "[raw]\r\n%s\r\n", response.Data());
+              }
+            }
+          }
+          else
+          {
+            if(response.Data())
+            {
+              fprintf(stdout, "[raw]\r\n%s\r\n", response.Data());
+            }
+          }
+          cJSON_Delete(json_obj);
+        }
+        else
+        {
+          if(response.Data())
+          {
+            fprintf(stdout, "[raw]\r\n%s\r\n", response.Data());
           }
         }
-        cJSON_Delete(json_obj);
       }
       else
       {

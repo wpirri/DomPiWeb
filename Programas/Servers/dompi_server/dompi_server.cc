@@ -105,6 +105,21 @@ CGMServerWait *m_pServer;
 DPConfig *pConfig;
 CSQLite *pDB;
 GEvent *pEV;
+/*                            11111111112222222222333333333344444444445555555555666666666677777777778
+                     12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
+char cli_help[] = 	"-------------------------------------------------------------------------------\r\n"
+					"Comandos disponibles:\r\n"
+					"  encender <objeto>\r\n"
+					"  apagar <objeto>\r\n"
+					"  pulso <objeto>\r\n"
+					"  estado <objeto>\r\n"
+					"  actualizar <dispositivo>, [modulo]\r\n"
+					"  solicitar <dispositivo>, [modulo]\r\n"
+					"  help\r\n"
+					"  * objeto: Nombre de un objeto existente.\r\n"
+					"    dispositivo: Nombre de un dispositivo existente.\r\n"
+					"    modulo: config, wifi o estado\r\n"
+					"-------------------------------------------------------------------------------\r\n";
 
 void OnClose(int sig);
 
@@ -143,7 +158,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
     cJSON *json_query;
     cJSON *json_query_result;
-    cJSON *json_response;
+    //cJSON *json_response;
     //cJSON *json_response_password;
     cJSON *json_hw_id;
     cJSON *json_cmdline;
@@ -386,7 +401,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc == 1)
 					{
 						/* OK */
-						strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						/* Si está todo bien me fijo si pidio enviar configuracion */
 						json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "GETCONF");
 						if(json_un_obj)
@@ -401,18 +416,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* NOT FOUND */
 						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_hw_id->valuestring);
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}}");
 					}
 					else
 					{
 						/* Otro Error */
-						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
 					}
 				}
 				else
 				{
 					/* El mensaje vino sin HWID */
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}}");
 				}
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -553,7 +568,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_add"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -612,7 +627,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				if(rc != 0)
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -628,7 +643,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_delete"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 				if(json_un_obj)
 				{
@@ -639,12 +654,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
 						{
-							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Usuario Invalido\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Usuario Invalido\"}}");
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -662,7 +677,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_update"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -718,12 +733,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					if(rc != 0)
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -739,7 +754,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_user_check"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"99\", \"resp_msg\":\"General Error\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"99\", \"resp_msg\":\"General Error\"}}");
 				checked = 0;
 				json_user = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
 				json_pass = cJSON_GetObjectItemCaseSensitive(json_obj, "password");
@@ -754,7 +769,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
-						json_response = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
+						//json_response = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
 
 						if( !strcmp(json_channel->valuestring, "web"))
 						{
@@ -776,7 +791,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if(checked == 1)
 						{
-							strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
@@ -890,7 +905,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_add"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -949,7 +964,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				if(rc != 0)
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -965,7 +980,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_delete"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
@@ -976,12 +991,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
 						{
-							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}}");
 					}
 				}
 
@@ -1000,7 +1015,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_update"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -1068,12 +1083,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					if(rc != 0)
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1183,7 +1198,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ass_add"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -1248,7 +1263,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				if(rc != 0)
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1264,7 +1279,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ass_delete"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
@@ -1275,12 +1290,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
 						{
-							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}}");
 					}
 				}
 
@@ -1299,7 +1314,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ass_update"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -1358,12 +1373,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					if(rc != 0)
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1473,7 +1488,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ev_add"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -1538,7 +1553,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				if(rc != 0)
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1554,7 +1569,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ev_delete"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
@@ -1565,12 +1580,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
 						{
-							strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}}");
 					}
 				}
 
@@ -1589,7 +1604,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_ev_update"))
 			{
 				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":[{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}]}");
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
@@ -1648,12 +1663,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					if(rc != 0)
 					{
-						strcpy(message, "{\"response\":[{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}]}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":[{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}]}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
 				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
@@ -1688,7 +1703,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if( !strcmp(comando, "help") || !strcmp(comando, "?"))
 						{
-							strcpy(message, "No hay ayuda.");
+							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
 						}
 						else if( !strcmp(comando, "encender") )
 						{
@@ -1752,6 +1767,115 @@ int main(/*int argc, char** argv, char** env*/void)
 								m_pServer->Free(call_resp);
 							}
 						}
+						else if( !strcmp(comando, "actualizar") )
+						{
+							if( !memcmp(parametro, "conf", 4))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
+												"Config_PORT_A_Analog, Config_PORT_A_E_S, "
+												"Config_PORT_B_Analog, Config_PORT_B_E_S, "
+												"Config_PORT_C_Analog, Config_PORT_C_E_S "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+									m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+							}
+							else if( !strcmp(parametro, "wifi"))
+							{
+
+							}
+							else if( !strcmp(parametro, "estado"))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
+												"Estado_PORT_A, Estado_PORT_B, Estado_PORT_C "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
+									m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, 500);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+							}
+						}
+						else if( !strcmp(comando, "solicitar") )
+						{
+							if( !memcmp(parametro, "conf", 4))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port_config][%s]", message);
+									m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, 500);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+							}
+							else if( !strcmp(parametro, "wifi"))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_get_comm_config][%s]", message);
+									m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, 500);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+							}
+							else if( !strcmp(parametro, "estado"))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port][%s]", message);
+									m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, 500);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+							}
+						}
 
 
 
@@ -1762,11 +1886,11 @@ int main(/*int argc, char** argv, char** env*/void)
 
 
 
-						json_response = cJSON_CreateObject();
-						cJSON_AddStringToObject(json_response, "ReturnMessage", message);
-						message[0] = 0;
-						cJSON_AddItemToObject(json_obj, "response", json_response);
-						cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+						//json_response = cJSON_CreateObject();
+						//cJSON_AddStringToObject(json_response, "ReturnMessage", message);
+						//message[0] = 0;
+						//cJSON_AddItemToObject(json_obj, "response", json_response);
+						//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 					}
 				}
 				/* *********************************************************** */
