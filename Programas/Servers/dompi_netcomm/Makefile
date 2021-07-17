@@ -5,7 +5,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lwiringPi -lcjson
 OBJECTS=dompi_netcomm.o qtcp.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=dompi_netcomm
-DEFINE=-D N__DEBUG__
+DEFINE=-D __NO__DEBUG__
 CC=g++
 
 #.cc.o:

@@ -5,7 +5,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lsqlite3 -lcjson
 OBJECTS=dompi_server.o csqlite.o config.o strfunc.o gevent.o
 OUTPUT=dompi_server
-DEFINE=-D NO__DEBUG__
+DEFINE=-D __NO__DEBUG__
 CC=g++
 
 #.cc.o:
