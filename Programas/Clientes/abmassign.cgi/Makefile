@@ -5,7 +5,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson
 OBJECTS=abmassign.cgi.o config.o strfunc.o
 OUTPUT=abmassign.cgi
-DEFINE=-D __DEBUG__
+DEFINE=-D __NO__DEBUG__
 CC=g++
 
 #.cc.o:

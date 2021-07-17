@@ -5,7 +5,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lwiringPi
 OBJECTS=dompi_gpio.o
 OUTPUT=dompi_gpio
-DEFINE=-D N__DEBUG__
+DEFINE=-D __NO__DEBUG__
 CC=g++
 
 #.cc.o:
