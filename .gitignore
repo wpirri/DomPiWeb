@@ -22,3 +22,5 @@ Programas/Clientes/abmhw.cgi/abmhw.cgi
 Programas/Clientes/abmev.cgi/abmev.cgi
 Programas/Clientes/dompi_manager/dompi_manager
 Programas/Clientes/dompi_manager/Makefile~
+Programas/Servers/dompi_netcomm/dompi_netcomm
+Programas/Servers/dompi_gpio/dompi_gpio

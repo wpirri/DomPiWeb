@@ -150,8 +150,6 @@ int main(/*int argc, char** argv, char** env*/void)
 		OnClose(0);
 	}
 
-	m_pServer->SetLogLevel(20);
-
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10 )) >= 0)
 	{
 		json_req = NULL;

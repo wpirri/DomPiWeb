@@ -1,9 +1,30 @@
-Instalar
+Archivo /boot/config.txt
+---------------------------------------
+Agregar al final:
+
+max_usb_current=1
+enable_uart=1
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt 800 480 60 6 0 0 0
+hdmi_drive=1
+
+
+
+Instalar en RBPi
 ---------------------------------------
 build-essential
 apache2 
 php
 sqlite3
+
+
+Instalación de GMonitor
+------------------------------------------------------------------------------
+./configure --prefix=/usr --sysconfdir=/etc/sysconfig --localstatedir=/var
+
+
+
 
 
 

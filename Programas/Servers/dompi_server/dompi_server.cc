@@ -105,6 +105,23 @@ CGMServerWait *m_pServer;
 DPConfig *pConfig;
 CSQLite *pDB;
 GEvent *pEV;
+
+int power2(int exp)
+{
+	switch(exp)
+	{
+		case 0x00: return 0x01;
+		case 0x01: return 0x02;
+		case 0x02: return 0x04;
+		case 0x03: return 0x08;
+		case 0x04: return 0x10;
+		case 0x05: return 0x20;
+		case 0x06: return 0x40;
+		case 0x07: return 0x80;
+		default:   return 0x00;
+	}
+}
+
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
 char cli_help[] = 	"-------------------------------------------------------------------------------\r\n"
@@ -114,11 +131,11 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  pulso <objeto>\r\n"
 					"  estado <objeto>\r\n"
 					"  actualizar <dispositivo>, [modulo]\r\n"
-					"  solicitar <dispositivo>, [modulo]\r\n"
+					"  modulo <dispositivo>, [modulo]\r\n"
 					"  help\r\n"
 					"  * objeto: Nombre de un objeto existente.\r\n"
 					"    dispositivo: Nombre de un dispositivo existente.\r\n"
-					"    modulo: config, wifi o estado\r\n"
+					"    modulo: config, wifi, porta, portb o portc\r\n"
 					"-------------------------------------------------------------------------------\r\n";
 
 void OnClose(int sig);
@@ -163,6 +180,11 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_hw_id;
     cJSON *json_cmdline;
 
+	char ass_s_disp[128];
+	int ass_i_port;
+	int ass_i_e_s;
+	int ass_i_tipo;
+
 	update_hw_config[0] = 0;
 	update_hw_status[0] = 0;
 
@@ -200,181 +222,36 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pEV = new GEvent(pDB, m_pServer);
 
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_infoio");
-	if(( rc =  m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_infoio", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_db_struct");
-	if(( rc =  m_pServer->Suscribe("dompi_db_struct", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_db_struct", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_list");
-	if(( rc =  m_pServer->Suscribe("dompi_user_list", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_list_all");
-	if(( rc =  m_pServer->Suscribe("dompi_user_list_all", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_list", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_get");
-	if(( rc =  m_pServer->Suscribe("dompi_user_get", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_get", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_add");
-	if(( rc =  m_pServer->Suscribe("dompi_user_add", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_add", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_delete");
-	if(( rc =  m_pServer->Suscribe("dompi_user_delete", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_delete", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_update");
-	if(( rc =  m_pServer->Suscribe("dompi_user_update", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_update", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_user_check");
-	if(( rc =  m_pServer->Suscribe("dompi_user_check", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_user_check", rc);
-		OnClose(0);
-	}
+	m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_db_struct", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_update", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_check", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_update", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_update", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ev_update", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_cmdline", GM_MSG_TYPE_CR);
 
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_list");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_list", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_list_all");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_list_all", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_list_all", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_get");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_get", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_get", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_add");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_add", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_add", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_delete");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_delete", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_delete", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_hw_update");
-	if(( rc =  m_pServer->Suscribe("dompi_hw_update", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_hw_update", rc);
-		OnClose(0);
-	}
-
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_list");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_list", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_list", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_list_all");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_list_all", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_list_all", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_get");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_get", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_get", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_add");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_add", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_add", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_delete");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_delete", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_delete", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ass_update");
-	if(( rc =  m_pServer->Suscribe("dompi_ass_update", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ass_update", rc);
-		OnClose(0);
-	}
-
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_list");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_list", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_list_all");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_list_all", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_get");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_get", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_get", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_add");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_add", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_add", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_delete");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_delete", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_delete", rc);
-		OnClose(0);
-	}
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_ev_update");
-	if(( rc =  m_pServer->Suscribe("dompi_ev_update", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_ev_update", rc);
-		OnClose(0);
-	}
-
-	m_pServer->m_pLog->Add(1, "Registrando Servicios: dompi_cmdline");
-	if(( rc =  m_pServer->Suscribe("dompi_cmdline", GM_MSG_TYPE_CR)) != GME_OK)
-	{
-		m_pServer->m_pLog->Add(1, "ERROR %i al suscribir servicio dompi_cmdline", rc);
-		OnClose(0);
-	}
-
-	m_pServer->m_pLog->Add(1, "Inicializacion OK");
-	m_pServer->SetLogLevel(20);
+	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
 	{
@@ -729,9 +606,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-
 					rc = pDB->Query(NULL, query);
-					if(rc != 0)
+					if(rc == 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1079,9 +955,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-
 					rc = pDB->Query(NULL, query);
-					if(rc != 0)
+					if(rc == 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1321,6 +1196,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_where[0] = 0;
 
 				json_un_obj = json_obj;
+				ass_s_disp[0] = 0;
+				ass_i_e_s = 0;
+				ass_i_port = 0;
+				ass_i_tipo = 0;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1356,7 +1235,23 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "='");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
-
+									}
+									/* Recopilo algunos datos para actualizar la tabla de HW */
+									if( !strcmp(json_un_obj->string, "Dispositivo"))
+									{
+										strcpy(ass_s_disp, json_un_obj->valuestring);
+									}
+									else if( !strcmp(json_un_obj->string, "Port"))
+									{
+										ass_i_port = atoi(json_un_obj->valuestring);
+									}
+									else if( !strcmp(json_un_obj->string, "E_S"))
+									{
+										ass_i_e_s = atoi(json_un_obj->valuestring);
+									}
+									else if( !strcmp(json_un_obj->string, "Tipo"))
+									{
+										ass_i_tipo = atoi(json_un_obj->valuestring);
 									}
 								}
 							}
@@ -1369,11 +1264,49 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-
 					rc = pDB->Query(NULL, query);
-					if(rc != 0)
+					if(rc == 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+					else
+					{
+						/* Actualizo la tabla de HW */
+						if(strlen(ass_s_disp) && ass_i_port && ass_i_e_s )
+						{
+							if(ass_i_tipo == 1)
+							{ 
+								sprintf(query, "UPDATE TB_DOM_PERIF "
+											"SET Actualizar = 1, "
+											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
+																	 "FROM TB_DOM_PERIF WHERE Id = '%s') | %i "
+											"WHERE Id = '%s';",
+											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
+											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
+											ass_s_disp,
+											power2(ass_i_e_s-1),
+											ass_s_disp);
+							}
+							else /* ass_i_tipo == 0 */
+							{
+								sprintf(query, "UPDATE TB_DOM_PERIF "
+											"SET Actualizar = 1, "
+											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
+																	 "FROM TB_DOM_PERIF WHERE Id = '%s') & %i "
+											"WHERE Id = '%s';",
+											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
+											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
+											ass_s_disp,
+											power2(ass_i_e_s-1)^0xFF,
+											ass_s_disp);
+							}
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(NULL, query);
+							if(rc == 0)
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+							}
+						}
 					}
 				}
 				else
@@ -1659,9 +1592,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-
 					rc = pDB->Query(NULL, query);
-					if(rc != 0)
+					if(rc == 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1816,7 +1748,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 							}
 						}
-						else if( !strcmp(comando, "solicitar") )
+						else if( !strcmp(comando, "modulo") )
 						{
 							if( !memcmp(parametro, "conf", 4))
 							{
@@ -1921,20 +1853,33 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_hw_add", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_delete", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_update", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_list_all", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_list", GM_MSG_TYPE_CR);
-
-	m_pServer->UnSuscribe("dompi_user_check", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_db_struct", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_get", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_user_update", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_user_list_all", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_user_list", GM_MSG_TYPE_CR);
-
-	m_pServer->UnSuscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_check", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_get", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_get", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_get", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ev_update", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_cmdline", GM_MSG_TYPE_CR);
 
 	delete pEV;
