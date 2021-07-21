@@ -175,10 +175,26 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
     cJSON *json_query;
     cJSON *json_query_result;
-    //cJSON *json_response;
+    cJSON *json_response;
     //cJSON *json_response_password;
-    cJSON *json_hw_id;
     cJSON *json_cmdline;
+    cJSON *json_resp_code;
+
+    cJSON *json_HW_Id;
+	cJSON *json_Direccion_IP;
+	cJSON *json_Tipo_HW;
+	cJSON *json_Tipo_ASS;
+	cJSON *json_Port;
+	cJSON *json_E_S;
+	cJSON *json_Estado;
+	cJSON *json_AN_Config;
+	cJSON *json_IO_Config;
+	cJSON *json_Config_PORT_A_Analog;
+	cJSON *json_Config_PORT_A_E_S;
+	cJSON *json_Config_PORT_B_Analog;
+	cJSON *json_Config_PORT_B_E_S;
+	cJSON *json_Config_PORT_C_Analog;
+	cJSON *json_Config_PORT_C_E_S;
 
 	char ass_s_disp[128];
 	int ass_i_port;
@@ -253,7 +269,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1000 )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -267,8 +283,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 
-				json_hw_id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
-				if(json_hw_id)
+				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
+				if(json_HW_Id)
 				{
 					rc = pEV->ExtIOEvent(message);
 					if(rc != 1)
@@ -285,14 +301,14 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_un_obj->valuestring) > 0 )
 							{
-								strcpy(update_hw_config, json_hw_id->valuestring);
+								strcpy(update_hw_config, json_HW_Id->valuestring);
 							}
 						}
 					}
 					else if(rc == 0)
 					{
 						/* NOT FOUND */
-						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_hw_id->valuestring);
+						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_HW_Id->valuestring);
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}}");
 					}
 					else
@@ -1653,9 +1669,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
-								strcpy(message, (const char*)call_resp.data);
-								m_pServer->Free(call_resp);
+								m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								
 							}
 						}
 						else if( !strcmp(comando, "apagar") )
@@ -1674,9 +1690,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
-								strcpy(message, (const char*)call_resp.data);
-								m_pServer->Free(call_resp);
+								m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
 						}
 						else if( !strcmp(comando, "estado") )
@@ -1694,20 +1709,18 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_un_obj = json_arr->child;
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, 500);
-								strcpy(message, (const char*)call_resp.data);
-								m_pServer->Free(call_resp);
+								m_pServer->Notify("dompi_hw_get_io", message, strlen(message));
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");;
 							}
 						}
 						else if( !strcmp(comando, "actualizar") )
 						{
 							if( !memcmp(parametro, "conf", 4))
 							{
+								/* PORT A */
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Config_PORT_A_Analog, Config_PORT_A_E_S, "
-												"Config_PORT_B_Analog, Config_PORT_B_E_S, "
-												"Config_PORT_C_Analog, Config_PORT_C_E_S "
+												"Port = 1, Config_PORT_A_E_S AS IO_Config "
 												"FROM TB_DOM_PERIF "
 												"WHERE Dispositivo =  \'%s\';", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -1718,10 +1731,28 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
-									strcpy(message, (const char*)call_resp.data);
-									m_pServer->Free(call_resp);
+									m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
+								cJSON_Delete(json_arr);
+								/* PORT B */
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
+												"Port = 2, Config_PORT_B_E_S AS IO_Config "
+												"FROM TB_DOM_PERIF "
+												"WHERE Dispositivo =  \'%s\';", objeto);
+								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								if(rc == 0)
+								{
+									/* Creo un objeto con el primer item del array */
+									json_un_obj = json_arr->child;
+									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+									m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								}
+								cJSON_Delete(json_arr);
 							}
 							else if( !strcmp(parametro, "wifi"))
 							{
@@ -1742,9 +1773,8 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
-									m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, 500);
-									strcpy(message, (const char*)call_resp.data);
-									m_pServer->Free(call_resp);
+									m_pServer->Notify("dompi_hw_set_port", message, strlen(message));
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
 							}
 						}
@@ -1808,21 +1838,6 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 							}
 						}
-
-
-
-
-
-
-
-
-
-
-						//json_response = cJSON_CreateObject();
-						//cJSON_AddStringToObject(json_response, "ReturnMessage", message);
-						//message[0] = 0;
-						//cJSON_AddItemToObject(json_obj, "response", json_response);
-						//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 					}
 				}
 				/* *********************************************************** */
@@ -1843,6 +1858,86 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 
 		}
+		m_pServer->m_pLog->Add(100, "Control de tareas programadas");
+		/* Control de tareas pendientes */
+		json_arr = cJSON_CreateArray();
+		sprintf(query, "SELECT Id, Direccion_IP, Tipo, "
+						"Config_PORT_A_Analog, Config_PORT_A_E_S, "
+						"Config_PORT_B_Analog, Config_PORT_B_E_S, "
+						"Config_PORT_C_Analog, Config_PORT_C_E_S "
+						"FROM TB_DOM_PERIF "
+						"WHERE Actualizar <> 0;");
+		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+		rc = pDB->Query(json_arr, query);
+		if(rc == 0)
+		{
+			/* Recorro el array */
+			cJSON_ArrayForEach(json_un_obj, json_arr)
+			{
+				/* Saco los datos que necesito */
+				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Id");
+				json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP");
+				json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
+				json_Config_PORT_A_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_E_S");
+				json_Config_PORT_B_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_E_S");
+				//json_Config_PORT_C_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_E_S");
+				//json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
+				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
+				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
+				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_HW_Id->valuestring);
+				/* Armo los mensajes para cada port */
+				/*PORT A*/
+				json_obj = cJSON_CreateObject();
+				cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+				cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
+				cJSON_AddStringToObject(json_obj, "Port", "1");
+				/* Envio la configuracion de cada port por separado */
+				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+				cJSON_Delete(json_obj);
+				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+				m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				/*  */
+				/*PORT B*/
+				json_obj = cJSON_CreateObject();
+				cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+				cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
+				cJSON_AddStringToObject(json_obj, "Port", "2");
+				/* Envio la configuracion de cada port por separado */
+				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+				cJSON_Delete(json_obj);
+				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+				m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				/*  */
+				/*PORT C*/
+				//json_obj = cJSON_CreateObject();
+				//cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring)
+				//cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring)
+				//cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring)
+				//cJSON_AddStringToObject(json_obj, "Port", "1")
+				/* Envio la configuracion de cada port por separado */
+				//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+				//cJSON_Delete(json_obj);
+				//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+				//m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				/*  */
+				/* Borro la marca */
+				sprintf(query, "UPDATE TB_DOM_PERIF "
+								"SET Actualizar = 0 "
+								"WHERE Id = \'%s\';", json_HW_Id->valuestring);
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				pDB->Query(NULL, query);
+			}
+		}
+		cJSON_Delete(json_arr);
+		/* Tareas programadas en TB_DOM_AT */
+
+
+
+
+
+
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
 	OnClose(0);
