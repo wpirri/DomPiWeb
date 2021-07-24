@@ -47,6 +47,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   cJSON *json_return_message;
   char input_buffer[MAX_INPUT_BUFFER_LEN+1];
   char prompt[20];
+  char version[255];
   char clear[12];
 
   int i;
@@ -57,6 +58,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   signal(SIGPIPE, SIG_IGN);
 
   strcpy(prompt, "DOMCLI > ");
+  strcpy(version, "          << Intercafe de linea de comandos de sistema de domotica >>\r\n"
+                  "                              ..:: DOMCLI 0.1 ::..\r\n");
   clear[0] = 0x1b;
   clear[1] = 0x5b;
   clear[2] = 0x48;
@@ -88,7 +91,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   pClient = new CGMClient(&gminit);
 
-  fprintf(stdout, "%s", prompt);
+  fprintf(stdout, "%s\r\n%s\r\n%s", clear, version, prompt);
   while( fgets(input_buffer, MAX_INPUT_BUFFER_LEN, stdin) )
   {
     if(strchr(input_buffer, '\r')) *(strchr(input_buffer, '\r')) = 0;

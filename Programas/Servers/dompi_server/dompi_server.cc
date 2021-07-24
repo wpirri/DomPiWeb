@@ -128,7 +128,8 @@ char cli_help[] = 	"------------------------------------------------------------
 					"Comandos disponibles:\r\n"
 					"  encender <objeto>\r\n"
 					"  apagar <objeto>\r\n"
-					"  pulso <objeto>\r\n"
+					"  cambiar <objeto>\r\n"
+					"  pulso <objeto>, [segundos]\r\n"
 					"  estado <objeto>\r\n"
 					"  actualizar <dispositivo>, [modulo]\r\n"
 					"  modulo <dispositivo>, [modulo]\r\n"
@@ -136,6 +137,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  * objeto: Nombre de un objeto existente.\r\n"
 					"    dispositivo: Nombre de un dispositivo existente.\r\n"
 					"    modulo: config, wifi, porta, portb o portc\r\n"
+					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
 					"-------------------------------------------------------------------------------\r\n";
 
 void OnClose(int sig);
@@ -301,6 +303,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_un_obj->valuestring) > 0 )
 							{
+								m_pServer->m_pLog->Add(10, "HW %s Solicita configuracion", json_HW_Id->valuestring);
 								strcpy(update_hw_config, json_HW_Id->valuestring);
 							}
 						}
@@ -1669,9 +1672,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-								
+								rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
 							}
 						}
 						else if( !strcmp(comando, "apagar") )
@@ -1690,8 +1692,47 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+							}
+						}
+						else if( !strcmp(comando, "cambiar") )
+						{
+							json_arr = cJSON_CreateArray();
+							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+											"WHERE HW.Id = ASS.Dispositivo AND "
+											"ASS.Objeto =  \'%s\';", objeto);
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr, query);
+							if(rc == 0)
+							{
+								/* Creo un objeto con el primer item del array */
+								json_un_obj = json_arr->child;
+								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
+								rc = m_pServer->Notify("dompi_hw_switch_io", message, strlen(message));
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+							}
+						}
+						else if( !strcmp(comando, "pulso") )
+						{
+							json_arr = cJSON_CreateArray();
+							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+											"WHERE HW.Id = ASS.Dispositivo AND "
+											"ASS.Objeto =  \'%s\';", objeto);
+							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr, query);
+							if(rc == 0)
+							{
+								/* Creo un objeto con el primer item del array */
+								json_un_obj = json_arr->child;
+								cJSON_AddStringToObject(json_un_obj, "Segundos", (parametro)?parametro:"1");
+								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
+								rc = m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
 							}
 						}
 						else if( !strcmp(comando, "estado") )
@@ -1708,9 +1749,17 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								m_pServer->Notify("dompi_hw_get_io", message, strlen(message));
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");;
+								m_pServer->m_pLog->Add(50, "[dompi_hw_get_io][%s]", message);
+								rc = m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, 500);
+								if(rc == 0)
+								{
+									strcpy(message, (const char*)call_resp.data);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+								}
+								m_pServer->Free(call_resp);
 							}
 						}
 						else if( !strcmp(comando, "actualizar") )
@@ -1731,8 +1780,8 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+									rc = m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
 								}
 								cJSON_Delete(json_arr);
 								/* PORT B */
@@ -1749,8 +1798,8 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+									rc = m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
 								}
 								cJSON_Delete(json_arr);
 							}
@@ -1773,8 +1822,8 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
-									m_pServer->Notify("dompi_hw_set_port", message, strlen(message));
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+									rc = m_pServer->Notify("dompi_hw_set_port", message, strlen(message));
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
 								}
 							}
 						}
@@ -1794,8 +1843,15 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port_config][%s]", message);
-									m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, 500);
-									strcpy(message, (const char*)call_resp.data);
+									rc = m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
 									m_pServer->Free(call_resp);
 								}
 							}
@@ -1813,8 +1869,15 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_comm_config][%s]", message);
-									m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, 500);
-									strcpy(message, (const char*)call_resp.data);
+									rc = m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
 									m_pServer->Free(call_resp);
 								}
 							}
@@ -1832,8 +1895,15 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port][%s]", message);
-									m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, 500);
-									strcpy(message, (const char*)call_resp.data);
+									rc = m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
 									m_pServer->Free(call_resp);
 								}
 							}
@@ -1931,6 +2001,16 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 		cJSON_Delete(json_arr);
+		/*  */
+		if(update_hw_config[0])
+		{
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Actualizar = 1 "
+							"WHERE Id = \'%s\';", update_hw_config);
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+			update_hw_config[0] = 0;
+		}
 		/* Tareas programadas en TB_DOM_AT */
 
 

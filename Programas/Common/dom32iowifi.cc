@@ -54,6 +54,10 @@ Dom32IoWifi::Dom32IoWifi()
 
     url_set_iostatus = "/iostatus.cgi";
     url_set_exstatus = "/exstatus.cgi";
+    url_switch_iostatus = "/ioswitch.cgi";
+    url_switch_exstatus = "/exswitch.cgi";
+    url_pulse_iostatus = "/iopulse.cgi";
+    url_pulse_exstatus = "/expulse.cgi";
 
     url_set_ioconfig = "/ioconfig.cgi";
     url_set_exconfig = "/exconfig.cgi";
@@ -549,6 +553,274 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
             {
                 *exstatus = EXP2Int(p);
             }        
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
+{
+    char buffer[4096];
+    char data[256];
+    char *p;
+    QTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    if(mask & 0x01)
+    {
+        strcat(data, "IO1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO2=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO3=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO4=on");
+    }
+    sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, buffer, buffer, 4096) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(iostatus)
+            {
+                *iostatus = IO2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
+{
+    char buffer[4096];
+    char data[256];
+    char *p;
+    QTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    if(mask & 0x01)
+    {
+        strcat(data, "EXP1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP3=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP4=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP5=on");
+    }
+    if(mask & 0x10)
+    {
+        strcat(data, "EXP7=on");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP8=on");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP9=on");
+    }
+
+    sprintf(buffer, http_post, url_switch_exstatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, buffer, buffer, 4096) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(exstatus)
+            {
+                *exstatus = EXP2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
+{
+    char buffer[4096];
+    char data[256];
+    char *p;
+    QTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    sprintf(data, "PULSE=%i", sec);
+
+    if(mask & 0x01)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO2=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO3=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO4=on");
+    }
+    sprintf(buffer, http_post, url_pulse_iostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, buffer, buffer, 4096) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(iostatus)
+            {
+                *iostatus = IO2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec, int *exstatus)
+{
+    char buffer[4096];
+    char data[256];
+    char *p;
+    QTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    sprintf(data, "PULSE=%i", sec);
+
+    if(mask & 0x01)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP3=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP4=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP5=on");
+    }
+    if(mask & 0x10)
+    {
+        strcat(data, "EXP7=on");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP8=on");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP9=on");
+    }
+
+    sprintf(buffer, http_post, url_pulse_exstatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, buffer, buffer, 4096) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(exstatus)
+            {
+                *exstatus = EXP2Int(p);
+            }
         }
         return 0;
     }

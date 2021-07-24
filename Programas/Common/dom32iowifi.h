@@ -43,6 +43,10 @@ public:
     int SetEX(const char *raddr, int mask, int *exstatus);
     int ResetIO(const char *raddr, int mask, int *iostatus);
     int ResetEX(const char *raddr, int mask, int *exstatus);
+    int SwitchIO(const char *raddr, int mask, int *iostatus);
+    int SwitchEX(const char *raddr, int mask, int *exstatus);
+    int PulseIO(const char *raddr, int mask, int sec, int *iostatus);
+    int PulseEX(const char *raddr, int mask, int sec, int *exstatus);
     int GetWifi(const char *raddr, wifi_config_data *config);
     int SetWifi(const char *raddr, wifi_config_data *config);
 
@@ -54,9 +58,13 @@ protected:
 
     const char *url_get_iostatus;
     const char *url_set_iostatus;
+    const char *url_switch_iostatus;
+    const char *url_pulse_iostatus;
     const char *url_set_ioconfig;
     const char *url_get_exstatus;
     const char *url_set_exstatus;
+    const char *url_switch_exstatus;
+    const char *url_pulse_exstatus;
     const char *url_set_exconfig;
     const char *url_get_config;
     const char *url_get_ioconfig;
