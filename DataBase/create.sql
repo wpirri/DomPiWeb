@@ -104,7 +104,7 @@ Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo
 Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 ON_a_OFF integer DEFAULT 0,
 OFF_a_ON integer DEFAULT 0,
-Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objeto o Grupo. Si no Variable = Enviar
+Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Switch 4=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- 0 ==, 1 >, 2 <
@@ -129,7 +129,7 @@ Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo,
 Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Evento integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Pulso a Objto o Grupo
+Evento integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Switch 4=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
