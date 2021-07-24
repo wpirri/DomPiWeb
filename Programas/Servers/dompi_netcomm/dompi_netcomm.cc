@@ -99,15 +99,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
     pD32W = new Dom32IoWifi();
 
-	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_port", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_hw_set_port", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_port", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);
-	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
-	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_io", GM_MSG_TYPE_CR);
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10 )) >= 0)
@@ -244,7 +244,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -254,12 +254,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
+				/* TODO: Enviar configuracion de WiFFi */
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_comm_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -307,7 +308,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -315,13 +316,14 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_port"))
 			{
+				/* TODO: Envio de estado de port completo */
 
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_port]");
 				}
 			}
 			/* ************************************************************* *
@@ -387,7 +389,7 @@ int main(/*int argc, char** argv, char** env*/void)
 												json_Direccion_IP->valuestring,
 												return_int1,
 												rc);
-							rc += pD32W->GetEXStatus(json_Direccion_IP->valuestring, 
+							rc |= pD32W->GetEXStatus(json_Direccion_IP->valuestring, 
 												&return_int2);
 							m_pServer->m_pLog->Add(100, "pD32W->GetIOStatus(%s, 0x%02X) = %i", 
 												json_Direccion_IP->valuestring,
@@ -418,7 +420,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port]");
 				}
 			}
 			/* ************************************************************* *
@@ -524,7 +526,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_io]");
 				}
 			}
 			/* ************************************************************* *
@@ -601,7 +603,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_switch_io]");
 				}
 			}
 			/* ************************************************************* *
@@ -682,7 +684,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_pulse_io]");
 				}
 			}
 			/* ************************************************************* *
@@ -752,7 +754,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_io]");
 				}
 			}
 
@@ -782,15 +784,15 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_get_port", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_get_io", GM_MSG_TYPE_CR);
 
 

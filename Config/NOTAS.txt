@@ -53,7 +53,7 @@ Altura paredes                                                     44 mm
 Total Gabinete                                                             48 mm
 
 
-Gabinete 160 x 120
+Gabinete 160 x 140
 Paredes 2mm
 Soportes Display 115 x 84 x 37 (y = top - 2,5, x = center)
 Soportes Pi       58 x 49 x 5 (y = top - 30, x = l + 27,5)

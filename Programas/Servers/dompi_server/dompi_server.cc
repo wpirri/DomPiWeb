@@ -1672,8 +1672,16 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								if(rc == 0)
+								{
+									strcpy(message, (const char*)call_resp.data);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+								}
+								m_pServer->Free(call_resp);
 							}
 						}
 						else if( !strcmp(comando, "apagar") )
@@ -1692,8 +1700,16 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								if(rc == 0)
+								{
+									strcpy(message, (const char*)call_resp.data);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+								}
+								m_pServer->Free(call_resp);
 							}
 						}
 						else if( !strcmp(comando, "cambiar") )
@@ -1711,8 +1727,16 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_un_obj = json_arr->child;
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
-								rc = m_pServer->Notify("dompi_hw_switch_io", message, strlen(message));
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+								rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, 500);
+								if(rc == 0)
+								{
+									strcpy(message, (const char*)call_resp.data);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+								}
+								m_pServer->Free(call_resp);
 							}
 						}
 						else if( !strcmp(comando, "pulso") )
@@ -1731,8 +1755,16 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "Segundos", (parametro)?parametro:"1");
 								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
-								rc = m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+								rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, 500);
+								if(rc == 0)
+								{
+									strcpy(message, (const char*)call_resp.data);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+								}
+								m_pServer->Free(call_resp);
 							}
 						}
 						else if( !strcmp(comando, "estado") )
@@ -1780,8 +1812,16 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
+									m_pServer->Free(call_resp);
 								}
 								cJSON_Delete(json_arr);
 								/* PORT B */
@@ -1798,8 +1838,16 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
+									m_pServer->Free(call_resp);
 								}
 								cJSON_Delete(json_arr);
 							}
@@ -1822,8 +1870,16 @@ int main(/*int argc, char** argv, char** env*/void)
 									json_un_obj = json_arr->child;
 									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
-									rc = m_pServer->Notify("dompi_hw_set_port", message, strlen(message));
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"%s\"}}", rc, (rc==0)?"Ok":"Error");
+									rc = m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, 500);
+									if(rc == 0)
+									{
+										strcpy(message, (const char*)call_resp.data);
+									}
+									else
+									{
+										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+									}
+									m_pServer->Free(call_resp);
 								}
 							}
 						}
@@ -1966,7 +2022,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
 				/*  */
 				/*PORT B*/
 				json_obj = cJSON_CreateObject();
@@ -1978,7 +2034,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
 				/*  */
 				/*PORT C*/
 				//json_obj = cJSON_CreateObject();
@@ -1990,7 +2046,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 				//cJSON_Delete(json_obj);
 				//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				//m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
+				//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
 				/*  */
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
