@@ -197,7 +197,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                 "SET Ultimo_Ok  = \"%04i-%02i-%02i %02i:%02i:%02i\", "
                                   "Direccion_IP = \"%s\""
                                   "%s "
-                                "WHERE Id = \"%s\";",
+                                "WHERE MAC = \"%s\";",
                                 p_tm->tm_year+1900, p_tm->tm_mon+1, p_tm->tm_mday,
                                 p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec, 
                                 remote_addr,
@@ -321,8 +321,6 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
     cJSON *Condicion_Valor;
     cJSON *Flags;
 
-    m_pServer->m_pLog->Add(100, "[CheckEvent] hw_id: %s - port: %i - e_s: %i -estado: %i", hw_id, port, e_s, estado);
-
     m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
                                 hw_id, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
                                 e_s, (estado)?"ON":"OFF");
@@ -331,75 +329,74 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
     /* Busco si hay evento para ese assign */
 
     json_arr = cJSON_CreateArray();
-    sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino "
+    sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino, "
                     "EV.Enviar, EV.Parametro_Evento, EV.Condicion_Variable, EV.Condicion_Igualdad, EV.Condicion_Valor, EV.Flags "
                     "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS, TB_DOM_EVENT AS EV "
                     "WHERE EV.Objeto_Origen = ASS.Id AND ASS.Dispositivo = HW.Id AND "
-                    "HW.Id = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i AND %s;",
+                    "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i AND %s;",
                     hw_id, port, e_s, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)
     {
-        json_obj = cJSON_CreateObject();
-        cJSON_AddItemToObject(json_obj, "response", json_arr);
-        cJSON_PrintPreallocated(json_obj, query, 4095, 0);
-
-        m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
-
-        Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto_Destino");
-        Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Grupo_Destino");
-        Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Funcion_Destino");
-        Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Variable_Destino");
-        Enviar = cJSON_GetObjectItemCaseSensitive(json_obj, "Enviar");
-        Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_obj, "Parametro_Evento");
-        Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Variable");
-        Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Igualdad");
-        Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Valor");
-        Flags = cJSON_GetObjectItemCaseSensitive(json_obj, "Flags");
-
-        /* TODO: Evaluar condiciones */
-        if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+        /* Recorro el array */
+        cJSON_ArrayForEach(json_obj, json_arr)
         {
+            cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+            m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
+
+            Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto_Destino");
+            Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Grupo_Destino");
+            Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Funcion_Destino");
+            Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_obj, "Variable_Destino");
+            Enviar = cJSON_GetObjectItemCaseSensitive(json_obj, "Enviar");
+            Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_obj, "Parametro_Evento");
+            Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Variable");
+            Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Igualdad");
+            Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Valor");
+            Flags = cJSON_GetObjectItemCaseSensitive(json_obj, "Flags");
+
+            /* TODO: Evaluar condiciones */
+            if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+            {
 
 
 
+            }
+
+            /* Si la condicion lo permite ejecuto según corresponda */
+            if( rc == 0 && Enviar )
+            {
+                if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
+                {
+                    SendEventObj(   atoi(Objeto_Destino->valuestring), 
+                                    atoi(Enviar->valuestring),
+                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                }
+                else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
+                {
+                    SendEventGrp(   atoi(Objeto_Destino->valuestring), 
+                                    atoi(Enviar->valuestring),
+                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                }
+                else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
+                {
+                    SendEventFun(   atoi(Objeto_Destino->valuestring), 
+                                    atoi(Enviar->valuestring),
+                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                }
+                else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
+                {
+                    SendEventVar(   atoi(Objeto_Destino->valuestring), 
+                                    atoi(Enviar->valuestring),
+                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                }
+            }
         }
+    }
 
-        /* Si la condicion lo permite ejecuto según corresponda */
-        if( rc == 0 && Enviar )
-        {
-            if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
-            {
-                SendEventObj(   atoi(Objeto_Destino->valuestring), 
-                                atoi(Enviar->valuestring),
-                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-            }
-            else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
-            {
-                SendEventGrp(   atoi(Objeto_Destino->valuestring), 
-                                atoi(Enviar->valuestring),
-                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-            }
-            else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
-            {
-                SendEventFun(   atoi(Objeto_Destino->valuestring), 
-                                atoi(Enviar->valuestring),
-                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-            }
-            else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
-            {
-                SendEventVar(   atoi(Objeto_Destino->valuestring), 
-                                atoi(Enviar->valuestring),
-                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-            }
-        }
-        cJSON_Delete(json_obj);
-    }
-    else
-    {
-        cJSON_Delete(json_arr);
-    }
+    cJSON_Delete(json_arr);
+
     return 0;
 }
 
@@ -409,11 +406,13 @@ int GEvent::SendEventObj(int id, int ev, int val)
     int rc;
     cJSON *json_arr;
     cJSON *json_obj;
+    CGMServerBase::GMIOS call_resp;
+
 
     m_pServer->m_pLog->Add(100, "[SendEventObj] id: %i - ev: %i - val: %i", id, ev, val);
 
     json_arr = cJSON_CreateArray();
-    sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo, ASS.Port, ASS.E_S, ASS.Estado "
+    sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
                     "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
                     "WHERE HW.Id = ASS.Dispositivo AND "
                     "ASS.Id = %i", id);
@@ -421,22 +420,79 @@ int GEvent::SendEventObj(int id, int ev, int val)
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)
     {
-        json_obj = cJSON_CreateObject();
-        cJSON_AddItemToObject(json_obj, "response", json_arr);
-        cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+        cJSON_ArrayForEach(json_obj, json_arr)
+        {
+            cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+            m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
 
-        m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
-
-
-
-
-
-        cJSON_Delete(json_obj);
+            switch(ev)
+            {
+                case 1:     /* On */
+                    cJSON_AddStringToObject(json_obj, "Estado", "1");
+                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
+                    m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]>>[%s]", query);
+                    rc = m_pServer->Call("dompi_hw_set_io", query, strlen(query), &call_resp, 500);
+                    if(rc == 0)
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[%s]", (const char*)call_resp.data);
+                    }
+                    else
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[Error]");
+                    }
+                    m_pServer->Free(call_resp);
+                    break;
+                case 2:     /* Off */
+                    cJSON_AddStringToObject(json_obj, "Estado", "0");
+                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
+                    m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]>>[%s]", query);
+                    rc = m_pServer->Call("dompi_hw_set_io", query, strlen(query), &call_resp, 500);
+                    if(rc == 0)
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[%s]", (const char*)call_resp.data);
+                    }
+                    else
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[Error]");
+                    }
+                    m_pServer->Free(call_resp);
+                    break;
+                case 3:     /* Switch */
+                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
+                    m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]>>[%s]", query);
+                    rc = m_pServer->Call("dompi_hw_switch_io", query, strlen(query), &call_resp, 500);
+                    if(rc == 0)
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]<<[%s]", (const char*)call_resp.data);
+                    }
+                    else
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]<<[Error]");
+                    }
+                    m_pServer->Free(call_resp);
+                    break;
+                case 4:     /* Pulso */
+                    sprintf(query, "%i", (val > 0)?val:1);
+                    cJSON_AddStringToObject(json_obj, "Segundos", query);
+                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
+                    m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", query);
+                    rc = m_pServer->Call("dompi_hw_pulse_io", query, strlen(query), &call_resp, 500);
+                    if(rc == 0)
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io]<<[%s]", (const char*)call_resp.data);
+                    }
+                    else
+                    {
+                        m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io]<<[Error]");
+                    }
+                    m_pServer->Free(call_resp);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
-    else
-    {
-        cJSON_Delete(json_arr);
-    }
+    cJSON_Delete(json_arr);
     return 0;
 }
 

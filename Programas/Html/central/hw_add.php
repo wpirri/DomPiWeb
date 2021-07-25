@@ -39,7 +39,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&Id=000000000000', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&Id=0', LoadData, false);
     }
 </script>
 

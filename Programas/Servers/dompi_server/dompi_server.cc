@@ -183,6 +183,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_resp_code;
 
     cJSON *json_HW_Id;
+    cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Tipo_HW;
 	cJSON *json_Tipo_ASS;
@@ -375,7 +376,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT Nombre, Usuario, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
+				strcpy(query, "SELECT Usuario, Nombre_Completo, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -434,11 +435,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = \'%s\';", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -470,6 +471,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 // cJSON_ArrayForEach(element, array) for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
 				json_un_obj = json_obj;
+
+				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
+				temp_l = pDB->NextId("TB_DOM_USER", "Id");
+				sprintf(temp_s, "%li", temp_l);
+				cJSON_AddStringToObject(json_un_obj, "Id", temp_s);
+
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -806,6 +813,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 // cJSON_ArrayForEach(element, array) for(element = (array != NULL) ? (array)->child : NULL; element != NULL; element = element->next)
 				json_un_obj = json_obj;
+
+				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
+				temp_l = pDB->NextId("TB_DOM_PERIF", "Id");
+				sprintf(temp_s, "%li", temp_l);
+				cJSON_AddStringToObject(json_un_obj, "Id", temp_s);
+
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1987,7 +2000,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		m_pServer->m_pLog->Add(100, "Control de tareas programadas");
 		/* Control de tareas pendientes */
 		json_arr = cJSON_CreateArray();
-		sprintf(query, "SELECT Id, Direccion_IP, Tipo, "
+		sprintf(query, "SELECT Id, MAC, Direccion_IP, Tipo, "
 						"Config_PORT_A_Analog, Config_PORT_A_E_S, "
 						"Config_PORT_B_Analog, Config_PORT_B_E_S, "
 						"Config_PORT_C_Analog, Config_PORT_C_E_S "
@@ -2002,6 +2015,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				/* Saco los datos que necesito */
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Id");
+				json_MAC = cJSON_GetObjectItemCaseSensitive(json_un_obj, "MAC");
 				json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP");
 				json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
 				json_Config_PORT_A_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_E_S");
@@ -2010,7 +2024,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				//json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
 				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
 				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
-				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_HW_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_MAC->valuestring);
 				/* Armo los mensajes para cada port */
 				/*PORT A*/
 				json_obj = cJSON_CreateObject();
@@ -2062,7 +2076,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE Id = \'%s\';", update_hw_config);
+							"WHERE MAC = \'%s\';", update_hw_config);
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
 			update_hw_config[0] = 0;

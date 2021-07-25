@@ -39,7 +39,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Nombre=admin', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Id=0', LoadData, false);
     }
 </script>
 

@@ -6,6 +6,7 @@ all:
 	make -C abmassign.cgi
 	make -C abmhw.cgi
 	make -C abmuser.cgi
+	make -C infoio.cgi
 
 clean:
 	make -C domcli clean
@@ -13,6 +14,7 @@ clean:
 	make -C abmassign.cgi clean
 	make -C abmhw.cgi clean
 	make -C abmuser.cgi clean
+	make -C infoio.cgi clean
 
 install:
 	make -C domcli install
@@ -20,6 +22,7 @@ install:
 	make -C abmassign.cgi install
 	make -C abmhw.cgi install
 	make -C abmuser.cgi install
+	make -C infoio.cgi install
 
 uninstall:
 	make -C domcli uninstall
@@ -27,3 +30,4 @@ uninstall:
 	make -C abmassign.cgi uninstall
 	make -C abmhw.cgi uninstall
 	make -C abmuser.cgi uninstall
+	make -C infoio.cgi uninstall

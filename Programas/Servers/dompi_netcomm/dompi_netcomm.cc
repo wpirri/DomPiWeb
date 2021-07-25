@@ -142,34 +142,70 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_Port->valuestring) == 1 )
 							{
-								pD32W->ConfigIO(json_Direccion_IP->valuestring, 
+								rc = pD32W->ConfigIO(json_Direccion_IP->valuestring, 
 												atol(json_IO_Config->valuestring),
 												NULL);
+								m_pServer->m_pLog->Add(100, "pD32W->ConfigIO(%s, %s) = %i", 
+													json_Direccion_IP->valuestring,
+													json_IO_Config->valuestring,
+													rc);
+								if(rc == 0)
+								{
+									/* OK */
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								}
+								else
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+								}
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{
-								pD32W->ConfigEX(json_Direccion_IP->valuestring, 
+								rc = pD32W->ConfigEX(json_Direccion_IP->valuestring, 
 												atol(json_IO_Config->valuestring),
 												NULL);
-							}
-							else if( atoi(json_Port->valuestring) == 3 )
-							{
-
+								m_pServer->m_pLog->Add(100, "pD32W->ConfigEX(%s, %s) = %i", 
+													json_Direccion_IP->valuestring,
+													json_IO_Config->valuestring,
+													rc);
+								if(rc == 0)
+								{
+									/* OK */
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								}
+								else
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+								}
 							}
 							else
 							{
-								json_IO_Config = NULL;
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
 							}
 						}
 						else if(json_AN_Config)
 						{
-
+							strcpy(message, "{\"response\":{\"resp_code\":\"5\", \"resp_msg\":\"No Implementado\"}}");
 						}
 						else
 						{
-
+							strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 						}
 					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
+				}
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -184,6 +220,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( !json_Port)
 						{
 							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, &return_int1, &return_int2);
+							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
+												json_Direccion_IP->valuestring,
+												rc);
 							if(rc == 0)
 							{
 								/* OK */
@@ -199,6 +238,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						else if( atoi(json_Port->valuestring) == 1 )
 						{
 							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, &return_int1, NULL);
+							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
+												json_Direccion_IP->valuestring,
+												rc);
 							if(rc == 0)
 							{
 								/* OK */
@@ -214,6 +256,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						else if( atoi(json_Port->valuestring) == 2 )
 						{
 							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, NULL, &return_int1);
+							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
+												json_Direccion_IP->valuestring,
+												rc);
 							if(rc == 0)
 							{
 								/* OK */

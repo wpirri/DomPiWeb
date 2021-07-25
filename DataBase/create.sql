@@ -11,8 +11,9 @@ DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
-Nombre varchar(16) primary key,         -- NIC Name
-Usuario varchar(64) NOT NULL,
+Id integer primary key,
+Usuario varchar(16) NOT NULL,         -- Nombre corto (1 palabra)
+Nombre_Completo varchar(64) NOT NULL,        -- Nombre completo
 Pin_Teclado varchar(32),
 Pin_SMS varchar(32),
 Pin_WEB varchar(32),
@@ -30,16 +31,17 @@ Flags integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
-Id varchar(16) primary key,              -- MAC Address
+Id integer primary key,
+MAC varchar(16) NOT NULL,                       -- MAC Address
 Dispositivo varchar(128) NOT NULL,
-Tipo integer DEFAULT 0,
-Estado integer DEFAULT 0,                -- 0=Disable
+Tipo integer DEFAULT 0,                         -- 0=Local, 1=Wifi PIC, 2=Wifi RBPi
+Estado integer DEFAULT 0,                       -- 0=Disable
 Config_PORT_A_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_A_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Config_PORT_A_E_S integer DEFAULT 255,          -- 0=Output 1=Input
 Config_PORT_B_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_B_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Config_PORT_B_E_S integer DEFAULT 255,          -- 0=Output 1=Input
 Config_PORT_C_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_C_E_S integer DEFAULT 255,       -- 0=Output 1=Input
+Config_PORT_C_E_S integer DEFAULT 255,          -- 0=Output 1=Input
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok varchar(32),
 Estado_PORT_A integer DEFAULT 0,
@@ -60,7 +62,7 @@ Flags integer DEFAULT 0
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,
-Dispositivo varchar(16) NOT NULL,
+Dispositivo integer NOT NULL,
 Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
 E_S integer NOT NULL,                       -- Bit 1 a 16
 Tipo integer NOT NULL,                      -- 0=Analog, 1=Digital, 2=Alarma
