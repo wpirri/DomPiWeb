@@ -288,12 +288,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_infoio"))
 			{
 				json_obj = cJSON_Parse(message);
-				message[0] = 0;
+				//message[0] = 0;
 
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
 				if(json_HW_Id)
 				{
 					rc = pEV->ExtIOEvent(message);
+					message[0] = 0;
 					if(rc != 1)
 					{
 						m_pServer->m_pLog->Add(100, "Error %i en ExtIOEvent()", rc);
@@ -2299,9 +2300,14 @@ void DBMant( char* msg )
 				}
 				cJSON_Delete(json_arr_ass);
 			}
+			/* Levanto el flag para que mande configuracion a la placa */
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Actualizar = 1 "
+							"WHERE Id = \'%s\';", json_HW_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
 		}
 	}
-
 	m_pServer->m_pLog->Add(50, "Finalizando mantenimiento de la base de datos");
 	cJSON_Delete(json_arr_hw);
 }
