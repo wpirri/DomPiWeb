@@ -106,6 +106,8 @@ DPConfig *pConfig;
 CSQLite *pDB;
 GEvent *pEV;
 
+void DBMant( char* msg );
+
 int power2(int exp)
 {
 	switch(exp)
@@ -133,6 +135,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  estado <objeto>\r\n"
 					"  actualizar <dispositivo>, [modulo]\r\n"
 					"  modulo <dispositivo>, [modulo]\r\n"
+					"  manten\r\n"
 					"  help\r\n"
 					"  * objeto: Nombre de un objeto existente.\r\n"
 					"    dispositivo: Nombre de un dispositivo existente.\r\n"
@@ -285,6 +288,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_infoio"))
 			{
 				json_obj = cJSON_Parse(message);
+				message[0] = 0;
 
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
 				if(json_HW_Id)
@@ -330,11 +334,32 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_infoio]");
 				}
 
 				cJSON_Delete(json_obj);
 
+			}
+			/* ****************************************************************
+			*		dompi_statusio
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_statusio"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+
+
+
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_statusio]");
+				}
+
+				cJSON_Delete(json_obj);
 			}
 			/* ****************************************************************
 			*		dompi_db_struct
@@ -364,7 +389,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_db_struct]");
 				}
 
 			}
@@ -395,7 +420,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_list]");
 				}
 			}
 			/* ****************************************************************
@@ -425,7 +450,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_list_all]");
 				}
 			}
 			/* ****************************************************************
@@ -456,7 +481,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_get]");
 				}
 			}
 			/* ****************************************************************
@@ -537,7 +562,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_add]");
 				}
 			}
 			/* ****************************************************************
@@ -571,7 +596,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_delete]");
 				}
 			}
 			/* ****************************************************************
@@ -647,7 +672,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_update]");
 				}
 			}
 			/* ****************************************************************
@@ -707,7 +732,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_user_check]");
 				}
 			}
 			/* ****************************************************************
@@ -737,7 +762,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_list]");
 				}
 			}
 			/* ****************************************************************
@@ -767,7 +792,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_list_all]");
 				}
 			}
 			/* ****************************************************************
@@ -798,7 +823,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_get]");
 				}
 			}
 			/* ****************************************************************
@@ -879,7 +904,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_add]");
 				}
 			}
 			/* ****************************************************************
@@ -914,7 +939,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_delete]");
 				}
 			}
 			/* ****************************************************************
@@ -1002,7 +1027,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_hw_update]");
 				}
 
 			}
@@ -1035,7 +1060,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_list]");
 				}
 			}
 			/* ****************************************************************
@@ -1065,7 +1090,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_list_all]");
 				}
 			}
 			/* ****************************************************************
@@ -1096,7 +1121,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_get]");
 				}
 			}
 			/* ****************************************************************
@@ -1177,7 +1202,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_add]");
 				}
 			}
 			/* ****************************************************************
@@ -1212,7 +1237,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_delete]");
 				}
 			}
 			/* ****************************************************************
@@ -1350,7 +1375,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_update]");
 				}
 
 			}
@@ -1383,7 +1408,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_list]");
 				}
 			}
 			/* ****************************************************************
@@ -1413,7 +1438,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_list_all]");
 				}
 			}
 			/* ****************************************************************
@@ -1444,7 +1469,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_get]");
 				}
 			}
 			/* ****************************************************************
@@ -1525,7 +1550,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_add]");
 				}
 			}
 			/* ****************************************************************
@@ -1560,7 +1585,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_delete]");
 				}
 			}
 			/* ****************************************************************
@@ -1639,7 +1664,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ev_update]");
 				}
 			}
 			/* ****************************************************************
@@ -1668,6 +1693,10 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( !strcmp(comando, "help") || !strcmp(comando, "?"))
 						{
 							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
+						}
+						else if( !strcmp(comando, "manten") )
+						{
+							DBMant( message );
 						}
 						else if( !strcmp(comando, "encender") )
 						{
@@ -1985,14 +2014,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje");
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_cmdline]");
 				}
 			}
 
 			else
 			{
-				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");
-				m_pServer->m_pLog->Add(50, "[%s][R][GME_SVC_NOTFOUND]");
+				m_pServer->m_pLog->Add(10, "[%s][R][GME_SVC_NOTFOUND]", fn);
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
 
@@ -2132,4 +2160,148 @@ void OnClose(int sig)
 	delete pDB;
 	delete m_pServer;
 	exit(0);
+}
+
+void DBMant( char* msg )
+{
+	int rc;
+	char query[4096];
+    cJSON *json_obj_hw;
+    cJSON *json_arr_hw;
+    cJSON *json_obj_ass;
+    cJSON *json_arr_ass;
+
+    cJSON *json_HW_Id;
+    cJSON *json_MAC;
+	cJSON *json_Tipo_HW;
+
+	cJSON *json_Objeto;
+	cJSON *json_Port;
+	cJSON *json_E_S;
+	cJSON *json_Tipo_ASS;
+
+	int i_PORT_A_Analog;
+	int i_PORT_A_E_S;
+	int i_PORT_B_Analog;
+	int i_PORT_B_E_S;
+	int i_PORT_C_Analog;
+	int i_PORT_C_E_S;
+
+	strcpy(msg, "Mantenimiento de la base de datos...\r\n");
+	m_pServer->m_pLog->Add(50, "Iniciando mantenimiento de la base de datos");
+
+	json_arr_hw = cJSON_CreateArray();
+	sprintf(query, "SELECT Id, MAC, Tipo "
+					"FROM TB_DOM_PERIF "
+					"WHERE Id > 0 ");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_arr_hw, query);
+	if(rc == 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_obj_hw, json_arr_hw)
+		{
+			/* Saco los datos que necesito */
+			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Id");
+			json_MAC = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "MAC");
+			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Tipo");
+			strcat(msg, "    Procesando ");
+			strcat(msg, json_MAC->valuestring);
+			strcat(msg, "\r\n");
+			m_pServer->m_pLog->Add(100, "Procesando [%s]...", json_MAC->valuestring);
+
+			if(atoi(json_Tipo_HW->valuestring) == 1)
+			{
+				json_arr_ass = cJSON_CreateArray();
+				sprintf(query, "SELECT Id, Objeto, Port, E_S, Tipo "
+								"FROM TB_DOM_ASSIGN "
+								"WHERE Dispositivo = %s ", json_HW_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr_ass, query);
+				if(rc == 0)
+				{
+					i_PORT_A_Analog = 0;
+					i_PORT_A_E_S = 0x0F;
+					i_PORT_B_Analog = 0;
+					i_PORT_B_E_S = 0x1F;
+					i_PORT_C_Analog = 0;
+					i_PORT_C_E_S = 0xFF;
+					/* Recorro el array */
+					cJSON_ArrayForEach(json_obj_ass, json_arr_ass)
+					{
+						json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Objeto");
+						json_Port = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Port");
+						json_E_S = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "E_S");
+						json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Tipo");
+
+						m_pServer->m_pLog->Add(100, "    Objeto [%s]...", json_Objeto->valuestring);
+
+						if(atoi(json_Port->valuestring) == 1)
+						{
+							/* PORT A */
+							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							{
+								/* Entrada */
+								i_PORT_A_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+							}
+							else
+							{
+								/* Salida */
+								i_PORT_A_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+							}
+						}
+						else if(atoi(json_Port->valuestring) == 2)
+						{
+							/* PORT B */
+							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							{
+								/* Entrada */
+								i_PORT_B_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+							}
+							else
+							{
+								/* Salida */
+								i_PORT_B_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+							}
+						}
+						else if(atoi(json_Port->valuestring) == 2)
+						{
+							/* PORT C */
+							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							{
+								/* Entrada */
+								i_PORT_C_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+							}
+							else
+							{
+								/* Salida */
+								i_PORT_C_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+							}
+						}
+					}
+					sprintf(query, "UPDATE TB_DOM_PERIF "
+									"Config_PORT_A_Analog = %i, "
+									"Config_PORT_A_E_S = %i, "
+									"Config_PORT_B_Analog = %i, "
+									"Config_PORT_B_E_S = %i, "
+									"Config_PORT_C_Analog = %i, "
+									"Config_PORT_C_E_S = %i, "
+									"WHERE Id = \'%s\';",
+									i_PORT_A_Analog,
+									i_PORT_A_E_S,
+									i_PORT_B_Analog,
+									i_PORT_B_E_S,
+									i_PORT_C_Analog,
+									i_PORT_C_E_S,
+									json_HW_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					pDB->Query(NULL, query);
+				}
+				cJSON_Delete(json_arr_ass);
+			}
+		}
+	}
+
+	m_pServer->m_pLog->Add(50, "Finalizando mantenimiento de la base de datos");
+	cJSON_Delete(json_arr_hw);
 }
