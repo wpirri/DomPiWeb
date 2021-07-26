@@ -115,13 +115,12 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  openlog("abmassign.cgi", 0, LOG_USER);
-
   Str.EscapeHttp(request_uri, request_uri);
   Str.EscapeHttp(post_data, post_data);
 
   if(trace)
   {
+    openlog("abmassign.cgi", 0, LOG_USER);
     syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
               remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
   }
@@ -136,7 +135,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(strchr(request_uri, '?'))
   {
     strcpy(buffer, strchr(request_uri, '?')+1);
-    syslog(LOG_DEBUG, "Section 1: %s", buffer);
+    if(trace) syslog(LOG_DEBUG, "GET DATA: %s", buffer);
     /* Recorro los parametros del GET */
     for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
     {
@@ -194,7 +193,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   query.Clear();
   response.Clear();
   query = buffer;
-  syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
+  if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
   rc = pClient->Call(funcion_call, query, response, 100);
   if(rc == 0)
   {

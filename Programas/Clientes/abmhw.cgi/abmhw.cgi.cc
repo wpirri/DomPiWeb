@@ -31,6 +31,7 @@
 #include "config.h"
 #include "strfunc.h"
 
+int trace;
 
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
@@ -45,6 +46,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   cJSON *json_obj;
   
   char server_address[16];
+  char s_trace[5];
   
   char remote_addr[16];
   char request_uri[4096];
@@ -68,6 +70,19 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   post_data[0] = 0;
   content_length = 0;
   s_content_length[0] = 0;
+  trace = 0;
+
+  pConfig = new DPConfig("/etc/dompiweb.config");
+
+  if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
+  {
+    return 0;
+  }
+
+  if( pConfig->GetParam("TRACE-ABMHW.CGI", s_trace))
+  {
+    trace = atoi(s_trace);
+  }
 
   for(i = 0; env[i]; i++)
   {
@@ -99,14 +114,16 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  openlog("abmhw.cgi", 0, LOG_USER);
 
   Str.EscapeHttp(request_uri, request_uri);
   Str.EscapeHttp(post_data, post_data);
 
-  syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
+  if(trace)
+  {
+    openlog("abmhw.cgi", 0, LOG_USER);
+    syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
               remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
-
+  }
 
   pConfig = new DPConfig("/etc/dompiweb.config");
 
@@ -126,7 +143,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(strchr(request_uri, '?'))
   {
     strcpy(buffer, strchr(request_uri, '?')+1);
-    syslog(LOG_DEBUG, "Section 1: %s", buffer);
+    if(trace) syslog(LOG_DEBUG, "Section 1: %s", buffer);
     /* Recorro los parametros del GET */
     for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
     {
@@ -184,7 +201,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   query.Clear();
   response.Clear();
   query = buffer;
-  syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
+  if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
   rc = pClient->Call(funcion_call, query, response, 100);
   if(rc == 0)
   {

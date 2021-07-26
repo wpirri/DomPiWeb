@@ -31,6 +31,10 @@
 #include "config.h"
 #include "strfunc.h"
 
+#define MAX_POST_DATA 4096
+#define MAX_GET_DATA  1024
+
+int trace;
 
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
@@ -45,13 +49,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   cJSON *json_obj;
   
   char server_address[16];
+  char s_trace[5];
   
   char remote_addr[16];
   char request_uri[4096];
   char request_method[8];
   int content_length;
   char s_content_length[8];
-  char post_data[4096];
+  char get_data[MAX_GET_DATA+1];
+  char post_data[MAX_POST_DATA+1];
   char buffer[4096];
   char label[64];
   char value[64];
@@ -68,6 +74,19 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   post_data[0] = 0;
   content_length = 0;
   s_content_length[0] = 0;
+  trace = 0;
+
+  pConfig = new DPConfig("/etc/dompiweb.config");
+
+  if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
+  {
+    return 0;
+  }
+
+  if( pConfig->GetParam("TRACE-ABMUSER.CGI", s_trace))
+  {
+    trace = atoi(s_trace);
+  }
 
   for(i = 0; env[i]; i++)
   {
@@ -92,28 +111,21 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(content_length)
   {
-    fgets(post_data, ((content_length+1)<4096)?(content_length+1):4095, stdin);
+    fgets(post_data, ((content_length+1)<MAX_POST_DATA)?(content_length+1):MAX_POST_DATA, stdin);
   }
 
   fputs("Connection: close\r\n", stdout);
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  openlog("abmuser.cgi", 0, LOG_USER);
-
   Str.EscapeHttp(request_uri, request_uri);
   Str.EscapeHttp(post_data, post_data);
 
-  syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
-              remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
-
-
-  pConfig = new DPConfig("/etc/dompiweb.config");
-
-  if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
+  if(trace)
   {
-    fputs("{ \"rc\":\"01\", \"msg\":\"Error de configuracion\" }\r\n", stdout);
-    return 0;
+    openlog("abmuser.cgi", 0, LOG_USER);
+    syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
+              remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
   }
 
   gminit.m_host = server_address;
@@ -125,10 +137,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(strchr(request_uri, '?'))
   {
-    strcpy(buffer, strchr(request_uri, '?')+1);
-    syslog(LOG_DEBUG, "Section 1: %s", buffer);
+    strcpy(get_data, strchr(request_uri, '?')+1);
+    if(trace) syslog(LOG_DEBUG, "GET DATA: %s", get_data);
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
+    for(i = 0; Str.ParseDataIdx(get_data, label, value, i); i++)
     {
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "funcion"))
@@ -184,7 +196,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   query.Clear();
   response.Clear();
   query = buffer;
-  syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
+  if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
   rc = pClient->Call(funcion_call, query, response, 100);
   if(rc == 0)
   {
