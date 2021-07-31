@@ -281,6 +281,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(status_portb != (-1))
   {
     sprintf(str, "%i", status_portb);
+    cJSON_AddStringToObject(json_obj, "STATUS_PORTB", str);
   }
   if(status_portc != (-1))
   {
