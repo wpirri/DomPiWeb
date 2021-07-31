@@ -175,7 +175,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "Call Q: statusio [%s]", query.C_Str());
   }
 
-  rc = pClient->Call("dompi_statusio", query, response, 100);
+  rc = pClient->Call("dompi_statusio", query, response, 1000);
   if(rc == 0)
   {
     if(trace)

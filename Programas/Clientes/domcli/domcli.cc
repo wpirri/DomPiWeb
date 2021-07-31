@@ -119,7 +119,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       cJSON_PrintPreallocated(json_query, input_buffer, MAX_INPUT_BUFFER_LEN, 0);
       cJSON_Delete(json_query);
       query = input_buffer;
-      rc = pClient->Call("dompi_cmdline", query, response, 100);
+      rc = pClient->Call("dompi_cmdline", query, response, 1000);
       if(rc == 0)
       {
         json_obj = cJSON_Parse(response.Data());

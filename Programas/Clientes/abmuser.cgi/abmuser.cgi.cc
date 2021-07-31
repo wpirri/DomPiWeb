@@ -197,7 +197,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   response.Clear();
   query = buffer;
   if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
-  rc = pClient->Call(funcion_call, query, response, 100);
+  rc = pClient->Call(funcion_call, query, response, 1000);
   if(trace) syslog(LOG_DEBUG, "resp %i [%s]", rc, response.Data()); 
   if(rc == 0)
   {

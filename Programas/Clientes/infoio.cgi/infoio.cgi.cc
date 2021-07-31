@@ -321,7 +321,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
   }
 
-  rc = pClient->Call("dompi_infoio", query, response, 100);
+  rc = pClient->Call("dompi_infoio", query, response, 1000);
   if(rc == 0)
   {
     if(trace)
