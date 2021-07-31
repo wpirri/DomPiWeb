@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS TB_DOM_FUNCTION;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
 DROP TABLE IF EXISTS TB_DOM_GROUP_LIST;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
+DROP TABLE IF EXISTS TB_DOM_ICONO;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
 DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
@@ -59,6 +60,12 @@ Actualizar integer DEFAULT 0,                -- Enviar update de config al HW
 Flags integer DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS TB_DOM_ICONO (
+Id integer primary key,
+FileNamePrefix varchar(256) NOT NULL,
+FileNameExt varchar(256) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,
@@ -68,7 +75,12 @@ E_S integer NOT NULL,                       -- Bit 1 a 16
 Tipo integer NOT NULL,                      -- 0=Analog, 1=Digital, 2=Alarma
 Estado integer DEFAULT 0,
 Flags integer DEFAULT 0,
-FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
+Planta integer DEFAULT 0,
+Icono integer DEFAULT 0,
+PosX integer DEFAULT 0,
+PosY integer DEFAULT 0,
+FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
+FOREIGN KEY(Icono) REFERENCES TB_DOM_ICONO(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP ( 

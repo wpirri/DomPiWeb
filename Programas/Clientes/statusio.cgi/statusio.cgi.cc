@@ -43,7 +43,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMError gmerror;
   CGMBuffer query;
   CGMBuffer response;
-  char buffer[4096];
   DPConfig *pConfig;
   STRFunc Str;
   cJSON *json_obj;
@@ -60,14 +59,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char post_data[MAX_POST_DATA+1];
   char label[64];
   char value[64];
-  char hw_id[16];
-  char str[16];
-  int status_porta = (-1);
-  int status_portb = (-1);
-  int status_portc = (-1);
-  int delta_porta = 0;
-  int delta_portb = 0;
-  int delta_portc = 0;
 
   int i;
   int rc;
@@ -79,8 +70,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   request_uri[0] = 0;
   request_method[0] = 0;
   post_data[0] = 0;
-  hw_id[0] = 0;
-  status_porta = 0;
   content_length = 0;
   s_content_length[0] = 0;
   trace = 0;
@@ -96,6 +85,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     trace = atoi(s_trace);
   }
+
+  json_obj = cJSON_CreateObject();
 
   for(i = 0; env[i]; i++)
   {
@@ -142,8 +133,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "CONFIG_FILE: /etc/dompiweb.config");
     syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
   }
-
-  json_obj = cJSON_CreateObject();
 
   if(strchr(request_uri, '?'))
   {
@@ -195,12 +184,11 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
     /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
     /* Contenido de la página */
-    fprintf(stdout, "%s\r\n", buffer);
+    fprintf(stdout, "%s\r\n", response.Data());
     if(trace)
     {
-      syslog(LOG_DEBUG, "%s\r\n", buffer);
+      syslog(LOG_DEBUG, "%s\r\n", response.Data());
     }
-    cJSON_Delete(json_obj);
   }
   else
   {

@@ -172,35 +172,35 @@ int main(/*int argc, char** argv, char** env*/void)
 	STRFunc Strf;
 	CGMServerBase::GMIOS call_resp;
 
-    cJSON *json_obj;
-    cJSON *json_un_obj;
-    cJSON *json_arr = NULL;
-    cJSON *json_user;
-    cJSON *json_pass;
-    cJSON *json_channel;
-    cJSON *json_query;
-    cJSON *json_query_result;
-    cJSON *json_response;
-    //cJSON *json_response_password;
-    cJSON *json_cmdline;
-    cJSON *json_resp_code;
+  cJSON *json_obj;
+  cJSON *json_un_obj;
+  cJSON *json_arr = NULL;
+  cJSON *json_user;
+  cJSON *json_pass;
+  cJSON *json_channel;
+  cJSON *json_query;
+  cJSON *json_query_result;
+  //cJSON *json_response;
+  //cJSON *json_response_password;
+  cJSON *json_cmdline;
+  //cJSON *json_resp_code;
 
-    cJSON *json_HW_Id;
-    cJSON *json_MAC;
+  cJSON *json_HW_Id;
+  cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Tipo_HW;
-	cJSON *json_Tipo_ASS;
-	cJSON *json_Port;
-	cJSON *json_E_S;
-	cJSON *json_Estado;
-	cJSON *json_AN_Config;
-	cJSON *json_IO_Config;
-	cJSON *json_Config_PORT_A_Analog;
+	//cJSON *json_Tipo_ASS;
+	//cJSON *json_Port;
+	//cJSON *json_E_S;
+	//cJSON *json_Estado;
+	//cJSON *json_AN_Config;
+	//cJSON *json_IO_Config;
+	//cJSON *json_Config_PORT_A_Analog;
 	cJSON *json_Config_PORT_A_E_S;
-	cJSON *json_Config_PORT_B_Analog;
+	//cJSON *json_Config_PORT_B_Analog;
 	cJSON *json_Config_PORT_B_E_S;
-	cJSON *json_Config_PORT_C_Analog;
-	cJSON *json_Config_PORT_C_E_S;
+	//cJSON *json_Config_PORT_C_Analog;
+	//cJSON *json_Config_PORT_C_E_S;
 
 	char ass_s_disp[128];
 	int ass_i_port;
@@ -245,6 +245,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	pEV = new GEvent(pDB, m_pServer);
 
 	m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_statusio", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_db_struct", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_user_list", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_user_list_all", GM_MSG_TYPE_CR);
@@ -346,12 +347,25 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_statusio"))
 			{
-				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-
-
-
+				json_arr = cJSON_CreateArray();
+				strcpy(query, "SELECT ASS.Id, ASS.Objeto, ASS.Tipo, ASS.Estado, ICON.FileNamePrefix, ICON.FileNameExt "
+                      "FROM TB_DOM_ASSIGN AS ASS, TB_DOM_ICONO AS ICON "
+                      "WHERE ASS.Icono = ICON.Id;");
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_arr);
+					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_arr);
+				}
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -359,8 +373,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_statusio]");
 				}
-
-				cJSON_Delete(json_obj);
 			}
 			/* ****************************************************************
 			*		dompi_db_struct

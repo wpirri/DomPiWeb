@@ -194,7 +194,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
             /* Actualizo la tabla de Dispositivos */
             sprintf(query, "UPDATE TB_DOM_PERIF "
-                                "SET Ultimo_Ok  = \"%04i-%02i-%02i %02i:%02i:%02i\", "
+                                "SET Ultimo_Ok = \"%04i-%02i-%02i %02i:%02i:%02i\", "
                                   "Direccion_IP = \"%s\""
                                   "%s "
                                 "WHERE MAC = \"%s\";",
@@ -295,6 +295,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         }
                     }
                 }
+            }
+            else
+            {
+              m_pServer->m_pLog->Add(50, "Error %i en update", rc);
             }
             cJSON_Delete(json_obj);
         }
