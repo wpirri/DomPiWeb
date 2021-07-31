@@ -414,7 +414,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT Usuario, Nombre_Completo, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
+				strcpy(query, "SELECT Id, Usuario, Nombre_Completo, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -585,12 +585,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					if( strcmp(json_un_obj->valuestring, "admin") )
+					if( strcmp(json_un_obj->valuestring, "0") )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Id = \'%s\';", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -640,7 +640,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Nombre") )
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
 										strcpy(query_where, json_un_obj->string);
 										strcat(query_where, "='");
@@ -704,7 +704,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_arr = cJSON_CreateArray();
 					sprintf(query, "SELECT Permisos,Dias,Horas,Estado,Contador_Error,"
-					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_user->valuestring);
+					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Id = \'%s\';", json_user->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
