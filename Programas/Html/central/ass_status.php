@@ -42,7 +42,7 @@ include('head-abm.php');
       table += '</table>';  
       
       document.getElementById('status_list_table_div').innerHTML = table;
-      newAJAXCommand('/cgi-bin/statusio.cgi', RefreshData, false);
+      newAJAXCommand('/cgi-bin/statusio.cgi', RefreshData, true);
     }
 
     function OnLoad() {
