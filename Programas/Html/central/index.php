@@ -101,7 +101,7 @@ function setCurrentTime( ) {
 setCurrentTime();
 
 /* On Click de la página */
-window.onclick = function() {window.location.replace('config.php');}
+window.onclick = function() {window.location.replace('planta1.php');}
 
 /* Reload para actualizaciones */
 setTimeout("window.location.replace('/');", 600000);

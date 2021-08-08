@@ -52,6 +52,8 @@ body {
 	color: white;
 	}
 	
+/* En config.php */
+
 #btn-config-usuarios {
 	left: 255px; 
 	top: 95px; 
@@ -95,7 +97,6 @@ body {
 	background: fuchsia;
 	}
 
-
 #btn-config-flags {
 	left: 95px; 
 	top: 265px; 
@@ -120,3 +121,21 @@ body {
 	background: orange;
 	}
 
+/* En plantaN.php */
+#btn-planta-config {
+	left: 10px; 
+	top: 180px; 
+	background: navy;
+	}
+
+#btn-planta-task {
+	left: 10px; 
+	top: 265px; 
+	background: brown;
+	}
+
+#btn-planta-alarm {
+	left: 10px; 
+	top: 350px; 
+	background: green;
+	}
