@@ -194,7 +194,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
             /* Actualizo la tabla de Dispositivos */
             sprintf(query, "UPDATE TB_DOM_PERIF "
-                                "SET Ultimo_Ok = \"%04i-%02i-%02i %02i:%02i:%02i\", "
+                                "SET Ultimo_Ok  = \"%04i-%02i-%02i %02i:%02i:%02i\", "
                                   "Direccion_IP = \"%s\""
                                   "%s "
                                 "WHERE MAC = \"%s\";",
@@ -216,11 +216,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     {
                         mask = pow(2, i);   /* Armo la mascara */
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Port = 1 AND E_S = %i AND Dispositivo = "
-                                        "(SELECT Id FROM TB_DOM_PERIF WHERE MAC = \"%s\");",
+                                        "WHERE Dispositivo = \"%s\" AND Port = 1 AND E_S = %i",
                                         (status_a & mask)?1:0,
-                                        i+1,
-                                        hw_id);
+                                        hw_id,
+                                        i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
@@ -232,11 +231,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     {
                         mask = pow(2, i);   /* Armo la mascara */
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Port = 2 AND E_S = %i AND Dispositivo = "
-                                        "(SELECT Id FROM TB_DOM_PERIF WHERE MAC = \"%s\");",
+                                        "WHERE Dispositivo = \"%s\" AND Port = 2 AND E_S = %i",
                                         (status_b & mask)?1:0,
-                                        i+1,
-                                        hw_id);
+                                        hw_id,
+                                        i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
@@ -248,11 +246,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     {
                         mask = pow(2, i);   /* Armo la mascara */
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Port = 3 AND E_S = %i AND Dispositivo = "
-                                        "(SELECT Id FROM TB_DOM_PERIF WHERE MAC = \"%s\");",
+                                        "WHERE Dispositivo = \"%s\" AND Port = 3 AND E_S = %i",
                                         (status_c & mask)?1:0,
-                                        i+1,
-                                        hw_id);
+                                        hw_id,
+                                        i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
@@ -298,10 +295,6 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         }
                     }
                 }
-            }
-            else
-            {
-              m_pServer->m_pLog->Add(50, "Error %i en update", rc);
             }
             cJSON_Delete(json_obj);
         }

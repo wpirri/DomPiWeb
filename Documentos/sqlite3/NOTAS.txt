@@ -126,9 +126,4 @@ sqlite> select * from tbl1;
 'goodbye',20
 sqlite>
 
-sqlite> .header on
-sqlite> .mode column
-
-sqlite> .dump <TABLE>
-
 

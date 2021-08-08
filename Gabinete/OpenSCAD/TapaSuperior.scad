@@ -25,13 +25,13 @@ inicial=[0,0,0];
 
 // Medidas de la tapa
 ancho=160;
-alto=100;
+alto=97;
 espesor=2;
 
 // Detalles de la tapa
 ancho_borde=1;          // (pared/2) de caja
 altura_borde=1.5;       // 1/2 mm menos que profundidad_calado en la caja
-altura_protector=20;    // Pared de separacion que queda detrás de las borneras
+altura_protector=25;    // Pared de separacion que queda detrás de las borneras
 
 // Altura sobre la pestaña donde va el orificio del tornillo de sujeccion
 // Relacionado con pos_tornillo_h de la caja

@@ -202,7 +202,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   response.Clear();
   query = buffer;
   if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
-  rc = pClient->Call(funcion_call, query, response, 1000);
+  rc = pClient->Call(funcion_call, query, response, 100);
   if(rc == 0)
   {
     fprintf(stdout, "%s\r\n", response.Data());

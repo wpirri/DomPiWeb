@@ -281,7 +281,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(status_portb != (-1))
   {
     sprintf(str, "%i", status_portb);
-    cJSON_AddStringToObject(json_obj, "STATUS_PORTB", str);
   }
   if(status_portc != (-1))
   {
@@ -321,7 +320,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
   }
 
-  rc = pClient->Call("dompi_infoio", query, response, 1000);
+  rc = pClient->Call("dompi_infoio", query, response, 100);
   if(rc == 0)
   {
     if(trace)

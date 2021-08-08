@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name srr1210)(type Legacy)(uri /home/walter/Dropbox/Walter/Proyectos/Domotica-IoT/DomPiWeb/Circuito-IO/usr_lib/2021-05-23_22-45-33.lib)(options "")(descr ""))
+  (lib (name DomPiWeb-rescue)(type Legacy)(uri ${KIPRJMOD}/DomPiWeb-rescue.lib)(options "")(descr ""))
 )
