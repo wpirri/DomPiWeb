@@ -1,4 +1,4 @@
 (sym_lib_table
-  (lib (name srr1210)(type Legacy)(uri /home/walter/Dropbox/Walter/Proyectos/Domotica-IoT/DomPiWeb/Circuito-IO/usr_lib/2021-05-23_22-45-33.lib)(options "")(descr ""))
-  (lib (name DomPiWeb-rescue)(type Legacy)(uri ${KIPRJMOD}/DomPiWeb-rescue.lib)(options "")(descr ""))
+  (lib (name srr1210)(type Legacy)(uri /home/walter/Dropbox/Walter/Electronica/Kicad_Libs/UL_SRR1210470M/2019-04-02_20-13-32.lib)(options "")(descr ""))
+  (lib (name sim7050)(type Legacy)(uri /home/walter/Dropbox/Walter/Electronica/Kicad_Libs/personal/SIM7050.lib)(options "")(descr ""))
 )
