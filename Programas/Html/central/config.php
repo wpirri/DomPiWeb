@@ -5,8 +5,8 @@ include("head.php");
 
 <body>
 
-<div class="back-btn" id="cfg0" onclick="window.location.replace('/');">
-	<img id="back-icon" class="icon-btn" src="/images/back.png">&nbsp;Inicio
+<div class="back-btn" id="back-from-config" onclick="window.location.replace('planta1.php');">
+	<img id="back-icon" class="icon-btn" src="/images/back.png">&nbsp;Volver
 </div>
 
 
