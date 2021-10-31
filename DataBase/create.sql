@@ -9,6 +9,20 @@ DROP TABLE IF EXISTS TB_DOM_GROUP;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
 DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
+DROP TABLE IF EXISTS TB_DOM_CONFIG;
+
+CREATE TABLE IF NOT EXISTS TB_DOM_CONFIG (
+Id integer primary key,
+Creacion varchar(32),
+System_Key varchar(256),
+Cloud_Host_1_Address varchar(64),
+Cloud_Host_1_Port integer DEFAULT 0,
+Cloud_Host_1_Proto varchar(8),
+Cloud_Host_2_Address varchar(64),
+Cloud_Host_2_Port integer DEFAULT 0,
+Cloud_Host_2_Proto varchar(8),
+Flags integer DEFAULT 0
+);
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
 Id integer primary key,
@@ -65,8 +79,11 @@ Objeto varchar(128) NOT NULL,
 Dispositivo integer NOT NULL,
 Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
 E_S integer NOT NULL,                       -- Bit 1 a 16
-Tipo integer NOT NULL,                      -- 0=Analog, 1=Digital, 2=Alarma
+Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma
 Estado integer DEFAULT 0,
+Coeficiente integer DEFAULT 0,              -- 0=Coeficiente Positivo, 1=Coeficiente Negativo
+Analog_Mult_Div integer DEFAULT 0,          -- 0=Nada, 1=Multiplicar por valor, 2 => si Coeficiente = 0 -> Estado = Analog / Div  si Coeficiente = 1 -> Estado = Div / Analog 
+Analog_Mult_Div_Valor integer DEFAULT 1,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
 );

@@ -6,3 +6,5 @@ INSERT INTO TB_DOM_FLAG (Id, Variable) VALUES (0, 'Ninguna');
 INSERT INTO TB_DOM_FUNCTION (Id, Funcion) VALUES (0, 'Ninguna');
 INSERT INTO TB_DOM_USER (id, Usuario, Nombre_Completo, Pin_WEB) VALUES (0, 'nadie', 'Nadie', '****');
 INSERT INTO TB_DOM_USER (id, Usuario, Nombre_Completo, Pin_WEB) VALUES (1, 'admin', 'Administrador del sistema', 'admin');
+INSERT INTO TB_DOM_CONFIG (id, Creacion, System_Key, Cloud_Host_1_Address, Cloud_Host_1_Proto, Cloud_Host_2_Address, Cloud_Host_2_Proto)
+  VALUES (1, '2021/10/30 15:58:00', '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF', 'witchblade.com.ar', 'http', 'pueyrredon2679.com.ar', 'http');
