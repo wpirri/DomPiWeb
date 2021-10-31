@@ -57,19 +57,19 @@ body {
 #btn-config-usuarios {
 	left: 255px; 
 	top: 95px; 
-	background: black;
+	background: olive;
 }
 
-#btn-config-upload {
+#btn-config-sistema {
 	left: 415px; 
 	top: 95px; 
 	background: red;
 	}
 
-#btn-config-download {
+#btn-config-dummy1 {
 	left: 575px; 
 	top: 95px; 
-	background: olive;
+	background: black;
 	}
 
 
@@ -121,6 +121,30 @@ body {
 	background: orange;
 	}
 
+#btn-config-upload {
+	left: 95px; 
+	top: 350px; 
+	background: maroon;
+}
+
+#btn-config-download {
+	left: 255px; 
+	top: 350px; 
+	background: fuchsia;
+	}
+
+#btn-config-dummy2 {
+	left: 415px; 
+	top: 350px; 
+	background: black;
+	}
+
+#btn-config-dummy3 {
+	left: 575px; 
+	top: 350px; 
+	background: black;
+	}
+				
 /* En plantaN.php */
 #btn-planta-config {
 	left: 10px; 
@@ -139,3 +163,4 @@ body {
 	top: 350px; 
 	background: green;
 	}
+

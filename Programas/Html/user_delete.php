@@ -6,11 +6,11 @@ include('head-abm.php');
 <body onload="OnLoad();">
 
 <div id='user_delete_back_btn' class='back-btn' onclick="window.location.replace('user_list.php');" >
-	<img id='user_delete_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
+	<img id='user_delete_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
 </div>
 
 <div id='user_delete_save_btn' class='submit-btn' onclick="SaveData();" >
-	<img id='user_delete_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Borrar
+	<img id='user_delete_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Borrar
 </div>
 
 <div id='user_delete_div' class='abm-div'></div>
@@ -21,12 +21,12 @@ include('head-abm.php');
     }
 
     function SaveData() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=delete&Nombre=<?php echo $_GET['Nombre']; ?>', null, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=delete&Id=<?php echo $_GET['Id']; ?>', null, false);
         window.location.replace('user_list.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Nombre=<?php echo $_GET['Nombre']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 </script>
 

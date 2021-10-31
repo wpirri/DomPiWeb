@@ -8,11 +8,11 @@ include('head-abm.php');
 <form id="add_form" name="add_form" method="post">
 
 <div id='user_add_back_btn' class='back-btn' onclick="window.location.replace('user_list.php');" >
-	<img id='user_add_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
+	<img id='user_add_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
 </div>
 
 <div id='user_add_save_btn' class='submit-btn' onclick="SaveData();" >
-	<img id='user_add_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Guardar
+	<img id='user_add_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Guardar
 </div>
 
 <div id='user_add_div' class='abm-div'></div>

@@ -83,9 +83,9 @@ function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_l
 			}
 		} 
 		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="/images/edit.png"></a></td>' 
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
 		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="/images/delete.png"></a></td>' 
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
 		output += val;
 		output += '</tr>\n';
 	}

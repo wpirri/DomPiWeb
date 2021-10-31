@@ -6,11 +6,11 @@ include('head-abm.php');
 <body onload="OnLoad();">
 
 <div id='hw_delete_back_btn' class='back-btn' onclick="window.location.replace('hw_list.php');" >
-	<img id='hw_delete_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
+	<img id='hw_delete_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
 </div>
 
 <div id='hw_delete_save_btn' class='submit-btn' onclick="SaveData();" >
-	<img id='hw_delete_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Borrar
+	<img id='hw_delete_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Borrar
 </div>
 
 <div id='hw_delete_div' class='abm-div'></div>

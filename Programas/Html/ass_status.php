@@ -6,11 +6,11 @@ include('head-abm.php');
 <body onload='OnLoad();'>
 
 <div id='status_list_back_btn' class='back-btn' onclick="window.location.replace('config.php');" >
-	<img id='status_list_back_icon' class='icon-btn' src='/images/back.png'>&nbsp;Volver
+	<img id='status_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
 <div id='status_list_add_btn' class='abm-add-btn' onclick="window.location.replace('status_add.php');" >
-	<img id='status_list_add__icon' class='icon-btn' src='/images/add.png'>&nbsp;Nuevo
+	<img id='status_list_add__icon' class='icon-btn' src='images/add.png'>&nbsp;Nuevo
 </div>
 
 <div id='status_list_table_div' class='abm-div'></div>
@@ -35,7 +35,7 @@ include('head-abm.php');
         {
           table += '<tr>';  
           table += '<td>' + respJSON[i].Objeto + '</td>';  
-          table += '<td><img id=\"' + respJSON[i].Objeto + '\" src=\"/images/' + respJSON[i].FileNamePrefix + respJSON[i].Estado + '.' + respJSON[i].FileNameExt  + '\"></td>';  
+          table += '<td><img id=\"' + respJSON[i].Objeto + '\" src=\"images/' + respJSON[i].FileNamePrefix + respJSON[i].Estado + '.' + respJSON[i].FileNameExt  + '\"></td>';  
           table += '</tr>\n';
         }
       }

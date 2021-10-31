@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-DOCUMENT_ROOT=/var/www/html/
+DOCUMENT_ROOT=/var/www/html/dompi-web/
 CGI_ROOT=/usr/lib/cgi-bin/
 
 CP=cp -uva
@@ -14,5 +14,9 @@ none:
 	echo "implementado solamente make install"
 
 install:
+	mkdir -p $(DOCUMENT_ROOT)
 	$(CP) * $(DOCUMENT_ROOT)
+
+uninstall:
+	rm -rf $(DOCUMENT_ROOT)
 

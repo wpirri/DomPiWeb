@@ -8,11 +8,11 @@ include('head-abm.php');
 <form id="edit_form" name="edit_form" method="post">
 
 <div id='user_edit_back_btn' class='back-btn' onclick="window.location.replace('user_list.php');" >
-	<img id='user_edit_back_icon' class='icon-btn' src='/images/no.png'>&nbsp;Cancelar
+	<img id='user_edit_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
 </div>
 
 <div id='user_edit_save_btn' class='submit-btn' onclick="SaveData();" >
-	<img id='user_edit_save_icon' class='icon-btn' src='/images/ok.png'>&nbsp;Guardar
+	<img id='user_edit_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Guardar
 </div>
 
 <div id='user_edit_div' class='abm-div'></div>
@@ -39,7 +39,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Nombre=<?php echo $_GET['Nombre']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 </script>
 

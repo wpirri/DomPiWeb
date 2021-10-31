@@ -3,8 +3,8 @@
 <html>
 <head>
 <title>SYSHOME V 3.0 - Usuarios</title>
-<link href="/css/dompiweb.css" rel="stylesheet" type="text/css" />
-<script src="/js/dompiweb.js" type="text/javascript"></script>
+<link href="css/dompiweb.css" rel="stylesheet" type="text/css" />
+<script src="js/dompiweb.js" type="text/javascript"></script>
 </head>
 <body>
 

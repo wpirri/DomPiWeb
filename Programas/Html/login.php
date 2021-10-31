@@ -7,7 +7,7 @@ $_SESSION["auth_token"] = "-";
 <html>
 <head>
 <title>SYSHOME V 3.0 - Login</title>
-<link href="/css/dompiweb.css" rel="stylesheet" type="text/css" />
+<link href="css/dompiweb.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <form id=login name=login>
