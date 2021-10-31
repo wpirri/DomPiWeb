@@ -60,7 +60,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char post_data[MAX_POST_DATA+1];
   char buffer[4096];
   char label[64];
-  char value[64];
+  char value[1024];
   char funcion[64];
   char funcion_call[64];
   int rc;
@@ -138,7 +138,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(strchr(request_uri, '?'))
   {
     strcpy(get_data, strchr(request_uri, '?')+1);
-    if(trace) syslog(LOG_DEBUG, "GET DATA: %s", get_data);
+    if(trace) syslog(LOG_DEBUG, "GET DATA: [%s]", buffer);
     /* Recorro los parametros del GET */
     for(i = 0; Str.ParseDataIdx(get_data, label, value, i); i++)
     {
