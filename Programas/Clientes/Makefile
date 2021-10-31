@@ -6,6 +6,7 @@ all:
 	make -C abmassign.cgi
 	make -C abmhw.cgi
 	make -C abmuser.cgi
+	make -C abmsys.cgi
 	make -C infoio.cgi
 	make -C statusio.cgi
 
@@ -15,6 +16,7 @@ clean:
 	make -C abmassign.cgi clean
 	make -C abmhw.cgi clean
 	make -C abmuser.cgi clean
+	make -C abmsys.cgi clean
 	make -C infoio.cgi clean
 	make -C statusio.cgi clean
 
@@ -24,6 +26,7 @@ install:
 	make -C abmassign.cgi install
 	make -C abmhw.cgi install
 	make -C abmuser.cgi install
+	make -C abmsys.cgi install
 	make -C infoio.cgi install
 	make -C statusio.cgi install
 
@@ -33,5 +36,6 @@ uninstall:
 	make -C abmassign.cgi uninstall
 	make -C abmhw.cgi uninstall
 	make -C abmuser.cgi uninstall
+	make -C abmsys.cgi uninstall
 	make -C infoio.cgi uninstall
 	make -C statusio.cgi uninstall

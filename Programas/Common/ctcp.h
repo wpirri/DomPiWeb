@@ -50,7 +50,7 @@ public:
     int Connect(string sadrrloc, string saddrrem, int port); /* Conexion cliente */
     /* cierra una conexion */
     int Close();
-    /* cierra la conexíon sun hacer el shutdown del socket */
+    /* cierra la conexï¿½on sun hacer el shutdown del socket */
     int Kill();
     /* devuelve el port que esta usando el socket */
     int LocalPort();
@@ -59,6 +59,7 @@ public:
     char* RemoteAddress();
     int Send(const void *msg, unsigned int msglen);
     int Receive(void *msg, unsigned int msglen, int to_ms);
+    int Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to_ms);
 
     char* GetErrorText();
     int GetErrorNumber();

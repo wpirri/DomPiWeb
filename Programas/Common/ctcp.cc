@@ -82,7 +82,7 @@ unsigned int CTcp::ResolvAddr(const char *addr)
   {
     if(strlen(addr))
     {
-      /* trato de obtener la dirección del formato nnn.nnn.nnn.nnn */
+      /* trato de obtener la direcciï¿½n del formato nnn.nnn.nnn.nnn */
       if(!inet_aton((char*)addr, &inaddr))
       {
         /* no estaba en ese formato -> lo busco por DNS */
@@ -124,7 +124,7 @@ int CTcp::LocalConn(const char *addr, int port)
   local.sin_port = htons(port);
   if((local.sin_addr.s_addr = ResolvAddr(addr)) == INADDR_NONE)
   {
-    /* el DNS devolvió la dirección en un formato erróneo */
+    /* el DNS devolviï¿½ la direcciï¿½n en un formato errï¿½neo */
     GetErr("[CTCP] ERROR LocalConn()->ResolvAddr() (%s:%i)", (addr)?addr:"", port);
     close(sock);
     return CTCP_ADDRESS_NOT_FOUND;
@@ -157,7 +157,7 @@ int CTcp::RemoteConn(const char *addr, int port)
   remote.sin_port = htons(port);
   if((remote.sin_addr.s_addr = ResolvAddr(addr)) == INADDR_NONE)
   {
-    /* el DNS devolvió la dirección en un formato erróneo */
+    /* el DNS devolviï¿½ la direcciï¿½n en un formato errï¿½neo */
     GetErr("[CTCP] ERROR RemoteConn()->ResolvAddr() (%s:%i)", (addr)?addr:"", port);
     return CTCP_ADDRESS_NOT_FOUND;
   }
@@ -306,7 +306,7 @@ int CTcp::Kill()
   {
     if(close(m_sock) < 0)
     {
-      /* por alguna razón no se puede cerrar el socket */
+      /* por alguna razï¿½n no se puede cerrar el socket */
       GetErr("[CTCP] ERROR Kill()->close()");
       return CTCP_GENERAL_ERROR;
     }
@@ -326,10 +326,10 @@ int CTcp::Send(const void *msg, unsigned int msglen)
   if(m_sock < 0)
   {
     /* el socket no esta abierto */
-    GetErr("[CTCP] ERROR Send() El socket no está conectado");
+    GetErr("[CTCP] ERROR Send() El socket no estï¿½ conectado");
     return CTCP_NOT_CONNECTED;
   }
-  /* para enviar tranquilo espero a que el socket esté dispnible */
+  /* para enviar tranquilo espero a que el socket estï¿½ dispnible */
   pfd[0].fd = m_sock;
   pfd[0].events = POLLOUT;
   if((rc = poll(pfd, 1, 1000)) < 0)
@@ -387,14 +387,14 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
       GetErr("[CTCP] ERROR Receive()->recv()");
       if((m_iLastError) && (m_iLastError != 11))
       {
-        /* error de recepción */
+        /* error de recepciï¿½n */
         return CTCP_READ_ERROR;
       }
     }
   }
   else
   {
-    /* se recibió con tamaño 0 */
+    /* se recibiï¿½ con tamaï¿½o 0 */
     GetErr("[CTCP] ERROR Receive()->recv() rcvlen = 0");
     return CTCP_READ_ERROR;
   }
@@ -430,6 +430,27 @@ int CTcp::GetErrorNumber()
 
 int CTcp::GetFD()
 {
-        return m_sock;
+  return m_sock;
 }
 
+int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to)
+{
+  int rc = 0; 
+
+  this->Connect(NULL, raddr, rport);
+  if(rc != 0) 
+  {
+      return (-1);
+  }
+
+  rc = this->Send(snd, strlen(snd));
+  if(rc != 0) 
+  {
+      return (-1);
+  }
+
+  rc = this->Receive(rcv, rcv_max_len, 3000);
+  *((char*)(rcv + rc)) = 0;
+
+  return rc;
+}
