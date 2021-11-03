@@ -433,7 +433,7 @@ int CTcp::GetFD()
   return m_sock;
 }
 
-int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to)
+int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to_ms)
 {
   int rc = 0; 
 
@@ -449,7 +449,7 @@ int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rc
       return (-1);
   }
 
-  rc = this->Receive(rcv, rcv_max_len, 3000);
+  rc = this->Receive(rcv, rcv_max_len, to_ms);
   *((char*)(rcv + rc)) = 0;
 
   return rc;
