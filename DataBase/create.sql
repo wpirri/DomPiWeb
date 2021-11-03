@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS TB_DOM_FLAG;
 DROP TABLE IF EXISTS TB_DOM_GROUP_LIST;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
+DROP TABLE IF EXISTS TB_DOM_GRUPO_VISUAL;
 DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
 DROP TABLE IF EXISTS TB_DOM_CONFIG;
@@ -73,6 +74,12 @@ Actualizar integer DEFAULT 0,                -- Enviar update de config al HW
 Flags integer DEFAULT 0
 );
 
+CREATE TABLE TB_DOM_GRUPO_VISUAL (
+Id integer primary key,
+Nombre varchar(32) NOT NULL,
+Descripcion varchar(256)
+);
+
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,
@@ -81,11 +88,18 @@ Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
 E_S integer NOT NULL,                       -- Bit 1 a 16
 Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma
 Estado integer DEFAULT 0,
+Icono0 varchar(32),
+Icono1 varchar(32),
+Grupo_Visual integer DEFAULT 0,
+Planta integer DEFAULT 0,
+Cord_x integer DEFAULT 0,
+Cord_y integer DEFAULT 0,
 Coeficiente integer DEFAULT 0,              -- 0=Coeficiente Positivo, 1=Coeficiente Negativo
 Analog_Mult_Div integer DEFAULT 0,          -- 0=Nada, 1=Multiplicar por valor, 2 => si Coeficiente = 0 -> Estado = Analog / Div  si Coeficiente = 1 -> Estado = Div / Analog 
 Analog_Mult_Div_Valor integer DEFAULT 1,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
+FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP ( 
