@@ -324,10 +324,29 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
     m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
                                 hw_id, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
                                 e_s, (estado)?"ON":"OFF");
-    /* Busco si hay un assign */
 
-    /* Busco si hay evento para ese assign */
+    /* Notifico el cambio de estado si corresponde a un assign */
+    json_arr = cJSON_CreateArray();
+    sprintf(query,  "SELECT ASS.Id, ASS.Objeto, ASS.Tipo "
+                    "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+                    "ASS.Dispositivo = HW.Id AND "
+                    "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i;",
+                    hw_id, port, e_s);
+    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_arr, query);
+    if(rc == 0)
+    {
+        cJSON_Delete(json_obj);
+        json_obj = cJSON_CreateObject();
+        cJSON_AddItemToObject(json_obj, "response", json_arr);
+        cJSON_AddStringToObject(json_obj, "Estado", (estado)?"1":"0");
+        cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+        m_pServer->m_pLog->Add(50, "[Post]: %s", query); 
+        m_pServer->Post("dompi_ass_change", query, strlen(query));
+    }
+    cJSON_Delete(json_arr);
 
+    /* Busco si hay un assign y si hay evento para ese assign */
     json_arr = cJSON_CreateArray();
     sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino, "
                     "EV.Enviar, EV.Parametro_Evento, EV.Condicion_Variable, EV.Condicion_Igualdad, EV.Condicion_Valor, EV.Flags "

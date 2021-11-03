@@ -107,31 +107,26 @@ CSQLite *pDB;
 GEvent *pEV;
 cJSON *json_System_Config;
 int load_system_config;
+int update_system_config;
 
 void DBMant( char* msg );
 
 void LoadSystemConfig(void)
 {
-    cJSON *json_arr = NULL;
 	char query[4096];
 	int rc;
 
 	if(pDB == NULL) return;
 
-	json_arr = cJSON_CreateArray();
+	if(json_System_Config) cJSON_Delete(json_System_Config);
+	json_System_Config = cJSON_CreateArray();
 	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
 	m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-	rc = pDB->Query(json_arr, query);
+	rc = pDB->Query(json_System_Config, query);
 	if(rc == 0)
 	{
-		if(json_System_Config) cJSON_Delete(json_System_Config);
-		json_System_Config = cJSON_CreateObject();
-		cJSON_AddItemToObject(json_System_Config, "response", json_arr);
 		load_system_config = 0;
-	}
-	else
-	{
-		cJSON_Delete(json_arr);
+		update_system_config = 1;
 	}
 }
 
@@ -237,6 +232,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	update_hw_config[0] = 0;
 	update_hw_status[0] = 0;
 	load_system_config = 1;
+	update_system_config = 0;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -2121,8 +2117,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_sysconf_get_current"))				
 			{
-				cJSON_PrintPreallocated(json_System_Config, message, 4095, 0);
-
+				json_obj = cJSON_CreateObject();
+				cJSON_AddItemReferenceToObject(json_obj, "response", json_System_Config);
+				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -2310,6 +2308,18 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(load_system_config)
 		{
 			LoadSystemConfig();
+		}
+
+		if(update_system_config && json_System_Config)
+		{
+			cJSON_PrintPreallocated(json_System_Config->child, message, 4095, 0);
+			m_pServer->m_pLog->Add(50, "[dompi_cloud_config][%s]", message);
+			rc = m_pServer->Call("dompi_cloud_config", message, strlen(message), &call_resp, 500);
+			if(rc == 0)
+			{
+				update_system_config = 0;
+			}
+			m_pServer->Free(call_resp);
 		}
 
 
