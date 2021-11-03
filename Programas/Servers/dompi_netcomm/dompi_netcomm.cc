@@ -33,7 +33,6 @@ using namespace std;
 
 #include <cjson/cJSON.h>
 
-#include "qtcp.h"
 #include "dom32iowifi.h"
 
 CGMServerWait *m_pServer;
