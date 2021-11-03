@@ -46,7 +46,7 @@ char m_CloudHost2Address[64];
 int  m_CloudHost2Port;
 char m_CloudHost2Proto[8];
 
-void DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg)
+int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg)
 {
     /* POST
     * 1.- %s: URI
@@ -77,19 +77,25 @@ void DompiCloud_Notificar(const char* host, int port, const char* proto, const c
 
 	CTcp s;
 	char buffer[4096];
+	int rc = 0;
 
 	buffer[0] = 0;
 	if( proto && !strcmp(proto, "https"))
 	{
 		m_pServer->m_pLog->Add(10, "ERROR: Protocolo HTTPS no implementado para la nube");
+
+		//if(port == 0) port = 443;
+    	//sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
+		//rc = s.Query(host, port, buffer, buffer, 4096, 5000);
 	}
 	else
 	{
+		if(port == 0) port = 80;
     	sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		s.Query(host, port, buffer, buffer, 4096, 5000);
+		rc = s.Query(host, port, buffer, buffer, 4096, 5000);
 	}
 
-	if(receive_msg)
+	if(rc > 0 && receive_msg)
 	{
 		*receive_msg = 0;
 		if(strlen(buffer))
@@ -97,6 +103,8 @@ void DompiCloud_Notificar(const char* host, int port, const char* proto, const c
 			strcpy(receive_msg, buffer);
 		}
 	}
+
+	return rc;
 }
 
 int main(/*int argc, char** argv, char** env*/void)
@@ -133,7 +141,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_cloud_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
 
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10 )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 3000 )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -151,38 +159,32 @@ int main(/*int argc, char** argv, char** env*/void)
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "System_Key")) != NULL)
 				{
 					strcpy(m_SystemKey, json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
-				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Hos_1_Address")) != NULL)
+				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_1_Address")) != NULL)
 				{
 					strcpy(m_CloudHost1Address, json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_1_Port")) != NULL)
 				{
 					m_CloudHost1Port = atoi(json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_1_Proto")) != NULL)
 				{
 					strcpy(m_CloudHost1Proto, json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
-				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Hos_2_Address")) != NULL)
+				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_2_Address")) != NULL)
 				{
 					strcpy(m_CloudHost2Address, json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_2_Port")) != NULL)
 				{
 					m_CloudHost2Port = atoi(json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Cloud_Host_2_Proto")) != NULL)
 				{
 					strcpy(m_CloudHost2Proto, json_un_obj->valuestring);
-					cJSON_Delete(json_un_obj);
 				}
+				cJSON_Delete(json_obj);
 
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -208,7 +210,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 		/* Después de un mensaje o al expirar el timer */
-		if(m_CloudHost1Address[0] || m_CloudHost1Address[0])
+		if(m_CloudHost1Address[0] || m_CloudHost2Address[0])
 		{
 			json_obj = cJSON_CreateObject();
 
@@ -219,16 +221,17 @@ int main(/*int argc, char** argv, char** env*/void)
 			cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 			cJSON_Delete(json_obj);
 			m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
+			rc = 0;
 			if(m_CloudHost1Address[0])
 			{
-				DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
+				rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
 			}
 			else /*if(m_CloudHost2Address[0])*/
 			{
-				DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
 			}
 
-			if(strlen(message))
+			if( rc > 0 && strlen(message) )
 			{
 				m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
 
