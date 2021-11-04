@@ -73,7 +73,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
                         "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
                         "Accept: text/html,text/xml\r\n\r\n";
 
-    char url_default[] = "/dompi_cloud_notif.cgi";
+    char url_default[] = "/cgi-bin/dompi_cloud_notif.cgi";
 
 	CTcp s;
 	char buffer[4096];

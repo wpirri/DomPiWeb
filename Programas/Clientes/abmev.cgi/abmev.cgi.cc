@@ -125,14 +125,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
                 remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
   }
 
-  pConfig = new DPConfig("/etc/dompiweb.config");
-
-  if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
-  {
-    fputs("{ \"rc\":\"01\", \"msg\":\"Error de configuracion\" }\r\n", stdout);
-    return 0;
-  }
-
   gminit.m_host = server_address;
   gminit.m_port = 5533;
 
