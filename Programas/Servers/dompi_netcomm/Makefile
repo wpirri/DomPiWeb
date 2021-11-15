@@ -2,7 +2,7 @@
 
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lcjson
+LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc
 OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=dompi_netcomm
 DEFINE=-D __NO__DEBUG__

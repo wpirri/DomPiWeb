@@ -67,11 +67,11 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
     * 1.- %s: URI
     * 2.- %s: Host
     */
-    char http_get[] =     "GET %s HTTP/1.1\r\n"
-                        "Host: %s\r\n"
-                        "Connection: close\r\n"
-                        "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
-                        "Accept: text/html,text/xml\r\n\r\n";
+    //char http_get[] =     "GET %s HTTP/1.1\r\n"
+    //                    "Host: %s\r\n"
+    //                    "Connection: close\r\n"
+    //                    "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
+    //                    "Accept: text/html,text/xml\r\n\r\n";
 
     char url_default[] = "/cgi-bin/dompi_cloud_notif.cgi";
 
@@ -115,7 +115,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char message[4096];
 	unsigned long message_len;
 
-	char str[256];
+	//char str[256];
     cJSON *json_obj;
     cJSON *json_un_obj;
 
@@ -195,11 +195,30 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_ass_change")) /* typo MSG, no se responde */
 			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+
+				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_Delete(json_obj);
+				rc = 0;
+				if(m_CloudHost1Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
+				}
+				else /*if(m_CloudHost2Address[0])*/
+				{
+					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				}
+
+				if( rc > 0 && strlen(message) )
+				{
+					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
 
 
 
-
-
+				}
 			}
 
 
@@ -216,7 +235,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 
-
+			/* Si hay que agragar mas objetos */
 
 			cJSON_PrintPreallocated(json_obj, message, 4095, 0);
 			cJSON_Delete(json_obj);

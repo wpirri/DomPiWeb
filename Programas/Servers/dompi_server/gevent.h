@@ -34,6 +34,7 @@ public:
     int SendEventVar(int id, int ev, int val);
 
 private:
+    int m_change_ass_count;
     CSQLite *m_pDB;
     CGMServerWait *m_pServer;
 

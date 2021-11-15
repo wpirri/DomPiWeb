@@ -88,6 +88,7 @@ GEvent::GEvent(CSQLite *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
     m_pServer = pServer;
+    m_change_ass_count = 0;
 }
 
 GEvent::~GEvent()
@@ -99,7 +100,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
 {
     int i;
     int mask;
-    char hw_id[16];
+    char hw_mac[16];
     int status_a;
     int status_b;
     int status_c;
@@ -113,7 +114,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
     char query[4096];
     char sql_set[4096];
     cJSON *json_obj;
+    cJSON *json_arr;
     cJSON *json_hw_id;
+    cJSON *json_hw_mac;
     cJSON *json_status_a;
     cJSON *json_status_b;
     cJSON *json_status_c;
@@ -136,8 +139,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
     json_obj = cJSON_Parse(json_evt);
     if(json_obj)
     {
-        json_hw_id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
-        if(json_hw_id)
+        json_hw_mac = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
+        if(json_hw_mac)
         {
             t = time(&t);
             p_tm = localtime(&t);
@@ -148,9 +151,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
             json_delta_b = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTB");
             json_delta_c = cJSON_GetObjectItemCaseSensitive(json_obj, "DELTA_PORTC");
             json_raddr = cJSON_GetObjectItemCaseSensitive(json_obj, "REMOTE_ADDR");
-            if(json_hw_id && cJSON_IsString(json_hw_id))
+            if(json_hw_mac && cJSON_IsString(json_hw_mac))
             {
-                strcpy(hw_id, json_hw_id->valuestring);
+                strcpy(hw_mac, json_hw_mac->valuestring);
             }
             if(json_status_a && cJSON_IsString(json_status_a))
             {
@@ -190,7 +193,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 strcpy(remote_addr, json_raddr->valuestring);
             }
 
-            m_pServer->m_pLog->Add(10, "[HW] %s %s", hw_id, remote_addr);
+            m_pServer->m_pLog->Add(10, "[HW] %s %s", hw_mac, remote_addr);
 
             /* Actualizo la tabla de Dispositivos */
             sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -202,14 +205,22 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                 p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec, 
                                 remote_addr,
                                 sql_set,
-                                hw_id);
+                                hw_mac);
             m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
             rc = m_pDB->Query(NULL, query);
 
-            if(rc > 0)
+
+            /* Busco el ID para relacionar con la tabla de assigns */
+            sprintf(query, "SELECT ID FROM TB_DOM_PERIF WHERE MAC = \"%s\";", hw_mac);
+            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+            json_arr = cJSON_CreateArray();
+            rc = m_pDB->Query(json_arr, query);
+            if(rc == 0)
             {
+                json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
+
                 /* Actualizo los assign correspondientes */
-                if(status_a >= 0)
+                if(json_status_a && cJSON_IsString(json_status_a))
                 {
                     /* Para los bits 0 a 15 */
                     for(i = 0; i < 16; i++)
@@ -218,13 +229,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
                                         "WHERE Dispositivo = \"%s\" AND Port = 1 AND E_S = %i",
                                         (status_a & mask)?1:0,
-                                        hw_id,
+                                        json_hw_id->valuestring,
                                         i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
                 }
-                if(status_b >= 0)
+                if(json_status_b && cJSON_IsString(json_status_b))
                 {
                     /* Para los bits 0 a 15 */
                     for(i = 0; i < 16; i++)
@@ -233,13 +244,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
                                         "WHERE Dispositivo = \"%s\" AND Port = 2 AND E_S = %i",
                                         (status_b & mask)?1:0,
-                                        hw_id,
+                                        json_hw_id->valuestring,
                                         i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
                 }
-                if(status_c >= 0)
+                if(json_status_c && cJSON_IsString(json_status_c))
                 {
                     /* Para los bits 0 a 15 */
                     for(i = 0; i < 16; i++)
@@ -248,12 +259,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
                                         "WHERE Dispositivo = \"%s\" AND Port = 3 AND E_S = %i",
                                         (status_c & mask)?1:0,
-                                        hw_id,
+                                        json_hw_id->valuestring,
                                         i+1);
                         m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                         m_pDB->Query(NULL, query);
                     }
                 }
+
 
                 /* Si hay cambios busco si hay que enviar eventos */
                 if(delta_a >= 0)
@@ -265,7 +277,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         if(delta_a & mask)  /* Si cambió .... */
                         {
                             /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_id, 1 /* PORT A */, i+1, (status_a & mask)?1:0);
+                            CheckEvent(hw_mac, 1 /* PORT A */, i+1, (status_a & mask)?1:0);
                         }
                     }
                 }
@@ -278,7 +290,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         if(delta_b & mask)  /* Si cambió .... */
                         {
                             /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_id, 2 /* PORT B */, i+1, (status_b & mask)?1:0);
+                            CheckEvent(hw_mac, 2 /* PORT B */, i+1, (status_b & mask)?1:0);
                         }
                     }
                 }
@@ -291,18 +303,21 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         if(delta_b & mask)  /* Si cambió .... */
                         {
                             /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_id, 3 /* PORT C */, i+1, (status_c & mask)?1:0);
+                            CheckEvent(hw_mac, 3 /* PORT C */, i+1, (status_c & mask)?1:0);
                         }
                     }
                 }
             }
+
+            cJSON_Delete(json_arr);
             cJSON_Delete(json_obj);
+
         }
     }
     return rc;
 }
 
-int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
+int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
 {
 	char query[4096];
     int rc;
@@ -322,29 +337,42 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
     cJSON *Flags;
 
     m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
-                                hw_id, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
+                                hw_mac, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
                                 e_s, (estado)?"ON":"OFF");
 
-    /* Notifico el cambio de estado si corresponde a un assign */
-    json_arr = cJSON_CreateArray();
-    sprintf(query,  "SELECT ASS.Id, ASS.Objeto, ASS.Tipo "
-                    "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-                    "ASS.Dispositivo = HW.Id AND "
-                    "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i;",
-                    hw_id, port, e_s);
-    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-    rc = m_pDB->Query(json_arr, query);
-    if(rc == 0)
+    m_change_ass_count++;
+
+    if(m_change_ass_count > 10)
     {
-        cJSON_Delete(json_obj);
-        json_obj = cJSON_CreateObject();
-        cJSON_AddItemToObject(json_obj, "response", json_arr);
-        cJSON_AddStringToObject(json_obj, "Estado", (estado)?"1":"0");
-        cJSON_PrintPreallocated(json_obj, query, 4095, 0);
-        m_pServer->m_pLog->Add(50, "[Post]: %s", query); 
-        m_pServer->Post("dompi_ass_change", query, strlen(query));
+        /* Notifico el estado de todos los objetos */
+
+
+        m_change_ass_count = 0;
     }
-    cJSON_Delete(json_arr);
+    else
+    {
+        /* Notifico el cambio de estado si corresponde a un assign */
+        json_arr = cJSON_CreateArray();
+        sprintf(query,  "SELECT ASS.Id, ASS.Objeto, ASS.Tipo, ASS.Estado "
+                        "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+                        "WHERE ASS.Dispositivo = HW.Id AND "
+                        "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i;",
+                        hw_mac, port, e_s);
+        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+        rc = m_pDB->Query(json_arr, query);
+        if(rc == 0)
+        {
+            json_obj = json_arr->child;
+
+            /* si hay que agregar algo mas */
+
+            cJSON_PrintPreallocated(json_obj, query, 4095, 0);
+            m_pServer->m_pLog->Add(50, "[Post]: %s", query); 
+            m_pServer->Post("dompi_ass_change", query, strlen(query));
+        }
+        cJSON_Delete(json_arr);
+    }
+
 
     /* Busco si hay un assign y si hay evento para ese assign */
     json_arr = cJSON_CreateArray();
@@ -353,7 +381,7 @@ int GEvent::CheckEvent(const char *hw_id, int port, int e_s, int estado)
                     "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS, TB_DOM_EVENT AS EV "
                     "WHERE EV.Objeto_Origen = ASS.Id AND ASS.Dispositivo = HW.Id AND "
                     "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i AND %s;",
-                    hw_id, port, e_s, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+                    hw_mac, port, e_s, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)

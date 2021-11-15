@@ -19,6 +19,7 @@
 #include <gmonitor/gmontdb.h>
 /*#include <gmonitor/gmstring.h>*/
 #include <gmonitor/gmswaited.h>
+#include <gmonitor/gmc.h>
 
 #include <string>
 #include <iostream>
@@ -36,6 +37,8 @@ using namespace std;
 #include "dom32iowifi.h"
 
 CGMServerWait *m_pServer;
+CGMClient     *m_pClient;
+
 void OnClose(int sig);
 
 int power2(int exp)
@@ -81,6 +84,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Init("dompi_netcomm");
 	m_pServer->m_pLog->Add(1, "Iniciando interface NETCOMM");
 
+	CGMInitData gminit;
+
     cJSON *json_req;
     cJSON *json_resp;
 	cJSON *json_Direccion_IP;
@@ -95,8 +100,11 @@ int main(/*int argc, char** argv, char** env*/void)
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
-
     pD32W = new Dom32IoWifi();
+
+	CGMServerBase::GMIOS call_server_resp;
+	CGMClient::GMIOS call_client_resp;
+
 
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
@@ -135,7 +143,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Port )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
+							rc = m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_set_port_config", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{
 						if(json_IO_Config)
 						{
@@ -214,7 +261,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port_config][%s]", message);
+							rc = m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_get_port_config", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{
 						if( !json_Port)
 						{
@@ -316,7 +402,46 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_comm_config][%s]", message);
+							rc = m_pServer->Call("dompi_pi_get_comm_config", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_get_comm_config", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						rc = pD32W->GetWifi(json_Direccion_IP->valuestring, 
 											&wifi_data);
@@ -377,7 +502,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port][%s]", message);
+							rc = m_pServer->Call("dompi_pi_get_port", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_get_port", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						if(json_Port)
 						{
@@ -474,7 +638,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Estado )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_set_io][%s]", message);
+							rc = m_pServer->Call("dompi_pi_set_io", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_set_io", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -580,7 +783,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_switch_io][%s]", message);
+							rc = m_pServer->Call("dompi_pi_switch_io", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_switch_io", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -657,7 +899,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Segundos )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_pulse_io][%s]", message);
+							rc = m_pServer->Call("dompi_pi_pulse_io", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_pulse_io", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -738,7 +1019,46 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
+						{
+							/* local */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_io][%s]", message);
+							rc = m_pServer->Call("dompi_pi_get_io", message, strlen(message), &call_server_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_server_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_server_resp);
+						}
+						else
+						{
+							/* remoto */
+							gminit.m_host = json_Direccion_IP->valuestring;
+							gminit.m_port = 5533;
+
+							m_pClient = new CGMClient(&gminit);
+
+							rc = m_pClient->Call("dompi_pi_get_io", message, strlen(message), &call_client_resp, 500);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_client_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pClient->Free(call_client_resp);
+							delete(m_pClient);
+						}
+
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
 						if( atoi(json_Port->valuestring) == 1 )
 						{	/* Puerto1 */
