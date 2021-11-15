@@ -77,7 +77,8 @@ Flags integer DEFAULT 0
 CREATE TABLE TB_DOM_GRUPO_VISUAL (
 Id integer primary key,
 Nombre varchar(32) NOT NULL,
-Descripcion varchar(256)
+Descripcion varchar(256),
+Icono varchar(32)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
