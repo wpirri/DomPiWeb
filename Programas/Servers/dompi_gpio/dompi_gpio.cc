@@ -143,7 +143,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_Port->valuestring) == 1 )
 							{
-								rc = pPI->ConfigIO(json_Direccion_IP->valuestring, 
+								rc = pPI->ConfigIO(
 												atol(json_IO_Config->valuestring),
 												NULL);
 								m_pServer->m_pLog->Add(100, "pPI->ConfigIO(%s, %s) = %i", 
@@ -162,7 +162,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{
-								rc = pPI->ConfigEX(json_Direccion_IP->valuestring, 
+								rc = pPI->ConfigEX(
 												atol(json_IO_Config->valuestring),
 												NULL);
 								m_pServer->m_pLog->Add(100, "pPI->ConfigEX(%s, %s) = %i", 
@@ -220,7 +220,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						if( !json_Port)
 						{
-							rc = pPI->GetConfig(json_Direccion_IP->valuestring, &return_int1, &return_int2);
+							rc = pPI->GetConfig(&return_int1, &return_int2);
 							m_pServer->m_pLog->Add(100, "pPI->GetConfig(%s, ...) = %i", 
 												json_Direccion_IP->valuestring,
 												rc);
@@ -238,7 +238,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( atoi(json_Port->valuestring) == 1 )
 						{
-							rc = pPI->GetConfig(json_Direccion_IP->valuestring, &return_int1, NULL);
+							rc = pPI->GetConfig(&return_int1, NULL);
 							m_pServer->m_pLog->Add(100, "pPI->GetConfig(%s, ...) = %i", 
 												json_Direccion_IP->valuestring,
 												rc);
@@ -256,7 +256,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( atoi(json_Port->valuestring) == 2 )
 						{
-							rc = pPI->GetConfig(json_Direccion_IP->valuestring, NULL, &return_int1);
+							rc = pPI->GetConfig(NULL, &return_int1);
 							m_pServer->m_pLog->Add(100, "pPI->GetConfig(%s, ...) = %i", 
 												json_Direccion_IP->valuestring,
 												rc);
@@ -321,7 +321,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_Port->valuestring) == 1 )
 							{	/* Puerto1 */
-								rc = pPI->GetIOStatus(json_Direccion_IP->valuestring, 
+								rc = pPI->GetIOStatus(
 													&return_int1);
 								m_pServer->m_pLog->Add(100, "pPI->GetIOStatus(%s, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
@@ -340,7 +340,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
-								rc = pPI->GetEXStatus(json_Direccion_IP->valuestring, 
+								rc = pPI->GetEXStatus(
 													&return_int1);
 								m_pServer->m_pLog->Add(100, "pPI->GetIEXtatus(%s, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
@@ -365,13 +365,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* Pido los dos puertos de este tipo de hw */
-							rc = pPI->GetIOStatus(json_Direccion_IP->valuestring, 
+							rc = pPI->GetIOStatus(
 												&return_int1);
 							m_pServer->m_pLog->Add(100, "pPI->GetIOStatus(%s, 0x%02X) = %i", 
 												json_Direccion_IP->valuestring,
 												return_int1,
 												rc);
-							rc |= pPI->GetEXStatus(json_Direccion_IP->valuestring, 
+							rc |= pPI->GetEXStatus(
 												&return_int2);
 							m_pServer->m_pLog->Add(100, "pPI->GetIOStatus(%s, 0x%02X) = %i", 
 												json_Direccion_IP->valuestring,
@@ -420,7 +420,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{	/* Puerto1 */
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
-									rc = pPI->SetIO(json_Direccion_IP->valuestring, 
+									rc = pPI->SetIO(
 														power2(atol(json_E_S->valuestring)-1),
 														&return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->SetIO(%s, 0x%02X, 0x%02X) = %i", 
@@ -431,7 +431,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								else
 								{	/* Apagar */
-									rc = pPI->ResetIO(json_Direccion_IP->valuestring, 
+									rc = pPI->ResetIO(
 														power2(atol(json_E_S->valuestring)-1),
 														&return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->ResetIO(%s, 0x%02X, 0x%02X) = %i", 
@@ -454,7 +454,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{	/* Puerto2 */
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
-									rc = pPI->SetEX(json_Direccion_IP->valuestring, 
+									rc = pPI->SetEX(
 														power2(atol(json_E_S->valuestring)-1),
 														&return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->SetEX(%s, 0x%02X, 0x%02X) = %i", 
@@ -465,7 +465,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								else
 								{	/* Apagar */
-									rc = pPI->ResetEX(json_Direccion_IP->valuestring, 
+									rc = pPI->ResetEX(
 														power2(atol(json_E_S->valuestring)-1),
 														&return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->ResetEX(%s, 0x%02X, 0x%02X) = %i", 
@@ -524,7 +524,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{	/* Salida */
 							if( atoi(json_Port->valuestring) == 1 )
 							{	/* Puerto1 */
-								rc = pPI->SwitchIO(json_Direccion_IP->valuestring, 
+								rc = pPI->SwitchIO(
 													power2(atol(json_E_S->valuestring)-1),
 													&return_int1);
 								m_pServer->m_pLog->Add(100, "pPI->SwitchIO(%s, 0x%02X, 0x%02X) = %i", 
@@ -544,7 +544,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
-								rc = pPI->SwitchEX(json_Direccion_IP->valuestring, 
+								rc = pPI->SwitchEX(
 													power2(atol(json_E_S->valuestring)-1),
 													&return_int1);
 								m_pServer->m_pLog->Add(100, "pPI->SwitchEX(%s, 0x%02X, 0x%02X) = %i", 
@@ -601,7 +601,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{	/* Salida */
 							if( atoi(json_Port->valuestring) == 1 )
 							{	/* Puerto1 */
-								rc = pPI->PulseIO(json_Direccion_IP->valuestring, 
+								rc = pPI->PulseIO(
 													power2(atol(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring),
 													&return_int1);
@@ -623,7 +623,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
-								rc = pPI->PulseEX(json_Direccion_IP->valuestring, 
+								rc = pPI->PulseEX(
 													power2(atol(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring),
 													&return_int1);
@@ -680,7 +680,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{	/* Interface Vía IP con dos puertos */
 						if( atoi(json_Port->valuestring) == 1 )
 						{	/* Puerto1 */
-							rc = pPI->GetIOStatus(json_Direccion_IP->valuestring, 
+							rc = pPI->GetIOStatus(
 												&return_int1);
 							m_pServer->m_pLog->Add(100, "pPI->GetIOStatus(%s, 0x%02X) = %i", 
 												json_Direccion_IP->valuestring,
@@ -700,7 +700,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( atoi(json_Port->valuestring) == 2 )
 						{	/* Puerto2 */
-							rc = pPI->GetEXStatus(json_Direccion_IP->valuestring, 
+							rc = pPI->GetEXStatus(
 												&return_int1);
 							m_pServer->m_pLog->Add(100, "pPI->GetIOStatus(%s, 0x%02X) = %i", 
 												json_Direccion_IP->valuestring,

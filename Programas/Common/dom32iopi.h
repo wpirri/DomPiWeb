@@ -34,24 +34,30 @@ public:
 	Dom32IoPi();
 	virtual ~Dom32IoPi();
 
-    int GetIOStatus(const char *raddr, int *iostatus);
-    int GetEXStatus(const char *raddr, int *exstatus);
-    int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
-    int ConfigIO(const char *raddr, int ioconfig, int *config);
-    int ConfigEX(const char *raddr, int exconfig, int *config);
-    int SetIO(const char *raddr, int mask, int *iostatus);
-    int SetEX(const char *raddr, int mask, int *exstatus);
-    int ResetIO(const char *raddr, int mask, int *iostatus);
-    int ResetEX(const char *raddr, int mask, int *exstatus);
-    int SwitchIO(const char *raddr, int mask, int *iostatus);
-    int SwitchEX(const char *raddr, int mask, int *exstatus);
-    int PulseIO(const char *raddr, int mask, int sec, int *iostatus);
-    int PulseEX(const char *raddr, int mask, int sec, int *exstatus);
+    int GetIOStatus(int *iostatus);
+    int GetEXStatus(int *exstatus);
+    int GetConfig(int *ioconfig, int *exconfig);
+    int ConfigIO(int ioconfig, int *config);
+    int ConfigEX(int exconfig, int *config);
+    int SetIO(int mask, int *iostatus);
+    int SetEX(int mask, int *exstatus);
+    int ResetIO(int mask, int *iostatus);
+    int ResetEX(int mask, int *exstatus);
+    int SwitchIO(int mask, int *iostatus);
+    int SwitchEX(int mask, int *exstatus);
+    int PulseIO(int mask, int sec, int *iostatus);
+    int PulseEX(int mask, int sec, int *exstatus);
 
     void SetStatusLed(int status);
 
-protected:
+    void InitSerial(int baud);
+    void TaskSerial(void);
+    void TimerSerial(void);
+    void SendSerial(const char* cmd, const char* wait, int on_ok, int on_error, int time_out);
 
+
+protected:
+    int m_sfd;
 
 };
 
