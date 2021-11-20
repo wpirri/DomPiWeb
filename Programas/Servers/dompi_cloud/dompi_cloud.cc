@@ -140,6 +140,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->Suscribe("dompi_cloud_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_ass_status_update", GM_MSG_TYPE_MSG);
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 3000 )) >= 0)
 	{
@@ -220,6 +221,33 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				}
 			}
+			else if( !strcmp(fn, "dompi_ass_status_update")) /* typo MSG, no se responde */
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+
+				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_Delete(json_obj);
+				rc = 0;
+				if(m_CloudHost1Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
+				}
+				else /*if(m_CloudHost2Address[0])*/
+				{
+					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				}
+
+				if( rc > 0 && strlen(message) )
+				{
+					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
+
+
+
+				}
+			}
 
 
 			else
@@ -270,6 +298,7 @@ void OnClose(int sig)
 
 	m_pServer->UnSuscribe("dompi_cloud_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_ass_status_update", GM_MSG_TYPE_MSG);
 
 
 	delete m_pServer;

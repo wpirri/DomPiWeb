@@ -186,6 +186,10 @@ int main(/*int argc, char** argv, char** env*/void)
 	char update_hw_status[16];
 	long temp_l;
 	char temp_s[64];
+	time_t t;
+	time_t next_t;
+	int delta_t;
+	time_t update_ass_t;
 
 	char comando[1024];
 	char objeto[1024];
@@ -306,8 +310,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1000 )) >= 0)
+	t = time(&t);
+	next_t = t + 10;
+	delta_t = 500;
+	update_ass_t = t + 600;
+
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, delta_t )) >= 0)
 	{
+		t = time(&t);
+		next_t = t + 10;
 		if(rc > 0)
 		{
 			json_query_result = NULL;
@@ -2318,18 +2329,45 @@ int main(/*int argc, char** argv, char** env*/void)
 			if(rc == 0)
 			{
 				update_system_config = 0;
+				update_ass_t = 0;
 			}
 			m_pServer->Free(call_resp);
 		}
+		/* Tomo la hora para los cálculos de abajo */
+		t = time(&t);
+		/* Actualizacion de objetos en la nube */
+		if(t >= update_ass_t)
+		{
+			update_ass_t = t + 600;
+			/* Genero un listado de los objetos con su estado para subir a la nube */
+			json_query_result = cJSON_CreateArray();
+			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			rc = pDB->Query(json_query_result, query);
+			if(rc == 0)
+			{
+				json_obj = cJSON_CreateObject();
+				cJSON_AddItemToObject(json_obj, "Objetos", json_query_result);
+				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_Delete(json_obj);
+				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
+			}
+			else
+			{
+				cJSON_Delete(json_query_result);
+			}
 
 
+
+
+
+
+		}
 		/* Tareas programadas en TB_DOM_AT */
 
 
-
-
-
-
+		/* Recalculo del timer */
+		delta_t = (next_t > t)?(next_t-t)*100:(1);
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
 	OnClose(0);

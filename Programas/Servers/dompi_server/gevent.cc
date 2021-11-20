@@ -111,6 +111,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     time_t t;
     struct tm *p_tm;
     int rc;
+    int hw_count;
     char query[4096];
     char sql_set[4096];
     cJSON *json_obj;
@@ -133,6 +134,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     delta_c = (-1);
     sql_set[0] = 0;
     rc = 0;
+    hw_count = 0;
 
     m_pServer->m_pLog->Add(100, "[ExtIOEvent] json_evt: %s", json_evt);
 
@@ -207,114 +209,115 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                 sql_set,
                                 hw_mac);
             m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-            rc = m_pDB->Query(NULL, query);
+            hw_count = m_pDB->Query(NULL, query);
 
 
-            /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT ID FROM TB_DOM_PERIF WHERE MAC = \"%s\";", hw_mac);
-            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-            json_arr = cJSON_CreateArray();
-            rc = m_pDB->Query(json_arr, query);
-            if(rc == 0)
+            if(hw_count > 0)
             {
-                json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
+                /* Busco el ID para relacionar con la tabla de assigns */
+                sprintf(query, "SELECT ID FROM TB_DOM_PERIF WHERE MAC = \"%s\";", hw_mac);
+                m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                json_arr = cJSON_CreateArray();
+                rc = m_pDB->Query(json_arr, query);
+                if(rc == 0)
+                {
+                    json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
 
-                /* Actualizo los assign correspondientes */
-                if(json_status_a && cJSON_IsString(json_status_a))
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
+                    /* Actualizo los assign correspondientes */
+                    if(json_status_a && cJSON_IsString(json_status_a))
                     {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Dispositivo = \"%s\" AND Port = 1 AND E_S = %i",
-                                        (status_a & mask)?1:0,
-                                        json_hw_id->valuestring,
-                                        i+1);
-                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-                        m_pDB->Query(NULL, query);
-                    }
-                }
-                if(json_status_b && cJSON_IsString(json_status_b))
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
-                    {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Dispositivo = \"%s\" AND Port = 2 AND E_S = %i",
-                                        (status_b & mask)?1:0,
-                                        json_hw_id->valuestring,
-                                        i+1);
-                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-                        m_pDB->Query(NULL, query);
-                    }
-                }
-                if(json_status_c && cJSON_IsString(json_status_c))
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
-                    {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                        "WHERE Dispositivo = \"%s\" AND Port = 3 AND E_S = %i",
-                                        (status_c & mask)?1:0,
-                                        json_hw_id->valuestring,
-                                        i+1);
-                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-                        m_pDB->Query(NULL, query);
-                    }
-                }
-
-
-                /* Si hay cambios busco si hay que enviar eventos */
-                if(delta_a >= 0)
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
-                    {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        if(delta_a & mask)  /* Si cambió .... */
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
                         {
-                            /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_mac, 1 /* PORT A */, i+1, (status_a & mask)?1:0);
+                            mask = pow(2, i);   /* Armo la mascara */
+                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                            "WHERE Dispositivo = \"%s\" AND Port = 1 AND E_S = %i",
+                                            (status_a & mask)?1:0,
+                                            json_hw_id->valuestring,
+                                            i+1);
+                            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                            m_pDB->Query(NULL, query);
+                        }
+                    }
+                    if(json_status_b && cJSON_IsString(json_status_b))
+                    {
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
+                        {
+                            mask = pow(2, i);   /* Armo la mascara */
+                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                            "WHERE Dispositivo = \"%s\" AND Port = 2 AND E_S = %i",
+                                            (status_b & mask)?1:0,
+                                            json_hw_id->valuestring,
+                                            i+1);
+                            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                            m_pDB->Query(NULL, query);
+                        }
+                    }
+                    if(json_status_c && cJSON_IsString(json_status_c))
+                    {
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
+                        {
+                            mask = pow(2, i);   /* Armo la mascara */
+                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                            "WHERE Dispositivo = \"%s\" AND Port = 3 AND E_S = %i",
+                                            (status_c & mask)?1:0,
+                                            json_hw_id->valuestring,
+                                            i+1);
+                            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                            m_pDB->Query(NULL, query);
+                        }
+                    }
+
+
+                    /* Si hay cambios busco si hay que enviar eventos */
+                    if(delta_a >= 0)
+                    {
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
+                        {
+                            mask = pow(2, i);   /* Armo la mascara */
+                            if(delta_a & mask)  /* Si cambió .... */
+                            {
+                                /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
+                                CheckEvent(hw_mac, 1 /* PORT A */, i+1, (status_a & mask)?1:0);
+                            }
+                        }
+                    }
+                    if(delta_b >= 0)
+                    {
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
+                        {
+                            mask = pow(2, i);   /* Armo la mascara */
+                            if(delta_b & mask)  /* Si cambió .... */
+                            {
+                                /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
+                                CheckEvent(hw_mac, 2 /* PORT B */, i+1, (status_b & mask)?1:0);
+                            }
+                        }
+                    }
+                    if(delta_c >= 0)
+                    {
+                        /* Para los bits 0 a 15 */
+                        for(i = 0; i < 16; i++)
+                        {
+                            mask = pow(2, i);   /* Armo la mascara */
+                            if(delta_b & mask)  /* Si cambió .... */
+                            {
+                                /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
+                                CheckEvent(hw_mac, 3 /* PORT C */, i+1, (status_c & mask)?1:0);
+                            }
                         }
                     }
                 }
-                if(delta_b >= 0)
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
-                    {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        if(delta_b & mask)  /* Si cambió .... */
-                        {
-                            /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_mac, 2 /* PORT B */, i+1, (status_b & mask)?1:0);
-                        }
-                    }
-                }
-                if(delta_c >= 0)
-                {
-                    /* Para los bits 0 a 15 */
-                    for(i = 0; i < 16; i++)
-                    {
-                        mask = pow(2, i);   /* Armo la mascara */
-                        if(delta_b & mask)  /* Si cambió .... */
-                        {
-                            /* Busco si hay evento  - Port A=1, B=2, C=3 - Entrada 1 a 16 */
-                            CheckEvent(hw_mac, 3 /* PORT C */, i+1, (status_c & mask)?1:0);
-                        }
-                    }
-                }
+                cJSON_Delete(json_arr);
             }
-
-            cJSON_Delete(json_arr);
-            cJSON_Delete(json_obj);
-
         }
+        cJSON_Delete(json_obj);
     }
-    return rc;
+    return hw_count;
 }
 
 int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
