@@ -18,6 +18,11 @@
 #include <cstdio>
 
 #include <sqlite3.h>
+/*
+instalar libcjson-dev (https://github.com/DaveGamble/cJSON)
+#include <cjson/cJSON.h>
+-lcjson
+*/
 #include <cjson/cJSON.h>
 
 #define CSQLITE_MAX_ERROR_TEXT 256
