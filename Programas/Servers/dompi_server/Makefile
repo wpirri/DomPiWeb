@@ -2,7 +2,7 @@
 
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lsqlite3 -lcjson
+LIBS=-lgmqw -lgmshared -lstdc++ -lsqlite3 -lcjson -lssl -lcrypto
 OBJECTS=dompi_server.o csqlite.o config.o strfunc.o gevent.o
 OUTPUT=dompi_server
 DEFINE=-D __NO__DEBUG__
@@ -26,7 +26,7 @@ strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
 dompi_server: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d

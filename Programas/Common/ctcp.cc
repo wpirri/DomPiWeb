@@ -21,6 +21,23 @@
 
 /*
     Implementacion de comunicacion a travez de TCP
+    Soporte SSL/TLS
+      Fuente:
+        https://fm4dd.com/openssl/sslconnect.shtm 
+        https://wiki.openssl.org/index.php/Simple_TLS_Server
+      Instalar:
+        apt install libssl-dev
+      Incluir:
+        #include <openssl/bio.h>
+        #include <openssl/ssl.h>
+        #include <openssl/err.h>
+        #include <openssl/pem.h>
+        #include <openssl/x509.h>
+        #include <openssl/x509_vfy.h>
+      Linkear:
+        -lssl -lcrypto
+        IMPORTANTE: En la compilación final el parámetro -O debe preceder a -lssl y -lcrypto
+
 */
 
 #include "ctcp.h"
@@ -51,6 +68,14 @@ using namespace std;
 CTcp::CTcp()
 {
   m_sock = (-1);
+#ifdef SOPORTE_SSL_TLS
+  m_p_ssl = NULL;
+  m_p_ctx = NULL;
+  m_ssl_tls = 0;
+  m_ssl_tls_ver = 0;
+  m_cert_pem = "";
+  m_key_pem = "";
+#endif
   m_iLastError = 0;
   strcpy(m_strLastError, "");
   strcpy(m_strLocalAddress, "");
@@ -60,9 +85,60 @@ CTcp::CTcp()
 CTcp::CTcp(int sock)
 {
   m_sock = sock;
+#ifdef SOPORTE_SSL_TLS
+  m_p_ssl = NULL;
+  m_p_ctx = NULL;
+  m_ssl_tls = 0;
+  m_ssl_tls_ver = 0;
+  m_cert_pem = "";
+  m_key_pem = "";
+#endif
   m_iLastError = 0;
   strcpy(m_strLastError, "");
 }
+
+#ifdef SOPORTE_SSL_TLS
+CTcp::CTcp(int ssl_tls, int ssl_tls_v)
+{
+  m_p_ssl = NULL;
+  m_p_ctx = NULL;
+  m_ssl_tls = ssl_tls;
+  m_ssl_tls_ver = ssl_tls_v;
+  m_cert_pem = "";
+  m_key_pem = "";
+
+  m_sock = (-1);
+  m_iLastError = 0;
+  strcpy(m_strLastError, "");
+  strcpy(m_strLocalAddress, "");
+  strcpy(m_strRemoteAddress, "");
+
+  if(m_ssl_tls != 0)
+  {
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+    if(SSL_library_init() < 0)
+    {
+      m_ssl_tls = (-1);
+    }
+  }
+}
+
+CTcp::CTcp(int sock, SSL *ssl_sock, int ver)
+{
+
+  m_p_ssl = ssl_sock;
+  m_p_ctx = NULL;
+  m_ssl_tls = 1;
+  m_ssl_tls_ver = ver;
+  m_cert_pem = "";
+  m_key_pem = "";
+
+  m_sock = sock;
+  m_iLastError = 0;
+  strcpy(m_strLastError, "");
+}
+#endif
 
 CTcp::~CTcp()
 {
@@ -151,6 +227,29 @@ int CTcp::RemoteConn(const char *addr, int port)
       (addr)?addr:"", port);
     return CTCP_INVALID_ADDRESS;
   }
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_ssl_tls < 0)
+  {
+    GetErr("[SSL/TLS] Library Error.");
+    return CTCP_SSL_LIB_ERROR;
+  }
+  if(m_ssl_tls > 0)
+  {
+    m_p_method = TLS_client_method();
+    if ( (m_p_ctx = SSL_CTX_new(m_p_method)) == NULL)
+    {
+      GetErr("[SSL/TLS] Unable to create a new SSL context structure..");
+      return CTCP_SSL_LIB_ERROR;
+    }
+    if(m_ssl_tls_ver >= 3)
+    {
+      SSL_CTX_set_options(m_p_ctx, SSL_OP_NO_SSLv2);
+    }
+    m_p_ssl = SSL_new(m_p_ctx);
+  }
+#endif /* SOPORTE_SSL_TLS */
+
   /* conecto el socket a la red */
   memset(&(remote.sin_zero), 0, sizeof(remote.sin_zero));
   remote.sin_family = AF_INET;
@@ -167,12 +266,28 @@ int CTcp::RemoteConn(const char *addr, int port)
     GetErr("[CTCP] ERROR RemoteConn()->connect() (%s:%i)", (addr)?addr:"", port);
     return CTCP_HOST_NOT_FOUND;
   }
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_ssl_tls > 0)
+  {
+    SSL_set_fd(m_p_ssl, m_sock);
+    if( SSL_connect(m_p_ssl) != 1 )
+    {
+      GetErr("[SSL/TLS] Could not build a SSL session.");
+      return CTCP_SSL_SESSION_ERROR;
+    }
+  }
+#endif /* SOPORTE_SSL_TLS */
+
   return CTCP_OK;
 }
 
 CTcp* CTcp::Listen(const char *addr, int port)
 {
   int newsock;
+#ifdef SOPORTE_SSL_TLS
+  SSL *newssl;
+#endif
 
   if(m_sock < 0)
   {
@@ -182,6 +297,43 @@ CTcp* CTcp::Listen(const char *addr, int port)
           return NULL;
     }
   }
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_ssl_tls < 0)
+  {
+    GetErr("[SSL/TLS] Library Error.");
+    return NULL;
+  }
+  if(m_ssl_tls > 0)
+  {
+    m_p_method = TLS_server_method();
+    if ( (m_p_ctx = SSL_CTX_new(m_p_method)) == NULL)
+    {
+      GetErr("[SSL/TLS] Unable to create a new SSL context structure..");
+      return NULL;
+    }
+    if(m_ssl_tls_ver >= 3)
+    {
+      SSL_CTX_set_options(m_p_ctx, SSL_OP_NO_SSLv2);
+    }
+  }
+
+  if(m_cert_pem.length() && m_key_pem.length())
+  {
+    if(SSL_CTX_use_certificate_file(m_p_ctx, m_cert_pem.c_str(), SSL_FILETYPE_PEM) <= 0)
+    {
+      GetErr("[SSL/TLS] Unable to load cert PEM.");
+      return NULL;
+    }
+    if(SSL_CTX_use_PrivateKey_file(m_p_ctx, m_key_pem.c_str(), SSL_FILETYPE_PEM) <= 0)
+    {
+      GetErr("[SSL/TLS] Unable to load key PEM.");
+      return NULL;
+    }
+  }
+
+#endif /* SOPORTE_SSL_TLS */
+
   if(listen(m_sock, SOMAXCONN) < 0)
   {
     GetErr("[CTCP] ERROR Listen()->listen() (%s:%i)", (addr)?addr:"", port);
@@ -194,7 +346,29 @@ CTcp* CTcp::Listen(const char *addr, int port)
   }
   /* el nuevo socket no es bloqueante */
   fcntl(newsock, F_SETFL, O_NONBLOCK);
-  return new CTcp(newsock);
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_ssl_tls > 0)
+  {
+    newssl = SSL_new(m_p_ctx);
+    SSL_set_fd(newssl, newsock);
+    if(SSL_accept(newssl) <= 0)
+    {
+      SSL_shutdown(newssl);
+      SSL_free(newssl);
+      GetErr("[SSL/TLS] ERROR Listen()->accept() (%s:%i)", (addr)?addr:"", port);
+      return NULL;
+    }
+    return new CTcp(newsock, newssl, m_ssl_tls_ver);
+  }
+  else
+  {
+#endif /* SOPORTE_SSL_TLS */
+    return new CTcp(newsock);
+#ifdef SOPORTE_SSL_TLS
+  }
+#endif /* SOPORTE_SSL_TLS */
+
 }
 
 CTcp* CTcp::Listen(string saddr, int port)
@@ -292,6 +466,20 @@ char* CTcp::RemoteAddress()
 
 int CTcp::Close()
 {
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_p_ssl)
+  {
+    SSL_free(m_p_ssl);
+    m_p_ssl = NULL;
+  }
+  if(m_p_ctx)
+  {
+    SSL_CTX_free(m_p_ctx);
+    m_p_ctx = NULL;
+  }
+#endif
+
   if(m_sock >= 0)
   {
     shutdown(m_sock, 2);
@@ -306,14 +494,13 @@ int CTcp::Kill()
   {
     if(close(m_sock) < 0)
     {
-      /* por alguna raz�n no se puede cerrar el socket */
+      close(m_sock);
+      close(m_sock);
+      close(m_sock);
+      /* por alguna razon no se puede cerrar el socket */
       GetErr("[CTCP] ERROR Kill()->close()");
-      return CTCP_GENERAL_ERROR;
     }
-    else
-    {
-      m_sock = (-1);
-    }
+    m_sock = (-1);
   }
   return CTCP_OK;
 }
@@ -326,10 +513,32 @@ int CTcp::Send(const void *msg, unsigned int msglen)
   if(m_sock < 0)
   {
     /* el socket no esta abierto */
-    GetErr("[CTCP] ERROR Send() El socket no est� conectado");
+    GetErr("[CTCP] ERROR Send() El socket no esta conectado");
     return CTCP_NOT_CONNECTED;
   }
-  /* para enviar tranquilo espero a que el socket est� dispnible */
+#ifdef SOPORTE_SSL_TLS
+  if( m_ssl_tls > 0 && !m_p_ssl )
+  {
+    /* el socket no esta abierto */
+    GetErr("[SSL/TLS] ERROR Send() El socket no esta conectado");
+    return CTCP_NOT_CONNECTED;
+  }
+#endif /* SOPORTE_SSL_TLS */
+
+#ifdef SOPORTE_SSL_TLS
+  if(m_ssl_tls > 0)
+  {
+    if(SSL_write(m_p_ssl, (char*)msg, msglen) < 0)
+    {
+      GetErr("[SSL/TLS] ERROR Send()->send()");
+      return CTCP_WRITE_ERROR;
+    }
+  }
+  else
+  {
+#endif /* SOPORTE_SSL_TLS */
+
+  /* para enviar tranquilo espero a que el socket esta dispnible */
   pfd[0].fd = m_sock;
   pfd[0].events = POLLOUT;
   if((rc = poll(pfd, 1, 1000)) < 0)
@@ -347,6 +556,11 @@ int CTcp::Send(const void *msg, unsigned int msglen)
     GetErr("[CTCP] ERROR Send()->send()");
     return CTCP_WRITE_ERROR;
   }
+
+#ifdef SOPORTE_SSL_TLS
+  }
+#endif /* SOPORTE_SSL_TLS */
+
   return 0;
 }
 
@@ -362,6 +576,36 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
     GetErr("[CTCP] ERROR Receive() El socket no esta conectado");
     return CTCP_NOT_CONNECTED;
   }
+#ifdef SOPORTE_SSL_TLS
+  if( m_ssl_tls > 0 && !m_p_ssl )
+  {
+    /* el socket no esta abierto */
+    GetErr("[SSL/TLS] ERROR Send() El socket no esta conectado");
+    return CTCP_NOT_CONNECTED;
+  }
+
+  if(m_ssl_tls > 0)
+  {
+    recvlen = 0;
+    rc = 0;
+
+    do
+    {
+      rc = SSL_read(m_p_ssl, (char*)((char*)msg+recvlen), (msglen-recvlen) );
+      if(rc == 0)
+      {
+        usleep(1000);
+        to_ms--;
+      }
+      else if(rc > 0)
+      {
+        recvlen += rc;
+      }
+    } while(recvlen < (int)msglen && (rc > 0 || recvlen == 0) && to_ms);
+  }
+  else
+  {
+#endif /* SOPORTE_SSL_TLS */
   pfd[0].fd = m_sock;
   pfd[0].events = POLLIN;
   if((rc = poll(pfd, 1, to_ms)) < 0)
@@ -387,7 +631,7 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
       GetErr("[CTCP] ERROR Receive()->recv()");
       if((m_iLastError) && (m_iLastError != 11))
       {
-        /* error de recepci�n */
+        /* error de recepcion */
         return CTCP_READ_ERROR;
       }
     }
@@ -398,6 +642,10 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
     GetErr("[CTCP] ERROR Receive()->recv() rcvlen = 0");
     return CTCP_READ_ERROR;
   }
+#ifdef SOPORTE_SSL_TLS
+  }
+#endif /* SOPORTE_SSL_TLS */
+
   return recvlen;
 }
 
@@ -433,6 +681,13 @@ int CTcp::GetFD()
   return m_sock;
 }
 
+#ifdef SOPORTE_SSL_TLS
+SSL* CTcp::GetSSL()
+{
+  return m_p_ssl;
+}
+#endif
+
 int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to_ms)
 {
   int rc = 0; 
@@ -454,3 +709,38 @@ int CTcp::Query(const char* raddr, int rport, const char* snd, char* rcv, int rc
 
   return rc;
 }
+
+#ifdef ___COMMENT___
+
+  /* ---------------------------------------------------------- *
+   * Get the remote certificate into the X509 structure         *
+   * ---------------------------------------------------------- */
+  cert = SSL_get_peer_certificate(ssl);
+  if (cert == NULL)
+    BIO_printf(outbio, "Error: Could not get a certificate from: %s.\n", dest_url);
+  else
+    BIO_printf(outbio, "Retrieved the server's certificate from: %s.\n", dest_url);
+
+  /* ---------------------------------------------------------- *
+   * extract various certificate information                    *
+   * -----------------------------------------------------------*/
+  certname = X509_NAME_new();
+  certname = X509_get_subject_name(cert);
+
+  /* ---------------------------------------------------------- *
+   * display the cert subject here                              *
+   * -----------------------------------------------------------*/
+  BIO_printf(outbio, "Displaying the certificate subject data:\n");
+  X509_NAME_print_ex(outbio, certname, 0, 0);
+  BIO_printf(outbio, "\n");
+
+  /* ---------------------------------------------------------- *
+   * Free the structures we don't need anymore                  *
+   * -----------------------------------------------------------*/
+  SSL_free(ssl);
+  close(server);
+  X509_free(cert);
+  SSL_CTX_free(ctx);
+  BIO_printf(outbio, "Finished SSL/TLS connection with server: %s.\n", dest_url);
+
+#endif

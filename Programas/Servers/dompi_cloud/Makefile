@@ -2,7 +2,7 @@
 
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lcjson
+LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto
 OBJECTS=dompi_cloud.o ctcp.o strfunc.o
 OUTPUT=dompi_cloud
 DEFINE=-D __NO__DEBUG__
@@ -22,7 +22,7 @@ strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
 dompi_cloud: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d

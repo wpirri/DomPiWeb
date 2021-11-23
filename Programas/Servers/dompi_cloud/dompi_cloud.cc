@@ -75,24 +75,26 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 
     char url_default[] = "/cgi-bin/dompi_cloud_notif.cgi";
 
-	CTcp s;
+	CTcp *pSock;
 	char buffer[4096];
 	int rc = 0;
 
 	buffer[0] = 0;
 	if( proto && !strcmp(proto, "https"))
 	{
-		m_pServer->m_pLog->Add(10, "ERROR: Protocolo HTTPS no implementado para la nube");
-
-		//if(port == 0) port = 443;
-    	//sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		//rc = s.Query(host, port, buffer, buffer, 4096, 5000);
+		pSock = new CTcp(1, 3);
+		if(port == 0) port = 443;
+    		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
+		rc =pSock->Query(host, port, buffer, buffer, 4096, 5000);
+		delete pSock;
 	}
 	else
 	{
+		pSock = new CTcp();
 		if(port == 0) port = 80;
-    	sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		rc = s.Query(host, port, buffer, buffer, 4096, 5000);
+    		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
+		rc = pSock->Query(host, port, buffer, buffer, 4096, 5000);
+		delete pSock;
 	}
 
 	if(rc > 0 && receive_msg)
@@ -116,8 +118,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 
 	//char str[256];
-    cJSON *json_obj;
-    cJSON *json_un_obj;
+	cJSON *json_obj;
+	cJSON *json_un_obj;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -137,6 +139,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_cloud");
 	m_pServer->m_pLog->Add(1, "Iniciando interface CLOUD");
+
 
 	m_pServer->Suscribe("dompi_cloud_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
