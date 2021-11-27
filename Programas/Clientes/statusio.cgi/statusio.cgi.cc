@@ -159,9 +159,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
   }
 
-  if(trace && content_length)
+  if(content_length)
   {
-    syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
+    if(trace) syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
+
     /* Recorro los parametros del POST */
     for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
     {
