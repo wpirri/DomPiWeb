@@ -337,7 +337,7 @@ int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
     cJSON *Condicion_Variable;
     cJSON *Condicion_Igualdad;
     cJSON *Condicion_Valor;
-    cJSON *Flags;
+//    cJSON *Flags;
 
     m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
                                 hw_mac, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
@@ -404,7 +404,7 @@ int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
             Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Variable");
             Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Igualdad");
             Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_obj, "Condicion_Valor");
-            Flags = cJSON_GetObjectItemCaseSensitive(json_obj, "Flags");
+            //Flags = cJSON_GetObjectItemCaseSensitive(json_obj, "Flags");
 
             /* TODO: Evaluar condiciones */
             if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)

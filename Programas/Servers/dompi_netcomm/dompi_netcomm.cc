@@ -35,9 +35,13 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
+#include "config.h"
 
 CGMServerWait *m_pServer;
+DPConfig *pConfig;
 CGMClient     *m_pClient;
+int internal_timeout;
+int external_timeout;
 
 void OnClose(int sig);
 
@@ -67,6 +71,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	int return_int1; 
 	int return_int2; 
+	char s[16];
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -83,6 +88,20 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_netcomm");
 	m_pServer->m_pLog->Add(1, "Iniciando interface NETCOMM");
+
+	pConfig = new DPConfig("/etc/dompiweb.config");
+
+	internal_timeout = 1000;
+	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	{
+		internal_timeout = atoi(s) * 1000;
+	}
+
+	external_timeout = 1000;
+	if( pConfig->GetParam("EXTERNAL-TIMEOUT", s))
+	{
+		external_timeout = atoi(s) * 1000;
+	}
 
 	CGMInitData gminit;
 
@@ -149,7 +168,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -163,12 +182,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_set_port_config", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_set_port_config", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -267,7 +287,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -281,12 +301,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_get_port_config", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_get_port_config", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -408,7 +429,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_get_comm_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_comm_config", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_get_comm_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -422,12 +443,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_comm_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_get_comm_config", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_get_comm_config", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -508,7 +530,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_port", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_get_port", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -522,12 +544,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_get_port", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_get_port", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -644,7 +667,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_set_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_set_io", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_set_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -658,12 +681,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_set_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_set_io", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_set_io", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -789,7 +813,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_switch_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_switch_io", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_switch_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -803,12 +827,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_switch_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_switch_io", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_switch_io", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -905,7 +930,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_pulse_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_pulse_io", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_pulse_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -919,12 +944,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_pulse_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_pulse_io", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_pulse_io", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);
@@ -1025,7 +1051,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* local */
 							m_pServer->m_pLog->Add(50, "[dompi_pi_get_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_io", message, strlen(message), &call_server_resp, 500);
+							rc = m_pServer->Call("dompi_pi_get_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_server_resp.data);
@@ -1039,12 +1065,13 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
+							m_pServer->m_pLog->Add(50, "[dompi_pi_get_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_get_io", message, strlen(message), &call_client_resp, 500);
+							rc = m_pClient->Call("dompi_pi_get_io", message, strlen(message), &call_client_resp, external_timeout);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_client_resp.data);

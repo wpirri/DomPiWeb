@@ -32,6 +32,7 @@
 #include "strfunc.h"
 
 int trace;
+int timeout;
 
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
@@ -47,7 +48,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
 
   char server_address[16];
-  char s_trace[5];
+  char s[16];
   
   char remote_addr[16];
   char request_uri[32];
@@ -89,9 +90,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     return 0;
   }
 
-  if( pConfig->GetParam("TRACE-INFOIO.CGI", s_trace))
+  if( pConfig->GetParam("TRACE-INFOIO.CGI", s))
   {
-    trace = atoi(s_trace);
+    trace = atoi(s);
+  }
+
+  timeout = 1000;
+  if( pConfig->GetParam("CGI-TIMEOUT", s))
+  {
+    timeout = atoi(s) * 1000;
   }
 
   json_obj = cJSON_CreateObject();
@@ -321,7 +328,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
   }
 
-  rc = pClient->Call("dompi_infoio", query, response, 100);
+  rc = pClient->Call("dompi_infoio", query, response, timeout);
   if(rc == 0)
   {
     if(trace)

@@ -51,6 +51,7 @@ public:
     int SetWifi(const char *raddr, wifi_config_data *config);
 
     int m_verbose;
+    int m_timeout;
 
 protected:
     const char *http_post;

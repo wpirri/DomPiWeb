@@ -34,8 +34,15 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "ctcp.h"
+#include "config.h"
+
+#define MAX_BUFFER_LEN 32767
+
+//int internal_timeout;
+int external_timeout;
 
 CGMServerWait *m_pServer;
+DPConfig *pConfig;
 void OnClose(int sig);
 
 char m_SystemKey[256];
@@ -76,7 +83,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
     char url_default[] = "/cgi-bin/dompi_cloud_notif.cgi";
 
 	CTcp *pSock;
-	char buffer[4096];
+	char buffer[MAX_BUFFER_LEN+1];
 	int rc = 0;
 
 	buffer[0] = 0;
@@ -85,7 +92,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		pSock = new CTcp(1, 3);
 		if(port == 0) port = 443;
     		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		rc =pSock->Query(host, port, buffer, buffer, 4096, 5000);
+		rc =pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
 		delete pSock;
 	}
 	else
@@ -93,7 +100,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		pSock = new CTcp();
 		if(port == 0) port = 80;
     		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		rc = pSock->Query(host, port, buffer, buffer, 4096, 5000);
+		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
 		delete pSock;
 	}
 
@@ -114,8 +121,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[4096];
+	char message[MAX_BUFFER_LEN+1];
 	unsigned long message_len;
+	char s[16];
 
 	//char str[256];
 	cJSON *json_obj;
@@ -140,12 +148,24 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Init("dompi_cloud");
 	m_pServer->m_pLog->Add(1, "Iniciando interface CLOUD");
 
+	pConfig = new DPConfig("/etc/dompiweb.config");
+//	internal_timeout = 1000;
+//	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+//	{
+//		internal_timeout = atoi(s) * 1000;
+//	}
+
+	external_timeout = 1000;
+	if( pConfig->GetParam("EXTERNAL-TIMEOUT", s))
+	{
+		external_timeout = atoi(s) * 1000;
+	}
 
 	m_pServer->Suscribe("dompi_cloud_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_ass_status_update", GM_MSG_TYPE_MSG);
 
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 3000 )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, 3000 )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -204,7 +224,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 
-				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				rc = 0;
 				if(m_CloudHost1Address[0])
@@ -231,7 +251,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 
-				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				rc = 0;
 				if(m_CloudHost1Address[0])
@@ -268,7 +288,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			/* Si hay que agragar mas objetos */
 
-			cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+			cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 			cJSON_Delete(json_obj);
 			m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
 			rc = 0;

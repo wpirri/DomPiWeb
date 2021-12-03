@@ -32,6 +32,7 @@
 #include "strfunc.h"
 
 int trace;
+int timeout;
 
 #define MAX_POST_DATA 4096
 #define MAX_GET_DATA  1024

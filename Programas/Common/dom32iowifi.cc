@@ -35,6 +35,7 @@ using namespace std;
 #include "ctcp.h"
 #include "strfunc.h"
 
+#define BUFFER_LEN 32767
 
 Dom32IoWifi::Dom32IoWifi()
 {
@@ -84,6 +85,7 @@ Dom32IoWifi::Dom32IoWifi()
     url_set_wifi = "/wifi.cgi";
 
     m_verbose = 0;
+    m_timeout = 1500;
 }
 
 Dom32IoWifi::~Dom32IoWifi()
@@ -93,7 +95,7 @@ Dom32IoWifi::~Dom32IoWifi()
 
 int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char *p;
     CTcp q;
     int rc;
@@ -104,7 +106,7 @@ int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
     *iostatus = 0;
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -142,7 +144,7 @@ int Dom32IoWifi::GetEXStatus(const char *raddr, int *exstatus)
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
     *exstatus = 0;
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -169,7 +171,7 @@ int Dom32IoWifi::GetEXStatus(const char *raddr, int *exstatus)
 
 int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char *p;
     CTcp q;
     int rc;
@@ -182,7 +184,7 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
     if(ioconfig) *ioconfig = 0;
     if(exconfig) *exconfig = 0;
 
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -213,7 +215,7 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
 
 int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -230,7 +232,7 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
     /*Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to_ms);*/
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -256,7 +258,7 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
 
 int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -275,7 +277,7 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -301,7 +303,7 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
 
 int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -333,7 +335,7 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -359,7 +361,7 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
 
 int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -406,7 +408,7 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -432,7 +434,7 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
 
 int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -464,7 +466,7 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -490,7 +492,7 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
 
 int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -537,7 +539,7 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -563,7 +565,7 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
 
 int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -595,7 +597,7 @@ int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4099, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -621,7 +623,7 @@ int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
 
 int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -668,7 +670,7 @@ int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -694,7 +696,7 @@ int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
 
 int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -729,7 +731,7 @@ int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -755,7 +757,7 @@ int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
 
 int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec, int *exstatus)
 {
-    char buffer[4096];
+    char buffer[BUFFER_LEN+1];
     char data[256];
     char *p;
     CTcp q;
@@ -805,7 +807,7 @@ int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec, int *exstatus)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -831,7 +833,7 @@ int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec, int *exstatus)
 
 int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
 {
-    char buffer[4096], tmp[16];
+    char buffer[BUFFER_LEN+1], tmp[16];
     char *p;
     CTcp q;
     STRFunc Str;
@@ -842,7 +844,7 @@ int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {
@@ -875,7 +877,7 @@ int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
 
 int Dom32IoWifi::SetWifi(const char *raddr, wifi_config_data *config)
 {
-    char buffer[4096], tmp[16];
+    char buffer[BUFFER_LEN+1], tmp[16];
     char data[256];
     char *p;
     CTcp q;
@@ -923,7 +925,7 @@ int Dom32IoWifi::SetWifi(const char *raddr, wifi_config_data *config)
     {
         printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
     }
-    if(q.Query(raddr, 80, buffer, buffer, 4096, 1500) > 0)
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
         if(m_verbose)
         {

@@ -110,7 +110,7 @@ int Dom32IoPi::GetEXStatus(int *exstatus)
     return (*exstatus);
 }
 
-int Dom32IoPi::GetConfig(int *ioconfig, int *exconfig)
+int Dom32IoPi::GetConfig(int */*ioconfig*/, int */*exconfig*/)
 {
     return (-1);
 }
@@ -223,12 +223,12 @@ int Dom32IoPi::SwitchEX(int mask, int *exstatus)
     return GetIOStatus(exstatus);
 }
 
-int Dom32IoPi::PulseIO(int mask, int sec, int *iostatus)
+int Dom32IoPi::PulseIO(int /*mask*/, int /*sec*/, int * /*iostatus*/)
 {
     return (-1);
 }
 
-int Dom32IoPi::PulseEX(int mask, int sec, int *exstatus)
+int Dom32IoPi::PulseEX(int /*mask*/, int /*sec*/, int * /*exstatus*/)
 {
     return (-1);
 }
@@ -257,7 +257,7 @@ void Dom32IoPi::TimerSerial(void)
 
 }
 
-void Dom32IoPi::SendSerial(const char* cmd, const char* wait, int on_ok, int on_error, int time_out)
+void Dom32IoPi::SendSerial(const char* /*cmd*/, const char* /*wait*/, int /*on_ok*/, int /*on_error*/, int /*time_out*/)
 {
 
 }

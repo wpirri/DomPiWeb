@@ -3,7 +3,7 @@
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto
-OBJECTS=dompi_cloud.o ctcp.o strfunc.o
+OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o
 OUTPUT=dompi_cloud
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -18,6 +18,8 @@ dompi_cloud.o: dompi_cloud.cc
 
 ctcp.o: ../../Common/ctcp.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/ctcp.cc
+config.o: ../../Common/config.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 

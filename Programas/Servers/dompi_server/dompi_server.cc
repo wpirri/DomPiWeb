@@ -101,6 +101,8 @@ using namespace std;
 #include "gevent.h"
 #include "strfunc.h"
 
+#define MAX_BUFFER_LEN 32767
+
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 CSQLite *pDB;
@@ -108,6 +110,7 @@ GEvent *pEV;
 cJSON *json_System_Config;
 int load_system_config;
 int update_system_config;
+int internal_timeout;
 
 void DBMant( char* msg );
 
@@ -172,7 +175,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[4096];
+	char message[MAX_BUFFER_LEN+1];
 	char cmdline[1024];
 	char query[4096];
 	char query_into[1024];
@@ -190,6 +193,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	time_t next_t;
 	int delta_t;
 	time_t update_ass_t;
+	char s[16];
 
 	char comando[1024];
 	char objeto[1024];
@@ -257,6 +261,12 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Leyendo configuración...");
 	pConfig = new DPConfig("/etc/dompiweb.config");
 	pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
+
+	internal_timeout = 1000;
+	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	{
+		internal_timeout = atoi(s) * 1000;
+	}
 
 	m_pServer->m_pLog->Add(1, "Conectando a la base de datos %s...", db_filename);
 	pDB = new CSQLite(db_filename);
@@ -423,7 +433,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -451,7 +461,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -481,7 +491,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -515,7 +525,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -793,7 +803,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -823,7 +833,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -857,7 +867,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -1091,7 +1101,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_query_result);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -1121,7 +1131,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -1155,7 +1165,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -1439,7 +1449,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -1469,7 +1479,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -1503,7 +1513,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -1755,9 +1765,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
 								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
-								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
 								if(rc == 0)
 								{
 									strcpy(message, (const char*)call_resp.data);
@@ -1783,9 +1793,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
 								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
-								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, 500);
+								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
 								if(rc == 0)
 								{
 									strcpy(message, (const char*)call_resp.data);
@@ -1810,9 +1820,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
-								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, 500);
+								rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
 								if(rc == 0)
 								{
 									strcpy(message, (const char*)call_resp.data);
@@ -1838,9 +1848,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
 								cJSON_AddStringToObject(json_un_obj, "Segundos", (parametro)?parametro:"1");
-								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, 500);
+								rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
 								if(rc == 0)
 								{
 									strcpy(message, (const char*)call_resp.data);
@@ -1865,9 +1875,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								/* Creo un objeto con el primer item del array */
 								json_un_obj = json_arr->child;
-								cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 								m_pServer->m_pLog->Add(50, "[dompi_hw_get_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, 500);
+								rc = m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, internal_timeout);
 								if(rc == 0)
 								{
 									strcpy(message, (const char*)call_resp.data);
@@ -1895,9 +1905,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -1921,9 +1931,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -1953,9 +1963,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -1982,9 +1992,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -2008,9 +2018,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_comm_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -2034,9 +2044,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									/* Creo un objeto con el primer item del array */
 									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, 4096, 0);
+									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
 									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, 500);
+									rc = m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, internal_timeout);
 									if(rc == 0)
 									{
 										strcpy(message, (const char*)call_resp.data);
@@ -2077,7 +2087,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
-					cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
@@ -2111,7 +2121,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
-						cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_obj);
@@ -2130,7 +2140,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_CreateObject();
 				cJSON_AddItemReferenceToObject(json_obj, "response", json_System_Config);
-				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2267,10 +2277,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
 				cJSON_AddStringToObject(json_obj, "Port", "1");
 				/* Envio la configuracion de cada port por separado */
-				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
+				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
 				/*  */
 				/*PORT B*/
 				json_obj = cJSON_CreateObject();
@@ -2279,10 +2289,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
 				cJSON_AddStringToObject(json_obj, "Port", "2");
 				/* Envio la configuracion de cada port por separado */
-				cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
+				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
 				/*  */
 				/*PORT C*/
 				//json_obj = cJSON_CreateObject();
@@ -2294,7 +2304,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
 				//cJSON_Delete(json_obj);
 				//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, 1);
+				//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
 				/*  */
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -2323,9 +2333,9 @@ int main(/*int argc, char** argv, char** env*/void)
 
 		if(update_system_config && json_System_Config)
 		{
-			cJSON_PrintPreallocated(json_System_Config->child, message, 4095, 0);
+			cJSON_PrintPreallocated(json_System_Config->child, message, MAX_BUFFER_LEN, 0);
 			m_pServer->m_pLog->Add(50, "[dompi_cloud_config][%s]", message);
-			rc = m_pServer->Call("dompi_cloud_config", message, strlen(message), &call_resp, 500);
+			rc = m_pServer->Call("dompi_cloud_config", message, strlen(message), &call_resp, internal_timeout);
 			if(rc == 0)
 			{
 				update_system_config = 0;
@@ -2348,7 +2358,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_CreateObject();
 				cJSON_AddItemToObject(json_obj, "Objetos", json_query_result);
-				cJSON_PrintPreallocated(json_obj, message, 4095, 0);
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
 			}

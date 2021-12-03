@@ -34,9 +34,13 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "dom32iopi.h"
+#include "config.h"
 
 CGMServerWait *m_pServer;
+//DPConfig *pConfig;
 void OnClose(int sig);
+
+//int internal_timeout;
 
 int power2(int exp)
 {
@@ -63,6 +67,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char message[4096];
 	unsigned long message_len;
 	unsigned char blink;
+//	char s[16];
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL,         OnClose);
@@ -79,6 +84,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_gpio");
 	m_pServer->m_pLog->Add(1, "Iniciando interface GPIO");
+
+//	pConfig = new DPConfig("/etc/dompiweb.config");
+//	internal_timeout = 1000;
+//	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+//	{
+//		internal_timeout = atoi(s) * 1000;
+//	}
 
     cJSON *json_req;
     //cJSON *json_resp;
