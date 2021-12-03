@@ -2,7 +2,7 @@
 
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lstdc++ -lgmshared -lgmc -lcjson
+LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=abmhw.cgi.o config.o strfunc.o
 OUTPUT=abmhw.cgi
 DEFINE=-D __NO__DEBUG__

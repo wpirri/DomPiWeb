@@ -35,6 +35,7 @@
 #define MAX_GET_DATA  1024
 
 int trace;
+int timeout;
 
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
@@ -49,7 +50,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   cJSON *json_obj;
   
   char server_address[16];
-  char s_trace[5];
+  char s[16];
   
   char remote_addr[16];
   char request_uri[4096];
@@ -83,9 +84,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     return 0;
   }
 
-  if( pConfig->GetParam("TRACE-ABMUSER.CGI", s_trace))
+  if( pConfig->GetParam("TRACE-ABMUSER.CGI", s))
   {
-    trace = atoi(s_trace);
+    trace = atoi(s);
+  }
+
+  timeout = 1000;
+  if( pConfig->GetParam("CGI-TIMEOUT", s))
+  {
+    timeout = atoi(s) * 1000;
   }
 
   for(i = 0; env[i]; i++)
@@ -197,7 +204,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   response.Clear();
   query = buffer;
   if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
-  rc = pClient->Call(funcion_call, query, response, 100);
+  rc = pClient->Call(funcion_call, query, response, timeout);
   if(rc == 0)
   {
     fprintf(stdout, "%s\r\n", response.Data());
