@@ -38,7 +38,7 @@ using namespace std;
 
 #define MAX_BUFFER_LEN 32767
 
-//int internal_timeout;
+int internal_timeout;
 int external_timeout;
 
 CGMServerWait *m_pServer;
@@ -84,6 +84,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 
 	CTcp *pSock;
 	char buffer[MAX_BUFFER_LEN+1];
+	char *ps;
 	int rc = 0;
 
 	buffer[0] = 0;
@@ -103,16 +104,19 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
 		delete pSock;
 	}
-
-	if(rc > 0 && receive_msg)
+	if(receive_msg)
 	{
 		*receive_msg = 0;
-		if(strlen(buffer))
+		if(rc > 0 && strlen(buffer))
 		{
-			strcpy(receive_msg, buffer);
+			ps = strstr(buffer, "\r\n\r\n");
+			if(ps)
+			{
+				ps += 4;
+				strcpy(receive_msg, ps);
+			}
 		}
 	}
-
 	return rc;
 }
 
@@ -124,10 +128,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	char message[MAX_BUFFER_LEN+1];
 	unsigned long message_len;
 	char s[16];
+	//CGMServerBase::GMIOS call_resp;
 
 	//char str[256];
 	cJSON *json_obj;
 	cJSON *json_un_obj;
+	//cJSON *json_resp_code;
+	//cJSON *json_resp_msg;
+	cJSON *json_arr;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -149,11 +157,11 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Iniciando interface CLOUD");
 
 	pConfig = new DPConfig("/etc/dompiweb.config");
-//	internal_timeout = 1000;
-//	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
-//	{
-//		internal_timeout = atoi(s) * 1000;
-//	}
+	internal_timeout = 1000;
+	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	{
+		internal_timeout = atoi(s) * 1000;
+	}
 
 	external_timeout = 1000;
 	if( pConfig->GetParam("EXTERNAL-TIMEOUT", s))
@@ -238,10 +246,19 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if( rc > 0 && strlen(message) )
 				{
+					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
 					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-
-
-
+					json_obj = cJSON_Parse(message);
+					//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+					//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+					json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+					if(json_arr && cJSON_IsArray(json_arr))
+					{
+						cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+						m_pServer->Post("dompi_cloud_notification", message, strlen(message));
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 			}
 			else if( !strcmp(fn, "dompi_ass_status_update")) /* typo MSG, no se responde */
@@ -265,10 +282,19 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if( rc > 0 && strlen(message) )
 				{
+					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
 					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-
-
-
+					json_obj = cJSON_Parse(message);
+					//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+					//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+					json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+					if(json_arr && cJSON_IsArray(json_arr))
+					{
+						cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+						m_pServer->Post("dompi_cloud_notification", message, strlen(message));
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 			}
 
@@ -303,10 +329,19 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			if( rc > 0 && strlen(message) )
 			{
+				/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
 				m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-
-
-
+				json_obj = cJSON_Parse(message);
+				//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+				//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+				json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+				if(json_arr && cJSON_IsArray(json_arr))
+				{
+					cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+					m_pServer->Post("dompi_cloud_notification", message, strlen(message));
+				}
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 			}
 		}
 	}

@@ -231,6 +231,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Config_PORT_B_E_S;
 	//cJSON *json_Config_PORT_C_Analog;
 	//cJSON *json_Config_PORT_C_E_S;
+	cJSON * json_Objeto;
+	cJSON * json_Accion;
 
 	char ass_s_disp[128];
 	int ass_i_port;
@@ -306,6 +308,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_add", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_update", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ev_get", GM_MSG_TYPE_CR);
@@ -317,6 +320,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_sysconf_get", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_sysconf_get_current", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_sysconf_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_MSG);
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
@@ -1430,7 +1434,58 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_update]");
 				}
+			}
+			/* ****************************************************************
+			*		dompi_ass_cmd
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_cmd"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
+				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
+
+				json_arr = cJSON_CreateArray();
+				sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+								"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+								"WHERE HW.Id = ASS.Dispositivo AND "
+								"ASS.Objeto =  \'%s\';", json_Objeto->valuestring);
+				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+				rc = pDB->Query(json_arr, query);
+				if(rc == 0)
+				{
+					/* Creo un objeto con el primer item del array */
+					json_un_obj = json_arr->child;
+					if( !strcmp(json_Accion->valuestring, "on"))
+					{
+						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
+					}
+					else if( !strcmp(json_Accion->valuestring, "off"))
+					{
+						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
+					}
+					cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+					if( !strcmp(json_Accion->valuestring, "switch"))
+					{
+						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+					}
+					else
+					{
+						m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
+					}
+					if(rc == 0)
+					{
+						strcpy(message, (const char*)call_resp.data);
+					}
+					else
+					{
+						sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+					}
+					m_pServer->Free(call_resp);
+				}
 			}
 			/* ****************************************************************
 			*		dompi_ev_list
@@ -2232,6 +2287,26 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_sysconf_add]");
 				}
 			}
+			/* ****************************************************************
+			*		dompi_cloud_notification
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_cloud_notification"))
+			{
+				/* Un array de acciones sobre objetos */
+				json_arr = cJSON_Parse(message);
+				if(cJSON_IsArray(json_arr))
+				{
+					cJSON_ArrayForEach(json_un_obj, json_arr)
+					{
+						/* Llamo dompi_ass_cmd */
+						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_ass_cmd][%s]", message);
+						m_pServer->Post("dompi_ass_cmd", message, strlen(message));
+					}
+				}
+				cJSON_Delete(json_arr);
+			}
+
 
 
 			else
@@ -2409,6 +2484,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_ass_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_get", GM_MSG_TYPE_CR);
@@ -2420,6 +2496,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_sysconf_get", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_sysconf_get_current", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_sysconf_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_cloud_notification", GM_MSG_TYPE_MSG);
 
 	delete pEV;
 	delete pConfig;
