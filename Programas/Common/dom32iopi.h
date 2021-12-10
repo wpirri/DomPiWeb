@@ -34,6 +34,8 @@ public:
 	Dom32IoPi();
 	virtual ~Dom32IoPi();
 
+    void LoadConfig( void );
+
     int GetIOStatus(int *iostatus);
     int GetEXStatus(int *exstatus);
     int GetConfig(int *ioconfig, int *exconfig);
@@ -57,7 +59,11 @@ public:
 
 
 protected:
+    void SetDefaultConfig( void );
+    void SaveConfig( void );
+
     int m_sfd;
+    char m_pi_config_io_file_data[256]; 
 
 };
 

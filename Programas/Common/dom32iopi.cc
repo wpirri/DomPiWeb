@@ -39,45 +39,111 @@ using namespace std;
 
 #include "gpiopin.h"
 
+#define DOMPI_IO_CONFIG "/etc/dompi_io.config"
+
 Dom32IoPi::Dom32IoPi()
 {
     wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
-
-    pinMode(gpio_pin[GPIO_IO1], INPUT);
-    pinMode(gpio_pin[GPIO_IO2], INPUT);
-    pinMode(gpio_pin[GPIO_IO3], INPUT);
-    pinMode(gpio_pin[GPIO_IO4], INPUT);
-    pinMode(gpio_pin[GPIO_IO5], INPUT);
-    pinMode(gpio_pin[GPIO_IO6], INPUT);
-    pinMode(gpio_pin[GPIO_IO7], INPUT);
-    pinMode(gpio_pin[GPIO_IO8], INPUT);
-    pinMode(gpio_pin[GPIO_EX1], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX2], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX3], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX4], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX5], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX6], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX7], OUTPUT);
-    pinMode(gpio_pin[GPIO_EX8], OUTPUT);
-
-    pinMode(gpio_pin[GPIO_POWER_5V], INPUT);    /* OUTPUT - OC */
-    pinMode(gpio_pin[GPIO_STATUS_LED], OUTPUT);
-
-    pinMode(gpio_pin[GPIO_TX_MODEM_RX], OUTPUT);
-    pinMode(gpio_pin[GPIO_RX_MODEM_TX], INPUT);
-    pinMode(gpio_pin[GPIO_MODEM_POWER_SET], OUTPUT);
-    pinMode(gpio_pin[GPIO_MODEM_POWER_GET], INPUT);
-    pinMode(gpio_pin[GPIO_MODEM_RESET], INPUT);    /* OUTPUT - OC */
-    pinMode(gpio_pin[GPIO_MODEM_RING ], INPUT);
-    pinMode(gpio_pin[GPIO_MODEM_PWRKEY], INPUT);    /* OUTPUT - OC */
-
     m_sfd = (-1);
-
 }
 
 Dom32IoPi::~Dom32IoPi()
 {
 
+}
+
+void Dom32IoPi::SetDefaultConfig()
+{
+    memset(m_pi_config_io_file_data, 0, sizeof(m_pi_config_io_file_data));
+
+    m_pi_config_io_file_data[GPIO_IO1] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO2] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO3] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO4] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO5] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO6] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO7] = INPUT;
+    m_pi_config_io_file_data[GPIO_IO8] = INPUT;
+    m_pi_config_io_file_data[GPIO_EX1] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX2] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX3] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX4] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX5] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX6] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX7] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX8] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_POWER_5V] = INPUT;    /* OUTPUT - OC */
+    m_pi_config_io_file_data[GPIO_STATUS_LED] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_TX_MODEM_RX] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_RX_MODEM_TX] = INPUT;
+    m_pi_config_io_file_data[GPIO_MODEM_POWER_SET] = OUTPUT;
+    m_pi_config_io_file_data[GPIO_MODEM_POWER_GET] = INPUT;
+    m_pi_config_io_file_data[GPIO_MODEM_RESET] = INPUT;    /* OUTPUT - OC */
+    m_pi_config_io_file_data[GPIO_MODEM_RING ] = INPUT;
+    m_pi_config_io_file_data[GPIO_MODEM_PWRKEY] = INPUT;    /* OUTPUT - OC */
+
+}
+
+void Dom32IoPi::LoadConfig( void )
+{
+    FILE *fd;
+
+    fd = fopen(DOMPI_IO_CONFIG, "r");
+    if(fd)
+    {
+        if(fread(&m_pi_config_io_file_data, sizeof(m_pi_config_io_file_data), 1, fd))
+        {
+            fclose(fd);
+        }
+        else
+        {
+            fclose(fd);
+            SetDefaultConfig();
+            SaveConfig();
+        }
+    }
+    else
+    {
+        SetDefaultConfig();
+        SaveConfig();
+    }
+    pinMode(gpio_pin[GPIO_IO1], m_pi_config_io_file_data[GPIO_IO1]);
+    pinMode(gpio_pin[GPIO_IO2], m_pi_config_io_file_data[GPIO_IO2]);
+    pinMode(gpio_pin[GPIO_IO3], m_pi_config_io_file_data[GPIO_IO3]);
+    pinMode(gpio_pin[GPIO_IO4], m_pi_config_io_file_data[GPIO_IO4]);
+    pinMode(gpio_pin[GPIO_IO5], m_pi_config_io_file_data[GPIO_IO5]);
+    pinMode(gpio_pin[GPIO_IO6], m_pi_config_io_file_data[GPIO_IO6]);
+    pinMode(gpio_pin[GPIO_IO7], m_pi_config_io_file_data[GPIO_IO7]);
+    pinMode(gpio_pin[GPIO_IO8], m_pi_config_io_file_data[GPIO_IO8]);
+    pinMode(gpio_pin[GPIO_EX1], m_pi_config_io_file_data[GPIO_EX1]);
+    pinMode(gpio_pin[GPIO_EX2], m_pi_config_io_file_data[GPIO_EX2]);
+    pinMode(gpio_pin[GPIO_EX3], m_pi_config_io_file_data[GPIO_EX3]);
+    pinMode(gpio_pin[GPIO_EX4], m_pi_config_io_file_data[GPIO_EX4]);
+    pinMode(gpio_pin[GPIO_EX5], m_pi_config_io_file_data[GPIO_EX5]);
+    pinMode(gpio_pin[GPIO_EX6], m_pi_config_io_file_data[GPIO_EX6]);
+    pinMode(gpio_pin[GPIO_EX7], m_pi_config_io_file_data[GPIO_EX7]);
+    pinMode(gpio_pin[GPIO_EX8], m_pi_config_io_file_data[GPIO_EX8]);
+    pinMode(gpio_pin[GPIO_POWER_5V], m_pi_config_io_file_data[GPIO_POWER_5V]);    /* OUTPUT - OC */
+    pinMode(gpio_pin[GPIO_STATUS_LED], m_pi_config_io_file_data[GPIO_STATUS_LED]);
+    pinMode(gpio_pin[GPIO_TX_MODEM_RX], m_pi_config_io_file_data[GPIO_TX_MODEM_RX]);
+    pinMode(gpio_pin[GPIO_RX_MODEM_TX], m_pi_config_io_file_data[GPIO_RX_MODEM_TX]);
+    pinMode(gpio_pin[GPIO_MODEM_POWER_SET], m_pi_config_io_file_data[GPIO_MODEM_POWER_SET]);
+    pinMode(gpio_pin[GPIO_MODEM_POWER_GET], m_pi_config_io_file_data[GPIO_MODEM_POWER_GET]);
+    pinMode(gpio_pin[GPIO_MODEM_RESET], m_pi_config_io_file_data[GPIO_MODEM_RESET]);    /* OUTPUT - OC */
+    pinMode(gpio_pin[GPIO_MODEM_RING ], m_pi_config_io_file_data[GPIO_MODEM_RING]);
+    pinMode(gpio_pin[GPIO_MODEM_PWRKEY], m_pi_config_io_file_data[GPIO_MODEM_PWRKEY]);    /* OUTPUT - OC */
+}
+
+void Dom32IoPi::SaveConfig( void )
+{
+    FILE *fd;
+
+    fd = fopen(DOMPI_IO_CONFIG, "w");
+    if(fd)
+    {
+        fwrite(&m_pi_config_io_file_data, sizeof(m_pi_config_io_file_data), 1, fd);
+        fclose(fd);
+    }
 }
 
 int Dom32IoPi::GetIOStatus(int *iostatus)
@@ -119,13 +185,25 @@ int Dom32IoPi::ConfigIO(int ioconfig, int *config)
 {
     (*config) = ioconfig & 0xff;
     pinMode(gpio_pin[GPIO_IO1], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO2], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO3], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO4], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO5], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO6], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO7], (ioconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_IO8], (ioconfig & 0x01)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO2], (ioconfig & 0x02)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO3], (ioconfig & 0x04)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO4], (ioconfig & 0x08)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO5], (ioconfig & 0x10)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO6], (ioconfig & 0x20)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO7], (ioconfig & 0x40)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_IO8], (ioconfig & 0x80)?INPUT:OUTPUT);
+
+    m_pi_config_io_file_data[GPIO_IO1] = (ioconfig & 0x01)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO2] = (ioconfig & 0x02)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO3] = (ioconfig & 0x04)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO4] = (ioconfig & 0x08)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO5] = (ioconfig & 0x10)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO6] = (ioconfig & 0x20)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO7] = (ioconfig & 0x40)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_IO8] = (ioconfig & 0x80)?INPUT:OUTPUT;
+
+    SaveConfig();
+
     return (*config);
 }
 
@@ -133,13 +211,25 @@ int Dom32IoPi::ConfigEX(int exconfig, int *config)
 {
     (*config) = exconfig & 0xff;
     pinMode(gpio_pin[GPIO_EX1], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX2], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX3], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX4], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX5], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX6], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX7], (exconfig & 0x01)?INPUT:OUTPUT);
-    pinMode(gpio_pin[GPIO_EX8], (exconfig & 0x01)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX2], (exconfig & 0x02)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX3], (exconfig & 0x04)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX4], (exconfig & 0x08)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX5], (exconfig & 0x10)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX6], (exconfig & 0x20)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX7], (exconfig & 0x40)?INPUT:OUTPUT);
+    pinMode(gpio_pin[GPIO_EX8], (exconfig & 0x80)?INPUT:OUTPUT);
+
+    m_pi_config_io_file_data[GPIO_EX1] = (exconfig & 0x01)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX2] = (exconfig & 0x02)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX3] = (exconfig & 0x04)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX4] = (exconfig & 0x08)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX5] = (exconfig & 0x10)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX6] = (exconfig & 0x20)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX7] = (exconfig & 0x40)?INPUT:OUTPUT;
+    m_pi_config_io_file_data[GPIO_EX8] = (exconfig & 0x80)?INPUT:OUTPUT;
+
+    SaveConfig();
+
     return (*config);
 }
 

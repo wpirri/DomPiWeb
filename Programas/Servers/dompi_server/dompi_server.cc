@@ -2344,43 +2344,74 @@ int main(/*int argc, char** argv, char** env*/void)
 				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
 				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
 				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_MAC->valuestring);
-				/* Armo los mensajes para cada port */
-				/*PORT A*/
-				json_obj = cJSON_CreateObject();
-				cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-				cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
-				cJSON_AddStringToObject(json_obj, "Port", "1");
-				/* Envio la configuracion de cada port por separado */
-				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				cJSON_Delete(json_obj);
-				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-				/*  */
-				/*PORT B*/
-				json_obj = cJSON_CreateObject();
-				cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-				cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-				cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
-				cJSON_AddStringToObject(json_obj, "Port", "2");
-				/* Envio la configuracion de cada port por separado */
-				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				cJSON_Delete(json_obj);
-				m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-				/*  */
-				/*PORT C*/
-				//json_obj = cJSON_CreateObject();
-				//cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring)
-				//cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring)
-				//cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring)
-				//cJSON_AddStringToObject(json_obj, "Port", "1")
-				/* Envio la configuracion de cada port por separado */
-				//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
-				//cJSON_Delete(json_obj);
-				//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-				//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-				/*  */
+				if(atoi(json_Tipo_HW->valuestring) == 0)
+				{
+					/* Armo los mensajes para cada port */
+					/*PORT A*/
+					json_obj = cJSON_CreateObject();
+					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
+					cJSON_AddStringToObject(json_obj, "Port", "1");
+					/* Envio la configuracion de cada port por separado */
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+					m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
+					m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), NULL, internal_timeout);
+					/*  */
+					/*PORT B*/
+					json_obj = cJSON_CreateObject();
+					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
+					cJSON_AddStringToObject(json_obj, "Port", "2");
+					/* Envio la configuracion de cada port por separado */
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+					m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
+					m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), NULL, internal_timeout);
+					/*  */
+				}
+				else if(atoi(json_Tipo_HW->valuestring) == 1)
+				{
+					/* Armo los mensajes para cada port */
+					/*PORT A*/
+					json_obj = cJSON_CreateObject();
+					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
+					cJSON_AddStringToObject(json_obj, "Port", "1");
+					/* Envio la configuracion de cada port por separado */
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
+					/*  */
+					/*PORT B*/
+					json_obj = cJSON_CreateObject();
+					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
+					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
+					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
+					cJSON_AddStringToObject(json_obj, "Port", "2");
+					/* Envio la configuracion de cada port por separado */
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
+					/*  */
+					/*PORT C*/
+					//json_obj = cJSON_CreateObject();
+					//cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring)
+					//cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring)
+					//cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring)
+					//cJSON_AddStringToObject(json_obj, "Port", "1")
+					/* Envio la configuracion de cada port por separado */
+					//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
+					//cJSON_Delete(json_obj);
+					//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
+					//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
+					/*  */
+				}
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
 								"SET Actualizar = 0 "

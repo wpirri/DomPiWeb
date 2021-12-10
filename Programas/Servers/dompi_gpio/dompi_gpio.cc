@@ -110,7 +110,8 @@ int main(/*int argc, char** argv, char** env*/void)
     Dom32IoPi *pPI;
     //Dom32IoPi::pi_config_data pi_data;
     pPI = new Dom32IoPi();
-
+	pPI->LoadConfig();
+	
 	m_pServer->Suscribe("dompi_pi_set_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_pi_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_CR);
@@ -149,7 +150,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Port )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{
 						if(json_IO_Config)
 						{
@@ -228,7 +229,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{
 						if( !json_Port)
 						{
@@ -327,7 +328,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{	/* Interface Vía IP con dos puertos */
 						if(json_Port)
 						{
@@ -424,7 +425,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Estado )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -530,7 +531,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -607,7 +608,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Segundos )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{	/* Interface Vía IP con dos puertos */
 						if(atoi(json_Tipo_ASS->valuestring) == 0)
 						{	/* Salida */
@@ -688,7 +689,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{	/* Interface Vía IP con dos puertos */
 						if( atoi(json_Port->valuestring) == 1 )
 						{	/* Puerto1 */
