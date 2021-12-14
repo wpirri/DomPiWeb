@@ -39,7 +39,7 @@ using namespace std;
 
 #include "gpiopin.h"
 
-#define DOMPI_IO_CONFIG "/etc/dompi_io.config"
+#define DOMPI_IO_CONFIG "/var/gmonitor/dompi_io.config"
 
 Dom32IoPi::Dom32IoPi()
 {
@@ -72,15 +72,15 @@ void Dom32IoPi::SetDefaultConfig()
     m_pi_config_io_file_data[GPIO_EX6] = OUTPUT;
     m_pi_config_io_file_data[GPIO_EX7] = OUTPUT;
     m_pi_config_io_file_data[GPIO_EX8] = OUTPUT;
-    m_pi_config_io_file_data[GPIO_POWER_5V] = INPUT;    /* OUTPUT - OC */
+    m_pi_config_io_file_data[GPIO_POWER_5V] = OUTPUT;    /* OUTPUT OC - Se emula pasando a input al HIGH*/
     m_pi_config_io_file_data[GPIO_STATUS_LED] = OUTPUT;
     m_pi_config_io_file_data[GPIO_TX_MODEM_RX] = OUTPUT;
     m_pi_config_io_file_data[GPIO_RX_MODEM_TX] = INPUT;
     m_pi_config_io_file_data[GPIO_MODEM_POWER_SET] = OUTPUT;
     m_pi_config_io_file_data[GPIO_MODEM_POWER_GET] = INPUT;
-    m_pi_config_io_file_data[GPIO_MODEM_RESET] = INPUT;    /* OUTPUT - OC */
+    m_pi_config_io_file_data[GPIO_MODEM_RESET] = OUTPUT;    /* OUTPUT - OC */
     m_pi_config_io_file_data[GPIO_MODEM_RING ] = INPUT;
-    m_pi_config_io_file_data[GPIO_MODEM_PWRKEY] = INPUT;    /* OUTPUT - OC */
+    m_pi_config_io_file_data[GPIO_MODEM_PWRKEY] = OUTPUT;    /* OUTPUT - OC */
 
 }
 
