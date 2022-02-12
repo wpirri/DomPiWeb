@@ -24,8 +24,8 @@
 inicial=[0,0,0];
 
 // Medidas de la caja
-ancho=160;
-alto=140;
+ancho=180;
+alto=150;
 profundidad=45;
 pared=2;
 
@@ -40,13 +40,17 @@ separacion_tornillos=60;
 espesor_guias=1;        // Guias para las pestañas de la tapa
 separacion_guias=11;
 
+ancho_rbpi=58;
+alto_rbpi=49;
 h_rbpi=3;               // Altura del soporte de Raspberry Pi
-x_rbpi=58;              // Posicion del soporte superios derecho de Raspberry Pi
-y_rbpi=30;
+x_rbpi=ancho-2.5-pared-ancho_rbpi-40;  // Posicion del soporte superior derecho de Raspberry Pi
+y_rbpi=31;
 
+ancho_display=113.11;
+alto_display=85.92;
 h_display=35;           // Altura del soporte del display
-x_display=23.45;        // Posicion del soporte superios derecho del display
-y_display=5;
+x_display=(ancho/2) - (ancho_display/2);        // Posicion del soporte superios derecho del display
+y_display=pared+5;
 
 module guias_tapa(xyz)
 {
@@ -89,21 +93,28 @@ module soporte_placa(xyz, h)
     translate(xyz+[0,0,h]) cylinder(3, r = 1, $fn = 100);
 }
 
+module apoyo_placa(xyz, h)
+{
+    translate(xyz - [0,2,0])
+        cube([ancho_display-10, 4, h], false);
+    translate(xyz + [0,0,h])
+        cube([ancho_display-10, 2, 1.5], false);
+}
+
 module soportes_rbpi(xyz)
 {
     soporte_placa(xyz, h_rbpi);    
-    soporte_placa(xyz + [58,0,0], h_rbpi);    
-    soporte_placa(xyz + [0,49,0], h_rbpi);    
-    soporte_placa(xyz + [58,49,0], h_rbpi);    
-    
+    soporte_placa(xyz + [ancho_rbpi,0,0], h_rbpi);    
+    soporte_placa(xyz + [0,alto_rbpi,0], h_rbpi);    
+    soporte_placa(xyz + [ancho_rbpi,alto_rbpi,0], h_rbpi);    
 }
 
 module soportes_dysplay(xyz)
 {
     soporte_placa(xyz, h_display);    
-    soporte_placa(xyz + [113.11,0,0], h_display);    
-    soporte_placa(xyz + [0,85.92,0], h_display);    
-    soporte_placa(xyz + [113.11,85.92,0], h_display);    
+    soporte_placa(xyz + [ancho_display,0,0], h_display);    
+    soporte_placa(xyz + [0,alto_display,0], h_display);    
+    soporte_placa(xyz + [ancho_display,alto_display,0], h_display);    
     
 }
 
@@ -112,6 +123,7 @@ module caja(xyz)
     cajon(xyz, ancho, alto, profundidad, pared);
     soportes_rbpi(xyz + [x_rbpi,y_rbpi,pared]);
     soportes_dysplay(xyz + [x_display,y_display,pared]);
+    apoyo_placa([x_display+5, y_rbpi+alto_rbpi+31, pared], pared + h_rbpi + 12.5);
 }
 
 module calado_borde(xyz, b, h)
@@ -143,6 +155,18 @@ module perf_tornillo_tapa(xyz)
         cylinder(ancho, r = 1, $fn = 100);
 }
 
+module entrada_12v(xyz)
+{
+    translate(xyz)
+        rotate(a=[0,90,0])
+        cylinder(pared, r = 1, $fn = 100);
+}
+
+module entrada_cables(xyz, ancho_ec, alto_ec)
+{
+    translate(xyz+[0,0,0.5])
+        cube([ancho_ec, alto_ec, pared], false);
+}
 
 //
 // Construcción
@@ -155,6 +179,8 @@ difference()
     calado_borde(inicial + [0,0,profundidad-2], ancho, alto);
     ventana_lateral(inicial);
     perf_tornillo_tapa(inicial + [0,pos_tornillo_y,pos_tornillo_h]);
+    entrada_cables([pared+5, alto-pared-5-25,0], 35, 25);
+    entrada_12v(inicial + [0,alto-50,profundidad/2]);
 }
 
 guias_tapa(inicial);
