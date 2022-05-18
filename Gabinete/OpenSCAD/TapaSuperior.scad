@@ -24,9 +24,10 @@
 inicial=[0,0,0];
 
 // Medidas de la tapa
-ancho=160;
-alto=97;
-espesor=2;
+ancho=180;
+alto=100;
+espesor_tapa=2;
+pared_caja=2;
 
 // Detalles de la tapa
 ancho_borde=1;          // (pared/2) de caja
@@ -50,10 +51,12 @@ ancho_tapa_lateral=40;
 altura_tapa_lateral=18;
 
 // Pocoion del angulo superios derecho del display
-x_display=25;   // x_display de Caja.scad + 1.56
-y_display=15;   // y_display de Caja.scad + 10
-ancho_display=110;
+ancho_display=113.11;
 alto_display=70;
+// En la caja: x_display=(ancho/2) - (ancho_display/2);
+//             y_display=pared+5;
+x_display=0 + (ancho/2) - (ancho_display/2);
+y_display=5 + pared_caja + 5;
 
 module bordes(xyz, b, h)
 {
@@ -61,7 +64,7 @@ module bordes(xyz, b, h)
     translate(xyz) cube([ancho_borde, h, altura_borde], false);
     translate(xyz + [b-ancho_borde,0,0]) cube([ancho_borde, h, altura_borde], false);
     
-    translate(xyz + [espesor,h-espesor,0]) cube([b - (2*espesor), espesor, altura_protector], false);
+    translate(xyz + [espesor_tapa,h-espesor_tapa,0]) cube([b - (2*espesor_tapa), espesor_tapa, altura_protector], false);
 }
 
 module oreja(xyz)
@@ -87,16 +90,16 @@ module oreja(xyz)
 
 module frente(xyz)
 {
-    translate(xyz) cube([ancho, alto, espesor], false);
+    translate(xyz) cube([ancho, alto, espesor_tapa], false);
 
-    bordes(xyz + [0,0,espesor], ancho, alto);
+    bordes(xyz + [0,0,espesor_tapa], ancho, alto);
 
-    oreja(xyz + [espesor,12,espesor]);
-    oreja(xyz + [espesor,72,espesor]);
-    oreja(xyz + [ancho - (espesor + espesor_guias),12,espesor]);
-    oreja(xyz + [ancho - (espesor + espesor_guias),72,espesor]);
+    oreja(xyz + [espesor_tapa,12,espesor_tapa]);
+    oreja(xyz + [espesor_tapa,72,espesor_tapa]);
+    oreja(xyz + [ancho - (espesor_tapa + espesor_guias),12,espesor_tapa]);
+    oreja(xyz + [ancho - (espesor_tapa + espesor_guias),72,espesor_tapa]);
 
-    translate(xyz + [0,posicion_tapa_lateral,espesor]) cube([espesor, ancho_tapa_lateral, altura_tapa_lateral], false);
+    translate(xyz + [0,posicion_tapa_lateral,espesor_tapa]) cube([espesor_tapa, ancho_tapa_lateral, altura_tapa_lateral], false);
 }
 
 
@@ -107,5 +110,5 @@ module frente(xyz)
 difference()
 {
     frente(inicial);
-    translate(inicial + [x_display, y_display, 0]) cube([ancho_display, alto_display, espesor], false);
+    translate(inicial + [x_display, y_display, 0]) cube([ancho_display, alto_display, espesor_tapa], false);
 }
