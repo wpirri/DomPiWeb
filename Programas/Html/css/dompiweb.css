@@ -164,3 +164,35 @@ body {
 	background: green;
 	}
 
+.home-group {
+	color: white;
+	z-index: 10;
+	padding: 2px;
+	height: 75px;
+	border: 1px dotted #fff;
+	}
+
+.home-image {
+	z-index: 20;
+	border: 0px;
+	cursor: pointer;
+	}
+	
+#home-div {
+	position: absolute; 
+	left: 170px; 
+	top: 10px; 
+	width: 685px;
+	height: 415px;
+	background: black;
+	overflow: auto;
+	overflow-y: auto;
+	}
+		
+#plano1 {
+	z-index: 10;
+	position: absolute; 
+	left: 5px; 
+	top: -40px; 
+	}
+	

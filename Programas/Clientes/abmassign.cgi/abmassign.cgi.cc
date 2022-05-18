@@ -196,6 +196,22 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_ass_info");
   }
+  else if( !strcmp(funcion, "on"))
+  {
+    strcpy(funcion_call, "dompi_ass_on");
+  }
+  else if( !strcmp(funcion, "off"))
+  {
+    strcpy(funcion_call, "dompi_ass_off");
+  }
+  else if( !strcmp(funcion, "switch"))
+  {
+    strcpy(funcion_call, "dompi_ass_switch");
+  }
+  else if( !strcmp(funcion, "pulse"))
+  {
+    strcpy(funcion_call, "dompi_ass_pulse");
+  }
   else
   {
     strcpy(funcion_call, "dompi_ass_list");

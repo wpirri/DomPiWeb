@@ -310,6 +310,10 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_update", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_info", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_on", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_off", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_switch", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_pulse", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
@@ -1286,7 +1290,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid User\"}}");
 					}
 				}
 
@@ -1444,15 +1448,23 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				json_arr = cJSON_CreateArray();
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
 				}
 				else
 				{
-					strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN;");
+					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
+					if(json_un_obj)
+					{
+						sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+					}
+					else
+					{
+						strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN;");
+					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
@@ -1478,15 +1490,23 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				json_arr = cJSON_CreateArray();
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
 				}
 				else
 				{
-					strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
+					if(json_un_obj)
+					{
+						sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+					}
+					else
+					{
+						strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
@@ -1503,6 +1523,202 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_info]");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ass_on
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_on"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+									"WHERE HW.Id = ASS.Dispositivo AND "
+									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						/* Creo un objeto con el primer item del array */
+						json_un_obj = json_arr->child;
+						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
+						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+						if(rc == 0)
+						{
+							strcpy(message, (const char*)call_resp.data);
+						}
+						else
+						{
+							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+						}
+						m_pServer->Free(call_resp);
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_on]");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ass_off
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_off"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+									"WHERE HW.Id = ASS.Dispositivo AND "
+									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						/* Creo un objeto con el primer item del array */
+						json_un_obj = json_arr->child;
+						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
+						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+						if(rc == 0)
+						{
+							strcpy(message, (const char*)call_resp.data);
+						}
+						else
+						{
+							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+						}
+						m_pServer->Free(call_resp);
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_off]");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ass_switch
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_switch"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+									"WHERE HW.Id = ASS.Dispositivo AND "
+									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						/* Creo un objeto con el primer item del array */
+						json_un_obj = json_arr->child;
+						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
+						if(rc == 0)
+						{
+							strcpy(message, (const char*)call_resp.data);
+						}
+						else
+						{
+							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+						}
+						m_pServer->Free(call_resp);
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_switch]");
+				}
+			}
+			/* ****************************************************************
+			*		dompi_ass_pulse
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_pulse"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				if(json_un_obj)
+				{
+					json_arr = cJSON_CreateArray();
+					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+									"WHERE HW.Id = ASS.Dispositivo AND "
+									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr, query);
+					if(rc == 0)
+					{
+						/* Creo un objeto con el primer item del array */
+						json_un_obj = json_arr->child;
+						/* TODO: Implementar parametro de tiempo */
+						cJSON_AddStringToObject(json_un_obj, "Segundos", "1");
+						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
+						rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
+						if(rc == 0)
+						{
+							strcpy(message, (const char*)call_resp.data);
+						}
+						else
+						{
+							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+						}
+						m_pServer->Free(call_resp);
+					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_pulse]");
 				}
 			}
 			/* ****************************************************************
@@ -2594,6 +2810,10 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_ass_update", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_info", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_on", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_off", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_switch", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_pulse", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
