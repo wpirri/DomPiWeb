@@ -54,10 +54,13 @@ Dom32IoWifi::Dom32IoWifi()
                     "Content-Type: application/x-www-form-urlencoded\r\n\r\n%s";
 
     url_set_iostatus = "/iostatus.cgi";
+    url_set_ostatus = "/iostatus.cgi";
     url_set_exstatus = "/exstatus.cgi";
     url_switch_iostatus = "/ioswitch.cgi";
+    url_switch_ostatus = "/ioswitch.cgi";
     url_switch_exstatus = "/exswitch.cgi";
     url_pulse_iostatus = "/iopulse.cgi";
+    url_pulse_ostatus = "/iopulse.cgi";
     url_pulse_exstatus = "/expulse.cgi";
 
     url_set_ioconfig = "/ioconfig.cgi";
@@ -75,6 +78,7 @@ Dom32IoWifi::Dom32IoWifi()
                         "Accept: text/html,text/xml\r\n\r\n";
 
     url_get_iostatus = "/iostatus.htm";
+    url_get_ostatus = "/iostatus.htm";
     url_get_exstatus = "/exstatus.htm";
 
     url_get_config = "/config.htm";
@@ -124,6 +128,44 @@ int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
             if(iostatus)
             {
                 *iostatus = IO2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::GetOutStatus(const char *raddr, int *ostatus)
+{
+    char buffer[BUFFER_LEN+1];
+    char *p;
+    CTcp q;
+    int rc;
+
+    sprintf(buffer, http_get, url_get_ostatus, raddr);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    *ostatus = 0;
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            /* Interpreto los datos */
+            if(ostatus)
+            {
+                *ostatus = Out2Int(p);
             }
         }
         return 0;
@@ -221,11 +263,15 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
     CTcp q;
     int rc;
 
-    sprintf(data, "IO1=%s&IO2=%s&IO3=%s&IO4=%s",
+    sprintf(data, "IO1=%s&IO2=%s&IO3=%s&IO4=%s&IO5=%s&IO6=%s&IO7=%s&IO8=%s",
             (ioconfig&0x01)?"in":"out",
             (ioconfig&0x02)?"in":"out",
             (ioconfig&0x04)?"in":"out",
-            (ioconfig&0x08)?"in":"out" );
+            (ioconfig&0x08)?"in":"out",
+            (ioconfig&0x10)?"in":"out",
+            (ioconfig&0x20)?"in":"out",
+            (ioconfig&0x40)?"in":"out",
+            (ioconfig&0x80)?"in":"out");
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
     if(m_verbose)
     {
@@ -264,14 +310,15 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
     CTcp q;
     int rc;
 
-    sprintf(data, "EXP1=%s&EXP3=%s&EXP4=%s&EXP5=%s&EXP7=%s&EXP8=%s&EXP9=%s",
+    sprintf(data, "EXP1=%s&EXP2=%s&EXP3=%s&EXP4=%s&EXP5=%s&EXP6=%s&EXP7=%s&EXP8=%s",
             (exconfig&0x01)?"in":"out",
             (exconfig&0x02)?"in":"out",
             (exconfig&0x04)?"in":"out",
             (exconfig&0x08)?"in":"out",
             (exconfig&0x10)?"in":"out",
             (exconfig&0x20)?"in":"out",
-            (exconfig&0x40)?"in":"out");
+            (exconfig&0x40)?"in":"out",
+            (exconfig&0x80)?"in":"out");
     sprintf(buffer, http_post, url_set_exconfig, raddr, strlen(data), data);
     if(m_verbose)
     {
@@ -330,6 +377,25 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
         if(data[0] != 0) strcat(data, "&");
         strcat(data, "IO4=on");
     }
+    if(mask & 0x10)
+    {
+        strcat(data, "IO5=on");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO6=on");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO7=on");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO8=on");
+    }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_verbose)
     {
@@ -359,6 +425,83 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
     return (-1);
 }
 
+int Dom32IoWifi::SetOut(const char *raddr, int mask, int *ostatus)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[256];
+    char *p;
+    CTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    if(mask & 0x01)
+    {
+        strcat(data, "OUT1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT2=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT3=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT4=on");
+    }
+    if(mask & 0x10)
+    {
+        strcat(data, "OUT5=on");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT6=on");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT7=on");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT8=on");
+    }
+    sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(ostatus)
+            {
+                *ostatus = Out2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
 int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
 {
     char buffer[BUFFER_LEN+1];
@@ -381,26 +524,31 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
     if(mask & 0x04)
     {
         if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP4=on");
+        strcat(data, "EXP3=on");
     }
     if(mask & 0x08)
     {
         if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP5=on");
+        strcat(data, "EXP4=on");
     }
     if(mask & 0x10)
     {
-        strcat(data, "EXP7=on");
+        strcat(data, "EXP5=on");
     }
     if(mask & 0x20)
     {
         if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP8=on");
+        strcat(data, "EXP6=on");
     }
     if(mask & 0x40)
     {
         if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP9=on");
+        strcat(data, "EXP7=on");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "EXP8=on");
     }
 
     sprintf(buffer, http_post, url_set_exstatus, raddr, strlen(data), data);
@@ -461,6 +609,26 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
         if(data[0] != 0) strcat(data, "&");
         strcat(data, "IO4=off");
     }
+    if(mask & 0x10)
+    {
+        strcat(data, "IO5=off");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO6=off");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO7=off");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "IO8=off");
+    }
+
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_verbose)
     {
@@ -483,6 +651,84 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
             if(iostatus)
             {
                 *iostatus = IO2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::ResetOut(const char *raddr, int mask, int *ostatus)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[256];
+    char *p;
+    CTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    if(mask & 0x01)
+    {
+        strcat(data, "OUT1=off");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT2=off");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT3=off");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT4=off");
+    }
+    if(mask & 0x10)
+    {
+        strcat(data, "OUT5=off");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT6=off");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT7=off");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT8=off");
+    }
+
+    sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(ostatus)
+            {
+                *ostatus = Out2Int(p);
             }
         }
         return 0;
@@ -621,6 +867,64 @@ int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
     return (-1);
 }
 
+int Dom32IoWifi::SwitchOut(const char *raddr, int mask, int *ostatus)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[256];
+    char *p;
+    CTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    if(mask & 0x01)
+    {
+        strcat(data, "OUT1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT2=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT3=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT4=on");
+    }
+    sprintf(buffer, http_post, url_switch_ostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(ostatus)
+            {
+                *ostatus = Out2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
 int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
 {
     char buffer[BUFFER_LEN+1];
@@ -748,6 +1052,87 @@ int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
             if(iostatus)
             {
                 *iostatus = IO2Int(p);
+            }
+        }
+        return 0;
+    }
+    return (-1);
+}
+
+int Dom32IoWifi::PulseOut(const char *raddr, int mask, int sec, int *ostatus)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[256];
+    char *p;
+    CTcp q;
+    int rc;
+
+    data[0] = 0;
+
+    sprintf(data, "PULSE=%i", sec);
+
+    if(mask & 0x01)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT1=on");
+    }
+    if(mask & 0x02)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT2=on");
+    }
+    if(mask & 0x04)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT3=on");
+    }
+    if(mask & 0x08)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT4=on");
+    }
+    if(mask & 0x10)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT5=on");
+    }
+    if(mask & 0x20)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT6=on");
+    }
+    if(mask & 0x40)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT3=on");
+    }
+    if(mask & 0x80)
+    {
+        if(data[0] != 0) strcat(data, "&");
+        strcat(data, "OUT4=on");
+    }
+    sprintf(buffer, http_post, url_pulse_ostatus, raddr, strlen(data), data);
+    if(m_verbose)
+    {
+        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+    }
+    if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
+    {
+        if(m_verbose)
+        {
+            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
+        }
+        rc = HttpRespCode(buffer);
+        if(rc != 0) return rc;
+        /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
+        p = strstr(buffer, "\r\n\r\n");
+        if(p)
+        {
+            /* Salteo CR/LF CR/LF */
+            p += 4;
+            if(ostatus)
+            {
+                *ostatus = Out2Int(p);
             }
         }
         return 0;
@@ -991,6 +1376,100 @@ int Dom32IoWifi::IO2Int(const char* str)
             rc += 0x08;
         }
     }
+    if(Str.ParseData(str, "IO5", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x10;
+        }
+    }
+    if(Str.ParseData(str, "IO6", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x20;
+        }
+    }
+    if(Str.ParseData(str, "IO7", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x40;
+        }
+    }
+    if(Str.ParseData(str, "IO8", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x80;
+        }
+    }
+    return rc;
+}
+
+int Dom32IoWifi::Out2Int(const char* str)
+{
+    int rc = 0;
+    char tmp[16];
+    STRFunc Str;
+
+    /* Interpreto los datos */
+    if(Str.ParseData(str, "OUT1", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x01;
+        }
+    }
+    if(Str.ParseData(str, "OUT2", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x02;
+        }
+    }
+    if(Str.ParseData(str, "OUT3", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x04;
+        }
+    }
+    if(Str.ParseData(str, "OUT4", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x08;
+        }
+    }
+    if(Str.ParseData(str, "OUT5", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x10;
+        }
+    }
+    if(Str.ParseData(str, "OUT6", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x20;
+        }
+    }
+    if(Str.ParseData(str, "OUT7", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x40;
+        }
+    }
+    if(Str.ParseData(str, "OUT8", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x80;
+        }
+    }
     return rc;
 }
 
@@ -1007,46 +1486,53 @@ int Dom32IoWifi::EXP2Int(const char* str)
             rc += 0x01;
         }
     }
-    if(Str.ParseData(str, "EXP3", tmp))
+    if(Str.ParseData(str, "EXP2", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x02;
         }
     }
-    if(Str.ParseData(str, "EXP4", tmp))
+    if(Str.ParseData(str, "EXP3", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x04;
         }
     }
-    if(Str.ParseData(str, "EXP5", tmp))
+    if(Str.ParseData(str, "EXP4", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x08;
         }
     }
-    if(Str.ParseData(str, "EXP7", tmp))
+    if(Str.ParseData(str, "EXP5", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x10;
         }
     }
-    if(Str.ParseData(str, "EXP8", tmp))
+    if(Str.ParseData(str, "EXP6", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x20;
         }
     }
-    if(Str.ParseData(str, "EXP9", tmp))
+    if(Str.ParseData(str, "EXP7", tmp))
     {
         if( !strcmp("on", tmp) || !strcmp("in", tmp))
         {
             rc += 0x40;
+        }
+    }
+    if(Str.ParseData(str, "EXP8", tmp))
+    {
+        if( !strcmp("on", tmp) || !strcmp("in", tmp))
+        {
+            rc += 0x80;
         }
     }
     return rc;

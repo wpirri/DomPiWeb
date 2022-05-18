@@ -188,6 +188,14 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_db_struct");
   }
+  else if( !strcmp(funcion, "status"))
+  {
+    strcpy(funcion_call, "dompi_ass_status");
+  }
+  else if( !strcmp(funcion, "info"))
+  {
+    strcpy(funcion_call, "dompi_ass_info");
+  }
   else
   {
     strcpy(funcion_call, "dompi_ass_list");

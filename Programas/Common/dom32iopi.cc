@@ -352,3 +352,28 @@ void Dom32IoPi::SendSerial(const char* /*cmd*/, const char* /*wait*/, int /*on_o
 
 }
 
+int Dom32IoPi::ModemPower(int OnOff, int wait)
+{
+    /* Si ya está en el estado que quiero no hago nada */
+    if(ModemPowerCheck() == OnOff) return OnOff;
+    /* Sino mando un puso por el boton */
+    /* PUSH */
+    pinMode(gpio_pin[GPIO_MODEM_POWER_SET], OUTPUT);    
+    digitalWrite(gpio_pin[GPIO_MODEM_POWER_SET], LOW);
+    sleep(1);
+    /* RELEASE */
+    pinMode(gpio_pin[GPIO_MODEM_POWER_SET], INPUT);    
+    while(wait)
+    {
+        if(ModemPowerCheck() == OnOff) break;
+        sleep(1);
+        wait--;
+    }
+    return ModemPowerCheck();
+}
+
+int Dom32IoPi::ModemPowerCheck( void )
+{
+    return digitalRead(gpio_pin[GPIO_MODEM_POWER_GET]);
+}
+

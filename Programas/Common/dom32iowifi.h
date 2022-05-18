@@ -35,17 +35,23 @@ public:
 	virtual ~Dom32IoWifi();
 
     int GetIOStatus(const char *raddr, int *iostatus);
+    int GetOutStatus(const char *raddr, int *ostatus);
     int GetEXStatus(const char *raddr, int *exstatus);
     int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
     int ConfigIO(const char *raddr, int ioconfig, int *config);
+    int ConfigOut(const char *raddr, int ioconfig, int *config);
     int ConfigEX(const char *raddr, int exconfig, int *config);
     int SetIO(const char *raddr, int mask, int *iostatus);
+    int SetOut(const char *raddr, int mask, int *ostatus);
     int SetEX(const char *raddr, int mask, int *exstatus);
     int ResetIO(const char *raddr, int mask, int *iostatus);
+    int ResetOut(const char *raddr, int mask, int *ostatus);
     int ResetEX(const char *raddr, int mask, int *exstatus);
     int SwitchIO(const char *raddr, int mask, int *iostatus);
+    int SwitchOut(const char *raddr, int mask, int *ostatus);
     int SwitchEX(const char *raddr, int mask, int *exstatus);
     int PulseIO(const char *raddr, int mask, int sec, int *iostatus);
+    int PulseOut(const char *raddr, int mask, int sec, int *ostatus);
     int PulseEX(const char *raddr, int mask, int sec, int *exstatus);
     int GetWifi(const char *raddr, wifi_config_data *config);
     int SetWifi(const char *raddr, wifi_config_data *config);
@@ -58,9 +64,13 @@ protected:
     const char *http_get;
 
     const char *url_get_iostatus;
+    const char *url_get_ostatus;
     const char *url_set_iostatus;
+    const char *url_set_ostatus;
     const char *url_switch_iostatus;
+    const char *url_switch_ostatus;
     const char *url_pulse_iostatus;
+    const char *url_pulse_ostatus;
     const char *url_set_ioconfig;
     const char *url_get_exstatus;
     const char *url_set_exstatus;
@@ -74,6 +84,7 @@ protected:
     const char *url_set_wifi;
 
     int IO2Int(const char* str);
+    int Out2Int(const char* str);
     int EXP2Int(const char* str);
     int HttpRespCode(const char* http);
 

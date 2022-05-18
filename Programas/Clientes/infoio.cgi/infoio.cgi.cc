@@ -195,8 +195,40 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_porta += 0x08;
     }
   }
+  if(Str.ParseData(post_data, "IO5", str))
+  {
+    if(status_porta < 0) status_porta = 0;
+    if( !strcmp("on", str))
+    {
+      status_porta += 0x10;
+    }
+  }
+  if(Str.ParseData(post_data, "IO6", str))
+  {
+    if(status_porta < 0) status_porta = 0;
+    if( !strcmp("on", str))
+    {
+      status_porta += 0x20;
+    }
+  }
+  if(Str.ParseData(post_data, "IO7", str))
+  {
+    if(status_porta < 0) status_porta = 0;
+    if( !strcmp("on", str))
+    {
+      status_porta += 0x40;
+    }
+  }
+  if(Str.ParseData(post_data, "IO8", str))
+  {
+    if(status_porta < 0) status_porta = 0;
+    if( !strcmp("on", str))
+    {
+      status_porta += 0x80;
+    }
+  }
 
-  if(Str.ParseData(post_data, "EXP1", str))
+  if(Str.ParseData(post_data, "OUT1", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -204,7 +236,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x01;
     }
   }
-  if(Str.ParseData(post_data, "EXP3", str))
+  if(Str.ParseData(post_data, "OUT2", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -212,7 +244,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x02;
     }
   }
-  if(Str.ParseData(post_data, "EXP4", str))
+  if(Str.ParseData(post_data, "OUT3", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -220,7 +252,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x04;
     }
   }
-  if(Str.ParseData(post_data, "EXP5", str))
+  if(Str.ParseData(post_data, "OUT4", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -228,7 +260,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x08;
     }
   }
-  if(Str.ParseData(post_data, "EXP7", str))
+  if(Str.ParseData(post_data, "OUT5", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -236,7 +268,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x10;
     }
   }
-  if(Str.ParseData(post_data, "EXP8", str))
+  if(Str.ParseData(post_data, "OUT6", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -244,7 +276,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x20;
     }
   }
-  if(Str.ParseData(post_data, "EXP9", str))
+  if(Str.ParseData(post_data, "OUT7", str))
   {
     if(status_portb < 0) status_portb = 0;
     if( !strcmp("on", str))
@@ -252,19 +284,33 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       status_portb += 0x40;
     }
   }
+  if(Str.ParseData(post_data, "OUT8", str))
+  {
+    if(status_portb < 0) status_portb = 0;
+    if( !strcmp("on", str))
+    {
+      status_portb += 0x80;
+    }
+  }
+
   if(Str.ParseData(post_data, "CHG", str))
   {
     if(str[0] == '1') delta_porta += 0x01;
     if(str[1] == '1') delta_porta += 0x02;
     if(str[2] == '1') delta_porta += 0x04;
     if(str[3] == '1') delta_porta += 0x08;
-    if(str[4] == '1') delta_portb += 0x01;
-    if(str[5] == '1') delta_portb += 0x02;
-    if(str[6] == '1') delta_portb += 0x04;
-    if(str[7] == '1') delta_portb += 0x08;
-    if(str[8] == '1') delta_portb += 0x10;
-    if(str[9] == '1') delta_portb += 0x20;
-    if(str[10] == '1') delta_portb += 0x40;
+    if(str[4] == '1') delta_porta += 0x10;
+    if(str[5] == '1') delta_porta += 0x20;
+    if(str[6] == '1') delta_porta += 0x40;
+    if(str[7] == '1') delta_porta += 0x80;
+    if(str[8] == '1') delta_portb += 0x01;
+    if(str[9] == '1') delta_portb += 0x02;
+    if(str[10] == '1') delta_portb += 0x04;
+    if(str[11] == '1') delta_portb += 0x08;
+    if(str[12] == '1') delta_portb += 0x10;
+    if(str[13] == '1') delta_portb += 0x20;
+    if(str[14] == '1') delta_portb += 0x40;
+    if(str[15] == '1') delta_portb += 0x80;
   }
 
   if(Str.ParseData(post_data, "GETCONF", str))

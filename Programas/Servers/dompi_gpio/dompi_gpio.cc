@@ -36,11 +36,13 @@ using namespace std;
 #include "dom32iopi.h"
 #include "config.h"
 
+#define MAX_BUFFER_LEN 32767
+
 CGMServerWait *m_pServer;
-//DPConfig *pConfig;
+DPConfig *pConfig;
 void OnClose(int sig);
 
-//int internal_timeout;
+int internal_timeout;
 
 int power2(int exp)
 {
@@ -64,10 +66,19 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[4096];
+	char message[MAX_BUFFER_LEN+1];
 	unsigned long message_len;
 	unsigned char blink;
-//	char s[16];
+	unsigned long exclude_modem = 0;
+
+	int current_io_status;
+	int previus_io_status = 0;
+	int current_ex_status;
+	int previus_ex_status = 0;
+	int delta_io_status;
+	int delta_ex_status;
+	char temp_s[64];
+	char s[16];
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL,         OnClose);
@@ -85,13 +96,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Init("dompi_gpio");
 	m_pServer->m_pLog->Add(1, "Iniciando interface GPIO");
 
-//	pConfig = new DPConfig("/etc/dompiweb.config");
-//	internal_timeout = 1000;
-//	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
-//	{
-//		internal_timeout = atoi(s) * 1000;
-//	}
+	pConfig = new DPConfig("/etc/dompiweb.config");
+	internal_timeout = 1000;
+	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	{
+		internal_timeout = atoi(s) * 1000;
+	}
 
+    cJSON *json_obj;
     cJSON *json_req;
     //cJSON *json_resp;
 	cJSON *json_Direccion_IP;
@@ -767,6 +779,62 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* expiracion del timer */
 			blink++;
 			pPI->SetStatusLed(blink&0x01);
+
+
+			json_obj = cJSON_CreateObject();
+
+			/* Verifico los cambios de estado */
+			pPI->GetIOStatus(&current_io_status);
+			delta_io_status = current_io_status ^ previus_io_status;
+			pPI->GetEXStatus(&current_ex_status);
+			delta_ex_status = current_ex_status ^ previus_ex_status;
+			if(delta_io_status || delta_ex_status)
+			{
+				cJSON_AddStringToObject(json_obj, "HW_ID", "000000000000");
+				if(delta_io_status)
+				{
+					previus_io_status = current_io_status;
+
+					sprintf(temp_s, "%i", current_io_status);
+					cJSON_AddStringToObject(json_obj, "STATUS_PORTA", temp_s);
+					sprintf(temp_s, "%i", delta_io_status);
+					cJSON_AddStringToObject(json_obj, "DELTA_PORTA", temp_s);
+
+				}
+				if(delta_ex_status)
+				{
+					previus_ex_status = current_ex_status;
+
+					sprintf(temp_s, "%i", current_ex_status);
+					cJSON_AddStringToObject(json_obj, "STATUS_PORTB", temp_s);
+					sprintf(temp_s, "%i", delta_ex_status);
+					cJSON_AddStringToObject(json_obj, "DELTA_PORTB", temp_s);
+
+				}
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+				cJSON_Delete(json_obj);
+				m_pServer->Call("dompi_infoio", message, strlen(message), NULL, internal_timeout);
+			}
+
+#ifdef __COMMENT__
+			/* Mantengo el modem encendido */
+			if(exclude_modem) exclude_modem--;
+			if( (pPI->ModemPowerCheck() == 0) && (exclude_modem == 0) )
+			{
+				exclude_modem = 1000;
+				m_pServer->m_pLog->Add(100, "INFO encendiendo el modem.");
+				if(pPI->ModemPower(1, 3) == 1)
+				{
+					m_pServer->m_pLog->Add(100, "INFO encendiendo el modem.");
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(100, "ERROR el modem no enciende.");
+				}
+
+			}
+#endif /* __COMMENT__ */
+
 		}
 		
 	}
