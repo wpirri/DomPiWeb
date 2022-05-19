@@ -23,6 +23,12 @@ Cloud_Host_1_Proto varchar(8),
 Cloud_Host_2_Address varchar(64),
 Cloud_Host_2_Port integer DEFAULT 0,
 Cloud_Host_2_Proto varchar(8),
+Planta1 varchar(256),
+Planta2 varchar(256),
+Planta3 varchar(256),
+Planta4 varchar(256),
+Planta5 varchar(256),
+Modem_port varchar(16),
 Flags integer DEFAULT 0
 );
 

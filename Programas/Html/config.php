@@ -5,7 +5,7 @@ include("head.php");
 
 <body>
 
-<div class="back-btn" id="back-from-config" onclick="window.location.replace('planta1.php');">
+<div class="back-btn" id="back-from-config" onclick="window.location.replace('planta.php');">
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
@@ -19,7 +19,7 @@ include("head.php");
 	<img id="upload-icon" class="icon-btn" src="images/gear.png">&nbsp;Sistema
 </div>
 
-<div class="normal-btn" id="btn-config-dummy1" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-dummy1" onclick="">
 	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
 </div>
 
@@ -32,7 +32,7 @@ include("head.php");
 	<img id="net-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Objetos
 </div>
 
-<div class="normal-btn" id="btn-config-groups" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-groups" onclick="window.location.replace('group_list.php');">
 	<img id="group-icon" class="icon-btn" src="images/group.png">&nbsp;Grupos
 </div>
 
@@ -41,15 +41,15 @@ include("head.php");
 </div>
 
 
-<div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">
 	<img id="flags-icon" class="icon-btn" src="images/var.png">&nbsp;Variables
 </div>
 
-<div class="normal-btn" id="btn-config-crono" onclick="window.location.replace('');">
+<div class="normal-btn" id="btn-config-crono" onclick="window.location.replace('task.php');">
 	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
 </div>
 
-<div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
 

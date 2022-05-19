@@ -1544,6 +1544,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
+						/* Actualizo el estado en la base */
+						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+										"SET Estado = 1 "
+										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
@@ -1593,6 +1598,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
+						/* Actualizo el estado en la base */
+						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+										"SET Estado = 0 "
+										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
@@ -1642,6 +1652,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
+						/* Actualizo el estado en la base */
+						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+										"SET Estado = (1 - Estado) "
+										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						rc = pDB->Query(json_arr, query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
@@ -1690,6 +1706,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
 					{
+						/* Actualizo el estado en la base */
+						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+										"SET Estado = 1 "
+										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						/* TODO: Implementar parametro de tiempo */
