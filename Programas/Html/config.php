@@ -19,8 +19,8 @@ include("head.php");
 	<img id="upload-icon" class="icon-btn" src="images/gear.png">&nbsp;Sistema
 </div>
 
-<div class="normal-btn" id="btn-config-dummy1" onclick="">
-	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
+<div class="normal-btn" id="btn-config-planta" onclick="window.location.replace('planta_edit.php');">
+	<img id="home-icon" class="icon-btn" src="images/home.png">&nbsp;Planta
 </div>
 
 

@@ -1452,18 +1452,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
 				}
 				else
 				{
 					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 					if(json_un_obj)
 					{
-						sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -1494,18 +1494,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
 				}
 				else
 				{
 					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 					if(json_un_obj)
 					{
-						sprintf(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -2733,7 +2733,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE MAC = \'%s\';", update_hw_config);
+							"WHERE Id = \'%s\';", update_hw_config);
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
 			update_hw_config[0] = 0;

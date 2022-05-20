@@ -1,5 +1,5 @@
 <?php
-$TITLE='Planta 1'; 
+$TITLE='Plano de Planta'; 
 include("head.php");
 ?>
 
