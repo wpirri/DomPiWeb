@@ -119,7 +119,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
-    pD32W = new Dom32IoWifi();
+    pD32W = new Dom32IoWifi(m_pServer->m_pLog);
 
 	CGMServerBase::GMIOS call_server_resp;
 	CGMClient::GMIOS call_client_resp;

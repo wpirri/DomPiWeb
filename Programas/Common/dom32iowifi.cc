@@ -37,8 +37,9 @@ using namespace std;
 
 #define BUFFER_LEN 32767
 
-Dom32IoWifi::Dom32IoWifi()
+Dom32IoWifi::Dom32IoWifi(CGLog *pLog)
 {
+    m_pLog = pLog;
     /* POST
     * 1.- %s: URI
     * 2.- %s: Host
@@ -88,7 +89,6 @@ Dom32IoWifi::Dom32IoWifi()
     url_get_wifi = "/wifi.cgi";
     url_set_wifi = "/wifi.cgi";
 
-    m_verbose = 0;
     m_timeout = 1500;
 }
 
@@ -105,17 +105,11 @@ int Dom32IoWifi::GetIOStatus(const char *raddr, int *iostatus)
     int rc;
 
     sprintf(buffer, http_get, url_get_iostatus, raddr);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     *iostatus = 0;
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -143,17 +137,11 @@ int Dom32IoWifi::GetOutStatus(const char *raddr, int *ostatus)
     int rc;
 
     sprintf(buffer, http_get, url_get_ostatus, raddr);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     *ostatus = 0;
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -181,17 +169,11 @@ int Dom32IoWifi::GetEXStatus(const char *raddr, int *exstatus)
     int rc;
 
     sprintf(buffer, http_get, url_get_exstatus, raddr);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     *exstatus = 0;
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -219,19 +201,13 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
     int rc;
 
     sprintf(buffer, http_get, url_get_config, raddr);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(ioconfig) *ioconfig = 0;
     if(exconfig) *exconfig = 0;
 
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -273,17 +249,11 @@ int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int *config)
             (ioconfig&0x40)?"in":"out",
             (ioconfig&0x80)?"in":"out");
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     /*Query(const char* raddr, int rport, const char* snd, char* rcv, int rcv_max_len, int to_ms);*/
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -320,16 +290,10 @@ int Dom32IoWifi::ConfigEX(const char *raddr, int exconfig, int *config)
             (exconfig&0x40)?"in":"out",
             (exconfig&0x80)?"in":"out");
     sprintf(buffer, http_post, url_set_exconfig, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -397,16 +361,10 @@ int Dom32IoWifi::SetIO(const char *raddr, int mask, int *iostatus)
         strcat(data, "IO8=on");
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -474,16 +432,10 @@ int Dom32IoWifi::SetOut(const char *raddr, int mask, int *ostatus)
         strcat(data, "OUT8=on");
     }
     sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -552,16 +504,10 @@ int Dom32IoWifi::SetEX(const char *raddr, int mask, int *exstatus)
     }
 
     sprintf(buffer, http_post, url_set_exstatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -630,16 +576,10 @@ int Dom32IoWifi::ResetIO(const char *raddr, int mask, int *iostatus)
     }
 
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -708,16 +648,10 @@ int Dom32IoWifi::ResetOut(const char *raddr, int mask, int *ostatus)
     }
 
     sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -781,16 +715,10 @@ int Dom32IoWifi::ResetEX(const char *raddr, int mask, int *exstatus)
     }
 
     sprintf(buffer, http_post, url_set_exstatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -839,16 +767,10 @@ int Dom32IoWifi::SwitchIO(const char *raddr, int mask, int *iostatus)
         strcat(data, "IO4=on");
     }
     sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -897,16 +819,10 @@ int Dom32IoWifi::SwitchOut(const char *raddr, int mask, int *ostatus)
         strcat(data, "OUT4=on");
     }
     sprintf(buffer, http_post, url_switch_ostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -970,16 +886,10 @@ int Dom32IoWifi::SwitchEX(const char *raddr, int mask, int *exstatus)
     }
 
     sprintf(buffer, http_post, url_switch_exstatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -1031,16 +941,10 @@ int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec, int *iostatus)
         strcat(data, "IO4=on");
     }
     sprintf(buffer, http_post, url_pulse_iostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -1112,16 +1016,10 @@ int Dom32IoWifi::PulseOut(const char *raddr, int mask, int sec, int *ostatus)
         strcat(data, "OUT4=on");
     }
     sprintf(buffer, http_post, url_pulse_ostatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -1188,16 +1086,10 @@ int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec, int *exstatus)
     }
 
     sprintf(buffer, http_post, url_pulse_exstatus, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -1225,16 +1117,10 @@ int Dom32IoWifi::GetWifi(const char *raddr, wifi_config_data *config)
     int rc;
 
     sprintf(buffer, http_post, url_get_wifi, raddr, 0, " ");
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
@@ -1306,16 +1192,10 @@ int Dom32IoWifi::SetWifi(const char *raddr, wifi_config_data *config)
         strcat(data, config->wifi_host2);
     }
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
-    if(m_verbose)
-    {
-        printf("Send:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-    }
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", buffer);
     if(q.Query(raddr, 80, buffer, buffer, BUFFER_LEN, m_timeout) > 0)
     {
-        if(m_verbose)
-        {
-            printf("Receive:\n----------------------------------------\n%s\n----------------------------------------\n", buffer);
-        }
+        if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
         if(rc != 0) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */

@@ -314,6 +314,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_off", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_switch", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_pulse", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_ass_add_to_planta", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);
@@ -1743,6 +1744,42 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			/* ****************************************************************
+			*		dompi_ass_add_to_planta
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_ass_add_to_planta"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				if(json_un_obj)
+				{
+					sprintf(query, "UPDATE TB_DOM_ASSIGN "
+									"SET Icono0 = \"lamp0.png\",Icono1 = \"lamp1.png\",Planta = 1,Cord_x = 100,Cord_y = 100 "
+									"WHERE Id = %s;", json_un_obj->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					if(rc == 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+
+				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_add_to_planta]");
+				}
+			}
+			/* ****************************************************************
 			*		dompi_ass_cmd
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_cmd"))
@@ -2733,7 +2770,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE Id = \'%s\';", update_hw_config);
+							"WHERE MAC = \'%s\';", update_hw_config);
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
 			update_hw_config[0] = 0;
@@ -2835,6 +2872,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_ass_off", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_switch", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_pulse", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_ass_add_to_planta", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_cmd", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);

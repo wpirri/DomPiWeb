@@ -549,6 +549,7 @@ int GEvent::SendEventObj(int id, int ev, int val)
 int GEvent::SendEventGrp(int id, int ev, int val)
 {
     m_pServer->m_pLog->Add(100, "[SendEventGrp] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(1, "[SendEventGrp] ERROR - Falta desarrollar");
 
     return 0;
 }
@@ -556,6 +557,7 @@ int GEvent::SendEventGrp(int id, int ev, int val)
 int GEvent::SendEventFun(int id, int ev, int val)
 {
     m_pServer->m_pLog->Add(100, "[SendEventFun] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(1, "[SendEventFun] ERROR - Falta desarrollar");
 
     return 0;
 }
@@ -563,6 +565,7 @@ int GEvent::SendEventFun(int id, int ev, int val)
 int GEvent::SendEventVar(int id, int ev, int val)
 {
     m_pServer->m_pLog->Add(100, "[SendEventVar] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(1, "[SendEventVar] ERROR - Falta desarrollar");
 
     return 0;
 }

@@ -13,11 +13,16 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmList(JSON.parse(msg).response, 'ass_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'ass_edit.php', 'ass_delete.php');
+        fillAddAssignList(JSON.parse(msg).response, 'ass_list_table_div', '<?php echo $TITLE; ?>', 'AddAssignToPlanta');
     }
 
     function OnLoad() {
         newAJAXCommand('/cgi-bin/abmassign.cgi', LoadData, false);
+    }
+
+    function AddAssignToPlanta(id) {
+        newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=addassigntoplanta&Id=' + id, null, false);
+        window.location.replace('planta_edit.php', 1000);
     }
 </script>
 

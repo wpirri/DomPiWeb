@@ -15,6 +15,8 @@
 #ifndef _DOM32IOWIFI_H_
 #define _DOM32IOWIFI_H_
 
+#include <gmonitor/glog.h>
+
 class Dom32IoWifi
 {
 public:
@@ -31,7 +33,7 @@ public:
         char rqst_path[33];
     } wifi_config_data;
 
-	Dom32IoWifi();
+	Dom32IoWifi(CGLog *pLog = NULL);
 	virtual ~Dom32IoWifi();
 
     int GetIOStatus(const char *raddr, int *iostatus);
@@ -56,7 +58,6 @@ public:
     int GetWifi(const char *raddr, wifi_config_data *config);
     int SetWifi(const char *raddr, wifi_config_data *config);
 
-    int m_verbose;
     int m_timeout;
 
 protected:
@@ -88,6 +89,7 @@ protected:
     int EXP2Int(const char* str);
     int HttpRespCode(const char* http);
 
+    CGLog *m_pLog;
 };
 
 #endif /* _DOM32IOWIFI_H_ */

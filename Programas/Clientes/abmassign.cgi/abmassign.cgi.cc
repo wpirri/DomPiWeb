@@ -212,6 +212,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_ass_pulse");
   }
+  else if( !strcmp(funcion, "addassigntoplanta"))
+  {
+    strcpy(funcion_call, "dompi_ass_add_to_planta");
+  }
   else
   {
     strcpy(funcion_call, "dompi_ass_list");

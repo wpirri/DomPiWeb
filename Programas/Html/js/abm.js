@@ -168,3 +168,46 @@ function fillAbmForm(json_list, dst_div, title)
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
 }
+
+function fillAddAssignList(json_list, dst_div, title, add_fcn) { 
+	// Getting the all column names 
+	var headers = getJsonHeaders(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		output += '<th>';
+		output += headers[i];
+		output += '</th>';
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Agregar</th>';
+	output += '</tr>\n';
+	// Datos
+	for (i = 0; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			// If there is any key, which is matching 
+			// with the column name 
+			if (val == null) val = "&nbsp;";   
+			output += '<td>';
+			output += val;
+			output += '</td>';
+			if(headers[j] == 'Id') {
+				index_value = val;
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><img src="images/edit.png" OnClick="' + add_fcn + '(' + index_value + ');"></a></td>' 
+		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
