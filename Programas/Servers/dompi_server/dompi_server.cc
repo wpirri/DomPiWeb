@@ -1649,37 +1649,44 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				if(json_un_obj)
 				{
-					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
+					/* Actualizo el estado en la base */
+					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+									"SET Estado = (1 - Estado) "
+									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-					rc = pDB->Query(json_arr, query);
-					if(rc == 0)
+					rc = pDB->Query(NULL, query);
+					if(rc > 0)
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = (1 - Estado) "
-										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+						json_arr = cJSON_CreateArray();
+						sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S, ASS.Estado "
+										"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
+										"WHERE HW.Id = ASS.Dispositivo AND "
+										"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						pDB->Query(NULL, query);
-						/* Creo un objeto con el primer item del array */
-						json_un_obj = json_arr->child;
-						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
+						rc = pDB->Query(json_arr, query);
 						if(rc == 0)
 						{
-							strcpy(message, (const char*)call_resp.data);
+							/* Creo un objeto con el primer item del array */
+							json_un_obj = json_arr->child;
+							cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+							m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
+							rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_resp);
 						}
-						else
-						{
-							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-						}
-						m_pServer->Free(call_resp);
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+					}
 				}
 				else
 				{
