@@ -69,7 +69,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char message[MAX_BUFFER_LEN+1];
 	unsigned long message_len;
 	unsigned char blink;
-	unsigned long exclude_modem = 0;
+	//unsigned long exclude_modem = 0;
 
 	int current_io_status;
 	int previus_io_status = 0;

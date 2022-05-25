@@ -17,6 +17,17 @@
 
 #include <gmonitor/glog.h>
 
+/* Definiciones para los bits de flag */
+#define FLAG_HTTPS_ENABLE    0x01
+#define FLAG_WIEGAND_ENABLE  0x02
+#define FLAG_DHT11_ENABLE    0x04
+#define FLAG_HTTPS_DISABLE    0x01^0xFF
+#define FLAG_WIEGAND_DISABLE  0x02^0xFF
+#define FLAG_DHT11_DISABLE    0x04^0xFF
+
+#define WIFI_MSG_MAX_LEN    4096
+#define WIFI_MSG_MAX_QUEUE  8
+
 class Dom32IoWifi
 {
 public:
@@ -40,29 +51,44 @@ public:
     int GetOutStatus(const char *raddr, int *ostatus);
     int GetEXStatus(const char *raddr, int *exstatus);
     int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
-    int ConfigIO(const char *raddr, int ioconfig, int *config);
-    int ConfigOut(const char *raddr, int ioconfig, int *config);
-    int ConfigEX(const char *raddr, int exconfig, int *config);
-    int SetIO(const char *raddr, int mask, int *iostatus);
-    int SetOut(const char *raddr, int mask, int *ostatus);
-    int SetEX(const char *raddr, int mask, int *exstatus);
-    int ResetIO(const char *raddr, int mask, int *iostatus);
-    int ResetOut(const char *raddr, int mask, int *ostatus);
-    int ResetEX(const char *raddr, int mask, int *exstatus);
-    int SwitchIO(const char *raddr, int mask, int *iostatus);
-    int SwitchOut(const char *raddr, int mask, int *ostatus);
-    int SwitchEX(const char *raddr, int mask, int *exstatus);
-    int PulseIO(const char *raddr, int mask, int sec, int *iostatus);
-    int PulseOut(const char *raddr, int mask, int sec, int *ostatus);
-    int PulseEX(const char *raddr, int mask, int sec, int *exstatus);
+    int ConfigIO(const char *raddr, int ioconfig);
+    int ConfigOut(const char *raddr, int ioconfig);
+    int ConfigEX(const char *raddr, int exconfig);
+    int ConfigFlags(const char *raddr, int flags);
+    int SetIO(const char *raddr, int mask);
+    int SetOut(const char *raddr, int mask);
+    int SetEX(const char *raddr, int mask);
+    int ResetIO(const char *raddr, int mask);
+    int ResetOut(const char *raddr, int mask);
+    int ResetEX(const char *raddr, int mask);
+    int SwitchIO(const char *raddr, int mask);
+    int SwitchOut(const char *raddr, int masks);
+    int SwitchEX(const char *raddr, int mask);
+    int PulseIO(const char *raddr, int mask, int sec);
+    int PulseOut(const char *raddr, int mask, int sec);
+    int PulseEX(const char *raddr, int mask, int sec);
     int GetWifi(const char *raddr, wifi_config_data *config);
     int SetWifi(const char *raddr, wifi_config_data *config);
+
+    void Task( void );
+    void Timer( void );
 
     int m_timeout;
 
 protected:
+    typedef struct _queue_list
+    {
+        char addr[16];
+        unsigned char id;
+        char buffer[WIFI_MSG_MAX_LEN*WIFI_MSG_MAX_QUEUE];
+        unsigned int delay;
+    } queue_list;
+
+    queue_list m_queue_list[256];
+
     const char *http_post;
     const char *http_get;
+    int m_port;
 
     const char *url_get_iostatus;
     const char *url_get_ostatus;
@@ -84,12 +110,15 @@ protected:
     const char *url_get_wifi;
     const char *url_set_wifi;
 
+    CGLog *m_pLog;
+
     int IO2Int(const char* str);
     int Out2Int(const char* str);
     int EXP2Int(const char* str);
     int HttpRespCode(const char* http);
+    int RequestEnqueue(const char* dest, const char* data);
+    int RequestDequeue(const char* dest, const char* data);
 
-    CGLog *m_pLog;
 };
 
 #endif /* _DOM32IOWIFI_H_ */

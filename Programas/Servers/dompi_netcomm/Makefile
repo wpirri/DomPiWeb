@@ -3,7 +3,7 @@
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto
-OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o
+OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o
 OUTPUT=dompi_netcomm
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -16,6 +16,8 @@ all: dompi_netcomm
 dompi_netcomm.o: dompi_netcomm.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_netcomm.cc
 
+queue.o: ../../Common/queue.c
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/queue.c
 ctcp.o: ../../Common/ctcp.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/ctcp.cc
 config.o: ../../Common/config.cc

@@ -59,6 +59,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   char hw_id[16];
   char str[16];
+  char card[256];
   int status_porta = (-1);
   int status_portb = (-1);
   int status_portc = (-1);
@@ -311,6 +312,11 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     if(str[13] == '1') delta_portb += 0x20;
     if(str[14] == '1') delta_portb += 0x40;
     if(str[15] == '1') delta_portb += 0x80;
+  }
+
+  if(Str.ParseData(post_data, "CARD", card))
+  {
+    cJSON_AddStringToObject(json_obj, "CARD", card);
   }
 
   if(Str.ParseData(post_data, "GETCONF", str))

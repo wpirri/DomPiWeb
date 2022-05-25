@@ -123,7 +123,7 @@ void LoadSystemConfig(void)
 
 	if(json_System_Config) cJSON_Delete(json_System_Config);
 	json_System_Config = cJSON_CreateArray();
-	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
+	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1");
 	m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 	rc = pDB->Query(json_System_Config, query);
 	if(rc == 0)
@@ -185,7 +185,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_filename[FILENAME_MAX+1];
 	int checked;
 	char hw_id[16];
-	char update_hw_config[16];
+	char update_hw_config_id[8];
+	char update_hw_config_mac[16];
 	char update_hw_status[16];
 	long temp_l;
 	char temp_s[64];
@@ -231,15 +232,17 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Config_PORT_B_E_S;
 	//cJSON *json_Config_PORT_C_Analog;
 	//cJSON *json_Config_PORT_C_E_S;
-	cJSON * json_Objeto;
-	cJSON * json_Accion;
+	cJSON *json_Flags;
+	cJSON *json_Objeto;
+	cJSON *json_Accion;
 
 	char ass_s_disp[128];
 	int ass_i_port;
 	int ass_i_e_s;
 	int ass_i_tipo;
 
-	update_hw_config[0] = 0;
+	update_hw_config_id[0] = 0;
+	update_hw_config_mac[0] = 0;
 	update_hw_status[0] = 0;
 	load_system_config = 1;
 	update_system_config = 0;
@@ -373,7 +376,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if( atoi(json_un_obj->valuestring) > 0 )
 							{
 								m_pServer->m_pLog->Add(10, "HW %s Solicita configuracion", json_HW_Id->valuestring);
-								strcpy(update_hw_config, json_HW_Id->valuestring);
+								strcpy(update_hw_config_mac, json_HW_Id->valuestring);
 							}
 						}
 					}
@@ -465,7 +468,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT Id, Usuario, Nombre_Completo, Estado, Ultimo_Acceso FROM TB_DOM_USER;");
+				strcpy(query, "SELECT Id, Usuario, Nombre_Completo, Estado, Ultimo_Acceso FROM TB_DOM_USER");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -495,7 +498,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT * FROM TB_DOM_USER;");
+				strcpy(query, "SELECT * FROM TB_DOM_USER");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -528,7 +531,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -613,7 +616,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_USER %s VALUES %s;", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_USER %s VALUES %s", query_into, query_values);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 				rc = pDB->Query(NULL, query);
@@ -641,7 +644,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( strcmp(json_un_obj->valuestring, "admin") )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Nombre = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -719,7 +722,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s;", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc == 0)
@@ -755,7 +758,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_arr = cJSON_CreateArray();
 					sprintf(query, "SELECT Permisos,Dias,Horas,Estado,Contador_Error,"
-					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Nombre = \'%s\';", json_user->valuestring);
+					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Nombre = \'%s\'", json_user->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -807,7 +810,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF;");
+				strcpy(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -837,7 +840,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT * FROM TB_DOM_PERIF;");
+				strcpy(query, "SELECT * FROM TB_DOM_PERIF");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -870,7 +873,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -955,7 +958,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_PERIF %s VALUES %s;", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_PERIF %s VALUES %s", query_into, query_values);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 				rc = pDB->Query(NULL, query);
@@ -983,7 +986,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( memcmp(json_un_obj->valuestring, "00", 2) )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE Id = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE Id = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -1057,7 +1060,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 										if( !memcmp("Config_", json_un_obj->string, 7))
 										{
-											strcpy(update_hw_config, hw_id);
+											strcpy(update_hw_config_id, hw_id);
 										}
 										if( !memcmp("Estado_", json_un_obj->string, 7))
 										{
@@ -1074,7 +1077,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s;", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc == 0)
@@ -1105,7 +1108,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_query_result = cJSON_CreateArray();
 				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.E_S, ASS.Tipo "
 								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
-								"WHERE ASS.Dispositivo = HW.Id;");
+								"WHERE ASS.Dispositivo = HW.Id");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_query_result, query);
 				if(rc == 0)
@@ -1135,7 +1138,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT * FROM TB_DOM_ASSIGN;");
+				strcpy(query, "SELECT * FROM TB_DOM_ASSIGN");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1168,7 +1171,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1253,7 +1256,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_ASSIGN %s VALUES %s;", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_ASSIGN %s VALUES %s", query_into, query_values);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 				rc = pDB->Query(NULL, query);
@@ -1281,7 +1284,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_un_obj->valuestring) != 0 )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_ASSIGN WHERE Id = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -1383,7 +1386,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s;", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc == 0)
@@ -1401,7 +1404,7 @@ int main(/*int argc, char** argv, char** env*/void)
 											"SET Actualizar = 1, "
 											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
 																	 "FROM TB_DOM_PERIF WHERE Id = '%s') | %i "
-											"WHERE Id = '%s';",
+											"WHERE Id = '%s'",
 											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
 											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
 											ass_s_disp,
@@ -1414,7 +1417,7 @@ int main(/*int argc, char** argv, char** env*/void)
 											"SET Actualizar = 1, "
 											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
 																	 "FROM TB_DOM_PERIF WHERE Id = '%s') & %i "
-											"WHERE Id = '%s';",
+											"WHERE Id = '%s'",
 											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
 											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
 											ass_s_disp,
@@ -1453,18 +1456,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = \'%s\'", json_un_obj->valuestring);
 				}
 				else
 				{
 					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 					if(json_un_obj)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s", json_un_obj->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN");
 					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -1495,18 +1498,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = \'%s\'", json_un_obj->valuestring);
 				}
 				else
 				{
 					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 					if(json_un_obj)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_un_obj->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s", json_un_obj->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN");
 					}
 				}
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -1540,7 +1543,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1548,8 +1551,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 1 "
-										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						pDB->Query(NULL, query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
@@ -1594,7 +1598,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1602,8 +1606,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 0 "
-										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						pDB->Query(NULL, query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
@@ -1648,7 +1653,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1656,9 +1661,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = (1 - Estado) "
-										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						rc = pDB->Query(json_arr, query);
+						pDB->Query(NULL, query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
@@ -1702,7 +1707,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\';", json_un_obj->valuestring);
+									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1710,8 +1715,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 1 "
-										"WHERE Objeto =  \'%s\';", json_un_obj->valuestring);
+										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+						pDB->Query(NULL, query);
 						/* Creo un objeto con el primer item del array */
 						json_un_obj = json_arr->child;
 						/* TODO: Implementar parametro de tiempo */
@@ -1755,7 +1761,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
 									"SET Icono0 = \"lamp0.png\",Icono1 = \"lamp1.png\",Planta = 1,Cord_x = 100,Cord_y = 100 "
-									"WHERE Id = %s;", json_un_obj->valuestring);
+									"WHERE Id = %s", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc == 0)
@@ -1794,7 +1800,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 								"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 								"WHERE HW.Id = ASS.Dispositivo AND "
-								"ASS.Objeto =  \'%s\';", json_Objeto->valuestring);
+								"ASS.Objeto =  \'%s\'", json_Objeto->valuestring);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1841,7 +1847,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_arr = cJSON_CreateArray();
 				strcpy(query, "SELECT EV.Id, EV.Evento, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
 				               "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
-							   "WHERE EV.Objeto_Origen = ASS.Id;");
+							   "WHERE EV.Objeto_Origen = ASS.Id");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1871,7 +1877,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT * FROM TB_DOM_EVENT;");
+				strcpy(query, "SELECT * FROM TB_DOM_EVENT");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -1904,7 +1910,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -1989,7 +1995,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_EVENT %s VALUES %s;", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_EVENT %s VALUES %s", query_into, query_values);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 				rc = pDB->Query(NULL, query);
@@ -2017,7 +2023,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_un_obj->valuestring) != 0 )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_EVENT WHERE Id = \'%s\';", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_EVENT WHERE Id = \'%s\'", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -2099,7 +2105,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s;", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc == 0)
@@ -2156,7 +2162,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\';", objeto);
+											"ASS.Objeto =  \'%s\'", objeto);
 							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 							rc = pDB->Query(json_arr, query);
 							if(rc == 0)
@@ -2184,7 +2190,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\';", objeto);
+											"ASS.Objeto =  \'%s\'", objeto);
 							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 							rc = pDB->Query(json_arr, query);
 							if(rc == 0)
@@ -2212,7 +2218,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\';", objeto);
+											"ASS.Objeto =  \'%s\'", objeto);
 							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 							rc = pDB->Query(json_arr, query);
 							if(rc == 0)
@@ -2239,7 +2245,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\';", objeto);
+											"ASS.Objeto =  \'%s\'", objeto);
 							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 							rc = pDB->Query(json_arr, query);
 							if(rc == 0)
@@ -2267,7 +2273,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
 											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
 											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\';", objeto);
+											"ASS.Objeto =  \'%s\'", objeto);
 							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 							rc = pDB->Query(json_arr, query);
 							if(rc == 0)
@@ -2297,7 +2303,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
 												"Port = 1, Config_PORT_A_E_S AS IO_Config "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2318,12 +2324,12 @@ int main(/*int argc, char** argv, char** env*/void)
 									m_pServer->Free(call_resp);
 								}
 								cJSON_Delete(json_arr);
-								/* PORT B */
+								/* Flags */
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Port = 2, Config_PORT_B_E_S AS IO_Config "
+												"Port = 0, Flags AS IO_Config "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2355,7 +2361,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
 												"Estado_PORT_A, Estado_PORT_B, Estado_PORT_C "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2384,7 +2390,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2410,7 +2416,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2436,7 +2442,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
 												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\';", objeto);
+												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 								rc = pDB->Query(json_arr, query);
 								if(rc == 0)
@@ -2479,7 +2485,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_arr = cJSON_CreateArray();
-				strcpy(query, "SELECT * FROM TB_DOM_CONFIG;");
+				strcpy(query, "SELECT * FROM TB_DOM_CONFIG");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				if(rc == 0)
@@ -2512,7 +2518,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_CONFIG WHERE Id = \'%s\';", json_un_obj->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_CONFIG WHERE Id = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					if(rc == 0)
@@ -2613,7 +2619,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_CONFIG %s VALUES %s;", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_CONFIG %s VALUES %s", query_into, query_values);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 
 				load_system_config = 1;
@@ -2666,9 +2672,10 @@ int main(/*int argc, char** argv, char** env*/void)
 		sprintf(query, "SELECT Id, MAC, Direccion_IP, Tipo, "
 						"Config_PORT_A_Analog, Config_PORT_A_E_S, "
 						"Config_PORT_B_Analog, Config_PORT_B_E_S, "
-						"Config_PORT_C_Analog, Config_PORT_C_E_S "
+						"Config_PORT_C_Analog, Config_PORT_C_E_S, "
+						"Flags "
 						"FROM TB_DOM_PERIF "
-						"WHERE Actualizar <> 0;");
+						"WHERE Actualizar <> 0");
 		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 		rc = pDB->Query(json_arr, query);
 		if(rc == 0)
@@ -2683,12 +2690,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
 				json_Config_PORT_A_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_E_S");
 				json_Config_PORT_B_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_E_S");
+				json_Flags = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Flags");
 				//json_Config_PORT_C_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_E_S");
 				//json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
 				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
 				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
 				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_MAC->valuestring);
-				if(atoi(json_Tipo_HW->valuestring) == 0)
+				if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
 				{
 					/* Armo los mensajes para cada port */
 					/*PORT A*/
@@ -2716,7 +2724,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), NULL, internal_timeout);
 					/*  */
 				}
-				else if(atoi(json_Tipo_HW->valuestring) == 1)
+				else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
 				{
 					/* Armo los mensajes para cada port */
 					/*PORT A*/
@@ -2731,49 +2739,47 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
 					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
 					/*  */
-					/*PORT B*/
+					/*Flags*/
 					json_obj = cJSON_CreateObject();
 					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
 					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
-					cJSON_AddStringToObject(json_obj, "Port", "2");
+					cJSON_AddStringToObject(json_obj, "IO_Config", json_Flags->valuestring);
+					cJSON_AddStringToObject(json_obj, "Port", "0");
 					/* Envio la configuracion de cada port por separado */
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
 					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-					/*  */
-					/*PORT C*/
-					//json_obj = cJSON_CreateObject();
-					//cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring)
-					//cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring)
-					//cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring)
-					//cJSON_AddStringToObject(json_obj, "Port", "1")
-					/* Envio la configuracion de cada port por separado */
-					//cJSON_PrintPreallocated(json_obj, message, 4096, 0);
-					//cJSON_Delete(json_obj);
-					//m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-					//m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
 					/*  */
 				}
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
 								"SET Actualizar = 0 "
-								"WHERE Id = \'%s\';", json_HW_Id->valuestring);
+								"WHERE Id = \'%s\'", json_HW_Id->valuestring);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				pDB->Query(NULL, query);
 			}
 		}
 		cJSON_Delete(json_arr);
 		/*  */
-		if(update_hw_config[0])
+		if(update_hw_config_mac[0])
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE MAC = \'%s\';", update_hw_config);
+							"WHERE MAC = \'%s\'", update_hw_config_mac);
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
-			update_hw_config[0] = 0;
+			update_hw_config_mac[0] = 0;
+		}
+		/*  */
+		if(update_hw_config_id[0])
+		{
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Actualizar = 1 "
+							"WHERE Id = \'%s\'", update_hw_config_id);
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+			update_hw_config_id[0] = 0;
 		}
 
 		if(load_system_config)
@@ -2801,7 +2807,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			update_ass_t = t + 600;
 			/* Genero un listado de los objetos con su estado para subir a la nube */
 			json_query_result = cJSON_CreateArray();
-			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
+			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0");
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			rc = pDB->Query(json_query_result, query);
 			if(rc == 0)
@@ -3018,7 +3024,7 @@ void DBMant( char* msg )
 									"Config_PORT_B_E_S = %i, "
 									"Config_PORT_C_Analog = %i, "
 									"Config_PORT_C_E_S = %i, "
-									"WHERE Id = \'%s\';",
+									"WHERE Id = \'%s\'",
 									i_PORT_A_Analog,
 									i_PORT_A_E_S,
 									i_PORT_B_Analog,
@@ -3034,7 +3040,7 @@ void DBMant( char* msg )
 			/* Levanto el flag para que mande configuracion a la placa */
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE Id = \'%s\';", json_HW_Id->valuestring);
+							"WHERE Id = \'%s\'", json_HW_Id->valuestring);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
 		}
