@@ -280,10 +280,10 @@ int Dom32IoWifi::ConfigFlags(const char *raddr, int flags)
     char buffer[BUFFER_LEN+1];
     char data[256];
 
-    sprintf(data, "HTTPS=%s&WIEGAND=%s&DHT11=%s",
+    sprintf(data, "HTTPS=%s&WIEGAND=%s&DHT2x=%s",
             (flags&FLAG_HTTPS_ENABLE)?"yes":"no",
             (flags&FLAG_WIEGAND_ENABLE)?"yes":"no",
-            (flags&FLAG_DHT11_ENABLE)?"yes":"no");
+            (flags&FLAG_DHT2x_ENABLE)?"yes":"no");
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
