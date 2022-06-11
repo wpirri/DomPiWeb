@@ -94,7 +94,7 @@ Objeto varchar(128) NOT NULL,
 Dispositivo integer NOT NULL,
 Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
 E_S integer NOT NULL,                       -- Bit 1 a 16
-Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma
+Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma, 5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param
 Estado integer DEFAULT 0,
 Icono0 varchar(32),
 Icono1 varchar(32),
