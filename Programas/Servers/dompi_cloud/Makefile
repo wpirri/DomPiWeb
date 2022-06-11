@@ -30,6 +30,7 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
+	chmod +x install_server.sh
 	./install_server.sh $(OUTPUT)
 
 uninstall:
