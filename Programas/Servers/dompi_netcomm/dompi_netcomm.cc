@@ -210,7 +210,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if( atoi(json_Port->valuestring) == 0 ) /* Flags */
 							{
 								rc = pD32W->ConfigFlags(json_Direccion_IP->valuestring, 
-												atol(json_IO_Config->valuestring));
+												atoi(json_IO_Config->valuestring));
 								m_pServer->m_pLog->Add(100, "pD32W->ConfigFlags(%s, %s) = %i", 
 													json_Direccion_IP->valuestring,
 													json_IO_Config->valuestring,
@@ -228,10 +228,12 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( atoi(json_Port->valuestring) == 1 ) /* IO */
 							{
 								rc = pD32W->ConfigIO(json_Direccion_IP->valuestring, 
-												atol(json_IO_Config->valuestring));
-								m_pServer->m_pLog->Add(100, "pD32W->ConfigIO(%s, %s) = %i", 
+												atoi(json_IO_Config->valuestring),
+												atoi((json_AN_Config)?json_AN_Config->valuestring:"0"));
+								m_pServer->m_pLog->Add(100, "pD32W->ConfigIO(%s, %s, %s) = %i", 
 													json_Direccion_IP->valuestring,
 													json_IO_Config->valuestring,
+													(json_AN_Config)?json_AN_Config->valuestring:"0",
 													rc);
 								if(rc == 0)
 								{
@@ -247,10 +249,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
 							}
-						}
-						else if(json_AN_Config)
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"5\", \"resp_msg\":\"No Implementado\"}}");
 						}
 						else
 						{
@@ -709,20 +707,20 @@ int main(/*int argc, char** argv, char** env*/void)
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
 									rc = pD32W->SetIO(json_Direccion_IP->valuestring, 
-														power2(atol(json_E_S->valuestring)-1));
+														power2(atoi(json_E_S->valuestring)-1));
 									m_pServer->m_pLog->Add(100, "pD32W->SetIO(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
-														power2(atol(json_E_S->valuestring)-1),
+														power2(atoi(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
 								else
 								{	/* Apagar */
 									rc = pD32W->ResetIO(json_Direccion_IP->valuestring, 
-														power2(atol(json_E_S->valuestring)-1));
+														power2(atoi(json_E_S->valuestring)-1));
 									m_pServer->m_pLog->Add(100, "pD32W->ResetIO(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
-														power2(atol(json_E_S->valuestring)-1),
+														power2(atoi(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
@@ -741,20 +739,20 @@ int main(/*int argc, char** argv, char** env*/void)
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
 									rc = pD32W->SetOut(json_Direccion_IP->valuestring, 
-														power2(atol(json_E_S->valuestring)-1));
+														power2(atoi(json_E_S->valuestring)-1));
 									m_pServer->m_pLog->Add(100, "pD32W->SetOut(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
-														power2(atol(json_E_S->valuestring)-1),
+														power2(atoi(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
 								else
 								{	/* Apagar */
 									rc = pD32W->ResetOut(json_Direccion_IP->valuestring, 
-														power2(atol(json_E_S->valuestring)-1));
+														power2(atoi(json_E_S->valuestring)-1));
 									m_pServer->m_pLog->Add(100, "pD32W->ResetOut(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
-														power2(atol(json_E_S->valuestring)-1),
+														power2(atoi(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
@@ -849,10 +847,10 @@ int main(/*int argc, char** argv, char** env*/void)
 							if( atoi(json_Port->valuestring) == 1 )
 							{	/* Puerto1 */
 								rc = pD32W->SwitchIO(json_Direccion_IP->valuestring, 
-													power2(atol(json_E_S->valuestring)-1));
+													power2(atoi(json_E_S->valuestring)-1));
 								m_pServer->m_pLog->Add(100, "pD32W->SwitchIO(%s, 0x%02X, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													return_int1,
 													rc);
 								if(rc == 0)
@@ -868,10 +866,10 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
 								rc = pD32W->SwitchOut(json_Direccion_IP->valuestring, 
-													power2(atol(json_E_S->valuestring)-1));
+													power2(atoi(json_E_S->valuestring)-1));
 								m_pServer->m_pLog->Add(100, "pD32W->SwitchOut(%s, 0x%02X, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													return_int1,
 													rc);
 								if(rc == 0)
@@ -964,11 +962,11 @@ int main(/*int argc, char** argv, char** env*/void)
 							if( atoi(json_Port->valuestring) == 1 )
 							{	/* Puerto1 */
 								rc = pD32W->PulseIO(json_Direccion_IP->valuestring, 
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring));
 								m_pServer->m_pLog->Add(100, "pD32W->PulseIO(%s, 0x%02X, %i, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring),
 													return_int1,
 													rc);
@@ -985,11 +983,11 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
 								rc = pD32W->PulseOut(json_Direccion_IP->valuestring, 
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring));
 								m_pServer->m_pLog->Add(100, "pD32W->PulseOut(%s, 0x%02X, %i, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
-													power2(atol(json_E_S->valuestring)-1),
+													power2(atoi(json_E_S->valuestring)-1),
 													atoi(json_Segundos->valuestring),
 													return_int1,
 													rc);
@@ -1091,7 +1089,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* OK */
 								sprintf(message,
 										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%i\"}}",
-										(return_int1&power2(atol(json_E_S->valuestring)-1)?1:0));
+										(return_int1&power2(atoi(json_E_S->valuestring)-1)?1:0));
 							}
 							else
 							{
@@ -1111,7 +1109,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* OK */
 								sprintf(message,
 										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%i\"}}",
-										(return_int1&power2(atol(json_E_S->valuestring)-1)?1:0));
+										(return_int1&power2(atoi(json_E_S->valuestring)-1)?1:0));
 							}
 							else
 							{

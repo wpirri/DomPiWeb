@@ -51,7 +51,7 @@ public:
     int GetOutStatus(const char *raddr, int *ostatus);
     int GetEXStatus(const char *raddr, int *exstatus);
     int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
-    int ConfigIO(const char *raddr, int ioconfig);
+    int ConfigIO(const char *raddr, int ioconfig, int anconfig);
     int ConfigOut(const char *raddr, int ioconfig);
     int ConfigEX(const char *raddr, int exconfig);
     int ConfigFlags(const char *raddr, int flags);

@@ -52,13 +52,6 @@ public:
 
     void SetStatusLed(int status);
 
-    void InitSerial(int baud);
-    void TaskSerial(void);
-    void TimerSerial(void);
-    void SendSerial(const char* cmd, const char* wait, int on_ok, int on_error, int time_out);
-    int ModemPower(int OnOff, int wait);
-    int ModemPowerCheck( void );
-
 protected:
     void SetDefaultConfig( void );
     void SaveConfig( void );

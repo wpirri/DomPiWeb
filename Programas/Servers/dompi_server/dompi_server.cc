@@ -112,6 +112,7 @@ int load_system_config;
 int update_system_config;
 int internal_timeout;
 
+bool run_dbmant;
 void DBMant( char* msg );
 
 void LoadSystemConfig(void)
@@ -226,7 +227,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	//cJSON *json_Estado;
 	//cJSON *json_AN_Config;
 	//cJSON *json_IO_Config;
-	//cJSON *json_Config_PORT_A_Analog;
+	cJSON *json_Config_PORT_A_Analog;
 	cJSON *json_Config_PORT_A_E_S;
 	//cJSON *json_Config_PORT_B_Analog;
 	cJSON *json_Config_PORT_B_E_S;
@@ -246,6 +247,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	update_hw_status[0] = 0;
 	load_system_config = 1;
 	update_system_config = 0;
+	run_dbmant = false;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -1271,6 +1273,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_add]");
 				}
+				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_delete
@@ -1306,6 +1309,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_delete]");
 				}
+				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_update
@@ -1444,6 +1448,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_update]");
 				}
+				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_status
@@ -2163,6 +2168,24 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							DBMant( message );
 						}
+						else if( !strcmp(comando, "sms") )
+						{
+							json_un_obj = cJSON_CreateObject();
+							cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
+							cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
+							cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+							m_pServer->m_pLog->Add(50, "[dompi_send_sms][%s]", message);
+							rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
+							if(rc == 0)
+							{
+								strcpy(message, (const char*)call_resp.data);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
+							}
+							m_pServer->Free(call_resp);
+						}
 						else if( !strcmp(comando, "encender") )
 						{
 							json_arr = cJSON_CreateArray();
@@ -2308,7 +2331,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* PORT A */
 								json_arr = cJSON_CreateArray();
 								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Port = 1, Config_PORT_A_E_S AS IO_Config "
+												"Port = 1, Config_PORT_A_Analog AS AN_Config, Config_PORT_A_E_S AS IO_Config "
 												"FROM TB_DOM_PERIF "
 												"WHERE Dispositivo =  \'%s\'", objeto);
 								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -2673,6 +2696,18 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 
 		}
+		/*
+		* Tareas asincrónicas
+		*
+		*
+		*/
+
+		if(run_dbmant)
+		{
+			run_dbmant = false;
+			DBMant(NULL);
+		}
+
 		m_pServer->m_pLog->Add(100, "Control de tareas programadas");
 		/* Control de tareas pendientes */
 		json_arr = cJSON_CreateArray();
@@ -2699,7 +2734,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Config_PORT_B_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_E_S");
 				json_Flags = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Flags");
 				//json_Config_PORT_C_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_E_S");
-				//json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
+				json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
 				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
 				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
 				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_MAC->valuestring);
@@ -2711,6 +2746,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
 					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
 					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
+					if(json_Config_PORT_A_Analog)
+					{
+						cJSON_AddStringToObject(json_obj, "AN_Config", json_Config_PORT_A_Analog->valuestring);
+					}
 					cJSON_AddStringToObject(json_obj, "Port", "1");
 					/* Envio la configuracion de cada port por separado */
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
@@ -2739,6 +2778,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
 					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
 					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
+					if(json_Config_PORT_A_Analog)
+					{
+						cJSON_AddStringToObject(json_obj, "AN_Config", json_Config_PORT_A_Analog->valuestring);
+					}
 					cJSON_AddStringToObject(json_obj, "Port", "1");
 					/* Envio la configuracion de cada port por separado */
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
@@ -2907,6 +2950,9 @@ void OnClose(int sig)
 	exit(0);
 }
 
+/*
+	Recorre los assign para setear la configuración correcta de E/S en cada dispositivo
+*/
 void DBMant( char* msg )
 {
 	int rc;
@@ -2932,7 +2978,7 @@ void DBMant( char* msg )
 	int i_PORT_C_Analog;
 	int i_PORT_C_E_S;
 
-	strcpy(msg, "Mantenimiento de la base de datos...\r\n");
+	if(msg) strcpy(msg, "Mantenimiento de la base de datos...\r\n");
 	m_pServer->m_pLog->Add(50, "Iniciando mantenimiento de la base de datos");
 
 	json_arr_hw = cJSON_CreateArray();
@@ -2950,9 +2996,12 @@ void DBMant( char* msg )
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Id");
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "MAC");
 			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Tipo");
-			strcat(msg, "    Procesando ");
-			strcat(msg, json_MAC->valuestring);
-			strcat(msg, "\r\n");
+			if(msg)
+			{
+				strcat(msg, "    Procesando ");
+				strcat(msg, json_MAC->valuestring);
+				strcat(msg, "\r\n");
+			}
 			m_pServer->m_pLog->Add(100, "Procesando [%s]...", json_MAC->valuestring);
 
 			if(atoi(json_Tipo_HW->valuestring) == 1)
@@ -2966,9 +3015,9 @@ void DBMant( char* msg )
 				if(rc == 0)
 				{
 					i_PORT_A_Analog = 0;
-					i_PORT_A_E_S = 0x0F;
+					i_PORT_A_E_S = 0xFF;
 					i_PORT_B_Analog = 0;
-					i_PORT_B_E_S = 0x1F;
+					i_PORT_B_E_S = 0x00;
 					i_PORT_C_Analog = 0;
 					i_PORT_C_E_S = 0xFF;
 					/* Recorro el array */
@@ -2984,43 +3033,71 @@ void DBMant( char* msg )
 						if(atoi(json_Port->valuestring) == 1)
 						{
 							/* PORT A */
-							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							/*	0=Output, 
+								1=Input, 
+								2=Analog, 
+								3=Output Alarma, 
+								4=Input Alarma, 
+								5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param
+							*/
+							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
+								atoi(json_Tipo_ASS->valuestring) == 2 ||
+								atoi(json_Tipo_ASS->valuestring) == 4  )
 							{
 								/* Entrada */
 								i_PORT_A_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+								if(atoi(json_Tipo_ASS->valuestring) == 2)
+								{
+									i_PORT_A_Analog |= power2(atoi(json_E_S->valuestring)-1);  
+								}
 							}
 							else
 							{
 								/* Salida */
 								i_PORT_A_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+								i_PORT_A_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
 							}
 						}
 						else if(atoi(json_Port->valuestring) == 2)
 						{
 							/* PORT B */
-							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
+								atoi(json_Tipo_ASS->valuestring) == 2 ||
+								atoi(json_Tipo_ASS->valuestring) == 4  )
 							{
 								/* Entrada */
 								i_PORT_B_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+								if(atoi(json_Tipo_ASS->valuestring) == 2)
+								{
+									i_PORT_B_Analog |= power2(atoi(json_E_S->valuestring)-1);  
+								}
 							}
 							else
 							{
 								/* Salida */
 								i_PORT_B_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+								i_PORT_B_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
 							}
 						}
 						else if(atoi(json_Port->valuestring) == 2)
 						{
 							/* PORT C */
-							if(atoi(json_Tipo_ASS->valuestring) == 1)
+							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
+								atoi(json_Tipo_ASS->valuestring) == 2 ||
+								atoi(json_Tipo_ASS->valuestring) == 4  )
 							{
 								/* Entrada */
 								i_PORT_C_E_S |= power2(atoi(json_E_S->valuestring)-1);  
+								if(atoi(json_Tipo_ASS->valuestring) == 2)
+								{
+									i_PORT_C_Analog |= power2(atoi(json_E_S->valuestring)-1);  
+								}
 							}
 							else
 							{
 								/* Salida */
 								i_PORT_C_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
+								i_PORT_C_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
 							}
 						}
 					}
@@ -3031,6 +3108,7 @@ void DBMant( char* msg )
 									"Config_PORT_B_E_S = %i, "
 									"Config_PORT_C_Analog = %i, "
 									"Config_PORT_C_E_S = %i, "
+									"Actualizar = 1 "
 									"WHERE Id = \'%s\'",
 									i_PORT_A_Analog,
 									i_PORT_A_E_S,

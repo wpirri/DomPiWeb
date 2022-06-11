@@ -237,20 +237,20 @@ int Dom32IoWifi::GetConfig(const char *raddr, int *ioconfig, int *exconfig)
     return (-1);
 }
 
-int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig)
+int Dom32IoWifi::ConfigIO(const char *raddr, int ioconfig, int anconfig)
 {
     char buffer[BUFFER_LEN+1];
     char data[256];
 
     sprintf(data, "IO1=%s&IO2=%s&IO3=%s&IO4=%s&IO5=%s&IO6=%s&IO7=%s&IO8=%s",
-            (ioconfig&0x01)?"in":"out",
-            (ioconfig&0x02)?"in":"out",
-            (ioconfig&0x04)?"in":"out",
-            (ioconfig&0x08)?"in":"out",
-            (ioconfig&0x10)?"in":"out",
-            (ioconfig&0x20)?"in":"out",
-            (ioconfig&0x40)?"in":"out",
-            (ioconfig&0x80)?"in":"out");
+            (ioconfig&0x01)?((anconfig&0x01)?"ana":"in"):"out",
+            (ioconfig&0x02)?((anconfig&0x02)?"ana":"in"):"out",
+            (ioconfig&0x04)?((anconfig&0x04)?"ana":"in"):"out",
+            (ioconfig&0x08)?((anconfig&0x08)?"ana":"in"):"out",
+            (ioconfig&0x10)?((anconfig&0x10)?"ana":"in"):"out",
+            (ioconfig&0x20)?((anconfig&0x20)?"ana":"in"):"out",
+            (ioconfig&0x40)?((anconfig&0x40)?"ana":"in"):"out",
+            (ioconfig&0x80)?((anconfig&0x80)?"ana":"in"):"out");
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
