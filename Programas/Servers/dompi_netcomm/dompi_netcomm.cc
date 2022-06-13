@@ -112,10 +112,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Tipo_HW;
 	cJSON *json_Tipo_ASS;
 	cJSON *json_Port;
-	cJSON *json_E_S;
 	cJSON *json_Estado;
-	cJSON *json_IO_Config;
-	cJSON *json_AN_Config;
 	cJSON *json_Segundos;
 
     Dom32IoWifi *pD32W;
@@ -130,12 +127,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_port", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_get_port", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_get_io", GM_MSG_TYPE_CR);
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
@@ -151,10 +145,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_req, "Tipo_HW");
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_req, "Tipo_ASS");
 			json_Port = cJSON_GetObjectItemCaseSensitive(json_req, "Port");
-			json_E_S = cJSON_GetObjectItemCaseSensitive(json_req, "E_S");
 			json_Estado = cJSON_GetObjectItemCaseSensitive(json_req, "Estado");
-			json_IO_Config = cJSON_GetObjectItemCaseSensitive(json_req, "IO_Config");
-			json_AN_Config = cJSON_GetObjectItemCaseSensitive(json_req, "AN_Config");
 			json_Segundos = cJSON_GetObjectItemCaseSensitive(json_req, "Segundos");
 			/* ************************************************************* *
 			 *
@@ -205,55 +196,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
 					{
-						if(json_IO_Config)
-						{
-							if( atoi(json_Port->valuestring) == 0 ) /* Flags */
-							{
-								rc = pD32W->ConfigFlags(json_Direccion_IP->valuestring, 
-												atoi(json_IO_Config->valuestring));
-								m_pServer->m_pLog->Add(100, "pD32W->ConfigFlags(%s, %s) = %i", 
-													json_Direccion_IP->valuestring,
-													json_IO_Config->valuestring,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else if( atoi(json_Port->valuestring) == 1 ) /* IO */
-							{
-								rc = pD32W->ConfigIO(json_Direccion_IP->valuestring, 
-												atoi(json_IO_Config->valuestring),
-												atoi((json_AN_Config)?json_AN_Config->valuestring:"0"));
-								m_pServer->m_pLog->Add(100, "pD32W->ConfigIO(%s, %s, %s) = %i", 
-													json_Direccion_IP->valuestring,
-													json_IO_Config->valuestring,
-													(json_AN_Config)?json_AN_Config->valuestring:"0",
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-							}
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-						}
+						/* TODO: Envío de configuración a WiFi */
+
+
 					}
 					else
 					{
@@ -502,161 +447,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			else if( !strcmp(fn, "dompi_hw_set_port"))
-			{
-				/* TODO: Envio de estado de port completo */
-
-
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_port]");
-				}
-			}
-			/* ************************************************************* *
-			 *
-			 * ************************************************************* */
-			else if( !strcmp(fn, "dompi_hw_get_port"))
-			{
-				if(json_Direccion_IP && json_Tipo_HW)
-				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
-					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_port", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
-						}
-						else
-						{
-							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port][%s]", message);
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							rc = m_pClient->Call("dompi_pi_get_port", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						if(json_Port)
-						{
-							if( atoi(json_Port->valuestring) == 1 )
-							{	/* Puerto1 */
-								rc = pD32W->GetIOStatus(json_Direccion_IP->valuestring, 
-													&return_int1);
-								m_pServer->m_pLog->Add(100, "pD32W->GetIOStatus(%s, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message,
-											"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else if( atoi(json_Port->valuestring) == 2 )
-							{	/* Puerto2 */
-								rc = pD32W->GetOutStatus(json_Direccion_IP->valuestring, 
-													&return_int1);
-								m_pServer->m_pLog->Add(100, "pD32W->GetOuttatus(%s, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message,
-											"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-							}
-						}
-						else
-						{
-							/* Pido los dos puertos de este tipo de hw */
-							rc = pD32W->GetIOStatus(json_Direccion_IP->valuestring, 
-												&return_int1);
-							m_pServer->m_pLog->Add(100, "pD32W->GetIOStatus(%s, 0x%02X) = %i", 
-												json_Direccion_IP->valuestring,
-												return_int1,
-												rc);
-							rc |= pD32W->GetOutStatus(json_Direccion_IP->valuestring, 
-												&return_int2);
-							m_pServer->m_pLog->Add(100, "pD32W->GetOutStatus(%s, 0x%02X) = %i", 
-												json_Direccion_IP->valuestring,
-												return_int2,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Port A: 0x%02X\r\nPort B: 0x%02X\"}}", return_int1, return_int2);
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-							}
-						}
-					}
-					else
-					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
-					}
-				}
-				else
-				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port]");
-				}
-			}
-			/* ************************************************************* *
-			 *
-			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_io"))
 			{
-				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Estado )
+				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{
@@ -699,78 +492,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						if(atoi(json_Tipo_ASS->valuestring) == 0)
-						{	/* Salida */
-							if( atoi(json_Port->valuestring) == 1 )
-							{	/* Puerto1 */
-								if( atoi(json_Estado->valuestring) == 1 )
-								{	/* Encender */
-									rc = pD32W->SetIO(json_Direccion_IP->valuestring, 
-														power2(atoi(json_E_S->valuestring)-1));
-									m_pServer->m_pLog->Add(100, "pD32W->SetIO(%s, 0x%02X, 0x%02X) = %i", 
-														json_Direccion_IP->valuestring,
-														power2(atoi(json_E_S->valuestring)-1),
-														return_int1,
-														rc);
-								}
-								else
-								{	/* Apagar */
-									rc = pD32W->ResetIO(json_Direccion_IP->valuestring, 
-														power2(atoi(json_E_S->valuestring)-1));
-									m_pServer->m_pLog->Add(100, "pD32W->ResetIO(%s, 0x%02X, 0x%02X) = %i", 
-														json_Direccion_IP->valuestring,
-														power2(atoi(json_E_S->valuestring)-1),
-														return_int1,
-														rc);
-								}
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else if( atoi(json_Port->valuestring) == 2 )
-							{	/* Puerto2 */
-								if( atoi(json_Estado->valuestring) == 1 )
-								{	/* Encender */
-									rc = pD32W->SetOut(json_Direccion_IP->valuestring, 
-														power2(atoi(json_E_S->valuestring)-1));
-									m_pServer->m_pLog->Add(100, "pD32W->SetOut(%s, 0x%02X, 0x%02X) = %i", 
-														json_Direccion_IP->valuestring,
-														power2(atoi(json_E_S->valuestring)-1),
-														return_int1,
-														rc);
-								}
-								else
-								{	/* Apagar */
-									rc = pD32W->ResetOut(json_Direccion_IP->valuestring, 
-														power2(atoi(json_E_S->valuestring)-1));
-									m_pServer->m_pLog->Add(100, "pD32W->ResetOut(%s, 0x%02X, 0x%02X) = %i", 
-														json_Direccion_IP->valuestring,
-														power2(atoi(json_E_S->valuestring)-1),
-														return_int1,
-														rc);
-								}
-
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-							}
+					{	
+						/* Interface Vía IP mensajeria HTTP */
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{	
+							/* Enviar mensaje al WiFi */
+							pD32W->SetIO(json_Direccion_IP->valuestring, json_req);
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
@@ -798,7 +528,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_switch_io"))
 			{
-				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
+				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{
@@ -841,51 +571,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						if(atoi(json_Tipo_ASS->valuestring) == 0)
-						{	/* Salida */
-							if( atoi(json_Port->valuestring) == 1 )
-							{	/* Puerto1 */
-								rc = pD32W->SwitchIO(json_Direccion_IP->valuestring, 
-													power2(atoi(json_E_S->valuestring)-1));
-								m_pServer->m_pLog->Add(100, "pD32W->SwitchIO(%s, 0x%02X, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													power2(atoi(json_E_S->valuestring)-1),
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else if( atoi(json_Port->valuestring) == 2 )
-							{	/* Puerto2 */
-								rc = pD32W->SwitchOut(json_Direccion_IP->valuestring, 
-													power2(atoi(json_E_S->valuestring)-1));
-								m_pServer->m_pLog->Add(100, "pD32W->SwitchOut(%s, 0x%02X, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													power2(atoi(json_E_S->valuestring)-1),
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-							}
+					{	
+						/* Interface Vía IP mensajeria HTTP */
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{
+							/* Enviar mensaje al WiFi */
+							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req);
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
@@ -913,7 +607,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
-				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Segundos )
+				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Segundos )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{
@@ -956,55 +650,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						if(atoi(json_Tipo_ASS->valuestring) == 0)
-						{	/* Salida */
-							if( atoi(json_Port->valuestring) == 1 )
-							{	/* Puerto1 */
-								rc = pD32W->PulseIO(json_Direccion_IP->valuestring, 
-													power2(atoi(json_E_S->valuestring)-1),
-													atoi(json_Segundos->valuestring));
-								m_pServer->m_pLog->Add(100, "pD32W->PulseIO(%s, 0x%02X, %i, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													power2(atoi(json_E_S->valuestring)-1),
-													atoi(json_Segundos->valuestring),
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else if( atoi(json_Port->valuestring) == 2 )
-							{	/* Puerto2 */
-								rc = pD32W->PulseOut(json_Direccion_IP->valuestring, 
-													power2(atoi(json_E_S->valuestring)-1),
-													atoi(json_Segundos->valuestring));
-								m_pServer->m_pLog->Add(100, "pD32W->PulseOut(%s, 0x%02X, %i, 0x%02X) = %i", 
-													json_Direccion_IP->valuestring,
-													power2(atoi(json_E_S->valuestring)-1),
-													atoi(json_Segundos->valuestring),
-													return_int1,
-													rc);
-								if(rc == 0)
-								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-								}
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-							}
+					{	
+						/* Interface Vía IP mensajeria HTTP */
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{
+							/* Enviar mensaje al WiFi */
+							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req);
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
@@ -1027,116 +681,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_pulse_io]");
 				}
 			}
-			/* ************************************************************* *
-			 *
-			 * ************************************************************* */
-			else if( !strcmp(fn, "dompi_hw_get_io"))
-			{
-				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
-				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
-					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_io", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
-						}
-						else
-						{
-							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_io][%s]", message);
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
 
-							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_get_io", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						if( atoi(json_Port->valuestring) == 1 )
-						{	/* Puerto1 */
-							rc = pD32W->GetIOStatus(json_Direccion_IP->valuestring, 
-												&return_int1);
-							m_pServer->m_pLog->Add(100, "pD32W->GetIOStatus(%s, 0x%02X) = %i", 
-												json_Direccion_IP->valuestring,
-												return_int1,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%i\"}}",
-										(return_int1&power2(atoi(json_E_S->valuestring)-1)?1:0));
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-							}
-						}
-						else if( atoi(json_Port->valuestring) == 2 )
-						{	/* Puerto2 */
-							rc = pD32W->GetOutStatus(json_Direccion_IP->valuestring, 
-												&return_int1);
-							m_pServer->m_pLog->Add(100, "pD32W->GetOutStatus(%s, 0x%02X) = %i", 
-												json_Direccion_IP->valuestring,
-												return_int1,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%i\"}}",
-										(return_int1&power2(atoi(json_E_S->valuestring)-1)?1:0));
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-							}
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
-						}
-					}
-					else
-					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
-					}
-				}
-				else
-				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_io]");
-				}
-			}
 
 
 			else
@@ -1177,7 +723,6 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_get_io", GM_MSG_TYPE_CR);
 
 
 	delete m_pServer;

@@ -112,9 +112,6 @@ int load_system_config;
 int update_system_config;
 int internal_timeout;
 
-bool run_dbmant;
-void DBMant( char* msg );
-
 void LoadSystemConfig(void)
 {
 	char query[4096];
@@ -186,9 +183,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_filename[FILENAME_MAX+1];
 	int checked;
 	char hw_id[16];
-	char update_hw_config_id[8];
-	char update_hw_config_mac[16];
-	char update_hw_status[16];
 	long temp_l;
 	char temp_s[64];
 	time_t t;
@@ -201,6 +195,12 @@ int main(/*int argc, char** argv, char** env*/void)
 	char objeto[1024];
 	char parametro[1024];
 
+	int update_hw_config_id;
+	char update_hw_config_mac[16];
+	int update_ass_status_id;
+	int update_ass_status_hwid;
+	char update_ass_status_name[256];
+
 	STRFunc Strf;
 	CGMServerBase::GMIOS call_resp;
 
@@ -212,42 +212,28 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
     cJSON *json_query;
     cJSON *json_query_result;
-    //cJSON *json_response;
-    //cJSON *json_response_password;
     cJSON *json_cmdline;
-    //cJSON *json_resp_code;
 
     cJSON *json_HW_Id;
+    cJSON *json_ASS_Id;
     cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Tipo_HW;
-	//cJSON *json_Tipo_ASS;
-	//cJSON *json_Port;
-	//cJSON *json_E_S;
-	//cJSON *json_Estado;
-	//cJSON *json_AN_Config;
-	//cJSON *json_IO_Config;
-	cJSON *json_Config_PORT_A_Analog;
-	cJSON *json_Config_PORT_A_E_S;
-	//cJSON *json_Config_PORT_B_Analog;
-	cJSON *json_Config_PORT_B_E_S;
-	//cJSON *json_Config_PORT_C_Analog;
-	//cJSON *json_Config_PORT_C_E_S;
+	cJSON *json_Tipo_ASS;
+	cJSON *json_Port;
+	cJSON *json_Estado;
 	cJSON *json_Flags;
 	cJSON *json_Objeto;
 	cJSON *json_Accion;
+	cJSON *json_Segundos;
 
-	char ass_s_disp[128];
-	int ass_i_port;
-	int ass_i_e_s;
-	int ass_i_tipo;
-
-	update_hw_config_id[0] = 0;
+	update_hw_config_id = 0;
 	update_hw_config_mac[0] = 0;
-	update_hw_status[0] = 0;
+	update_ass_status_id = 0;
+	update_ass_status_hwid = 0;
+	update_ass_status_name[0] = 0;
 	load_system_config = 1;
 	update_system_config = 0;
-	run_dbmant = false;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -358,7 +344,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				//message[0] = 0;
 
-				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "HW_ID");
+				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "ID");
 				if(json_HW_Id)
 				{
 					rc = pEV->ExtIOEvent(message);
@@ -386,7 +372,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* NOT FOUND */
 						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_HW_Id->valuestring);
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
 					}
 					else
 					{
@@ -397,7 +383,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				else
 				{
 					/* El mensaje vino sin HWID */
-					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Not Found\"}}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in message\"}}");
 				}
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1022,6 +1008,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_into[0] = 0;
 				query_values[0] = 0;
 				query_where[0] = 0;
+				hw_id[0] = 0;
 
 				json_un_obj = json_obj;
 				while( json_un_obj )
@@ -1059,16 +1046,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "='");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
-
-										if( !memcmp("Config_", json_un_obj->string, 7))
-										{
-											strcpy(update_hw_config_id, hw_id);
-										}
-										if( !memcmp("Estado_", json_un_obj->string, 7))
-										{
-											strcpy(update_hw_status, hw_id);
-										}
-										
 									}
 								}
 							}
@@ -1077,8 +1054,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 				cJSON_Delete(json_obj);
-				if(strlen(query_where))
+				if(strlen(query_where) && strlen(hw_id))
 				{
+					strcat(query_values, ",Actualizar = 1");
 					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1108,7 +1086,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_query_result = cJSON_CreateArray();
-				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.E_S, ASS.Tipo "
+				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.Tipo "
 								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
 								"WHERE ASS.Dispositivo = HW.Id");
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -1273,7 +1251,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_add]");
 				}
-				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_delete
@@ -1309,25 +1286,19 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_delete]");
 				}
-				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_update
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_update"))
 			{
-				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
 				query_into[0] = 0;
 				query_values[0] = 0;
 				query_where[0] = 0;
 
+				json_obj = cJSON_Parse(message);
 				json_un_obj = json_obj;
-				ass_s_disp[0] = 0;
-				ass_i_e_s = 0;
-				ass_i_port = 0;
-				ass_i_tipo = 0;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1367,19 +1338,8 @@ int main(/*int argc, char** argv, char** env*/void)
 									/* Recopilo algunos datos para actualizar la tabla de HW */
 									if( !strcmp(json_un_obj->string, "Dispositivo"))
 									{
-										strcpy(ass_s_disp, json_un_obj->valuestring);
-									}
-									else if( !strcmp(json_un_obj->string, "Port"))
-									{
-										ass_i_port = atoi(json_un_obj->valuestring);
-									}
-									else if( !strcmp(json_un_obj->string, "E_S"))
-									{
-										ass_i_e_s = atoi(json_un_obj->valuestring);
-									}
-									else if( !strcmp(json_un_obj->string, "Tipo"))
-									{
-										ass_i_tipo = atoi(json_un_obj->valuestring);
+										/* Mando a actualiza la configuración del HW */
+										update_hw_config_id = atoi(json_un_obj->valuestring);
 									}
 								}
 							}
@@ -1393,48 +1353,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s", query_values, query_where);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
-					if(rc == 0)
+					if(rc > 0)
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
 					{
-						/* Actualizo la tabla de HW */
-						if(strlen(ass_s_disp) && ass_i_port && ass_i_e_s )
-						{
-							if(ass_i_tipo == 1)
-							{ 
-								sprintf(query, "UPDATE TB_DOM_PERIF "
-											"SET Actualizar = 1, "
-											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
-																	 "FROM TB_DOM_PERIF WHERE Id = '%s') | %i "
-											"WHERE Id = '%s'",
-											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
-											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
-											ass_s_disp,
-											power2(ass_i_e_s-1),
-											ass_s_disp);
-							}
-							else /* ass_i_tipo == 0 */
-							{
-								sprintf(query, "UPDATE TB_DOM_PERIF "
-											"SET Actualizar = 1, "
-											    "Config_PORT_%c_E_S = (SELECT Config_PORT_%c_E_S "
-																	 "FROM TB_DOM_PERIF WHERE Id = '%s') & %i "
-											"WHERE Id = '%s'",
-											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
-											(ass_i_port == 1)?'A':(ass_i_port == 2)?'B':'C',
-											ass_s_disp,
-											power2(ass_i_e_s-1)^0xFF,
-											ass_s_disp);
-							}
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(NULL, query);
-							if(rc == 0)
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-							}
-						}
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
 				}
 				else
@@ -1448,7 +1373,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(50, "ERROR al responder mensaje [dompi_ass_update]");
 				}
-				run_dbmant = true;
 			}
 			/* ****************************************************************
 			*		dompi_ass_status
@@ -1544,44 +1468,25 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				if(json_un_obj)
 				{
-					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
+					/* Actualizo el estado en la base */
+					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+									"SET Estado = 1, Actualizar = 1 "
+									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-					rc = pDB->Query(json_arr, query);
-					if(rc == 0)
+					rc = pDB->Query(NULL, query);
+					if(rc > 0)
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 1 "
-										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
-						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						pDB->Query(NULL, query);
-						/* Creo un objeto con el primer item del array */
-						json_un_obj = json_arr->child;
-						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
-						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-						if(rc == 0)
-						{
-							strcpy(message, (const char*)call_resp.data);
-						}
-						else
-						{
-							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-						}
-						m_pServer->Free(call_resp);
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"Error en update a TB_DOM_ASSIGN\"}}");
+					}
 				}
 				else
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
 				}
-
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1599,44 +1504,25 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				if(json_un_obj)
 				{
-					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
+					/* Actualizo el estado en la base */
+					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+									"SET Estado = 0, Actualizar = 1 "
+									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-					rc = pDB->Query(json_arr, query);
-					if(rc == 0)
+					rc = pDB->Query(NULL, query);
+					if(rc > 0)
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 0 "
-										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
-						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						pDB->Query(NULL, query);
-						/* Creo un objeto con el primer item del array */
-						json_un_obj = json_arr->child;
-						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
-						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-						if(rc == 0)
-						{
-							strcpy(message, (const char*)call_resp.data);
-						}
-						else
-						{
-							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-						}
-						m_pServer->Free(call_resp);
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
+					}
 				}
 				else
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
 				}
-
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1656,48 +1542,23 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-									"SET Estado = (1 - Estado) "
+									"SET Estado = (1 - Estado), Actualizar = 1 "
 									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					if(rc > 0)
 					{
-						json_arr = cJSON_CreateArray();
-						sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S, ASS.Estado "
-										"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-										"WHERE HW.Id = ASS.Dispositivo AND "
-										"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
-						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						rc = pDB->Query(json_arr, query);
-						if(rc == 0)
-						{
-							/* Creo un objeto con el primer item del array */
-							json_un_obj = json_arr->child;
-							cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-							m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-							rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_resp);
-						}
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
 					}
 				}
 				else
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
 				}
-
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1715,45 +1576,38 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				if(json_un_obj)
 				{
-					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-									"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-									"WHERE HW.Id = ASS.Dispositivo AND "
-									"ASS.Objeto =  \'%s\'", json_un_obj->valuestring);
-					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-					rc = pDB->Query(json_arr, query);
-					if(rc == 0)
+					json_Segundos = cJSON_GetObjectItemCaseSensitive(json_obj, "Segundos");
+					/* Actualizo el estado en la base */
+					if(json_Segundos)
 					{
-						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 1 "
-										"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
-						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-						pDB->Query(NULL, query);
-						/* Creo un objeto con el primer item del array */
-						json_un_obj = json_arr->child;
-						/* TODO: Implementar parametro de tiempo */
-						cJSON_AddStringToObject(json_un_obj, "Segundos", "1");
-						cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
-						if(rc == 0)
-						{
-							strcpy(message, (const char*)call_resp.data);
-						}
-						else
-						{
-							sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-						}
-						m_pServer->Free(call_resp);
+										"SET Estado = %i, Actualizar = 1 "
+										"WHERE Objeto = \'%s\'",
+										atoi(json_Segundos->valuestring)+1,
+										json_un_obj->valuestring);
 					}
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					else
+					{
+						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+										"SET Estado = 2, Actualizar = 1 "
+										"WHERE Objeto = \'%s\'",
+										json_un_obj->valuestring);
+					}
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					if(rc > 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
+					}
 				}
 				else
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
 				}
-
 				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1808,46 +1662,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
 
-				json_arr = cJSON_CreateArray();
-				sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-								"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-								"WHERE HW.Id = ASS.Dispositivo AND "
-								"ASS.Objeto =  \'%s\'", json_Objeto->valuestring);
-				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-				rc = pDB->Query(json_arr, query);
-				if(rc == 0)
-				{
-					/* Creo un objeto con el primer item del array */
-					json_un_obj = json_arr->child;
-					if( !strcmp(json_Accion->valuestring, "on"))
-					{
-						cJSON_AddStringToObject(json_un_obj, "Estado", "1");
-					}
-					else if( !strcmp(json_Accion->valuestring, "off"))
-					{
-						cJSON_AddStringToObject(json_un_obj, "Estado", "0");
-					}
-					cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-					if( !strcmp(json_Accion->valuestring, "switch"))
-					{
-						m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-					}
-					else
-					{
-						m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
-					}
-					if(rc == 0)
-					{
-						strcpy(message, (const char*)call_resp.data);
-					}
-					else
-					{
-						sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-					}
-					m_pServer->Free(call_resp);
-				}
+
+
+
+
+
+
+
 			}
 			/* ****************************************************************
 			*		dompi_ev_list
@@ -2166,7 +1987,8 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "manten") )
 						{
-							DBMant( message );
+							/* TODO: Hacer algún mantenimiento si es necesario */
+
 						}
 						else if( !strcmp(comando, "sms") )
 						{
@@ -2174,8 +1996,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
 							cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
 							cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-							m_pServer->m_pLog->Add(50, "[dompi_send_sms][%s]", message);
+							m_pServer->m_pLog->Add(50, "Call [dompi_send_sms][%s]", message);
 							rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
+							m_pServer->m_pLog->Add(50, "Resp [dompi_send_sms][%s]", (const char*)call_resp.data);
 							if(rc == 0)
 							{
 								strcpy(message, (const char*)call_resp.data);
@@ -2188,311 +2011,27 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "encender") )
 						{
-							json_arr = cJSON_CreateArray();
-							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\'", objeto);
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(json_arr, query);
-							if(rc == 0)
-							{
-								/* Creo un objeto con el primer item del array */
-								json_un_obj = json_arr->child;
-								cJSON_AddStringToObject(json_un_obj, "Estado", "1");
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									strcpy(message, (const char*)call_resp.data);
-								}
-								else
-								{
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-								}
-								m_pServer->Free(call_resp);
-							}
+
 						}
 						else if( !strcmp(comando, "apagar") )
 						{
-							json_arr = cJSON_CreateArray();
-							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\'", objeto);
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(json_arr, query);
-							if(rc == 0)
-							{
-								/* Creo un objeto con el primer item del array */
-								json_un_obj = json_arr->child;
-								cJSON_AddStringToObject(json_un_obj, "Estado", "0");
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_set_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									strcpy(message, (const char*)call_resp.data);
-								}
-								else
-								{
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-								}
-								m_pServer->Free(call_resp);
-							}
+
 						}
 						else if( !strcmp(comando, "cambiar") )
 						{
-							json_arr = cJSON_CreateArray();
-							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\'", objeto);
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(json_arr, query);
-							if(rc == 0)
-							{
-								/* Creo un objeto con el primer item del array */
-								json_un_obj = json_arr->child;
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_switch_io", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									strcpy(message, (const char*)call_resp.data);
-								}
-								else
-								{
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-								}
-								m_pServer->Free(call_resp);
-							}
+
 						}
 						else if( !strcmp(comando, "pulso") )
 						{
-							json_arr = cJSON_CreateArray();
-							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\'", objeto);
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(json_arr, query);
-							if(rc == 0)
-							{
-								/* Creo un objeto con el primer item del array */
-								json_un_obj = json_arr->child;
-								cJSON_AddStringToObject(json_un_obj, "Segundos", (parametro)?parametro:"1");
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									strcpy(message, (const char*)call_resp.data);
-								}
-								else
-								{
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-								}
-								m_pServer->Free(call_resp);
-							}
+
 						}
 						else if( !strcmp(comando, "estado") )
 						{
-							json_arr = cJSON_CreateArray();
-							sprintf(query, "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
-											"FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-											"WHERE HW.Id = ASS.Dispositivo AND "
-											"ASS.Objeto =  \'%s\'", objeto);
-							m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-							rc = pDB->Query(json_arr, query);
-							if(rc == 0)
-							{
-								/* Creo un objeto con el primer item del array */
-								json_un_obj = json_arr->child;
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(50, "[dompi_hw_get_io][%s]", message);
-								rc = m_pServer->Call("dompi_hw_get_io", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									strcpy(message, (const char*)call_resp.data);
-								}
-								else
-								{
-									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-								}
-								m_pServer->Free(call_resp);
-							}
+
 						}
 						else if( !strcmp(comando, "actualizar") )
 						{
-							if( !memcmp(parametro, "conf", 4))
-							{
-								/* PORT A */
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Port = 1, Config_PORT_A_Analog AS AN_Config, Config_PORT_A_E_S AS IO_Config "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-								cJSON_Delete(json_arr);
-								/* Flags */
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Port = 0, Flags AS IO_Config "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-								cJSON_Delete(json_arr);
-							}
-							else if( !strcmp(parametro, "wifi"))
-							{
 
-							}
-							else if( !strcmp(parametro, "estado"))
-							{
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW, "
-												"Estado_PORT_A, Estado_PORT_B, Estado_PORT_C "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_set_port][%s]", message);
-									rc = m_pServer->Call("dompi_hw_set_port", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-							}
-						}
-						else if( !strcmp(comando, "modulo") )
-						{
-							if( !memcmp(parametro, "conf", 4))
-							{
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_port_config", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-							}
-							else if( !strcmp(parametro, "wifi"))
-							{
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_get_comm_config][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_comm_config", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-							}
-							else if( !strcmp(parametro, "estado"))
-							{
-								json_arr = cJSON_CreateArray();
-								sprintf(query, "SELECT Direccion_IP, Tipo AS Tipo_HW "
-												"FROM TB_DOM_PERIF "
-												"WHERE Dispositivo =  \'%s\'", objeto);
-								m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-								rc = pDB->Query(json_arr, query);
-								if(rc == 0)
-								{
-									/* Creo un objeto con el primer item del array */
-									json_un_obj = json_arr->child;
-									cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-									m_pServer->m_pLog->Add(50, "[dompi_hw_get_port][%s]", message);
-									rc = m_pServer->Call("dompi_hw_get_port", message, strlen(message), &call_resp, internal_timeout);
-									if(rc == 0)
-									{
-										strcpy(message, (const char*)call_resp.data);
-									}
-									else
-									{
-										sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-									}
-									m_pServer->Free(call_resp);
-								}
-							}
 						}
 					}
 				}
@@ -2702,20 +2241,11 @@ int main(/*int argc, char** argv, char** env*/void)
 		*
 		*/
 
-		if(run_dbmant)
-		{
-			run_dbmant = false;
-			DBMant(NULL);
-		}
-
 		m_pServer->m_pLog->Add(100, "Control de tareas programadas");
-		/* Control de tareas pendientes */
+
+		/* Controlo si hay que actualizar configuración de dispositivo */
 		json_arr = cJSON_CreateArray();
-		sprintf(query, "SELECT Id, MAC, Direccion_IP, Tipo, "
-						"Config_PORT_A_Analog, Config_PORT_A_E_S, "
-						"Config_PORT_B_Analog, Config_PORT_B_E_S, "
-						"Config_PORT_C_Analog, Config_PORT_C_E_S, "
-						"Flags "
+		sprintf(query, "SELECT * "
 						"FROM TB_DOM_PERIF "
 						"WHERE Actualizar <> 0");
 		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
@@ -2730,77 +2260,19 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_MAC = cJSON_GetObjectItemCaseSensitive(json_un_obj, "MAC");
 				json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP");
 				json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
-				json_Config_PORT_A_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_E_S");
-				json_Config_PORT_B_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_E_S");
-				json_Flags = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Flags");
-				//json_Config_PORT_C_E_S = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_E_S");
-				json_Config_PORT_A_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_A_Analog");
-				//json_Config_PORT_B_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_B_Analog");
-				//json_Config_PORT_C_Analog = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Config_PORT_C_Analog");
+
 				m_pServer->m_pLog->Add(100, "Actualizar [%s]", json_MAC->valuestring);
-				if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
+				if(atoi(json_Tipo_HW->valuestring) == 0)
 				{
-					/* Armo los mensajes para cada port */
-					/*PORT A*/
-					json_obj = cJSON_CreateObject();
-					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
-					if(json_Config_PORT_A_Analog)
-					{
-						cJSON_AddStringToObject(json_obj, "AN_Config", json_Config_PORT_A_Analog->valuestring);
-					}
-					cJSON_AddStringToObject(json_obj, "Port", "1");
-					/* Envio la configuracion de cada port por separado */
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
-					m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), NULL, internal_timeout);
-					/*  */
-					/*PORT B*/
-					json_obj = cJSON_CreateObject();
-					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_B_E_S->valuestring);
-					cJSON_AddStringToObject(json_obj, "Port", "2");
-					/* Envio la configuracion de cada port por separado */
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
-					m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), NULL, internal_timeout);
-					/*  */
+					/* RBPi Local */
+
+					/* TODO: Actualizar I/O de RBPi  */
 				}
-				else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
+				else if(atoi(json_Tipo_HW->valuestring) == 1)
 				{
-					/* Armo los mensajes para cada port */
-					/*PORT A*/
-					json_obj = cJSON_CreateObject();
-					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-					cJSON_AddStringToObject(json_obj, "IO_Config", json_Config_PORT_A_E_S->valuestring);
-					if(json_Config_PORT_A_Analog)
-					{
-						cJSON_AddStringToObject(json_obj, "AN_Config", json_Config_PORT_A_Analog->valuestring);
-					}
-					cJSON_AddStringToObject(json_obj, "Port", "1");
-					/* Envio la configuracion de cada port por separado */
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-					/*  */
-					/*Flags*/
-					json_obj = cJSON_CreateObject();
-					cJSON_AddStringToObject(json_obj, json_Direccion_IP->string, json_Direccion_IP->valuestring);
-					cJSON_AddStringToObject(json_obj, "Tipo_HW", json_Tipo_HW->valuestring);
-					cJSON_AddStringToObject(json_obj, "IO_Config", json_Flags->valuestring);
-					cJSON_AddStringToObject(json_obj, "Port", "0");
-					/* Envio la configuracion de cada port por separado */
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(50, "[dompi_hw_set_port_config][%s]", message);
-					m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), NULL, internal_timeout);
-					/*  */
+					/* Dom32IOWiFi */
+
+					/* TODO: Actualizar I/O de WiFi */
 				}
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -2811,7 +2283,41 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 		cJSON_Delete(json_arr);
-		/*  */
+
+		/* Controlo si hay que actualizar estados de Assign */
+		json_arr = cJSON_CreateArray();
+		sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, "
+								"Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
+						"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
+						"WHERE ASS.Dispositivo = PERIF.Id AND ASS.Actualizar <> 0");
+		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+		rc = pDB->Query(json_arr, query);
+		if(rc == 0)
+		{
+			/* Recorro el array */
+			cJSON_ArrayForEach(json_un_obj, json_arr)
+			{
+				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Objeto");
+				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");;
+				m_pServer->m_pLog->Add(100, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+				cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(50, "Call [dompi_hw_set_io][%s]", message);
+				rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+				m_pServer->m_pLog->Add(50, "Resp [dompi_hw_set_io] [%s]", (const char*)call_resp.data);
+				if(rc == 0)
+				{
+					/* Borro la marca */
+					sprintf(query, "UPDATE TB_DOM_ASSIGN "
+									"SET Actualizar = 0 "
+									"WHERE Id = %s", json_ASS_Id->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					pDB->Query(NULL, query);
+				}
+				m_pServer->Free(call_resp);
+			}
+		}
+		cJSON_Delete(json_arr);
+		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -2821,15 +2327,49 @@ int main(/*int argc, char** argv, char** env*/void)
 			pDB->Query(NULL, query);
 			update_hw_config_mac[0] = 0;
 		}
-		/*  */
-		if(update_hw_config_id[0])
+
+		/* Marcar para actualizar configuracion todos los assign de un periferico por Id */
+		if(update_hw_config_id)
 		{
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE Id = \'%s\'", update_hw_config_id);
+							"WHERE Id = %i", update_hw_config_id);
 			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 			pDB->Query(NULL, query);
-			update_hw_config_id[0] = 0;
+			update_hw_config_id = 0;
+		}
+
+		/* Marcar para actualizar estado todos los assign por id de HW */
+		if(update_ass_status_hwid)
+		{
+			sprintf(query, "UPDATE TB_DOM_ASSIGN "
+							"SET Actualizar = 1 "
+							"WHERE Dispositivo = %i", update_ass_status_hwid);
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+			update_ass_status_hwid = 0;
+		}
+
+		/* Marcar para actualizar estado un assign por id */
+		if(update_ass_status_id)
+		{
+			sprintf(query, "UPDATE TB_DOM_ASSIGN "
+							"SET Actualizar = 1 "
+							"WHERE Id = %i", update_ass_status_id);
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+			update_ass_status_id = 0;
+		}
+
+		/* Marcar para actualizar estado un assign por nombre */
+		if(update_ass_status_name[0])
+		{
+			sprintf(query, "UPDATE TB_DOM_ASSIGN "
+							"SET Actualizar = 1 "
+							"WHERE Id = \'%s\'", update_ass_status_name);
+			m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+			update_ass_status_name[0] = 0;
 		}
 
 		if(load_system_config)
@@ -2840,8 +2380,9 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(update_system_config && json_System_Config)
 		{
 			cJSON_PrintPreallocated(json_System_Config->child, message, MAX_BUFFER_LEN, 0);
-			m_pServer->m_pLog->Add(50, "[dompi_cloud_config][%s]", message);
+			m_pServer->m_pLog->Add(50, "Call [dompi_cloud_config][%s]", message);
 			rc = m_pServer->Call("dompi_cloud_config", message, strlen(message), &call_resp, internal_timeout);
+			m_pServer->m_pLog->Add(50, "Resp [dompi_cloud_config][%s]", (const char*)call_resp.data);
 			if(rc == 0)
 			{
 				update_system_config = 0;
@@ -2950,186 +2491,3 @@ void OnClose(int sig)
 	exit(0);
 }
 
-/*
-	Recorre los assign para setear la configuración correcta de E/S en cada dispositivo
-*/
-void DBMant( char* msg )
-{
-	int rc;
-	char query[4096];
-    cJSON *json_obj_hw;
-    cJSON *json_arr_hw;
-    cJSON *json_obj_ass;
-    cJSON *json_arr_ass;
-
-    cJSON *json_HW_Id;
-    cJSON *json_MAC;
-	cJSON *json_Tipo_HW;
-
-	cJSON *json_Objeto;
-	cJSON *json_Port;
-	cJSON *json_E_S;
-	cJSON *json_Tipo_ASS;
-
-	int i_PORT_A_Analog;
-	int i_PORT_A_E_S;
-	int i_PORT_B_Analog;
-	int i_PORT_B_E_S;
-	int i_PORT_C_Analog;
-	int i_PORT_C_E_S;
-
-	if(msg) strcpy(msg, "Mantenimiento de la base de datos...\r\n");
-	m_pServer->m_pLog->Add(50, "Iniciando mantenimiento de la base de datos");
-
-	json_arr_hw = cJSON_CreateArray();
-	sprintf(query, "SELECT Id, MAC, Tipo "
-					"FROM TB_DOM_PERIF "
-					"WHERE Id > 0 ");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_arr_hw, query);
-	if(rc == 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_obj_hw, json_arr_hw)
-		{
-			/* Saco los datos que necesito */
-			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Id");
-			json_MAC = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "MAC");
-			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_obj_hw, "Tipo");
-			if(msg)
-			{
-				strcat(msg, "    Procesando ");
-				strcat(msg, json_MAC->valuestring);
-				strcat(msg, "\r\n");
-			}
-			m_pServer->m_pLog->Add(100, "Procesando [%s]...", json_MAC->valuestring);
-
-			if(atoi(json_Tipo_HW->valuestring) == 1)
-			{
-				json_arr_ass = cJSON_CreateArray();
-				sprintf(query, "SELECT Id, Objeto, Port, E_S, Tipo "
-								"FROM TB_DOM_ASSIGN "
-								"WHERE Dispositivo = %s ", json_HW_Id->valuestring);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_arr_ass, query);
-				if(rc == 0)
-				{
-					i_PORT_A_Analog = 0;
-					i_PORT_A_E_S = 0xFF;
-					i_PORT_B_Analog = 0;
-					i_PORT_B_E_S = 0x00;
-					i_PORT_C_Analog = 0;
-					i_PORT_C_E_S = 0xFF;
-					/* Recorro el array */
-					cJSON_ArrayForEach(json_obj_ass, json_arr_ass)
-					{
-						json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Objeto");
-						json_Port = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Port");
-						json_E_S = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "E_S");
-						json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_obj_ass, "Tipo");
-
-						m_pServer->m_pLog->Add(100, "    Objeto [%s]...", json_Objeto->valuestring);
-
-						if(atoi(json_Port->valuestring) == 1)
-						{
-							/* PORT A */
-							/*	0=Output, 
-								1=Input, 
-								2=Analog, 
-								3=Output Alarma, 
-								4=Input Alarma, 
-								5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param
-							*/
-							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
-								atoi(json_Tipo_ASS->valuestring) == 2 ||
-								atoi(json_Tipo_ASS->valuestring) == 4  )
-							{
-								/* Entrada */
-								i_PORT_A_E_S |= power2(atoi(json_E_S->valuestring)-1);  
-								if(atoi(json_Tipo_ASS->valuestring) == 2)
-								{
-									i_PORT_A_Analog |= power2(atoi(json_E_S->valuestring)-1);  
-								}
-							}
-							else
-							{
-								/* Salida */
-								i_PORT_A_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-								i_PORT_A_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-							}
-						}
-						else if(atoi(json_Port->valuestring) == 2)
-						{
-							/* PORT B */
-							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
-								atoi(json_Tipo_ASS->valuestring) == 2 ||
-								atoi(json_Tipo_ASS->valuestring) == 4  )
-							{
-								/* Entrada */
-								i_PORT_B_E_S |= power2(atoi(json_E_S->valuestring)-1);  
-								if(atoi(json_Tipo_ASS->valuestring) == 2)
-								{
-									i_PORT_B_Analog |= power2(atoi(json_E_S->valuestring)-1);  
-								}
-							}
-							else
-							{
-								/* Salida */
-								i_PORT_B_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-								i_PORT_B_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-							}
-						}
-						else if(atoi(json_Port->valuestring) == 2)
-						{
-							/* PORT C */
-							if(	atoi(json_Tipo_ASS->valuestring) == 1 ||
-								atoi(json_Tipo_ASS->valuestring) == 2 ||
-								atoi(json_Tipo_ASS->valuestring) == 4  )
-							{
-								/* Entrada */
-								i_PORT_C_E_S |= power2(atoi(json_E_S->valuestring)-1);  
-								if(atoi(json_Tipo_ASS->valuestring) == 2)
-								{
-									i_PORT_C_Analog |= power2(atoi(json_E_S->valuestring)-1);  
-								}
-							}
-							else
-							{
-								/* Salida */
-								i_PORT_C_E_S &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-								i_PORT_C_Analog &= (power2(atoi(json_E_S->valuestring)-1)^0xFF);  
-							}
-						}
-					}
-					sprintf(query, "UPDATE TB_DOM_PERIF "
-									"Config_PORT_A_Analog = %i, "
-									"Config_PORT_A_E_S = %i, "
-									"Config_PORT_B_Analog = %i, "
-									"Config_PORT_B_E_S = %i, "
-									"Config_PORT_C_Analog = %i, "
-									"Config_PORT_C_E_S = %i, "
-									"Actualizar = 1 "
-									"WHERE Id = \'%s\'",
-									i_PORT_A_Analog,
-									i_PORT_A_E_S,
-									i_PORT_B_Analog,
-									i_PORT_B_E_S,
-									i_PORT_C_Analog,
-									i_PORT_C_E_S,
-									json_HW_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					pDB->Query(NULL, query);
-				}
-				cJSON_Delete(json_arr_ass);
-			}
-			/* Levanto el flag para que mande configuracion a la placa */
-			sprintf(query, "UPDATE TB_DOM_PERIF "
-							"SET Actualizar = 1 "
-							"WHERE Id = \'%s\'", json_HW_Id->valuestring);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			pDB->Query(NULL, query);
-		}
-	}
-	m_pServer->m_pLog->Add(50, "Finalizando mantenimiento de la base de datos");
-	cJSON_Delete(json_arr_hw);
-}

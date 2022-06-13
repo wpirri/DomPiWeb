@@ -16,6 +16,7 @@
 #define _DOM32IOWIFI_H_
 
 #include <gmonitor/glog.h>
+#include <cjson/cJSON.h>
 
 /* Definiciones para los bits de flag */
 #define FLAG_HTTPS_ENABLE    0x01
@@ -55,20 +56,16 @@ public:
     int ConfigOut(const char *raddr, int ioconfig);
     int ConfigEX(const char *raddr, int exconfig);
     int ConfigFlags(const char *raddr, int flags);
-    int SetIO(const char *raddr, int mask);
-    int SetOut(const char *raddr, int mask);
-    int SetEX(const char *raddr, int mask);
-    int ResetIO(const char *raddr, int mask);
-    int ResetOut(const char *raddr, int mask);
-    int ResetEX(const char *raddr, int mask);
-    int SwitchIO(const char *raddr, int mask);
-    int SwitchOut(const char *raddr, int masks);
-    int SwitchEX(const char *raddr, int mask);
-    int PulseIO(const char *raddr, int mask, int sec);
-    int PulseOut(const char *raddr, int mask, int sec);
-    int PulseEX(const char *raddr, int mask, int sec);
     int GetWifi(const char *raddr, wifi_config_data *config);
     int SetWifi(const char *raddr, wifi_config_data *config);
+
+    int SetIO(const char *raddr, const char *msg);
+    int SwitchIO(const char *raddr, const char *msg);
+    int PulseIO(const char *raddr, const char *msg);
+
+    int SetIO(const char *raddr, cJSON *json);
+    int SwitchIO(const char *raddr, cJSON *json);
+    int PulseIO(const char *raddr, cJSON *json);
 
     void Task( void );
     void Timer( void );

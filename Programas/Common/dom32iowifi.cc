@@ -289,546 +289,242 @@ int Dom32IoWifi::ConfigFlags(const char *raddr, int flags)
     return RequestEnqueue(raddr, buffer);
 }
 
-int Dom32IoWifi::SetIO(const char *raddr, int mask)
+int Dom32IoWifi::SetIO(const char *raddr, const char* msg)
+{
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(msg);
+    rc = SetIO(raddr, json_obj);
+    cJSON_Delete(json_obj);
+    return rc;
+}
+
+int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj)
 {
     char buffer[BUFFER_LEN+1];
-    char data[256];
+    char data[1024];
+    char port[16];
+    char estado[16];
+    cJSON *json_un_obj;
 
+    json_un_obj = json_obj;
     data[0] = 0;
-
-    if(mask & 0x01)
+    port[0] = 0;
+    estado[0] = 0;
+    while( json_un_obj )
     {
-        strcat(data, "IO1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO4=on");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "IO5=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO6=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO7=on");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO8=on");
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if( !strcmp(json_un_obj->string, "Port"))
+                        {
+                            strcpy(port, json_un_obj->valuestring);
+                        }
+                        else if( !strcmp(json_un_obj->string, "Estado"))
+                        {
+                            strcpy(estado, json_un_obj->valuestring);
+                        }
+                        if(port[0] && estado[0])
+                        {
+                            if(data[0] != 0) strcat(data, "&");
+                            strcat(data, port);
+                            strcat(data, "=");
+                            if( !strcmp(estado, "0"))
+                            {
+                                strcat(data, "off");
+                            }
+                            else if( !strcmp(estado, "1"))
+                            {
+                                strcat(data, "on");
+                            }
+                            else
+                            {
+                                strcat(data, estado);
+                            }
+                            port[0] = 0;
+                            estado[0] = 0;
+                        }
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
-int Dom32IoWifi::SetOut(const char *raddr, int mask)
+int Dom32IoWifi::SwitchIO(const char *raddr, const char* msg)
 {
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "OUT1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT4=on");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "OUT5=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT6=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT7=on");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT8=on");
-    }
-    sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(msg);
+    rc = SwitchIO(raddr, json_obj);
+    cJSON_Delete(json_obj);
+    return rc;
 }
 
-int Dom32IoWifi::SetEX(const char *raddr, int mask)
+int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj)
 {
     char buffer[BUFFER_LEN+1];
-    char data[256];
+    char data[1024];
+    char port[16];
+    char estado[16];
+    cJSON *json_un_obj;
 
+    json_un_obj = json_obj;
     data[0] = 0;
-
-    if(mask & 0x01)
+    port[0] = 0;
+    estado[0] = 0;
+    while( json_un_obj )
     {
-        strcat(data, "EXP1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP3=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP4=on");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "EXP5=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP6=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP7=on");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP8=on");
-    }
-
-    sprintf(buffer, http_post, url_set_exstatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::ResetIO(const char *raddr, int mask)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "IO1=off");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO2=off");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO3=off");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO4=off");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "IO5=off");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO6=off");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO7=off");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO8=off");
-    }
-
-    sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::ResetOut(const char *raddr, int mask)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "OUT1=off");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT2=off");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT3=off");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT4=off");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "OUT5=off");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT6=off");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT7=off");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT8=off");
-    }
-
-    sprintf(buffer, http_post, url_set_ostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::ResetEX(const char *raddr, int mask)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "EXP1=off");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP3=off");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP4=off");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP5=off");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "EXP7=off");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP8=off");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP9=off");
-    }
-
-    sprintf(buffer, http_post, url_set_exstatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::SwitchIO(const char *raddr, int mask)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "IO1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO4=on");
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if( !strcmp(json_un_obj->string, "Port"))
+                        {
+                            strcpy(port, json_un_obj->valuestring);
+                        }
+                        else if( !strcmp(json_un_obj->string, "Estado"))
+                        {
+                            strcpy(estado, json_un_obj->valuestring);
+                        }
+                        if(port[0] && estado[0])
+                        {
+                            if(data[0] != 0) strcat(data, "&");
+                            strcat(data, port);
+                            strcat(data, "=");
+                            if( !strcmp(estado, "0"))
+                            {
+                                strcat(data, "off");
+                            }
+                            else if( !strcmp(estado, "1"))
+                            {
+                                strcat(data, "on");
+                            }
+                            else
+                            {
+                                strcat(data, estado);
+                            }
+                            port[0] = 0;
+                            estado[0] = 0;
+                        }
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
     }
     sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
-int Dom32IoWifi::SwitchOut(const char *raddr, int mask)
+int Dom32IoWifi::PulseIO(const char *raddr, const char* msg)
 {
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    if(mask & 0x01)
-    {
-        strcat(data, "OUT1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT4=on");
-    }
-    sprintf(buffer, http_post, url_switch_ostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(msg);
+    rc = PulseIO(raddr, json_obj);
+    cJSON_Delete(json_obj);
+    return rc;
 }
 
-int Dom32IoWifi::SwitchEX(const char *raddr, int mask)
+int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
 {
     char buffer[BUFFER_LEN+1];
-    char data[256];
+    char data[1024];
+    char port[16];
+    char estado[16];
+    cJSON *json_un_obj;
 
+    json_un_obj = json_obj;
     data[0] = 0;
+    port[0] = 0;
+    estado[0] = 0;
+    while( json_un_obj )
+    {
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if( !strcmp(json_un_obj->string, "Port"))
+                        {
+                            strcpy(port, json_un_obj->valuestring);
+                        }
+                        else if( !strcmp(json_un_obj->string, "Estado"))
+                        {
+                            strcpy(estado, json_un_obj->valuestring);
+                        }
+                        else if(json_un_obj->string[0] == 'P' && 
+                                json_un_obj->string[1] == 'U' && 
+                                json_un_obj->string[2] == 'L' && 
+                                json_un_obj->string[3] == 'S' && 
+                                json_un_obj->string[4] == 'E')
+                        {
+                            if(data[0] != 0) strcat(data, "&");
+                            strcat(data, json_un_obj->string);
+                            strcat(data, "=");
+                            strcat(data, json_un_obj->valuestring);
+                        }
 
-    if(mask & 0x01)
-    {
-        strcat(data, "EXP1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP3=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP4=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP5=on");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "EXP7=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP8=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP9=on");
-    }
-
-    sprintf(buffer, http_post, url_switch_exstatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::PulseIO(const char *raddr, int mask, int sec)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    sprintf(data, "PULSE=%i", sec);
-
-    if(mask & 0x01)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO4=on");
+                        if(port[0] && estado[0])
+                        {
+                            if(data[0] != 0) strcat(data, "&");
+                            strcat(data, port);
+                            strcat(data, "=");
+                            if( !strcmp(estado, "0"))
+                            {
+                                strcat(data, "off");
+                            }
+                            else if( !strcmp(estado, "1"))
+                            {
+                                strcat(data, "on");
+                            }
+                            else
+                            {
+                                strcat(data, estado);
+                            }
+                            port[0] = 0;
+                            estado[0] = 0;
+                        }
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
     }
     sprintf(buffer, http_post, url_pulse_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::PulseOut(const char *raddr, int mask, int sec)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    sprintf(data, "PULSE=%i", sec);
-
-    if(mask & 0x01)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT2=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT3=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT4=on");
-    }
-    if(mask & 0x10)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT5=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT6=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT3=on");
-    }
-    if(mask & 0x80)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "OUT4=on");
-    }
-    sprintf(buffer, http_post, url_pulse_ostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
-    return RequestEnqueue(raddr, buffer);
-}
-
-int Dom32IoWifi::PulseEX(const char *raddr, int mask, int sec)
-{
-    char buffer[BUFFER_LEN+1];
-    char data[256];
-
-    data[0] = 0;
-
-    sprintf(data, "PULSE=%i", sec);
-
-    if(mask & 0x01)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "IO1=on");
-    }
-    if(mask & 0x02)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP3=on");
-    }
-    if(mask & 0x04)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP4=on");
-    }
-    if(mask & 0x08)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP5=on");
-    }
-    if(mask & 0x10)
-    {
-        strcat(data, "EXP7=on");
-    }
-    if(mask & 0x20)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP8=on");
-    }
-    if(mask & 0x40)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "EXP9=on");
-    }
-
-    sprintf(buffer, http_post, url_pulse_exstatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
 }

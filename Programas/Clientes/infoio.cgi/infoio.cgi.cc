@@ -44,9 +44,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char buffer[4096];
   DPConfig *pConfig;
   STRFunc Str;
-  cJSON *json_obj;
-
-
+  cJSON *json_request;
+  
   char server_address[16];
   char s[16];
   
@@ -56,16 +55,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   int content_length;
   char s_content_length[8];
   char post_data[1024];
-
-  char hw_id[16];
-  char str[16];
-  char card[256];
-  int status_porta = (-1);
-  int status_portb = (-1);
-  int status_portc = (-1);
-  int delta_porta = 0;
-  int delta_portb = 0;
-  int delta_portc = 0;
+  char label[256];
+  char value[256];
 
   int i;
   int rc;
@@ -77,8 +68,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   request_uri[0] = 0;
   request_method[0] = 0;
   post_data[0] = 0;
-  hw_id[0] = 0;
-  status_porta = 0;
   content_length = 0;
   s_content_length[0] = 0;
   trace = 0;
@@ -102,30 +91,30 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     timeout = atoi(s) * 1000;
   }
 
-  json_obj = cJSON_CreateObject();
+  json_request = cJSON_CreateObject();
 
   for(i = 0; env[i]; i++)
   {
     if( !memcmp(env[i], "REMOTE_ADDR=", 12))
     {
       strncpy(remote_addr, env[i]+12, 15);
-      cJSON_AddStringToObject(json_obj, "REMOTE_ADDR", remote_addr);
+      cJSON_AddStringToObject(json_request, "REMOTE_ADDR", remote_addr);
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
       strncpy(request_uri, env[i]+12, 31);
-      cJSON_AddStringToObject(json_obj, "REQUEST_URI", request_uri);
+      cJSON_AddStringToObject(json_request, "REQUEST_URI", request_uri);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
       strncpy(request_method, env[i]+15, 7);
-      cJSON_AddStringToObject(json_obj, "REQUEST_METHOD", request_method);
+      cJSON_AddStringToObject(json_request, "REQUEST_METHOD", request_method);
     }
     else if( !memcmp(env[i], "CONTENT_LENGTH=", 15))
     {
       strncpy(s_content_length, env[i]+15, 7);
       content_length = atoi(s_content_length);
-      cJSON_AddStringToObject(json_obj, "CONTENT_LENGTH", s_content_length);
+      cJSON_AddStringToObject(json_request, "CONTENT_LENGTH", s_content_length);
     }
   }
 
@@ -153,7 +142,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(content_length == 0)
   {
     fputs("error=99&msg=Sin Datos\r\n", stdout);
-    cJSON_Delete(json_obj);
+    cJSON_Delete(json_request);
     return 0;
   }
 
@@ -162,205 +151,9 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
   }
 
-  Str.ParseData(post_data, "ID", hw_id);
-
-  if(Str.ParseData(post_data, "IO1", str))
+  for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
   {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x01;
-    }
-  }
-  if(Str.ParseData(post_data, "IO2", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x02;
-    }
-  }
-  if(Str.ParseData(post_data, "IO3", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x04;
-    }
-  }
-  if(Str.ParseData(post_data, "IO4", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x08;
-    }
-  }
-  if(Str.ParseData(post_data, "IO5", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x10;
-    }
-  }
-  if(Str.ParseData(post_data, "IO6", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x20;
-    }
-  }
-  if(Str.ParseData(post_data, "IO7", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x40;
-    }
-  }
-  if(Str.ParseData(post_data, "IO8", str))
-  {
-    if(status_porta < 0) status_porta = 0;
-    if( !strcmp("on", str))
-    {
-      status_porta += 0x80;
-    }
-  }
-
-  if(Str.ParseData(post_data, "OUT1", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x01;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT2", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x02;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT3", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x04;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT4", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x08;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT5", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x10;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT6", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x20;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT7", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x40;
-    }
-  }
-  if(Str.ParseData(post_data, "OUT8", str))
-  {
-    if(status_portb < 0) status_portb = 0;
-    if( !strcmp("on", str))
-    {
-      status_portb += 0x80;
-    }
-  }
-
-  if(Str.ParseData(post_data, "CHG", str))
-  {
-    if(str[0] == '1') delta_porta += 0x01;
-    if(str[1] == '1') delta_porta += 0x02;
-    if(str[2] == '1') delta_porta += 0x04;
-    if(str[3] == '1') delta_porta += 0x08;
-    if(str[4] == '1') delta_porta += 0x10;
-    if(str[5] == '1') delta_porta += 0x20;
-    if(str[6] == '1') delta_porta += 0x40;
-    if(str[7] == '1') delta_porta += 0x80;
-    if(str[8] == '1') delta_portb += 0x01;
-    if(str[9] == '1') delta_portb += 0x02;
-    if(str[10] == '1') delta_portb += 0x04;
-    if(str[11] == '1') delta_portb += 0x08;
-    if(str[12] == '1') delta_portb += 0x10;
-    if(str[13] == '1') delta_portb += 0x20;
-    if(str[14] == '1') delta_portb += 0x40;
-    if(str[15] == '1') delta_portb += 0x80;
-  }
-
-  if(Str.ParseData(post_data, "CARD", card))
-  {
-    cJSON_AddStringToObject(json_obj, "CARD", card);
-  }
-
-  if(Str.ParseData(post_data, "GETCONF", str))
-  {
-    cJSON_AddStringToObject(json_obj, "GETCONF", str);
-  }
-
-  if(strlen(hw_id) == 0)
-  {
-    fputs("error=99&msg=Id Not Found\r\n", stdout);
-    cJSON_Delete(json_obj);
-    return 0;
-  }
-
-  cJSON_AddStringToObject(json_obj, "HW_ID", hw_id);
-  if(status_porta != (-1))
-  {
-    sprintf(str, "%i", status_porta);
-    cJSON_AddStringToObject(json_obj, "STATUS_PORTA", str);
-  }
-  if(status_portb != (-1))
-  {
-    sprintf(str, "%i", status_portb);
-    cJSON_AddStringToObject(json_obj, "STATUS_PORTB", str);
-  }
-  if(status_portc != (-1))
-  {
-    sprintf(str, "%i", status_portc);
-    cJSON_AddStringToObject(json_obj, "STATUS_PORTC", str);
-  }
-  if(delta_porta != 0)
-  {
-    sprintf(str, "%i", delta_porta);
-    cJSON_AddStringToObject(json_obj, "DELTA_PORTA", str);
-  }
-  if(delta_portb != 0)
-  {
-    sprintf(str, "%i", delta_portb);
-    cJSON_AddStringToObject(json_obj, "DELTA_PORTB", str);
-  }
-  if(delta_portc != 0)
-  {
-    sprintf(str, "%i", delta_portc);
-    cJSON_AddStringToObject(json_obj, "DELTA_PORTC", str);
+    cJSON_AddStringToObject(json_request, label, value);                    
   }
 
   gminit.m_host = server_address;
@@ -371,9 +164,9 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   query.Clear();
   response.Clear();
 
-  query = cJSON_PrintUnformatted(json_obj);
+  query = cJSON_PrintUnformatted(json_request);
 
-  cJSON_Delete(json_obj);
+  cJSON_Delete(json_request);
 
   if(trace)
   {
@@ -388,7 +181,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       syslog(LOG_DEBUG, "Call R: [%s]", response.C_Str());
     }
     /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
-    json_obj = cJSON_Parse(response.C_Str());
+    json_request = cJSON_Parse(response.C_Str());
 
     // cJSON_ArrayForEach(element, array)
 
@@ -400,7 +193,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     {
       syslog(LOG_DEBUG, "%s\r\n", buffer);
     }
-    cJSON_Delete(json_obj);
+    cJSON_Delete(json_request);
   }
   else
   {
