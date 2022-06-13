@@ -10,17 +10,42 @@
     for ($i = 0; $i < $count; $i++)
     {
         //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono0']."</p>";
-        if($edit == 1)
+        $Id = $obj_list[$i]['Id'];
+        $Icono0 = $obj_list[$i]['Icono0'];
+        $Icono1 = $obj_list[$i]['Icono1'];
+        $Objeto = $obj_list[$i]['Objeto'];
+        $Tipo = $obj_list[$i]['Tipo'];
+        $Segundos = $obj_list[$i]['Analog_Mult_Div_Valor'];
+
+        if($edit == 1 || $obj_list[$i]['Estado'] == 1)
         {
-		    echo "<img id=\"id-".$obj_list[$i]['Objeto']."\" class=\"home-image\" src=\"images/".$obj_list[$i]['Icono1']."\" onClick=\"window.location.replace('edit_assign.php?Id=".$obj_list[$i]['Id']."');\"/>";
-        }
-        else if($obj_list[$i]['Estado'] == 1)
-        {
-		    echo "<img id=\"id-".$obj_list[$i]['Objeto']."\" class=\"home-image\" src=\"images/".$obj_list[$i]['Icono1']."\" onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=switch&Objeto=".$obj_list[$i]['Objeto']."');\"/>";
+            $src = "src=\"images/".$Icono1."\"";
         }
         else
         {
-		    echo "<img id=\"id-".$obj_list[$i]['Objeto']."\" class=\"home-image\" src=\"images/".$obj_list[$i]['Icono0']."\" onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=switch&Objeto=".$obj_list[$i]['Objeto']."');\"/>";
+            $src = "src=\"images/".$Icono0."\"";
         }
+
+        if($edit == 1)
+        {
+            $onclick = "onClick=\"window.location.replace('edit_assign.php?Id=".$Id."');\"";
+        }
+        else if($Tipo == 0)
+        {
+            // ON / OFF
+		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=switch&Objeto=".$Objeto."');\"";
+        }
+        else if($obj_list[$i]['Tipo'] == 5)
+        {
+            // Pulso
+		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=pulse&Objeto=".$Objeto."&Segundos=".$Segundos."');\"";
+        }
+        else
+        {
+            // Sin control
+            $onclick = "";
+        }
+
+	    echo "<img id=\"id-".$Objeto."\" class=\"home-image\" ".$src." ".$onclick."/>";
     }
 ?>
