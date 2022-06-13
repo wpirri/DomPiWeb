@@ -56,28 +56,11 @@ CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 Id integer primary key,
 MAC varchar(16) NOT NULL,                       -- MAC Address
 Dispositivo varchar(128) NOT NULL,
-Tipo integer DEFAULT 0,                         -- 0=Local, 1=Wifi PIC, 2=Wifi RBPi
+Tipo integer DEFAULT 0,                         -- 0=RBPi, 1=Wifi HTTP
 Estado integer DEFAULT 0,                       -- 0=Disable
-Config_PORT_A_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_A_E_S integer DEFAULT 255,          -- 0=Output 1=Input
-Config_PORT_B_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_B_E_S integer DEFAULT 255,          -- 0=Output 1=Input
-Config_PORT_C_Analog integer DEFAULT 0,         -- 0=Digital 1=Analogico
-Config_PORT_C_E_S integer DEFAULT 255,          -- 0=Output 1=Input
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok varchar(32),
-Estado_PORT_A integer DEFAULT 0,
-Estado_PORT_B integer DEFAULT 0,
-Estado_PORT_C integer DEFAULT 0,
-Estado_Analog_1 integer DEFAULT 0,
-Estado_Analog_2 integer DEFAULT 0,
-Estado_Analog_3 integer DEFAULT 0,
-Estado_Analog_4 integer DEFAULT 0,
-Estado_Analog_5 integer DEFAULT 0,
-Estado_Analog_6 integer DEFAULT 0,
-Estado_Analog_7 integer DEFAULT 0,
-Estado_Analog_8 integer DEFAULT 0,
-Actualizar integer DEFAULT 0,                -- Enviar update de config al HW
+Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
 Flags integer DEFAULT 0
 );
 
@@ -90,12 +73,11 @@ Icono varchar(32)
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
-Objeto varchar(128) NOT NULL,
-Dispositivo integer NOT NULL,
-Port integer NOT NULL,                      -- 1=A, 2=B, 3=C
-E_S integer NOT NULL,                       -- Bit 1 a 16
+Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
+Dispositivo integer NOT NULL,               -- Discpositivo - Id de TB_DOM_PERIF
+Port varchar(128) NOT NULL,                 -- Nombre con el que se identifica en el dispositivo
 Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma, 5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param
-Estado integer DEFAULT 0,
+Estado integer DEFAULT 0,                   -- 1 / 0 para digitales 0 a n para analogicos
 Icono0 varchar(32),
 Icono1 varchar(32),
 Grupo_Visual integer DEFAULT 0,
@@ -105,6 +87,7 @@ Cord_y integer DEFAULT 0,
 Coeficiente integer DEFAULT 0,              -- 0=Coeficiente Positivo, 1=Coeficiente Negativo
 Analog_Mult_Div integer DEFAULT 0,          -- 0=Nada, 1=Multiplicar por valor, 2 => si Coeficiente = 0 -> Estado = Analog / Div  si Coeficiente = 1 -> Estado = Div / Analog 
 Analog_Mult_Div_Valor integer DEFAULT 1,
+Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
