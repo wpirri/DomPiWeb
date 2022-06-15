@@ -1,4 +1,7 @@
-<?php include('session.php'); ?>
+<?php
+    include('config.php'); 
+    include('session.php');
+?>
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>

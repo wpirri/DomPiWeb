@@ -1,3 +1,6 @@
+<?php 
+    include('config.php'); 
+?>
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
@@ -101,10 +104,10 @@ function setCurrentTime( ) {
 setCurrentTime();
 
 /* On Click de la página */
-window.onclick = function() {window.location.replace('planta.php');}
+window.onclick = function() {window.location.replace('<?php echo $MAIN?>');}
 
 /* Reload para actualizaciones */
-setTimeout("window.location.replace('/');", 600000);
+setTimeout("window.location.replace('<?php echo $INDEX?>');", 600000);
 
 </script>
 </body>

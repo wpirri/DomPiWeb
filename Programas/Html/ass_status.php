@@ -5,7 +5,7 @@ include('head-abm.php');
 
 <body onload='OnLoad();'>
 
-<div id='status_list_back_btn' class='back-btn' onclick="window.location.replace('config.php');" >
+<div id='status_list_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $CONFIG_MENU?>');" >
 	<img id='status_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 

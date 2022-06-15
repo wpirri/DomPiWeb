@@ -7,7 +7,7 @@ include('head-abm.php');
 
 <form id="edit_form" name="edit_form" method="post">
 
-<div id='sys_config_back_btn' class='back-btn' onclick="window.location.replace('config.php');" >
+<div id='sys_config_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $CONFIG_MENU?>');" >
 	<img id='sys_config_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
 </div>
 
@@ -35,7 +35,7 @@ include('head-abm.php');
 
         newAJAXCommand('/cgi-bin/abmsys.cgi?funcion=add', null, false, kvpairs.join('&'));
 
-        window.location.replace('config.php');
+        window.location.replace('<?php echo $CONFIG_MENU?>');
     }
 
     function OnLoad() {

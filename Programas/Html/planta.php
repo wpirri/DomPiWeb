@@ -10,11 +10,11 @@ $PLANTA=1;
 include("obj_style.php");
 ?>
 
-<div class="back-btn" id="back-from-planta" onclick="window.location.replace('/');">
+<div class="back-btn" id="back-from-planta" onclick="window.location.replace('<?php echo $INDEX?>');">
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
-<div class="normal-btn" id="btn-planta-config" onclick="window.location.replace('config.php');">
+<div class="normal-btn" id="btn-planta-config" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
 	<img id="config-icon" class="icon-btn" src="images/system.png">&nbsp;Configuración
 </div>
 

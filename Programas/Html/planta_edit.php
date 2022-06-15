@@ -10,7 +10,7 @@ $PLANTA=1;
 include("obj_style.php");
 ?>
 
-<div class="back-btn" id="back-from-planta" onclick="window.location.replace('config.php');">
+<div class="back-btn" id="back-from-planta" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
