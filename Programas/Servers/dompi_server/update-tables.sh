@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 cat $1/conf/$3.tab | while read line
 do
 	if [ "X${3}" = "Xserver" ]
