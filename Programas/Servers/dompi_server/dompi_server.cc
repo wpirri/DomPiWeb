@@ -206,7 +206,9 @@ int main(/*int argc, char** argv, char** env*/void)
 
     cJSON *json_obj;
     cJSON *json_un_obj;
+    cJSON *json_un_obj2;
     cJSON *json_arr = NULL;
+    cJSON *json_arr2 = NULL;
     cJSON *json_user;
     cJSON *json_pass;
     cJSON *json_channel;
@@ -219,12 +221,12 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Tipo_HW;
-	cJSON *json_Tipo_ASS;
-	cJSON *json_Port;
-	cJSON *json_Estado;
-	cJSON *json_Flags;
+	//cJSON *json_Tipo_ASS;
+	//cJSON *json_Port;
+	//cJSON *json_Estado;
+	//cJSON *json_Flags;
 	cJSON *json_Objeto;
-	cJSON *json_Accion;
+	//cJSON *json_Accion;
 	cJSON *json_Segundos;
 
 	update_hw_config_id = 0;
@@ -1659,8 +1661,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
-				json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
+				//json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
+				//json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
 
 
 
@@ -2270,9 +2272,32 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 				else if(atoi(json_Tipo_HW->valuestring) == 1)
 				{
-					/* Dom32IOWiFi */
-
-					/* TODO: Actualizar I/O de WiFi */
+					/* Actualizar I/O de Dom32IOWiFi */
+					json_arr2 = cJSON_CreateArray();
+					sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
+									"FROM TB_DOM_ASSIGN AS ASS "
+									"WHERE Dispositivo = %s", json_HW_Id->valuestring);
+					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr2, query);
+					if(rc == 0)
+					{
+						/* Recorro el array */
+						cJSON_ArrayForEach(json_un_obj2, json_arr2)
+						{
+							json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj2, "Objeto");
+							m_pServer->m_pLog->Add(100, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+							/* Le agrego los datos del dispositivo */
+							cJSON_AddStringToObject(json_un_obj2, "Direccion_IP", json_Direccion_IP->valuestring);
+							cJSON_AddStringToObject(json_un_obj2, "MAC", json_MAC->valuestring);
+							cJSON_AddStringToObject(json_un_obj2, "Tipo_HW", json_Tipo_HW->valuestring);
+							cJSON_PrintPreallocated(json_un_obj2, message, MAX_BUFFER_LEN, 0);
+							m_pServer->m_pLog->Add(50, "Call [dompi_hw_set_port_config][%s]", message);
+							m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
+							m_pServer->m_pLog->Add(50, "Resp [dompi_hw_set_port_config] [%s]", (const char*)call_resp.data);
+							m_pServer->Free(call_resp);
+						}
+					}
+					cJSON_Delete(json_arr2);
 				}
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "

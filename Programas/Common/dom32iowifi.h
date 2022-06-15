@@ -48,21 +48,19 @@ public:
 	Dom32IoWifi(CGLog *pLog = NULL);
 	virtual ~Dom32IoWifi();
 
-    int GetIOStatus(const char *raddr, int *iostatus);
-    int GetOutStatus(const char *raddr, int *ostatus);
-    int GetEXStatus(const char *raddr, int *exstatus);
-    int GetConfig(const char *raddr, int *ioconfig, int *exconfig);
-    int ConfigIO(const char *raddr, int ioconfig, int anconfig);
-    int ConfigOut(const char *raddr, int ioconfig);
-    int ConfigEX(const char *raddr, int exconfig);
-    int ConfigFlags(const char *raddr, int flags);
-    int GetWifi(const char *raddr, wifi_config_data *config);
-    int SetWifi(const char *raddr, wifi_config_data *config);
+    int GetWifiConfig(const char *raddr, wifi_config_data *config);
+    int SetWifiConfig(const char *raddr, wifi_config_data *config);
 
-    int SetIO(const char *raddr, const char *msg);
-    int SwitchIO(const char *raddr, const char *msg);
-    int PulseIO(const char *raddr, const char *msg);
+    int GetConfig(const char *raddr, char *msg, int max_msg_len);
+    int SetConfig(const char *raddr, char *msg);
+    int GetIO(const char *raddr, char *msg, int max_msg_len);
+    int SetIO(const char *raddr, char *msg);
+    int SwitchIO(const char *raddr, char *msg);
+    int PulseIO(const char *raddr, char *msg);
 
+    int GetConfig(const char *raddr, cJSON *json);
+    int SetConfig(const char *raddr, cJSON *json);
+    int GetIO(const char *raddr, cJSON *json);
     int SetIO(const char *raddr, cJSON *json);
     int SwitchIO(const char *raddr, cJSON *json);
     int PulseIO(const char *raddr, cJSON *json);
@@ -109,9 +107,6 @@ protected:
 
     CGLog *m_pLog;
 
-    int IO2Int(const char* str);
-    int Out2Int(const char* str);
-    int EXP2Int(const char* str);
     int HttpRespCode(const char* http);
     int RequestEnqueue(const char* dest, const char* data);
     int RequestDequeue(const char* dest, const char* data);

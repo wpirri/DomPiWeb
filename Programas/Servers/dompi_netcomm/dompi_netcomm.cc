@@ -69,8 +69,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char typ[1];
 	char message[4096];
 	unsigned long message_len;
-	int return_int1; 
-	int return_int2; 
 	char s[16];
 	int timer_count = 0;
 
@@ -196,9 +194,15 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
 					{
-						/* TODO: Envío de configuración a WiFi */
-
-
+						/* Envío de configuración a WiFi */
+						if(pD32W->SetConfig(json_Direccion_IP->valuestring, message) == 0)
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						}
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error al encolar mensaje\"}}");
+						}
 					}
 					else
 					{
@@ -265,62 +269,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{
-						if( !json_Port)
+						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024);
+						m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
+											json_Direccion_IP->valuestring,
+											rc);
+						if(rc != 0)
 						{
-							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, &return_int1, &return_int2);
-							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
-												json_Direccion_IP->valuestring,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Port A: 0x%02X - Port B: 0x%02X\"}}", return_int1, return_int2);
-							}
-							else
-							{
-								/* Otro Error */
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
-							}
-						}
-						else if( atoi(json_Port->valuestring) == 1 )
-						{
-							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, &return_int1, NULL);
-							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
-												json_Direccion_IP->valuestring,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-							}
-							else
-							{
-								/* Otro Error */
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
-							}
-						}
-						else if( atoi(json_Port->valuestring) == 2 )
-						{
-							rc = pD32W->GetConfig(json_Direccion_IP->valuestring, NULL, &return_int1);
-							m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
-												json_Direccion_IP->valuestring,
-												rc);
-							if(rc == 0)
-							{
-								/* OK */
-								sprintf(message,
-										"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-							}
-							else
-							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
-							}
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
+							/* Otro Error */
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
 						}
 					}
 					else
@@ -407,9 +363,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
-						rc = pD32W->GetWifi(json_Direccion_IP->valuestring, 
-											&wifi_data);
-						m_pServer->m_pLog->Add(100, "pD32W->GetWifi(%s, ...) = %i", 
+						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &wifi_data);
+						m_pServer->m_pLog->Add(100, "pD32W->GetWifiConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
 						if(rc == 0)
