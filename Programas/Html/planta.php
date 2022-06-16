@@ -52,10 +52,12 @@ function updateHomeStatus(msg) {
 		//jsonData[i].Icono0
 		//jsonData[i].Icono1
 		//jsonData[i].Estado
+		var Objeto = jsonData[i].Objeto;
+		var objId = Objeto.replace(/ /g, "-");
 		if(jsonData[i].Estado == 1) {
-			document.getElementById('id-'+jsonData[i].Objeto).src = 'images/' + jsonData[i].Icono1;
+			document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono1;
 		} else {
-			document.getElementById('id-'+jsonData[i].Objeto).src = 'images/' + jsonData[i].Icono0;
+			document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono0;
 		}
 	}
 }

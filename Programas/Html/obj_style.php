@@ -9,14 +9,17 @@
     $count = count($obj_list);
     for ($i = 0; $i < $count; $i++)
     {
+        $Objeto = str_replace(" ", "-", $obj_list[$i]['Objeto']);
+        $Cord_x = $obj_list[$i]['Cord_x'];
+        $Cord_y = $obj_list[$i]['Cord_y'];
         //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono0']."</p>";
-        echo "#id-".$obj_list[$i]['Objeto']." {";
+        echo "#id-".$Objeto." {";
             echo "  z-index: 20;";
             echo "  border: 0px;";
             echo "  cursor: pointer;";
             echo "  position: absolute; ";
-            echo "  left: ".$obj_list[$i]['Cord_x']."px;";
-            echo "  top: ".$obj_list[$i]['Cord_y']."px;";
+            echo "  left: ".$Cord_x."px;";
+            echo "  top: ".$Cord_y."px;";
             echo "}";
     }
     echo "</style>";

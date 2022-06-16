@@ -13,7 +13,8 @@
         $Id = $obj_list[$i]['Id'];
         $Icono0 = $obj_list[$i]['Icono0'];
         $Icono1 = $obj_list[$i]['Icono1'];
-        $Objeto = $obj_list[$i]['Objeto'];
+        $Objeto = str_replace(" ", "-", $obj_list[$i]['Objeto']);
+        $Nombre = $obj_list[$i]['Objeto'];
         $Tipo = $obj_list[$i]['Tipo'];
         $Segundos = $obj_list[$i]['Analog_Mult_Div_Valor'];
 
@@ -33,12 +34,12 @@
         else if($Tipo == 0)
         {
             // ON / OFF
-		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=switch&Objeto=".$Objeto."');\"";
+		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=switch&Objeto=".$Nombre."');\"";
         }
         else if($obj_list[$i]['Tipo'] == 5)
         {
             // Pulso
-		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=pulse&Objeto=".$Objeto."&Segundos=".$Segundos."');\"";
+		    $onclick = "onClick=\"newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=pulse&Objeto=".$Nombre."&Segundos=".$Segundos."');\"";
         }
         else
         {
