@@ -111,7 +111,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Tipo_ASS;
 	cJSON *json_Port;
 	cJSON *json_Estado;
-	cJSON *json_Segundos;
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
@@ -144,7 +143,6 @@ int main(/*int argc, char** argv, char** env*/void)
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_req, "Tipo_ASS");
 			json_Port = cJSON_GetObjectItemCaseSensitive(json_req, "Port");
 			json_Estado = cJSON_GetObjectItemCaseSensitive(json_req, "Estado");
-			json_Segundos = cJSON_GetObjectItemCaseSensitive(json_req, "Segundos");
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
@@ -562,7 +560,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
-				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Segundos )
+				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
 					{

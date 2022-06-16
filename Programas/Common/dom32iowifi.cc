@@ -56,17 +56,9 @@ Dom32IoWifi::Dom32IoWifi(CGLog *pLog)
                     "Content-Type: application/x-www-form-urlencoded\r\n\r\n%s";
 
     url_set_iostatus = "/iostatus.cgi";
-    url_set_ostatus = "/iostatus.cgi";
-    url_set_exstatus = "/exstatus.cgi";
     url_switch_iostatus = "/ioswitch.cgi";
-    url_switch_ostatus = "/ioswitch.cgi";
-    url_switch_exstatus = "/exswitch.cgi";
-    url_pulse_iostatus = "/iopulse.cgi";
-    url_pulse_ostatus = "/iopulse.cgi";
-    url_pulse_exstatus = "/expulse.cgi";
 
     url_set_ioconfig = "/ioconfig.cgi";
-    url_set_exconfig = "/exconfig.cgi";
 
     /*
     * GET
@@ -80,12 +72,8 @@ Dom32IoWifi::Dom32IoWifi(CGLog *pLog)
                         "Accept: text/html,text/xml\r\n\r\n";
 
     url_get_iostatus = "/iostatus.htm";
-    url_get_ostatus = "/iostatus.htm";
-    url_get_exstatus = "/exstatus.htm";
 
     url_get_config = "/config.htm";
-    url_get_ioconfig = "/ioconfig.htm";
-    url_get_exconfig = "/exconfig.htm";
 
     url_get_wifi = "/wifi.cgi";
     url_set_wifi = "/wifi.cgi";
@@ -552,35 +540,13 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
                         {
                             strcpy(estado, json_un_obj->valuestring);
                         }
-                        else if(json_un_obj->string[0] == 'P' && 
-                                json_un_obj->string[1] == 'U' && 
-                                json_un_obj->string[2] == 'L' && 
-                                json_un_obj->string[3] == 'S' && 
-                                json_un_obj->string[4] == 'E')
-                        {
-                            if(data[0] != 0) strcat(data, "&");
-                            strcat(data, json_un_obj->string);
-                            strcat(data, "=");
-                            strcat(data, json_un_obj->valuestring);
-                        }
-
                         if(port[0] && estado[0])
                         {
                             if(data[0] != 0) strcat(data, "&");
+                            strcat(data, "PULSE-");
                             strcat(data, port);
                             strcat(data, "=");
-                            if( !strcmp(estado, "0"))
-                            {
-                                strcat(data, "off");
-                            }
-                            else if( !strcmp(estado, "1"))
-                            {
-                                strcat(data, "on");
-                            }
-                            else
-                            {
-                                strcat(data, estado);
-                            }
+                            strcat(data, estado);
                             port[0] = 0;
                             estado[0] = 0;
                         }
@@ -590,7 +556,7 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
             json_un_obj = json_un_obj->next;
         }
     }
-    sprintf(buffer, http_post, url_pulse_iostatus, raddr, strlen(data), data);
+    sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] PulseIO Encolando [%s]", buffer);
     return RequestEnqueue(raddr, buffer);
 }
