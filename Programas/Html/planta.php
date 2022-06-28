@@ -18,8 +18,8 @@ include("obj_style.php");
 	<img id="config-icon" class="icon-btn" src="images/system.png">&nbsp;Configuración
 </div>
 
-<div class="normal-btn" id="btn-planta-task" onclick="window.location.replace('task.php');">
-	<img id="config-icon" class="icon-btn" src="images/task.png">&nbsp;Tareas
+<div class="normal-btn" id="btn-planta-auto" onclick="window.location.replace('auto_menu.php');">
+	<img id="auto-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatización
 </div>
 
 <div class="normal-btn" id="btn-planta-alarm" onclick="window.location.replace('alarm.php');">

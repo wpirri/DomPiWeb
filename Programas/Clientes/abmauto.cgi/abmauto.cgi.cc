@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright (C) 2021 Walter Pirri
+ * Copyright (C) 2022 Walter Pirri
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,6 @@
 #include "config.h"
 #include "strfunc.h"
 
-#define MAX_POST_DATA 4096
-#define MAX_GET_DATA  1024
-
 int trace;
 int timeout;
 
@@ -57,8 +54,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char request_method[8];
   int content_length;
   char s_content_length[8];
-  char get_data[MAX_GET_DATA+1];
-  char post_data[MAX_POST_DATA+1];
+  char post_data[4096];
   char buffer[4096];
   char label[64];
   char value[1024];
@@ -81,10 +77,11 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
   {
+    fputs("{ \"rc\":\"01\", \"msg\":\"Error de configuracion\" }\r\n", stdout);
     return 0;
   }
 
-  if( pConfig->GetParam("TRACE-ABMUSER.CGI", s))
+  if( pConfig->GetParam("TRACE-ABMAUTO.CGI", s))
   {
     trace = atoi(s);
   }
@@ -124,7 +121,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(content_length)
   {
-    fgets(post_data, ((content_length+1)<MAX_POST_DATA)?(content_length+1):MAX_POST_DATA, stdin);
+    fgets(post_data, ((content_length+1)<4096)?(content_length+1):4095, stdin);
   }
 
   fputs("Connection: close\r\n", stdout);
@@ -136,7 +133,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(trace)
   {
-    openlog("abmuser.cgi", 0, LOG_USER);
+    openlog("abmauto.cgi", 0, LOG_USER);
     syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
               remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
   }
@@ -150,10 +147,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(strchr(request_uri, '?'))
   {
-    strcpy(get_data, strchr(request_uri, '?')+1);
+    strcpy(buffer, strchr(request_uri, '?')+1);
     if(trace) syslog(LOG_DEBUG, "GET DATA: [%s]", buffer);
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(get_data, label, value, i); i++)
+    for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
     {
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "funcion"))
@@ -179,27 +176,51 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if( !strcmp(funcion, "get"))
   {
-    strcpy(funcion_call, "dompi_user_get");
+    strcpy(funcion_call, "dompi_auto_get");
   }
   else if( !strcmp(funcion, "add"))
   {
-    strcpy(funcion_call, "dompi_user_add");
+    strcpy(funcion_call, "dompi_auto_add");
   }
   else if( !strcmp(funcion, "update"))
   {
-    strcpy(funcion_call, "dompi_user_update");
+    strcpy(funcion_call, "dompi_auto_update");
   }
   else if( !strcmp(funcion, "delete"))
   {
-    strcpy(funcion_call, "dompi_user_delete");
+    strcpy(funcion_call, "dompi_auto_delete");
   }
   else if( !strcmp(funcion, "struct"))
   {
     strcpy(funcion_call, "dompi_db_struct");
   }
+  else if( !strcmp(funcion, "status"))
+  {
+    strcpy(funcion_call, "dompi_auto_status");
+  }
+  else if( !strcmp(funcion, "info"))
+  {
+    strcpy(funcion_call, "dompi_auto_info");
+  }
+  else if( !strcmp(funcion, "on"))
+  {
+    strcpy(funcion_call, "dompi_auto_on");
+  }
+  else if( !strcmp(funcion, "off"))
+  {
+    strcpy(funcion_call, "dompi_auto_off");
+  }
+  else if( !strcmp(funcion, "enable"))
+  {
+    strcpy(funcion_call, "dompi_auto_enable");
+  }
+  else if( !strcmp(funcion, "disable"))
+  {
+    strcpy(funcion_call, "dompi_auto_disable");
+  }
   else
   {
-    strcpy(funcion_call, "dompi_user_list");
+    strcpy(funcion_call, "dompi_auto_list");
   }
 
   /* Paso el objeto json a un buffer */

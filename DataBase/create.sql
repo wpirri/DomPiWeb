@@ -1,4 +1,5 @@
 
+DROP TABLE IF EXISTS TB_DOM_AUTO;
 DROP TABLE IF EXISTS TB_DOM_ALARM;
 DROP TABLE IF EXISTS TB_DOM_AT;
 DROP TABLE IF EXISTS TB_DOM_EVENT_CHANGE;
@@ -84,8 +85,8 @@ Grupo_Visual integer DEFAULT 0,
 Planta integer DEFAULT 0,
 Cord_x integer DEFAULT 0,
 Cord_y integer DEFAULT 0,
-Coeficiente integer DEFAULT 0,              -- 0=Coeficiente Positivo, 1=Coeficiente Negativo
-Analog_Mult_Div integer DEFAULT 0,          -- 0=Nada, 1=Multiplicar por valor, 2 => si Coeficiente = 0 -> Estado = Analog / Div  si Coeficiente = 1 -> Estado = Div / Analog 
+Coeficiente integer DEFAULT 0,              -- 1=Coeficiente Positivo, -1=Coeficiente Negativo  - rc = Coeficiente * ( (Analog_Mult_Div)?Estado/Analog_Mult_Div_Valor:Estado*Analog_Mult_Div_Valor ) 
+Analog_Mult_Div integer DEFAULT 0,          -- 0=Multiplicar por valor, 1=Dividir por valor
 Analog_Mult_Div_Valor integer DEFAULT 1,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
@@ -192,4 +193,32 @@ FOREIGN KEY(InZone8) REFERENCES TB_DOM_ASSIGN(Id)
 FOREIGN KEY(InActDes) REFERENCES TB_DOM_ASSIGN(Id)
 FOREIGN KEY(OutSiren) REFERENCES TB_DOM_ASSIGN(Id)
 FOREIGN KEY(OutBuzer) REFERENCES TB_DOM_ASSIGN(Id)
+);
+
+-- Sistema de riego
+-- Calefaccion
+-- Aire acondicionado
+CREATE TABLE IF NOT EXISTS TB_DOM_AUTO (
+Id integer primary key,
+Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
+Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Aire acondicionado
+Objeto_Salida integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
+Objeto_Sensor integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
+Min_Sensor integer DEFAULT 0,
+Max_Sensor integer DEFAULT 0,
+Hora_Inicio integer DEFAULT 0,
+Hora_Fin integer DEFAULT 0,
+Dias_Semana integer DEFAULT 0,
+Estado integer DEFAULT 0,                   -- 0 = Disable 1 = Enable
+Icono0 varchar(32),
+Icono1 varchar(32),
+Grupo_Visual integer DEFAULT 0,
+Planta integer DEFAULT 0,
+Cord_x integer DEFAULT 0,
+Cord_y integer DEFAULT 0,
+Actualizar integer DEFAULT 0,
+Flags integer DEFAULT 0,
+FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );

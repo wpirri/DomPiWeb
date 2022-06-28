@@ -92,24 +92,30 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     timeout = atoi(s) * 1000;
   }
 
+  json_obj = cJSON_CreateObject();
+
   for(i = 0; env[i]; i++)
   {
     if( !memcmp(env[i], "REMOTE_ADDR=", 12))
     {
       strncpy(remote_addr, env[i]+12, 15);
+      cJSON_AddStringToObject(json_obj, "REMOTE_ADDR", remote_addr);
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
       strncpy(request_uri, env[i]+12, 4095);
+      cJSON_AddStringToObject(json_obj, "REQUEST_URI", request_uri);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
       strncpy(request_method, env[i]+15, 7);
+      cJSON_AddStringToObject(json_obj, "REQUEST_METHOD", request_method);
     }
     else if( !memcmp(env[i], "CONTENT_LENGTH=", 15))
     {
       strncpy(s_content_length, env[i]+15, 7);
       content_length = atoi(s_content_length);
+      cJSON_AddStringToObject(json_obj, "CONTENT_LENGTH", s_content_length);
     }
   }
 
@@ -136,8 +142,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   gminit.m_port = 5533;
 
   pClient = new CGMClient(&gminit);
-
-  json_obj = cJSON_CreateObject();
 
   if(strchr(request_uri, '?'))
   {

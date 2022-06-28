@@ -152,7 +152,7 @@ body {
 	background: navy;
 	}
 
-#btn-planta-task {
+#btn-planta-auto {
 	left: 10px; 
 	top: 265px; 
 	background: brown;
@@ -203,3 +203,29 @@ body {
 	background: navy;
 	}
 
+/* En auto_menu.php */
+
+#btn-config-riego {
+	left: 255px; 
+	top: 95px; 
+	background: olive;
+}
+
+#btn-config-calefaccion {
+	left: 415px; 
+	top: 95px; 
+	background: red;
+	}
+
+#btn-config-aire {
+	left: 575px; 
+	top: 95px; 
+	background: black;
+	}
+
+#btn-config-task {
+	left: 95px; 
+	top: 180px; 
+	background: navy;
+	}
+	

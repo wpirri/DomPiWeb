@@ -413,18 +413,7 @@ int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj)
                             if(data[0] != 0) strcat(data, "&");
                             strcat(data, port);
                             strcat(data, "=");
-                            if( !strcmp(estado, "0"))
-                            {
-                                strcat(data, "off");
-                            }
-                            else if( !strcmp(estado, "1"))
-                            {
-                                strcat(data, "on");
-                            }
-                            else
-                            {
-                                strcat(data, estado);
-                            }
+                            strcat(data, estado);
                             port[0] = 0;
                             estado[0] = 0;
                         }
@@ -479,18 +468,7 @@ int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj)
                             if(data[0] != 0) strcat(data, "&");
                             strcat(data, port);
                             strcat(data, "=");
-                            if( !strcmp(estado, "0"))
-                            {
-                                strcat(data, "off");
-                            }
-                            else if( !strcmp(estado, "1"))
-                            {
-                                strcat(data, "on");
-                            }
-                            else
-                            {
-                                strcat(data, estado);
-                            }
+                            strcat(data, estado);
                             port[0] = 0;
                             estado[0] = 0;
                         }

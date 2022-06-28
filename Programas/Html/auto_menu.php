@@ -1,5 +1,5 @@
 <?php
-$TITLE='Configuraciones'; 
+$TITLE='Automatizaciones'; 
 include("head.php");
 ?>
 
@@ -11,23 +11,23 @@ include("head.php");
 
 
 
-<div class="normal-btn" id="btn-config-usuarios" onclick="window.location.replace('user_list.php');">
-	<img id="user-icon" class="icon-btn" src="images/access.png">&nbsp;Usuarios
+<div class="normal-btn" id="btn-config-riego" onclick="window.location.replace('riego_list.php');">
+	<img id="riego-icon" class="icon-btn" src="images/gota.png">&nbsp;Riego
 </div>
 
-<div class="normal-btn" id="btn-config-sistema" onclick="window.location.replace('sys_config.php');">
-	<img id="upload-icon" class="icon-btn" src="images/gear.png">&nbsp;Sistema
+<div class="normal-btn" id="btn-config-calefaccion" onclick="window.location.replace('calefaccion_list.php');">
+	<img id="calefaccion-icon" class="icon-btn" src="images/calef1.png">&nbsp;Calefacción
 </div>
 
-<div class="normal-btn" id="btn-config-planta" onclick="window.location.replace('planta_edit.php');">
-	<img id="home-icon" class="icon-btn" src="images/home.png">&nbsp;Planta
+<div class="normal-btn" id="btn-config-aire" onclick="window.location.replace('aire_edit.php');">
+	<img id="aire-icon" class="icon-btn" src="images/aire.png">&nbsp;Aire
 </div>
 
 
-<div class="normal-btn" id="btn-config-hard" onclick="window.location.replace('hw_list.php');">
-	<img id="disp-icon" class="icon-btn" src="images/hard.png">&nbsp;Dispositivos
+<div class="normal-btn" id="btn-config-hard" onclick="window.location.replace('task.php');">
+	<img id="task-icon" class="icon-btn" src="images/cron.png">&nbsp;Tareas
 </div>
-
+<!--
 <div class="normal-btn" id="btn-config-assign" onclick="window.location.replace('ass_list.php');">
 	<img id="net-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Objetos
 </div>
@@ -39,16 +39,17 @@ include("head.php");
 <div class="normal-btn" id="btn-config-events" onclick="window.location.replace('event_list.php');">
 	<img id="event-icon" class="icon-btn" src="images/event.png">&nbsp;Eventos
 </div>
+-->
 
-
+<!--
 <div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">
 	<img id="flags-icon" class="icon-btn" src="images/var.png">&nbsp;Variables
 </div>
-<!--
+
 <div class="normal-btn" id="btn-config-crono" onclick="window.location.replace('task.php');">
 	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
 </div>
--->
+
 <div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
@@ -56,8 +57,10 @@ include("head.php");
 <div class="normal-btn" id="btn-config-cameras" onclick="window.location.replace('working_list.php');">
 	<img id="camera-icon" class="icon-btn" src="images/camara.png">&nbsp;C&aacute;maras
 </div>
+-->
 
 
+<!--
 <div class="normal-btn" id="btn-config-upload" onclick="window.location.replace('working_list.php');">
 	<img id="upload-icon" class="icon-btn" src="images/upload.png">&nbsp;Actualizaci&oacute;n
 </div>
@@ -67,12 +70,13 @@ include("head.php");
 </div>
 
 <div class="normal-btn" id="btn-config-dummy2" onclick="window.location.replace('working_list.php');">
-	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
+	<img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx
 </div>
 
 <div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('working_list.php');">
-	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
+	<img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx
 </div>
+-->
 
 </div>
 

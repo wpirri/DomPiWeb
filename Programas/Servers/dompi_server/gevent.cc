@@ -168,22 +168,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                             {
                                 if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
                                 {
-                                    if( !memcmp(json_un_obj->string, "IO", 2) ||
-                                        !memcmp(json_un_obj->string, "OUT", 3) ||
-                                        !memcmp(json_un_obj->string, "ANA", 3)  )
+                                    if( !memcmp(json_un_obj->string, "IO", 2) || !memcmp(json_un_obj->string, "OUT", 3) )
                                     {
-                                        if( !strcmp(json_un_obj->valuestring, "on"))
-                                        {
-                                            ival = 1;
-                                        }
-                                        else if( !strcmp(json_un_obj->valuestring, "off"))
-                                        {
-                                            ival = 0;
-                                        }
-                                        else
-                                        {
-                                            ival = atoi(json_un_obj->valuestring);
-                                        }
+                                        ival = atoi(json_un_obj->valuestring);
+
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
                                                         ival,
