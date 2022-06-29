@@ -1,11 +1,11 @@
+<!DOCTYPE html>
+<html lang="es">
 <?php
     include('config.php'); 
     include('session.php');
 ?>
-<!DOCTYPE html>
-<meta charset="utf-8">
-<html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>SYSHOME V 3.0 - <?php echo $TITLE; ?></title>
 <link href="css/dompiweb.css" rel="stylesheet" type="text/css" />
 <link href="css/abm.css" rel="stylesheet" type="text/css" />

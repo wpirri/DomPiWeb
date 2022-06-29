@@ -16,7 +16,7 @@ include("head.php");
 </div>
 
 <div class="normal-btn" id="btn-config-calefaccion" onclick="window.location.replace('calefaccion_list.php');">
-	<img id="calefaccion-icon" class="icon-btn" src="images/calef1.png">&nbsp;Calefacción
+	<img id="calefaccion-icon" class="icon-btn" src="images/calef1.png">&nbsp;Calefacci&oacute;n
 </div>
 
 <div class="normal-btn" id="btn-config-aire" onclick="window.location.replace('aire_edit.php');">

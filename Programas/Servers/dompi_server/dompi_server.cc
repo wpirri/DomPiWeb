@@ -2271,9 +2271,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_query_result = cJSON_CreateArray();
-					sprintf(query, "SELECT Id, Objeto, Estado, Estado_Sensor, Estado_Salida "
-									"FROM TB_DOM_AUTO "
-									"WHERE Id = 0 OR Tipo = %s", json_un_obj->valuestring);
+					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Grupo, ASS.Objeto AS Salida, AU.Estado AS Estado "
+									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
+									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
+										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s)", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(json_query_result, query);
 					if(rc == 0)
@@ -2996,6 +2997,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 
+#ifdef __COMMENT__
 		/* Propago la configuración del módulo de automatización */
 		/* Controlo si hay que actualizar estados de Assign */
 		json_arr = cJSON_CreateArray();
@@ -3011,7 +3013,6 @@ int main(/*int argc, char** argv, char** env*/void)
 			cJSON_ArrayForEach(json_un_obj, json_arr)
 			{
 				json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_ID");
-#ifdef __COMMENT__
 				json_Tipo = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
 				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_ID");
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "PERIF_ID");
@@ -3030,7 +3031,6 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_ASS_Id->valuestring);
 				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 				pDB->Query(NULL, query);
-#endif /* __COMMENT__ */
 				/* Borro la marca de actualización */
 				sprintf(query, "UPDATE TB_DOM_AUTO "
 								"SET Actualizar = 0 "
@@ -3040,6 +3040,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 		cJSON_Delete(json_arr);
+#endif /* __COMMENT__ */
 
 		/* Controles del modulo de alarma */
 
