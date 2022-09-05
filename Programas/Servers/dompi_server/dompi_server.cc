@@ -112,6 +112,128 @@ int load_system_config;
 int update_system_config;
 int internal_timeout;
 
+const char *system_columns[] = {
+	"Id",
+	"Creacion",
+	"System_Key",
+	"Cloud_Host_1_Address",
+	"Cloud_Host_1_Port",
+	"Cloud_Host_1_Proto",
+	"Cloud_Host_2_Address",
+	"Cloud_Host_2_Port",
+	"Cloud_Host_2_Proto",
+	"Planta1",
+	"Planta2",
+	"Planta3",
+	"Planta4",
+	"Planta5",
+	"Modem_port",
+	"Flags",
+	0};
+
+const char *user_columns[] = {
+	"Id integer primary key",
+	"Usuario",
+	"Nombre_Completo",
+	"Pin_Teclado",
+	"Pin_WEB",
+	"Telefono_Voz",
+	"Telefono_SMS",
+	"eMail",
+	"Permisos",
+	"Dias",
+	"Horas",
+	"Estado",
+	"Contador_Error",
+	"Ultimo_Acceso",
+	"Ultimo_Error",
+	"Flags",
+	0};
+
+const char *perif_columns[] = {
+	"Id",
+	"MAC",
+	"Dispositivo",
+	"Tipo",
+	"Estado",
+	"Direccion_IP",
+	"Ultimo_Ok",
+	"Actualizar",
+	"Flags",
+	0};
+
+const char *assign_columns[] = { 
+	"Id",
+	"Objeto",
+	"Dispositivo",
+	"Port",
+	"Tipo",
+	"Estado",
+	"Icono0",
+	"Icono1",
+	"Grupo_Visual",
+	"Planta",
+	"Cord_x",
+	"Cord_y",
+	"Coeficiente",
+	"Analog_Mult_Div",
+	"Analog_Mult_Div_Valor",
+	"Actualizar",
+	"Flag",
+	0};
+
+const char *event_columns[] = {
+		"Id",
+		"Evento",
+		"Objeto_Origen",
+		"Objeto_Destino",
+		"Grupo_Destino",
+		"Funcion_Destino",
+		"Variable_Destino",
+		"ON_a_OFF",
+		"OFF_a_ON",
+		"Enviar",
+		"Parametro_Evento",
+		"Condicion_Variable",
+		"Condicion_Igualdad",
+		"Condicion_Valor",
+		"Flags",
+		0};
+
+const char *auto_columns[] = {
+		"Id",
+		"Objeto",
+		"Tipo",
+		"Objeto_Sensor",
+		"Min_Sensor",
+		"Max_Sensor",
+		"Hora_Inicio",
+		"Hora_Fin",
+		"Dias_Semana",
+		"Estado",
+		"Icono0",
+		"Icono1",
+		"Grupo_Visual",
+		"Planta",
+		"Cord_x",
+		"Cord_y",
+		"Actualizar",
+		"Flags",
+		0};
+
+int ExisteColumna(const char* columna, const char** lista)
+{
+	int i = 0;
+
+	if(!columna || !lista) return 0;
+	while(lista[i])
+	{
+		if( !strcmp(columna, lista[i])) return 1;
+		i++;
+	}
+	return 0;
+}
+
 void LoadSystemConfig(void)
 {
 	char query[4096];
@@ -232,6 +354,11 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Segundos;
 	cJSON *json_Min;
 	cJSON *json_Max;
+	cJSON *json_Hora_Inicio;
+	cJSON *json_Hora_Fin;
+	cJSON *json_Dias_Semana;
+	cJSON *json_ASS_Estado;
+	
 
 	update_hw_config_id = 0;
 	update_hw_config_mac[0] = 0;
@@ -584,28 +711,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, user_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -694,24 +824,27 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Nombre") )
+									if(ExisteColumna(json_un_obj->string, user_columns))
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Nombre") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
 									}
 								}
 							}
@@ -926,28 +1059,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, perif_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -1038,26 +1174,29 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExisteColumna(json_un_obj->string, perif_columns))
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
 									}
 								}
 							}
@@ -1216,28 +1355,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, assign_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -1326,32 +1468,35 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExisteColumna(json_un_obj->string, assign_columns))
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
-									}
-									/* Recopilo algunos datos para actualizar la tabla de HW */
-									if( !strcmp(json_un_obj->string, "Dispositivo"))
-									{
-										/* Mando a actualiza la configuración del HW */
-										update_hw_config_id = atoi(json_un_obj->valuestring);
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
+										/* Recopilo algunos datos para actualizar la tabla de HW */
+										if( !strcmp(json_un_obj->string, "Dispositivo"))
+										{
+											/* Mando a actualiza la configuración del HW */
+											update_hw_config_id = atoi(json_un_obj->valuestring);
+										}
 									}
 								}
 							}
@@ -1831,28 +1976,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, event_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -1942,27 +2090,30 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExisteColumna(json_un_obj->string, event_columns))
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 
+											strcpy(hw_id, json_un_obj->valuestring);
+										}
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+
+										}
 									}
 								}
 							}
@@ -2191,28 +2342,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, system_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2403,35 +2557,38 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExisteColumna(json_un_obj->string, auto_columns))
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										if( !strcmp(json_un_obj->string, "Actualizar"))
+										{
+											strcat(query_values, "1");
+										}
+										else
+										{ 
+											strcat(query_values, json_un_obj->valuestring);
+										}
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									if( !strcmp(json_un_obj->string, "Actualizar"))
-									{
-										strcat(query_values, "1");
-									}
-									else
-									{ 
-										strcat(query_values, json_un_obj->valuestring);
-									}
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2520,33 +2677,36 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExisteColumna(json_un_obj->string, auto_columns))
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
+										if( !strcmp(json_un_obj->string, "Id") )
+										{
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										if( !strcmp(json_un_obj->string, "Actualizar"))
-										{
-											strcat(query_values, "1");
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
-										{ 
-											strcat(query_values, json_un_obj->valuestring);
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											if( !strcmp(json_un_obj->string, "Actualizar"))
+											{
+												strcat(query_values, "1");
+											}
+											else
+											{ 
+												strcat(query_values, json_un_obj->valuestring);
+											}
+											strcat(query_values, "'");
 										}
-										strcat(query_values, "'");
 									}
 								}
 							}
@@ -2997,14 +3157,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 
-#ifdef __COMMENT__
-		/* Propago la configuración del módulo de automatización */
-		/* Controlo si hay que actualizar estados de Assign */
+		/* Control del modulo de automatización */
 		json_arr = cJSON_CreateArray();
-		sprintf(query, "SELECT AU.Id AS AUTO_ID, AU.Tipo AS Tipo, A.Id AS ASS_ID, A.Dispositivo AS PERIF_ID, Min_Sensor, Max_Sensor "
-						"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS A "
-						"WHERE AU.Objeto_Sensor = A.Id AND AU.Id > 0 AND "
-							"AU.Actualizar <> 0");
+		sprintf(query, "SELECT AU.Id AS AUTO_Id, AU.Tipo, AU.Min_Sensor, AU.Max_Sensor, AU.Hora_Inicio, AU.Hora_Fin, AU.Dias_Semana, AU.Estado AUTO_Estado "
+							"ASS.Id AS ASS_Id, ASS.Estado AS ASS_Estado "
+							"ASS.Dispositivo AS PERIF_Id "
+						"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
+						"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0");
 		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 		rc = pDB->Query(json_arr, query);
 		if(rc == 0)
@@ -3012,35 +3171,22 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* Recorro el array */
 			cJSON_ArrayForEach(json_un_obj, json_arr)
 			{
-				json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_ID");
+				json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_Id");
 				json_Tipo = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
-				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_ID");
-				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "PERIF_ID");
 				json_Min = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Min_Sensor");
 				json_Max = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Max_Sensor");
-				/* Actualizo el dispositivo */
-				sprintf(query, "UPDATE TB_DOM_PERIF "
-								"SET Actualizar = 1 "
-								"WHERE Id = %s", json_HW_Id->valuestring);
-				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-				pDB->Query(NULL, query);
-				/* Actualizo el objeto */
-				sprintf(query, "UPDATE TB_DOM_ASSIGN "
-								"SET  "
-								"WHERE Id = %s",
-								json_ASS_Id->valuestring);
-				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-				pDB->Query(NULL, query);
-				/* Borro la marca de actualización */
-				sprintf(query, "UPDATE TB_DOM_AUTO "
-								"SET Actualizar = 0 "
-								"WHERE Id = %s", json_AUTO_Id->valuestring);
-				m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-				pDB->Query(NULL, query);
+				json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Inicio");
+				json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
+				json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
+				json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
+				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
+				json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Estado");
+				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "PERIF_Id");
+
+
 			}
 		}
 		cJSON_Delete(json_arr);
-#endif /* __COMMENT__ */
 
 		/* Controles del modulo de alarma */
 

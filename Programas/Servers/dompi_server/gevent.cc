@@ -84,11 +84,12 @@ using namespace std;
 #include <cjson/cJSON.h>
 #include <math.h>
 
+#include "strfunc.h"
+
 GEvent::GEvent(CSQLite *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
     m_pServer = pServer;
-    m_change_ass_count = 0;
 }
 
 GEvent::~GEvent()
@@ -98,6 +99,8 @@ GEvent::~GEvent()
 
 int GEvent::ExtIOEvent(const char* json_evt)
 {
+    int i;
+    char s[256];
     time_t t;
     struct tm *p_tm;
     int rc;
@@ -109,7 +112,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_hw_mac;
     cJSON *json_raddr;
     cJSON *json_chg;
+    cJSON *json_status;
     cJSON *json_un_obj;
+    STRFunc str;
 
     m_pServer->m_pLog->Add(100, "[ExtIOEvent] json_evt: %s", json_evt);
 
@@ -198,17 +203,28 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         json_un_obj = json_un_obj->next;
                     }
                 }
+
                 /* Cambios informados */
                 json_chg = cJSON_GetObjectItemCaseSensitive(json_obj, "CHG");
                 if(json_chg)
                 {
-                    /* TODO: Detectar cambios */
-
-
-
-
-
-
+                    m_pServer->m_pLog->Add(100, "[ExtIOEvent] El mensaje informa cabios de estado.");
+                    /* json_chg->valuestring: lista separada por comas de cambios  */
+                    i = 0;
+                    while(str.Section(json_chg->valuestring, ',', i, s))
+                    {
+                        /* Me fijo el estado actual de ese puerto */
+                        json_status = cJSON_GetObjectItemCaseSensitive(json_obj, s);
+                        if(json_status)
+                        {
+                            CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring));
+                        }
+                        else
+                        {
+                            CheckEvent(atoi(json_hw_id->valuestring), s, 1);
+                        }
+                        i++;
+                    }
                 }
             }
             cJSON_Delete(json_arr);
@@ -218,7 +234,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     return 1;
 }
 
-int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
+int GEvent::CheckEvent(int hw_id, const char* port, int estado)
 {
 	char query[4096];
     int rc;
@@ -237,52 +253,17 @@ int GEvent::CheckEvent(const char *hw_mac, int port, int e_s, int estado)
     cJSON *Condicion_Valor;
 //    cJSON *Flags;
 
-    m_pServer->m_pLog->Add(10, "Cambio de estado - CheckEvent: HW: %s Port: %s E/S: %i Estado: %s", 
-                                hw_mac, (port==1)?"A":(port==2)?"B":(port==3)?"C":"?",
-                                e_s, (estado)?"ON":"OFF");
+    m_pServer->m_pLog->Add(10, "[CheckEvent] HW: %i Port: %s Estado: %s", 
+                                hw_id, port, (estado)?"ON":"OFF");
 
-    m_change_ass_count++;
-
-    if(m_change_ass_count > 10)
-    {
-        /* Notifico el estado de todos los objetos */
-
-
-        m_change_ass_count = 0;
-    }
-    else
-    {
-        /* Notifico el cambio de estado si corresponde a un assign */
-        json_arr = cJSON_CreateArray();
-        sprintf(query,  "SELECT ASS.Id, ASS.Objeto, ASS.Tipo, ASS.Estado "
-                        "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-                        "WHERE ASS.Dispositivo = HW.Id AND "
-                        "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i",
-                        hw_mac, port, e_s);
-        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-        rc = m_pDB->Query(json_arr, query);
-        if(rc == 0)
-        {
-            json_obj = json_arr->child;
-
-            /* si hay que agregar algo mas */
-
-            cJSON_PrintPreallocated(json_obj, query, 4095, 0);
-            m_pServer->m_pLog->Add(50, "[Post]: %s", query); 
-            m_pServer->Post("dompi_ass_change", query, strlen(query));
-        }
-        cJSON_Delete(json_arr);
-    }
-
-
-    /* Busco si hay un assign y si hay evento para ese assign */
+    /* Busco si hay un evento para este cambio */
     json_arr = cJSON_CreateArray();
     sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino, "
                     "EV.Enviar, EV.Parametro_Evento, EV.Condicion_Variable, EV.Condicion_Igualdad, EV.Condicion_Valor, EV.Flags "
-                    "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS, TB_DOM_EVENT AS EV "
-                    "WHERE EV.Objeto_Origen = ASS.Id AND ASS.Dispositivo = HW.Id AND "
-                    "HW.MAC = \"%s\" AND ASS.Port = %i AND ASS.E_S = %i AND %s",
-                    hw_mac, port, e_s, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+                    "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
+                    "WHERE EV.Objeto_Origen = ASS.Id AND "
+                    "ASS.Dispositivo = %i AND ASS.Port = \"%s\" AND %s",
+                    hw_id, port, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)
@@ -354,13 +335,11 @@ int GEvent::SendEventObj(int id, int ev, int val)
     int rc;
     cJSON *json_arr;
     cJSON *json_obj;
-    CGMServerBase::GMIOS call_resp;
 
-
-    m_pServer->m_pLog->Add(100, "[SendEventObj] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(100, "[SendEventObj] ass id: %i - ev: %i - val: %i", id, ev, val);
 
     json_arr = cJSON_CreateArray();
-    sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port, ASS.E_S "
+    sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port "
                     "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
                     "WHERE HW.Id = ASS.Dispositivo AND "
                     "ASS.Id = %i", id);
@@ -378,90 +357,34 @@ int GEvent::SendEventObj(int id, int ev, int val)
                 case 1:     /* On */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 1 "
+                                    "SET Estado = 1, Actualizar = 1 "
                                     "WHERE Id = %i", id);
                     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
-                    /*  */
-                    cJSON_AddStringToObject(json_obj, "Estado", "1");
-                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
-                    m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]>>[%s]", query);
-                    rc = m_pServer->Call("dompi_hw_set_io", query, strlen(query), &call_resp, 500);
-                    if(rc == 0)
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[%s]", (const char*)call_resp.data);
-                    }
-                    else
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[Error]");
-                    }
-                    m_pServer->Free(call_resp);
                     break;
                 case 2:     /* Off */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 0 "
+                                    "SET Estado = 0, Actualizar = 1 "
                                     "WHERE Id = %i", id);
                     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
-                    /*  */
-                    cJSON_AddStringToObject(json_obj, "Estado", "0");
-                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
-                    m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]>>[%s]", query);
-                    rc = m_pServer->Call("dompi_hw_set_io", query, strlen(query), &call_resp, 500);
-                    if(rc == 0)
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[%s]", (const char*)call_resp.data);
-                    }
-                    else
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_set_io]<<[Error]");
-                    }
-                    m_pServer->Free(call_resp);
                     break;
                 case 3:     /* Switch */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = (1 - Estado) "
+                                    "SET Estado = (1 - Estado), Actualizar = 1 "
                                     "WHERE Id = %i", id);
                     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
-                    /*  */
-                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
-                    m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]>>[%s]", query);
-                    rc = m_pServer->Call("dompi_hw_switch_io", query, strlen(query), &call_resp, 500);
-                    if(rc == 0)
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]<<[%s]", (const char*)call_resp.data);
-                    }
-                    else
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_switch_io]<<[Error]");
-                    }
-                    m_pServer->Free(call_resp);
                     break;
                 case 4:     /* Pulso */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 1 "
-                                    "WHERE Id = %i", id);
+                                    "SET Estado = %i "
+                                    "WHERE Id = %i", 2 + val, id);
                     m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
-                    /*  */
-                    sprintf(query, "%i", (val > 0)?val:1);
-                    cJSON_AddStringToObject(json_obj, "Segundos", query);
-                    cJSON_PrintPreallocated(json_obj, query, 4096, 0);
-                    m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io][%s]", query);
-                    rc = m_pServer->Call("dompi_hw_pulse_io", query, strlen(query), &call_resp, 500);
-                    if(rc == 0)
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io]<<[%s]", (const char*)call_resp.data);
-                    }
-                    else
-                    {
-                        m_pServer->m_pLog->Add(50, "[dompi_hw_pulse_io]<<[Error]");
-                    }
-                    m_pServer->Free(call_resp);
                     break;
                 default:
                     break;

@@ -26,7 +26,7 @@ public:
 
     int ExtIOEvent(const char* json_evt);
 
-    int CheckEvent(const char *hw_id, int port, int e_s, int estado);
+    int CheckEvent(int hw_id, const char* port, int estado);
 
     int SendEventObj(int id, int ev, int val);
     int SendEventGrp(int id, int ev, int val);
@@ -34,7 +34,6 @@ public:
     int SendEventVar(int id, int ev, int val);
 
 private:
-    int m_change_ass_count;
     CSQLite *m_pDB;
     CGMServerWait *m_pServer;
 
