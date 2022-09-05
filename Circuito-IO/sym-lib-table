@@ -1,4 +1,4 @@
 (sym_lib_table
-  (lib (name srr1210)(type Legacy)(uri /home/walter/Dropbox/Walter/Electronica/Kicad_Libs/UL_SRR1210470M/2019-04-02_20-13-32.lib)(options "")(descr ""))
-  (lib (name sim7050)(type Legacy)(uri /home/walter/Dropbox/Walter/Electronica/Kicad_Libs/personal/SIM7050.lib)(options "")(descr ""))
+  (lib (name srr1210)(type Legacy)(uri ${KIPRJMOD}/SRR1210-470M.lib)(options "")(descr ""))
+  (lib (name sim7050)(type Legacy)(uri ${KIPRJMOD}/SIM7050.lib)(options "")(descr ""))
 )
