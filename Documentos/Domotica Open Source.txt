@@ -1,0 +1,11 @@
+https://rincondomotica.com/openhab-la-mejor-plataforma-domotica-open-source
+
+
+https://www.casasdigitales.com/domotica-open-source-2/
+
+Calaos: para automatizar el hogar por completo. Se puede usar con iOS y Android.
+Domoticz: otro de los nombres populares de la domótica de código abierto. Se puede utilizar con Raspberry Pi.
+Home Assistant: su versatilidad para instalarlo en cualquier plataforma es su principal virtud.
+OpenHUB: muy conocida y manejable. Se basa en Java y con los conocimientos oportunos puedes crear hasta tu propia interfaz y varias interfaces de usuario nativas.
+OpenMotics: cuenta con hardware y software abierto.
+        https://www.openmotics.com/en/
