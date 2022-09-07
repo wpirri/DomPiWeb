@@ -79,6 +79,7 @@ Dispositivo integer NOT NULL,               -- Discpositivo - Id de TB_DOM_PERIF
 Port varchar(128) NOT NULL,                 -- Nombre con el que se identifica en el dispositivo
 Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma, 5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param
 Estado integer DEFAULT 0,                   -- 1 / 0 para digitales 0 a n para analogicos
+Estado_HW integer DEFAULT 0,                -- Estado reportado por el HW
 Icono0 varchar(32),
 Icono1 varchar(32),
 Grupo_Visual integer DEFAULT 0,
@@ -93,6 +94,8 @@ Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );
+
+# ALTER TABLE TB_DOM_ASSIGN ADD COLUMN Estado_HW integer DEFAULT 0; 
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP ( 
 Id integer primary key,

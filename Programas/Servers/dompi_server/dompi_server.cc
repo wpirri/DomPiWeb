@@ -312,6 +312,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int delta_t;
 	time_t update_ass_t;
 	char s[16];
+	int iEstado;
 
 	char comando[1024];
 	char objeto[1024];
@@ -506,7 +507,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( atoi(json_un_obj->valuestring) > 0 )
 							{
-								m_pServer->m_pLog->Add(10, "HW %s Solicita configuracion", json_HW_Id->valuestring);
+								m_pServer->m_pLog->Add(10, "[HW] %s Solicita configuracion", json_HW_Id->valuestring);
 								strcpy(update_hw_config_mac, json_HW_Id->valuestring);
 							}
 						}
@@ -514,7 +515,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					else if(rc == 0)
 					{
 						/* NOT FOUND */
-						m_pServer->m_pLog->Add(10, "HW: %s No encontrado en la base", json_HW_Id->valuestring);
+						m_pServer->m_pLog->Add(10, "[HW] %s No encontrado en la base", json_HW_Id->valuestring);
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
 					}
 					else
@@ -1627,7 +1628,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-									"SET Estado = 1, Actualizar = 1 "
+									"SET Estado = 1 "
 									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1663,7 +1664,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-									"SET Estado = 0, Actualizar = 1 "
+									"SET Estado = 0 "
 									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1699,7 +1700,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-									"SET Estado = (1 - Estado), Actualizar = 1 "
+									"SET Estado = (1 - Estado) "
 									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1738,7 +1739,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Segundos)
 					{
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = %i, Actualizar = 1 "
+										"SET Estado = %i "
 										"WHERE Objeto = \'%s\'",
 										atoi(json_Segundos->valuestring)+1,
 										json_un_obj->valuestring);
@@ -1746,7 +1747,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					else
 					{
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 2, Actualizar = 1 "
+										"SET Estado = 2 "
 										"WHERE Objeto = \'%s\'",
 										json_un_obj->valuestring);
 					}
@@ -1825,7 +1826,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 1, Actualizar = 1 "
+										"SET Estado = 1 "
 										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						pDB->Query(NULL, query);
@@ -1834,7 +1835,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 0, Actualizar = 1 "
+										"SET Estado = 0 "
 										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						pDB->Query(NULL, query);
@@ -1843,7 +1844,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = (1 - Estado), Actualizar = 1 "
+										"SET Estado = (1 - Estado) "
 										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 						pDB->Query(NULL, query);
@@ -3011,7 +3012,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
 								"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
 						"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-						"WHERE ASS.Dispositivo = PERIF.Id AND ASS.Actualizar <> 0");
+						"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
+						"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) )");
 		m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 		rc = pDB->Query(json_arr, query);
 		if(rc == 0)
@@ -3045,10 +3047,12 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(rc == 0)
 				{
-					/* Borro la marca */
+					/* Borro la diferencia */
+					iEstado = atoi(json_Estado->valuestring);
+					if(iEstado != 1) iEstado = 0;
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
-									"SET Actualizar = 0 "
-									"WHERE Id = %s", json_ASS_Id->valuestring);
+									"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+									"WHERE Id = %s", iEstado, iEstado, json_ASS_Id->valuestring);
 					m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
 					pDB->Query(NULL, query);
 				}

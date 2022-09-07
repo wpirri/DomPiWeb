@@ -177,8 +177,18 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     {
                                         ival = atoi(json_un_obj->valuestring);
 
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                        /* Actualizo el estado del HW */
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado_HW = %i "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                                        ival,
+                                                        json_hw_id->valuestring,
+                                                        json_un_obj->string);
+                                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                                        m_pDB->Query(NULL, query);
+                                        /* En las entradas actualizo también el estado a mostrar */
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                                        "(Tipo = 1 OR Tipo = 2 OR Tipo = 4)",
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
