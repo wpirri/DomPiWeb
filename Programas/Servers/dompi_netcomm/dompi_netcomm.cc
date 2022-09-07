@@ -135,7 +135,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(rc > 0)
 		{
 			message[message_len] = 0;
-			m_pServer->m_pLog->Add(50, "%s:(Q)[%s]", fn, message);
+			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 
 			json_req = cJSON_Parse(message);
 			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_req, "Direccion_IP");
@@ -155,7 +155,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_port_config][%s]", message);
 							rc = m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -170,7 +170,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_set_port_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_port_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -211,11 +211,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_port_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -230,7 +230,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_port_config][%s]", message);
 							rc = m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -245,7 +245,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_port_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_port_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -287,11 +287,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_port_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -303,11 +303,11 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				/* TODO: Enviar configuracion de WiFFi */
 
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_comm_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_comm_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -324,7 +324,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_comm_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_comm_config][%s]", message);
 							rc = m_pServer->Call("dompi_pi_get_comm_config", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -339,7 +339,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_get_comm_config][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_comm_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -390,11 +390,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -409,7 +409,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_set_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_io][%s]", message);
 							rc = m_pServer->Call("dompi_pi_set_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -424,7 +424,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_set_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -469,11 +469,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_io]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_io]");
 				}
 			}
 			/* ************************************************************* *
@@ -488,7 +488,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_switch_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_switch_io][%s]", message);
 							rc = m_pServer->Call("dompi_pi_switch_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -503,7 +503,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_switch_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_switch_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -548,11 +548,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_switch_io]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_switch_io]");
 				}
 			}
 			/* ************************************************************* *
@@ -567,7 +567,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_pulse_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_pulse_io][%s]", message);
 							rc = m_pServer->Call("dompi_pi_pulse_io", message, strlen(message), &call_server_resp, internal_timeout);
 							if(rc == 0)
 							{
@@ -582,7 +582,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(50, "[dompi_pi_pulse_io][%s]", message);
+							m_pServer->m_pLog->Add(90, "Call [dompi_pi_pulse_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
@@ -627,11 +627,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_pulse_io]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_pulse_io]");
 				}
 			}
 
@@ -640,7 +640,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			else
 			{
-				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");
+				m_pServer->m_pLog->Add(90, "[%s][R][GME_SVC_NOTFOUND]", fn);
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
 		}

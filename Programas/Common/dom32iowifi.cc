@@ -171,7 +171,7 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config)
         strcat(data, config->wifi_host2);
     }
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Encolando [%s]", buffer);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion WiFi para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
@@ -334,7 +334,7 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj)
         }
     }
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] SetConfig Encolando [%s]", buffer);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion I/O para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
@@ -424,7 +424,7 @@ int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj)
         }
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] SetIO Encolando [%s]", buffer);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando estado de I/O para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
@@ -479,7 +479,7 @@ int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj)
         }
     }
     sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] SwitchIO Encolando [%s]", buffer);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando switch de I/O para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer);
 }
 
@@ -535,7 +535,7 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
         }
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] PulseIO Encolando [%s]", buffer);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando pulso de I/O para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer);
 }
 

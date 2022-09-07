@@ -102,7 +102,6 @@ int GEvent::ExtIOEvent(const char* json_evt)
     int i;
     char s[256];
     time_t t;
-    struct tm *p_tm;
     int rc;
     unsigned int ival;
     char query[4096];
@@ -126,36 +125,31 @@ int GEvent::ExtIOEvent(const char* json_evt)
         if(json_hw_mac && cJSON_IsString(json_hw_mac))
         {
             t = time(&t);
-            p_tm = localtime(&t);
 
-            m_pServer->m_pLog->Add(10, "[HW] %s %s", json_hw_mac->valuestring, json_raddr->valuestring);
-
-            /* Actualizo la tabla de Dispositivos */
-            sprintf(query, "UPDATE TB_DOM_PERIF "
-                                "SET Ultimo_Ok = \"%04i-%02i-%02i %02i:%02i:%02i\", "
-                                  "Direccion_IP = \"%s\" "
-                                "WHERE MAC = \"%s\"",
-                                p_tm->tm_year+1900, p_tm->tm_mon+1, p_tm->tm_mday,
-                                p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec, 
-                                json_raddr->valuestring,
-                                json_hw_mac->valuestring);
-            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
-            rc = m_pDB->Query(NULL, query);
-            /* Si no existe en la base */
-            if(rc == 0)
-            {
-                cJSON_Delete(json_obj);
-                return 0;
-            }
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT ID FROM TB_DOM_PERIF WHERE MAC = \"%s\"", json_hw_mac->valuestring);
-            m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE MAC = \"%s\"", json_hw_mac->valuestring);
+            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_arr = cJSON_CreateArray();
             rc = m_pDB->Query(json_arr, query);
             if(rc == 0)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
-
+                json_status = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Estado");
+                if(atoi(json_status->valuestring) == 0)
+                {
+                    m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                }
+                /* Actualizo la tabla de Dispositivos */
+                sprintf(query, "UPDATE TB_DOM_PERIF "
+                                    "SET Ultimo_Ok = \"%lu\", "
+                                    "Direccion_IP = \"%s\", "
+                                    "Estado = 1 "
+                                    "WHERE MAC = \"%s\"",
+                                    t,
+                                    json_raddr->valuestring,
+                                    json_hw_mac->valuestring);
+                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                m_pDB->Query(NULL, query);
                 /* Actualizo los assign que vengan  en el mensaje */
                 json_un_obj = json_obj;
                 while( json_un_obj )
@@ -183,7 +177,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
-                                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         m_pDB->Query(NULL, query);
                                         /* En las entradas actualizo también el estado a mostrar */
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
@@ -192,7 +186,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
-                                        m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         m_pDB->Query(NULL, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "WIEGAND", 7))
@@ -218,7 +212,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 json_chg = cJSON_GetObjectItemCaseSensitive(json_obj, "CHG");
                 if(json_chg)
                 {
-                    m_pServer->m_pLog->Add(100, "[ExtIOEvent] El mensaje informa cabios de estado.");
+                    m_pServer->m_pLog->Add(50, "[ExtIOEvent] El mensaje informa cabios de estado.");
                     /* json_chg->valuestring: lista separada por comas de cambios  */
                     i = 0;
                     while(str.Section(json_chg->valuestring, ',', i, s))
@@ -236,12 +230,22 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         i++;
                     }
                 }
+                cJSON_Delete(json_arr);
+                cJSON_Delete(json_obj);
+                return 1;
             }
-            cJSON_Delete(json_arr);
+            else
+            {
+                m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_hw_mac->valuestring, json_raddr->valuestring);
+                cJSON_Delete(json_arr);
+                cJSON_Delete(json_obj);
+                return 0;
+            }
         }
         cJSON_Delete(json_obj);
+        return 0;
     }
-    return 1;
+    return 0;
 }
 
 int GEvent::CheckEvent(int hw_id, const char* port, int estado)
@@ -263,7 +267,7 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *Condicion_Valor;
 //    cJSON *Flags;
 
-    m_pServer->m_pLog->Add(10, "[CheckEvent] HW: %i Port: %s Estado: %s", 
+    m_pServer->m_pLog->Add(50, "[CheckEvent] HW: %i Port: %s Estado: %s", 
                                 hw_id, port, (estado)?"ON":"OFF");
 
     /* Busco si hay un evento para este cambio */
@@ -274,7 +278,7 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                     "WHERE EV.Objeto_Origen = ASS.Id AND "
                     "ASS.Dispositivo = %i AND ASS.Port = \"%s\" AND %s",
                     hw_id, port, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
-    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)
     {
@@ -346,46 +350,46 @@ int GEvent::SendEventObj(int id, int ev, int val)
     cJSON *json_arr;
     cJSON *json_obj;
 
-    m_pServer->m_pLog->Add(100, "[SendEventObj] ass id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(90, "[SendEventObj] ass id: %i - ev: %i - val: %i", id, ev, val);
 
     json_arr = cJSON_CreateArray();
     sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port "
                     "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
                     "WHERE HW.Id = ASS.Dispositivo AND "
                     "ASS.Id = %i", id);
-    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
     if(rc == 0)
     {
         cJSON_ArrayForEach(json_obj, json_arr)
         {
             cJSON_PrintPreallocated(json_obj, query, 4095, 0);
-            m_pServer->m_pLog->Add(50, "[RESULT]: %s", query); 
+            m_pServer->m_pLog->Add(100, "[RESULT]: %s", query); 
 
             switch(ev)
             {
                 case 1:     /* On */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 1, Actualizar = 1 "
+                                    "SET Estado = 1 "
                                     "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
                     break;
                 case 2:     /* Off */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 0, Actualizar = 1 "
+                                    "SET Estado = 0 "
                                     "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
                     break;
                 case 3:     /* Switch */
                     /* Actualizo el estado en la base */
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = (1 - Estado), Actualizar = 1 "
+                                    "SET Estado = (1 - Estado) "
                                     "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
                     break;
                 case 4:     /* Pulso */
@@ -393,7 +397,7 @@ int GEvent::SendEventObj(int id, int ev, int val)
                     sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
                                     "SET Estado = %i "
                                     "WHERE Id = %i", 2 + val, id);
-                    m_pServer->m_pLog->Add(50, "[QUERY][%s]", query);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                     m_pDB->Query(NULL, query);
                     break;
                 default:
@@ -407,7 +411,7 @@ int GEvent::SendEventObj(int id, int ev, int val)
 
 int GEvent::SendEventGrp(int id, int ev, int val)
 {
-    m_pServer->m_pLog->Add(100, "[SendEventGrp] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(90, "[SendEventGrp] id: %i - ev: %i - val: %i", id, ev, val);
     m_pServer->m_pLog->Add(1, "[SendEventGrp] ERROR - Falta desarrollar");
 
     return 0;
@@ -415,7 +419,7 @@ int GEvent::SendEventGrp(int id, int ev, int val)
 
 int GEvent::SendEventFun(int id, int ev, int val)
 {
-    m_pServer->m_pLog->Add(100, "[SendEventFun] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(90, "[SendEventFun] id: %i - ev: %i - val: %i", id, ev, val);
     m_pServer->m_pLog->Add(1, "[SendEventFun] ERROR - Falta desarrollar");
 
     return 0;
@@ -423,7 +427,7 @@ int GEvent::SendEventFun(int id, int ev, int val)
 
 int GEvent::SendEventVar(int id, int ev, int val)
 {
-    m_pServer->m_pLog->Add(100, "[SendEventVar] id: %i - ev: %i - val: %i", id, ev, val);
+    m_pServer->m_pLog->Add(90, "[SendEventVar] id: %i - ev: %i - val: %i", id, ev, val);
     m_pServer->m_pLog->Add(1, "[SendEventVar] ERROR - Falta desarrollar");
 
     return 0;
