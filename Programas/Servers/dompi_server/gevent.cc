@@ -141,7 +141,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 }
                 /* Actualizo la tabla de Dispositivos */
                 sprintf(query, "UPDATE TB_DOM_PERIF "
-                                    "SET Ultimo_Ok = \"%lu\", "
+                                    "SET Ultimo_Ok = %lu, "
                                     "Direccion_IP = \"%s\", "
                                     "Estado = 1 "
                                     "WHERE MAC = \"%s\"",

@@ -2928,11 +2928,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 
 		}
-		/*
-		* Tareas asincrónicas
-		*
-		*
-		*/
+
+		/* ********************************************************************
+		 *   Actualizaciones de estados
+		 *
+		 *
+		 * *******************************************************************/
+
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
 		{
@@ -2993,6 +2995,60 @@ int main(/*int argc, char** argv, char** env*/void)
 			update_ass_status_name[0] = 0;
 		}
 
+		/* Controlo si hay que actualizar estados de Assign */
+		json_arr = cJSON_CreateArray();
+		sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
+								"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
+						"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
+						"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
+						"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) )");
+		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+		rc = pDB->Query(json_arr, query);
+		if(rc == 0)
+		{
+			/* Recorro el array */
+			cJSON_ArrayForEach(json_un_obj, json_arr)
+			{
+				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Objeto");
+				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
+				json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
+				json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo_ASS");
+				m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+				cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+				/* Me fijo si es estado o pulso */
+				if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
+				{
+					m_pServer->m_pLog->Add(90, "Call [dompi_hw_pulse_io][%s]", message);
+					rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
+					m_pServer->m_pLog->Add(90, "Resp [dompi_hw_pulse_io] [%s]", (const char*)call_resp.data);
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(90, "Call [dompi_hw_set_io][%s]", message);
+					rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
+					m_pServer->m_pLog->Add(90, "Resp [dompi_hw_set_io] [%s]", (const char*)call_resp.data);
+
+					/* Notifico a la nube */
+					m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
+					m_pServer->Post("dompi_ass_change", message, strlen(message));
+				}
+
+				if(rc == 0)
+				{
+					/* Borro la diferencia */
+					iEstado = atoi(json_Estado->valuestring);
+					if(iEstado != 1) iEstado = 0;
+					sprintf(query, "UPDATE TB_DOM_ASSIGN "
+									"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+									"WHERE Id = %s", iEstado, iEstado, json_ASS_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					pDB->Query(NULL, query);
+				}
+				m_pServer->Free(call_resp);
+			}
+		}
+		cJSON_Delete(json_arr);
+
 		if(load_system_config)
 		{
 			LoadSystemConfig();
@@ -3012,6 +3068,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->Free(call_resp);
 		}
 
+
+		/* ********************************************************************
+		 *   Actualizaciones de la nube
+		 *
+		 *
+		 * *******************************************************************/
 		/* Tomo la hora para los cálculos de abajo */
 		t = time(&t);
 		/* Actualizacion de objetos en la nube */
@@ -3038,6 +3100,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 
+		/* ********************************************************************
+		 *   Timer
+		 *
+		 *
+		 * *******************************************************************/
 		/* Recalculo del timer */
 		t = time(&t);
 		if(next_t > t)
@@ -3050,7 +3117,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* El timer ya está vencido */
 
 
-			m_pServer->m_pLog->Add(50, "Control de tareas programadas...");
+			m_pServer->m_pLog->Add(60, "Control de tareas programadas...");
 
 			/* Controlo si hay que actualizar configuración de dispositivo */
 			json_arr = cJSON_CreateArray();
@@ -3112,60 +3179,6 @@ int main(/*int argc, char** argv, char** env*/void)
 									"WHERE Id = %s", json_HW_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					pDB->Query(NULL, query);
-				}
-			}
-			cJSON_Delete(json_arr);
-
-			/* Controlo si hay que actualizar estados de Assign */
-			json_arr = cJSON_CreateArray();
-			sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-									"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
-							"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-							"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-							"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) )");
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(json_arr, query);
-			if(rc == 0)
-			{
-				/* Recorro el array */
-				cJSON_ArrayForEach(json_un_obj, json_arr)
-				{
-					json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Objeto");
-					json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
-					json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
-					json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo_ASS");
-					m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
-					cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-					/* Me fijo si es estado o pulso */
-					if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
-					{
-						m_pServer->m_pLog->Add(90, "Call [dompi_hw_pulse_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
-						m_pServer->m_pLog->Add(90, "Resp [dompi_hw_pulse_io] [%s]", (const char*)call_resp.data);
-					}
-					else
-					{
-						m_pServer->m_pLog->Add(90, "Call [dompi_hw_set_io][%s]", message);
-						rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-						m_pServer->m_pLog->Add(90, "Resp [dompi_hw_set_io] [%s]", (const char*)call_resp.data);
-
-						/* Notifico a la nube */
-						m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
-						m_pServer->Post("dompi_ass_change", message, strlen(message));
-					}
-
-					if(rc == 0)
-					{
-						/* Borro la diferencia */
-						iEstado = atoi(json_Estado->valuestring);
-						if(iEstado != 1) iEstado = 0;
-						sprintf(query, "UPDATE TB_DOM_ASSIGN "
-										"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-										"WHERE Id = %s", iEstado, iEstado, json_ASS_Id->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						pDB->Query(NULL, query);
-					}
-					m_pServer->Free(call_resp);
 				}
 			}
 			cJSON_Delete(json_arr);

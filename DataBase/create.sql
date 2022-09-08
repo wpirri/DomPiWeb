@@ -60,10 +60,16 @@ Dispositivo varchar(128) NOT NULL,
 Tipo integer DEFAULT 0,                         -- 0=RBPi, 1=Wifi HTTP
 Estado integer DEFAULT 0,                       -- 0=Disable
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
-Ultimo_Ok varchar(32),
+Ultimo_Ok integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
 Flags integer DEFAULT 0
 );
+
+# INSERT INTO TB_DOM_PERIF_NEW (Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags)
+#   SELECT Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags FROM TB_DOM_PERIF;
+# ALTER TABLE TB_DOM_PERIF RENAME TO TB_DOM_PERIF_BORRAR;
+# ALTER TABLE TB_DOM_PERIF_NEW RENAME TO TB_DOM_PERIF;
+# DROP TABLE TB_DOM_PERIF_BORRAR;
 
 CREATE TABLE TB_DOM_GRUPO_VISUAL (
 Id integer primary key,
