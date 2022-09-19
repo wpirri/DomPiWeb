@@ -33,11 +33,17 @@ using namespace std;
 #include <string.h>
 #include <math.h>
 
+/* para readdir */
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <cjson/cJSON.h>
 #include "config.h"
+#include "modulo_gsm.h"
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
+ModGSM* pModem;
 
 int internal_timeout;
 int external_timeout;
@@ -46,6 +52,7 @@ char gsm_port[256];
 char sms_pool_files[256];
 
 void OnClose(int sig);
+void ScanSMS(const char *path);
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -75,7 +82,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_gsm");
-	m_pServer->m_pLog->Add(1, "Iniciando interface de masajeria SMS");
+	m_pServer->m_pLog->Add(1, "Iniciando interface de mensajeria SMS");
 
 	pConfig = new DPConfig("/etc/dompiweb.config");
 
@@ -97,11 +104,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	sms_pool_files[0] = 0;
 	pConfig->GetParam("SMS_POOL_FILES", sms_pool_files);
 
-
-
 	CGMInitData gminit;
 
 	m_pServer->Suscribe("dompi_send_sms", GM_MSG_TYPE_CR);
+
+	pModem = new ModGSM(m_pServer, gsm_port);
+
+	m_pServer->m_pLog->Add(1, "Soporte SMS / GSM Inicializado.");
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
@@ -109,7 +118,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(rc > 0)
 		{
 			message[message_len] = 0;
-			m_pServer->m_pLog->Add(50, "%s:(Q)[%s]", fn, message);
+			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 
 			/* ************************************************************* *
 			 *
@@ -129,23 +138,35 @@ int main(/*int argc, char** argv, char** env*/void)
 					f = fopen(str, "w");
 					if(f)
 					{
-						sprintf(str, "SMS:%s:%s", json_msg_to->valuestring, json_msg_txt->valuestring);
-						fwrite(str, sizeof(char), strlen(str), f);
+						sprintf(str, "SMS:%s:%s\n", json_msg_to->valuestring, json_msg_txt->valuestring);
+						if(fwrite(str, sizeof(char), strlen(str), f) != strlen(str))
+						{
+							/* Error */
+							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"ERROR: Al escribir archivo de mensaje.\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_send_sms] ERROR Al escribir archivo de mensaje");
+						}
 						fclose(f);
+						/* OK */
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
-					/* OK */
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					else
+					{
+						/* Error */
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"ERROR: Al crear archivo de mensaje.\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_send_sms] ERROR Al crear archivo de mensaje");
+					}
 				}
 				else
 				{
 					/* El mensaje vino sin HWID */
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan SmsTo y/o SmsTxt\"}}");
+					m_pServer->m_pLog->Add(1, "[dompi_send_sms] ERROR Faltan SmsTo y/o SmsTxt");
 				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_port_config]");
 				}
 			}
 
@@ -157,7 +178,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else
 			{
 				m_pServer->m_pLog->Add(50, "GME_SVC_NOTFOUND");
-				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
+				m_pServer->Resp((void*)0, 0, GME_SVC_NOTFOUND);
 			}
 		}
 		else
@@ -168,6 +189,12 @@ int main(/*int argc, char** argv, char** env*/void)
 
 
 		}
+		pModem->Task();
+
+		/* Busco mensajes pendientes de envío */
+		ScanSMS(sms_pool_files);
+
+
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
 	OnClose(0);
@@ -177,9 +204,92 @@ int main(/*int argc, char** argv, char** env*/void)
 void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
-
 	m_pServer->UnSuscribe("dompi_send_sms", GM_MSG_TYPE_CR);
+	pModem->Close();
 
+	delete pModem;
 	delete m_pServer;
 	exit(0);
+}
+
+void ScanSMS(const char *path)
+{
+    DIR *dir;
+    struct dirent *dir_ent;
+    FILE *f;
+    char buffer[4096];
+	char filename[FILENAME_MAX+1];
+	char filename_rename[FILENAME_MAX+1];
+    char *to, *msg;
+	int rc;
+
+    dir = opendir(path);
+    if( !dir)
+    {
+        if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error al abrir directorio [%s]", path);
+        return;
+    }
+    while( (dir_ent = readdir(dir)) )
+    {
+        if(dir_ent->d_type == DT_REG && dir_ent->d_name[0] == 's' && dir_ent->d_name[1] == 'm' && dir_ent->d_name[2] == 's')
+        {
+            if(m_pServer) m_pServer->m_pLog->Add(90, "[ScanSMS] Procesando: [%s]", dir_ent->d_name);
+			if( *(path + strlen(path) - 1) != '/' )
+			{
+				sprintf(filename, "%s/%s", path, dir_ent->d_name);
+			}
+			else
+			{
+				sprintf(filename, "%s%s", path, dir_ent->d_name);
+			}
+            if(m_pServer) m_pServer->m_pLog->Add(90, "[ScanSMS] Procesando: [%s]", filename);
+			f = fopen(filename, "r");
+			if( !f )
+			{
+				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error al abrir archivo [%s]", filename);
+				sprintf(filename_rename, "error-%s", filename);
+				rename(filename, filename_rename);
+				break;
+			}
+			rc = fread(buffer, sizeof(char), 4096, f);
+			if(rc == 0)
+			{
+				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error al leer archivo [%s]", filename);
+				fclose(f);
+				sprintf(filename_rename, "error-%s", filename);
+				rename(filename, filename_rename);
+				break;
+			}
+			fclose(f);
+			if(buffer[0] != 'S' || buffer[1] != 'M' || buffer[2] != 'S' || buffer[3] != ':')
+			{
+				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error parseando archivo [%s]", filename);
+				sprintf(filename_rename, "error-%s", filename);
+				rename(filename, filename_rename);
+				break;
+			}
+			to = &buffer[4];
+			if( !strchr(to, ':'))
+			{
+				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error parseando archivo [%s]", filename);
+				sprintf(filename_rename, "error-%s", filename);
+				rename(filename, filename_rename);
+				break;
+			}
+			msg = strchr(to, ':');
+			*msg = 0;
+			msg++;
+			if(strchr(msg, '\n')) *(strchr(msg, '\n')) = 0;
+			if(strchr(msg, '\r')) *(strchr(msg, '\r')) = 0;
+			if(m_pServer) m_pServer->m_pLog->Add(90, "[ScanSMS] SMS To: [%s] Msg: [%s]", to, msg);
+			/* Envio SMS */
+
+
+
+
+			/* Borro archivo temporal */
+			remove(filename);
+        }
+    }
+    closedir(dir);
 }

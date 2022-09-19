@@ -1,0 +1,5 @@
+gdb
+
+file /usr/local/sbin/dompi_gsm
+set args -n dompi_gsm
+

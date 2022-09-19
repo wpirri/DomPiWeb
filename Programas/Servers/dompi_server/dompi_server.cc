@@ -2139,7 +2139,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			/* ****************************************************************
-			*		dompi_cmdline
+			*		dompi_cmdline - input de domcli
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_cmdline"))
 			{
@@ -2179,14 +2179,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							m_pServer->m_pLog->Add(90, "Call [dompi_send_sms][%s]", message);
 							rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
 							m_pServer->m_pLog->Add(90, "Resp [dompi_send_sms][%s]", (const char*)call_resp.data);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
+							strcpy(message, (const char*)call_resp.data);
 							m_pServer->Free(call_resp);
 						}
 						else if( !strcmp(comando, "encender") )

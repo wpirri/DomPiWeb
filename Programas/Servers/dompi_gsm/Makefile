@@ -3,7 +3,7 @@
 INCLUDE=-I../../Common/
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto
-OBJECTS=dompi_gsm.o config.o
+OBJECTS=dompi_gsm.o config.o modulo_gsm.o serial.o
 OUTPUT=dompi_gsm
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -18,6 +18,12 @@ dompi_gsm.o: dompi_gsm.cc
 
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
+
+serial.o: ../../Common/serial.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/serial.cc
+
+modulo_gsm.o: modulo_gsm.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c modulo_gsm.cc
 
 dompi_gsm: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
