@@ -46,6 +46,10 @@ public:
     int Open(const char* port);
     void Close();
 
+    int ReadySMS( void );
+    int ReadyTCP( void );
+    int ReadyUDP( void );
+
     int SendSMS(const char* dest, const char* msg);
     int SendTCP(const char* host, unsigned port, const char* msg);
     int SendUDP(const char* host, unsigned port, const char* msg);
@@ -64,8 +68,11 @@ private:
     int QueryModem(const char* wait_for, const char* fmt, ...);
     int QueryModem(const char* wait_for, char* recv, int recv_max, const char* fmt, ...);
     void CheckUnsol(void);
+    void CheckSMS( void );
     void GetSMS(int id);
     void GetModemStatus(void);
+    void SMSDelRead(void);
+    void SMSDelSent(void);
 
 };
 

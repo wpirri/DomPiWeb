@@ -184,13 +184,13 @@ void ModGSM::Close()
 int ModGSM::QueryModem(const char* wait_for, const char* fmt, ...)
 {
     va_list arg;
-    int rc;
+    char buffer[4096];
 
     va_start(arg, fmt);
-    rc = QueryModem(wait_for, nullptr, 0, fmt, arg);
+    vsprintf(buffer, fmt, arg);
     va_end(arg);
 
-    return rc;
+    return QueryModem(wait_for, nullptr, 0, buffer);
 }
 
 int ModGSM::QueryModem(const char* wait_for, char* recv, int recv_max, const char* fmt, ...)
@@ -200,15 +200,15 @@ int ModGSM::QueryModem(const char* wait_for, char* recv, int recv_max, const cha
     time_t t, t_end;
     int len;
 
+    va_start(arg, fmt);
+    vsprintf(buffer, fmt, arg);
+    va_end(arg);
+
     if(m_modem_status < MODEM_STATUS_OPEN || !m_pSerial)
     {
         if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] QueryModem: Modem en estado invalido");
         return (-1);
     }
-
-    va_start(arg, fmt);
-    vsprintf(buffer, fmt, arg);
-    va_end(arg);
 
     if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] QueryModem: >> [%s]", buffer);
 
@@ -269,6 +269,7 @@ void ModGSM::Task( void )
             {
                 m_get_status_time = t + 30;
                 GetModemStatus();
+                CheckSMS();
             }
             CheckUnsol();
             break;
@@ -319,6 +320,88 @@ void ModGSM::GetSMS(int id)
 
     }
 
+}
+
+/*
+AT+CMG
+
++CMGL: 4,"REC UNREAD","01133926320",,"22/09/22,12:47:58-12",Prueba input 1
+
+OK
+*/
+void ModGSM::CheckSMS( void )
+{
+    char buffer[4096];
+    char *p;
+    char from[32];
+    char msg[4096];
+    int i;
+    int borrar_leidos = 0;
+
+    if(!m_pSerial) return;
+
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMS");
+    /* AT+CMGR=n */
+    if(QueryModem("OK", buffer, 4096, "AT+CMGL") > 0)
+    {
+        if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] CheckSMS: Mensaje recibido [%s]", buffer);
+        p = strstr(buffer, "+CMGL:");
+        while(p)
+        {
+            borrar_leidos = 1;
+            /* Salto al número de origen, salto 2 ',' y la " */
+            i = 2;
+            while(i && *p)
+            {
+                if(*p == ',') i--;
+                p++;
+            }
+            if(!(*p)) break;
+            p++;
+            /* Copio la parte numerica */
+            i = 0;
+            while(*p && *p >= '0' && *p <= '9' && i < (sizeof(from)-1))
+            {
+                from[i] = *p;
+                i++;
+                p++;
+            }
+            from[i] = 0;
+            /* Busco el inicio del mensaje, salto 4 comas */
+            i = 4;
+            while(i && *p)
+            {
+                if(*p == ',') i--;
+                p++;
+            }
+            if(!(*p)) break;
+            /* Copio el texto hasta el final */
+            i = 0;
+            while(*p && *p != 0x0A && *p !=0x0D && i < (sizeof(msg)-1))
+            {
+                if(*p == ',')
+                {
+                    if( !memcmp(p, ",+CMGL:", 7)) break;
+                }
+                msg[i] = *p;
+                i++;
+                p++;
+            }
+            msg[i] = 0;
+
+            if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
+
+
+
+
+            p = strstr(p, "+CMGL:");
+        }
+    }
+
+    if(borrar_leidos)
+    {
+        SMSDelRead();
+    }
 }
 
 void ModGSM::GetModemStatus( void )
@@ -378,6 +461,7 @@ void ModGSM::GetModemStatus( void )
 int ModGSM::SendSMS(const char* dest, const char* msg)
 {
     if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] SendSMS dest:[%s] msg:[%s]", dest, msg);
+    SMSDelSent();
     do
     {
         if(QueryModem(">", "AT+CMGS=\"%s\"", dest) < 0) break;
@@ -399,4 +483,32 @@ int ModGSM::SendUDP(const char* host, unsigned port, const char* msg)
 {
 
     return (-1);
+}
+
+int ModGSM::ReadySMS( void )
+{
+    if(m_modem_status >= MODEM_STATUS_SMS_READY) return 1;
+    return 0;
+}
+
+int ModGSM::ReadyTCP( void )
+{
+    if(m_modem_status >= MODEM_STATUS_GSM_READY) return 1;
+    return 0;
+}
+
+int ModGSM::ReadyUDP( void )
+{
+    if(m_modem_status >= MODEM_STATUS_GSM_READY) return 1;
+    return 0;
+}
+
+void ModGSM::SMSDelRead(void)
+{
+    QueryModem("OK", "AT+CMGDA=\"DEL READ\"");
+}
+
+void ModGSM::SMSDelSent(void)
+{
+    QueryModem("OK", "AT+CMGDA=\"DEL SENT\"");
 }

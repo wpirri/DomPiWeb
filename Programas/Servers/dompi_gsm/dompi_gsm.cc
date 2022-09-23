@@ -41,6 +41,8 @@ using namespace std;
 #include "config.h"
 #include "modulo_gsm.h"
 
+#define SMS_TEMP_FILE "sms.tmp"
+
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 ModGSM* pModem;
@@ -63,6 +65,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	time_t t;
 	FILE *f;
+	char filename[FILENAME_MAX+1];
+	char filename_tmp[FILENAME_MAX+1];
 
     cJSON *json_obj;
     cJSON *json_msg_to;
@@ -134,8 +138,17 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_msg_to && json_msg_txt)
 				{
-					sprintf(str, "%ssms-%10lu", sms_pool_files, t);
-					f = fopen(str, "w");
+					if( sms_pool_files[strlen(sms_pool_files) - 1] != '/' )
+					{
+						sprintf(filename, "%s/sms-%10lu", sms_pool_files, t);
+						sprintf(filename_tmp, "%s/tmp-%10lu", sms_pool_files, t);
+					}
+					else
+					{
+						sprintf(filename, "%ssms-%10lu", sms_pool_files, t);
+						sprintf(filename_tmp, "%stmp-%10lu", sms_pool_files, t);
+					}
+					f = fopen(filename_tmp, "w");
 					if(f)
 					{
 						sprintf(str, "SMS:%s:%s\n", json_msg_to->valuestring, json_msg_txt->valuestring);
@@ -146,6 +159,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							m_pServer->m_pLog->Add(1, "[dompi_send_sms] ERROR Al escribir archivo de mensaje");
 						}
 						fclose(f);
+						rename(filename_tmp, filename);
 						/* OK */
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
@@ -192,7 +206,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		pModem->Task();
 
 		/* Busco mensajes pendientes de envío */
-		ScanSMS(sms_pool_files);
+		if(pModem->ReadySMS()) ScanSMS(sms_pool_files);
 
 
 	}
@@ -247,7 +261,14 @@ void ScanSMS(const char *path)
 			if( !f )
 			{
 				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error al abrir archivo [%s]", filename);
-				sprintf(filename_rename, "error-%s", filename);
+				if( *(path + strlen(path) - 1) != '/' )
+				{
+					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+				}
+				else
+				{
+					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+				}
 				rename(filename, filename_rename);
 				break;
 			}
@@ -256,7 +277,14 @@ void ScanSMS(const char *path)
 			{
 				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error al leer archivo [%s]", filename);
 				fclose(f);
-				sprintf(filename_rename, "error-%s", filename);
+				if( *(path + strlen(path) - 1) != '/' )
+				{
+					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+				}
+				else
+				{
+					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+				}
 				rename(filename, filename_rename);
 				break;
 			}
@@ -264,7 +292,14 @@ void ScanSMS(const char *path)
 			if(buffer[0] != 'S' || buffer[1] != 'M' || buffer[2] != 'S' || buffer[3] != ':')
 			{
 				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error parseando archivo [%s]", filename);
-				sprintf(filename_rename, "error-%s", filename);
+				if( *(path + strlen(path) - 1) != '/' )
+				{
+					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+				}
+				else
+				{
+					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+				}
 				rename(filename, filename_rename);
 				break;
 			}
@@ -272,7 +307,14 @@ void ScanSMS(const char *path)
 			if( !strchr(to, ':'))
 			{
 				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error parseando archivo [%s]", filename);
-				sprintf(filename_rename, "error-%s", filename);
+				if( *(path + strlen(path) - 1) != '/' )
+				{
+					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+				}
+				else
+				{
+					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+				}
 				rename(filename, filename_rename);
 				break;
 			}
@@ -283,12 +325,31 @@ void ScanSMS(const char *path)
 			if(strchr(msg, '\r')) *(strchr(msg, '\r')) = 0;
 			if(m_pServer) m_pServer->m_pLog->Add(90, "[ScanSMS] SMS To: [%s] Msg: [%s]", to, msg);
 			/* Envio SMS */
-
-
-
-
-			/* Borro archivo temporal */
-			remove(filename);
+			if(pModem->SendSMS(to, msg) != 0)
+			{
+				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error enviando mensaje SMS To: [%s] Msg: [%s]", to, msg);
+				if( *(path + strlen(path) - 1) != '/' )
+				{
+					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+				}
+				else
+				{
+					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+				}
+				rename(filename, filename_rename);
+				break;
+			}
+			/* Renombro archivo temporal */
+			if( *(path + strlen(path) - 1) != '/' )
+			{
+				sprintf(filename_rename, "%s/send-%s", path, dir_ent->d_name);
+			}
+			else
+			{
+				sprintf(filename_rename, "%ssend-%s", path, dir_ent->d_name);
+			}
+            if(m_pServer) m_pServer->m_pLog->Add(100, "[ScanSMS] Renombrando: [%s -> %s]", filename, filename_rename);
+			rename(filename, filename_rename);
         }
     }
     closedir(dir);
