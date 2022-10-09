@@ -24,14 +24,41 @@ Cloud_Host_1_Proto varchar(8),
 Cloud_Host_2_Address varchar(64),
 Cloud_Host_2_Port integer DEFAULT 0,
 Cloud_Host_2_Proto varchar(8),
+Wifi_AP1 varchar(33),
+Wifi_AP1_pass varchar(65),
+Wifi_AP2 varchar(33),
+Wifi_AP2_pass varchar(65),
+Wifi_Report integer DEFAULT 0,
+Gprs_APN_auto integer DEFAULT 0,
+Gprs_APN varchar(33),
+Gprs_DNS1 varchar(16),
+Gprs_DNS2 varchar(16),
+Gprs_user varchar(17),
+Gprs_pass varchar(17),
+Gprs_Auth integer DEFAULT 0,		-- 1:PAP 2:CHAP 3:PAP/CHAP
+Send_Method integer DEFAULT 0,	-- 1: First Wifi 2: First GPRS 3: Paralell
 Planta1 varchar(256),
 Planta2 varchar(256),
 Planta3 varchar(256),
 Planta4 varchar(256),
 Planta5 varchar(256),
-Modem_port varchar(16),
 Flags integer DEFAULT 0
 );
+
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN wifi_ap1 varchar(33);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN wifi_ap1_pass varchar(65);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN wifi_ap2 varchar(33);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN wifi_ap2_pass varchar(65);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN wifi_report integer DEFAULT 0;
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_apn_auto integer DEFAULT 0;
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_apn varchar(33);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_dns1 varchar(16);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_dns2 varchar(16);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_user varchar(17);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_pass varchar(17);
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN gprs_auth integer DEFAULT 0;		-- 1:PAP 2:CHAP 3:PAP/CHAP
+# ALTER TABLE TB_DOM_CONFIG ADD COLUMN send_method integer DEFAULT 0;	-- 1: First Wifi 2: First GPRS 3: Paralell
+
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
 Id integer primary key,
