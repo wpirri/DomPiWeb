@@ -338,6 +338,25 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj)
     return RequestEnqueue(raddr, buffer);
 }
 
+int Dom32IoWifi::SetTime(const char *raddr)
+{
+    time_t t;
+    struct tm *tm_time;
+    char buffer[BUFFER_LEN+1];
+    char data[1024];
+
+    t = time(&t);
+    tm_time = localtime(&t);
+
+    sprintf(data, "TIME=%04i/%02i/%02i %02i:%02i:%02i",
+        tm_time->tm_year, tm_time->tm_mon, tm_time->tm_mday,
+        tm_time->tm_hour, tm_time->tm_min, tm_time->tm_sec);
+
+    sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
+    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion Fecha y Hora para %s [%s]", raddr, buffer);
+    return RequestEnqueue(raddr, buffer);
+}
+
 int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj)
 {
     char buffer[BUFFER_LEN+1];
@@ -565,11 +584,11 @@ void Dom32IoWifi::Task( void )
                 if(RequestDequeue(m_queue_list[i].addr, p) == 0)
                 {
                     QueueDel(m_queue_list[i].id);
-                    m_queue_list[i].delay = 3;
+                    m_queue_list[i].delay = 1;
                 }
                 else
                 {
-                    m_queue_list[i].delay = 30;
+                    m_queue_list[i].delay = 1;
                 }
             }
         }
@@ -616,7 +635,7 @@ int Dom32IoWifi::RequestDequeue(const char* dest, const char* data)
     char buffer[WIFI_MSG_MAX_LEN];
 
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", data);
-    if(q.Query(dest, m_port, data, buffer, WIFI_MSG_MAX_LEN, 3000) > 0)
+    if(q.Query(dest, m_port, data, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         return HttpRespCode(buffer);

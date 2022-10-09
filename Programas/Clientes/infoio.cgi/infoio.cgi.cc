@@ -41,7 +41,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMError gmerror;
   CGMBuffer query;
   CGMBuffer response;
-  char buffer[4096];
   DPConfig *pConfig;
   STRFunc Str;
   cJSON *json_request;
@@ -183,15 +182,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
     json_request = cJSON_Parse(response.C_Str());
 
-    // cJSON_ArrayForEach(element, array)
-
-    strcpy(buffer, "msg=FALTA JSON->POST");
-
-    /* Contenido de la página */
-    fprintf(stdout, "%s\r\n", buffer);
+    fprintf(stdout, "%s\r\n", response.Data());
     if(trace)
     {
-      syslog(LOG_DEBUG, "%s\r\n", buffer);
+      syslog(LOG_DEBUG, "%s\r\n", response.Data());
     }
     cJSON_Delete(json_request);
   }

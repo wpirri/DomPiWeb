@@ -124,6 +124,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_set_time_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
@@ -395,6 +396,42 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
+				}
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_hw_set_time_config"))
+			{
+				if(json_Direccion_IP && json_Tipo_HW)
+				{
+					if(atoi(json_Tipo_HW->valuestring) == 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok (No es necesario)\"}}");
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1)
+					{	
+						/* Interface Vía IP mensajeria HTTP */
+						/* Envío de configuración a WiFi */
+						if(pD32W->SetTime(json_Direccion_IP->valuestring) == 0)
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						}
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error al encolar mensaje\"}}");
+						}
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
+				}
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_io]");
 				}
 			}
 			/* ************************************************************* *

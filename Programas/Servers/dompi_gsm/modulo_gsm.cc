@@ -84,9 +84,10 @@ using namespace std;
 #include <cjson/cJSON.h>
 #include <math.h>
 
-ModGSM::ModGSM()
+ModGSM::ModGSM(const char* tempdir)
 {
     m_port[0] = 0;
+    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = nullptr;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
@@ -94,9 +95,10 @@ ModGSM::ModGSM()
     m_get_status_time = 0;
 }
 
-ModGSM::ModGSM(CGMServerWait *pServer)
+ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer)
 {
     m_port[0] = 0;
+    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
@@ -104,10 +106,11 @@ ModGSM::ModGSM(CGMServerWait *pServer)
     m_get_status_time = 0;
 }
 
-ModGSM::ModGSM(CGMServerWait *pServer, const char* port)
+ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port)
 {
     if(port) strcpy(m_port, port);
     else m_port[0] = 0;
+    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
@@ -160,9 +163,7 @@ int ModGSM::Open()
     }
 
     if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error inicialiando modem en port [%s]", m_port);
-    m_modem_status = MODEM_STATUS_ERROR;
-    delete m_pSerial;
-    m_pSerial = nullptr;
+    ModemError();
     return (-1);
 }
 
@@ -306,11 +307,18 @@ void ModGSM::CheckUnsol(void)
 void ModGSM::GetSMS(int id)
 {
     char buffer[4096];
+    int rc;
     if(!m_pSerial) return;
 
     if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS Id:[%i]", id);
     /* AT+CMGR=n */
-    if(QueryModem("OK", buffer, 4096, "AT+CMGR=%i", id) > 0)
+    rc = QueryModem("OK", buffer, 4096, "AT+CMGR=%i", id);
+    if(rc < 0)
+    {
+        ModemError();
+        return;
+    }
+    else if(rc > 0)
     {
         if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS: Mesaje recibido [%s]", buffer);
 
@@ -337,12 +345,19 @@ void ModGSM::CheckSMS( void )
     char msg[4096];
     int i;
     int borrar_leidos = 0;
+    int rc;
 
     if(!m_pSerial) return;
 
     if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMS");
     /* AT+CMGR=n */
-    if(QueryModem("OK", buffer, 4096, "AT+CMGL") > 0)
+    rc = QueryModem("OK", buffer, 4096, "AT+CMGL");
+    if(rc < 0)
+    {
+        ModemError();
+        return;
+    }
+    else if(rc > 0)
     {
         if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] CheckSMS: Mensaje recibido [%s]", buffer);
         p = strstr(buffer, "+CMGL:");
@@ -360,7 +375,7 @@ void ModGSM::CheckSMS( void )
             p++;
             /* Copio la parte numerica */
             i = 0;
-            while(*p && *p >= '0' && *p <= '9' && i < (sizeof(from)-1))
+            while(*p && ( (*p >= '0' && *p <= '9') || *p == '+' ) && i < (sizeof(from)-1))
             {
                 from[i] = *p;
                 i++;
@@ -390,7 +405,7 @@ void ModGSM::CheckSMS( void )
             msg[i] = 0;
 
             if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
-
+            SaveRecvSMS(from, msg);
 
 
 
@@ -407,11 +422,25 @@ void ModGSM::CheckSMS( void )
 void ModGSM::GetModemStatus( void )
 {
     char buffer[256];
+    int rc;
+
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] GetModemStatus");
 
     if(!m_pSerial) return;
 
-    QueryModem("OK", "AT+CREG?");
-    if(QueryModem("OK", buffer, 256, "AT+CSQ") > 0)
+    rc = QueryModem("OK", "AT+CREG?");
+    if(rc < 0)
+    {
+        ModemError();
+        return;
+    }
+    rc = QueryModem("OK", buffer, 256, "AT+CSQ");
+    if(rc < 0)
+    {
+        ModemError();
+        return;
+    }
+    else if(rc > 0)
     {
         /* Respuesta de AT+CSQ - viene con info de nivel de se?al - +CSQ: 12,0 */
         if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetModemStatus: [%s]", buffer);
@@ -470,6 +499,7 @@ int ModGSM::SendSMS(const char* dest, const char* msg)
         return 0;
     } while (0);
     if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error en SendSMS dest:[%s] msg:[%s]", dest, msg);
+    ModemError();
     return (-1);
 }
 
@@ -505,10 +535,66 @@ int ModGSM::ReadyUDP( void )
 
 void ModGSM::SMSDelRead(void)
 {
-    QueryModem("OK", "AT+CMGDA=\"DEL READ\"");
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] SMSDelRead");
+    if(QueryModem("OK", "AT+CMGD=1,1") < 0) ModemError();
 }
 
 void ModGSM::SMSDelSent(void)
 {
-    QueryModem("OK", "AT+CMGDA=\"DEL SENT\"");
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] SMSDelSent");
+    if(QueryModem("OK", "AT+CMGD=1,2") < 0) ModemError();
+}
+
+void ModGSM::ModemError(void)
+{
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] ModemError");
+    m_modem_status = MODEM_STATUS_ERROR;
+    delete m_pSerial;
+    m_pSerial = nullptr;
+}
+
+int ModGSM::SaveRecvSMS(const char* from, const char* msg)
+{
+    FILE *f;
+    char filename[FILENAME_MAX];
+    char filename_tmp[FILENAME_MAX];
+    time_t t;
+    char sms_buffer[1024];
+
+    t = time(&t);
+
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] SaveRecvSMS");
+
+    if( m_temp_dir[strlen(m_temp_dir) - 1] != '/' )
+    {
+        sprintf(filename, "%s/recv-sms-%10lu", m_temp_dir, t);
+        sprintf(filename_tmp, "%s/recv-tmp-%10lu", m_temp_dir, t);
+    }
+    else
+    {
+        sprintf(filename, "%srecv-sms-%10lu", m_temp_dir, t);
+        sprintf(filename_tmp, "%srecv-tmp-%10lu", m_temp_dir, t);
+    }
+    f = fopen(filename_tmp, "w");
+    if(f)
+    {
+        sprintf(sms_buffer, "SMS:%s:%s\n", from, msg);
+        if(fwrite(sms_buffer, sizeof(char), strlen(sms_buffer), f) != strlen(sms_buffer))
+        {
+            fclose(f);
+            /* Error */
+            if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] ERROR Al escribir archivo de mensaje entrante [%s]", filename_tmp);
+            return (-1);
+        }
+        /* OK */
+        fclose(f);
+        rename(filename_tmp, filename);
+        return 0;
+    }
+    else
+    {
+        /* Error */
+        if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] ERROR Al crear archivo de mensaje entrante [%s]", filename_tmp);
+        return (-1);
+    }
 }

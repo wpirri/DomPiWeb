@@ -97,7 +97,7 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "config.h"
-#include "csqlite.h"
+#include "cdb.h"
 #include "gevent.h"
 #include "strfunc.h"
 
@@ -105,12 +105,13 @@ using namespace std;
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
-CSQLite *pDB;
+CDB *pDB;
 GEvent *pEV;
 cJSON *json_System_Config;
 int load_system_config;
 int update_system_config;
 int internal_timeout;
+time_t last_daily;
 
 const char *system_columns[] = {
 	"Id",
@@ -127,7 +128,19 @@ const char *system_columns[] = {
 	"Planta3",
 	"Planta4",
 	"Planta5",
-	"Modem_port",
+	"Wifi_AP1",
+	"Wifi_AP1_pass",
+	"Wifi_AP2",
+	"Wifi_AP2_pass",
+	"Wifi_Report",
+	"Gprs_APN_auto",
+	"Gprs_APN",
+	"Gprs_DNS1",
+	"Gprs_DNS2",
+	"Gprs_user",
+	"Gprs_pass",
+	"Gprs_Auth",
+	"Send_Method",
 	"Flags",
 	0};
 
@@ -169,6 +182,7 @@ const char *assign_columns[] = {
 	"Port",
 	"Tipo",
 	"Estado",
+	"Estado_HW",
 	"Icono0",
 	"Icono1",
 	"Grupo_Visual",
@@ -220,6 +234,34 @@ const char *auto_columns[] = {
 		"Actualizar",
 		"Flags",
 		0};
+
+void RunDaily( void )
+{
+	m_pServer->m_pLog->Add(100, "[Daily] Mantenimiento de la base de datos.");
+	if(pDB) pDB->Manten();
+
+
+
+}
+
+void CheckDaily()
+{
+	time_t now;
+	struct tm *tmNow, *tmLastDaily;
+	int day_now, day_last;
+
+	now = time(&now);
+	tmNow = localtime(&now);
+	day_now = tmNow->tm_mday;
+	tmLastDaily = localtime(&last_daily);
+	day_last = tmLastDaily->tm_mday;
+
+	if(day_now != day_last)
+	{
+		RunDaily();
+		last_daily = now;
+	}
+}
 
 int ExisteColumna(const char* columna, const char** lista)
 {
@@ -273,6 +315,7 @@ int power2(int exp)
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
 char cli_help[] = 	"-------------------------------------------------------------------------------\r\n"
 					"Comandos disponibles:\r\n"
+					"  listar <tipo>\r\n"
 					"  encender <objeto>\r\n"
 					"  apagar <objeto>\r\n"
 					"  cambiar <objeto>\r\n"
@@ -281,11 +324,15 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  actualizar <dispositivo>, [modulo]\r\n"
 					"  modulo <dispositivo>, [modulo]\r\n"
 					"  manten\r\n"
+					"  sms <numero>, <mensaje>\r\n"
 					"  help\r\n"
-					"  * objeto: Nombre de un objeto existente.\r\n"
+					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
+					"    objeto: Nombre de un objeto existente.\r\n"
 					"    dispositivo: Nombre de un dispositivo existente.\r\n"
-					"    modulo: config, wifi, porta, portb o portc\r\n"
+					"    modulo: config, wifi, porta, portb o portc.\r\n"
 					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
+					"    numero: Numero de telefono destino del mensaje.\r\n"
+					"    mensaje: Mensaje a enviar.\r\n"
 					"-------------------------------------------------------------------------------\r\n";
 
 void OnClose(int sig);
@@ -368,6 +415,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	update_ass_status_name[0] = 0;
 	load_system_config = 1;
 	update_system_config = 0;
+	last_daily = 0;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -396,7 +444,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	}
 
 	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
-	pDB = new CSQLite(db_filename);
+	pDB = new CDB(db_filename);
 	if(pDB->Open() != 0)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR al conectar con la base de datos");
@@ -2165,9 +2213,31 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
 						}
+						else if( !strcmp(comando, "listar") )
+						{
+							if( !memcmp(objeto, "dis", 3))
+							{
+								
+							}
+							else if( !memcmp(objeto, "obj", 3))
+							{
+								
+							}
+							else if( !memcmp(objeto, "gru", 3))
+							{
+								
+							}
+							else if( !memcmp(objeto, "eve", 3))
+							{
+								
+							}
+							
+						}
 						else if( !strcmp(comando, "manten") )
 						{
 							/* TODO: Hacer algún mantenimiento si es necesario */
+							m_pServer->m_pLog->Add(100, "[manten] Mantenimiento de la base de datos.");
+							if(pDB) pDB->Manten();
 
 						}
 						else if( !strcmp(comando, "sms") )
@@ -3107,6 +3177,11 @@ int main(/*int argc, char** argv, char** env*/void)
 		}
 		else
 		{
+			/* Tareas diarias */
+			CheckDaily();
+
+
+
 			/* El timer ya está vencido */
 
 
@@ -3116,7 +3191,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			json_arr = cJSON_CreateArray();
 			sprintf(query, "SELECT * "
 							"FROM TB_DOM_PERIF "
-							"WHERE Actualizar <> 0");
+							"WHERE Actualizar <> 0 "
+							"ORDER BY Id");
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(json_arr, query);
 			if(rc == 0)

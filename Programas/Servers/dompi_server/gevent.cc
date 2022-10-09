@@ -86,7 +86,7 @@ using namespace std;
 
 #include "strfunc.h"
 
-GEvent::GEvent(CSQLite *pDB, CGMServerWait *pServer)
+GEvent::GEvent(CDB *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
     m_pServer = pServer;
@@ -229,6 +229,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         }
                         i++;
                     }
+                }
+                else
+                {
+                    /* TODO: Si no se informaron cambios */
+
+
+
                 }
                 cJSON_Delete(json_arr);
                 cJSON_Delete(json_obj);

@@ -52,6 +52,7 @@ int external_timeout;
 char str[256];
 char gsm_port[256];
 char sms_pool_files[256];
+char sms_buffer[1024];
 
 void OnClose(int sig);
 void ScanSMS(const char *path);
@@ -112,7 +113,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->Suscribe("dompi_send_sms", GM_MSG_TYPE_CR);
 
-	pModem = new ModGSM(m_pServer, gsm_port);
+	pModem = new ModGSM(sms_pool_files, m_pServer, gsm_port);
 
 	m_pServer->m_pLog->Add(1, "Soporte SMS / GSM Inicializado.");
 
@@ -151,8 +152,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					f = fopen(filename_tmp, "w");
 					if(f)
 					{
-						sprintf(str, "SMS:%s:%s\n", json_msg_to->valuestring, json_msg_txt->valuestring);
-						if(fwrite(str, sizeof(char), strlen(str), f) != strlen(str))
+						sprintf(sms_buffer, "SMS:%s:%s\n", json_msg_to->valuestring, json_msg_txt->valuestring);
+						if(fwrite(sms_buffer, sizeof(char), strlen(sms_buffer), f) != strlen(sms_buffer))
 						{
 							/* Error */
 							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"ERROR: Al escribir archivo de mensaje.\"}}");
@@ -328,15 +329,15 @@ void ScanSMS(const char *path)
 			if(pModem->SendSMS(to, msg) != 0)
 			{
 				if(m_pServer) m_pServer->m_pLog->Add(1, "[ScanSMS] Error enviando mensaje SMS To: [%s] Msg: [%s]", to, msg);
-				if( *(path + strlen(path) - 1) != '/' )
-				{
-					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
-				}
-				else
-				{
-					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
-				}
-				rename(filename, filename_rename);
+//				if( *(path + strlen(path) - 1) != '/' )
+//				{
+//					sprintf(filename_rename, "%s/error-%s", path, dir_ent->d_name);
+//				}
+//				else
+//				{
+//					sprintf(filename_rename, "%serror-%s", path, dir_ent->d_name);
+//				}
+//				rename(filename, filename_rename);
 				break;
 			}
 			/* Renombro archivo temporal */

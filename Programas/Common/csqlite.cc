@@ -90,7 +90,18 @@ CSQLite::~CSQLite()
 
 int CSQLite::Open( void )
 {
-  return sqlite3_open(m_db_file, &m_db);
+  int rc;
+
+  rc = sqlite3_open(m_db_file, &m_db);
+
+  if(m_db)
+  {
+    if(this->Query(NULL, "pragma journal_mode = WAL;") < 0) return rc;
+    if(this->Query(NULL, "pragma synchronous = normal;") < 0) return rc;
+    if(this->Query(NULL, "pragma temp_store = memory;") < 0) return rc;
+    if(this->Query(NULL, "pragma mmap_size = 30000000000;") < 0) return rc;
+  }
+  return rc; 
 }
 
 int CSQLite::Open(const char *filename)
@@ -178,4 +189,15 @@ long CSQLite::NextId(const char* table_name, const char* row_name)
     sqlite3_free(msg);
     return (-1);
   }
+}
+
+void CSQLite::Manten( void )
+{
+  if( !m_db) return;
+
+  if(this->Query(NULL, "pragma vacuum;") < 0) return;
+  if(this->Query(NULL, "pragma optimize;") < 0) return;
+  //if(this->Query(NULL, "pragma auto_vacuum = incremental;") < 0) return;  // once on first DB create
+  //if(this->Query(NULL, "pragma incremental_vacuum;") < 0) return;         // regularily
+
 }

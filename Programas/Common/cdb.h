@@ -1,5 +1,5 @@
 /***************************************************************************
-  Copyright (C) 2022   Walter Pirri
+  Copyright (C) 2021   Walter Pirri
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -12,35 +12,16 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ***************************************************************************/
-#ifndef _HWCTRL_H_
-#define _HWCTRL_H_
+#ifndef _CDB_H_
+#define _CDB_H_
 
-#include "cdb.h"
-#include <gmonitor/gmswaited.h>
+#include "csqlite.h"
 
-class HWCtrl
+class CDB : public CSQLite
 {
-public:
-    HWCtrl(CDB *pDB, CGMServerWait *pServer);
-    virtual ~HWCtrl();
-
-    int GetHWId(const char* mac);
-    int GetHWIP(const char* mac, char *ip);
-    int GetHWStatus(const char* mac, char *ip);
-    int SetHWStatus(const char* mac, char *ip);
-    int GetHWConf(const char* mac, char *ip);
-    int SetHWConf(const char* mac, char *ip);
-    int SetObject(int id);
-    int SetObject(const char* name);
-    int ResetObject(int id);
-    int ResetObject(const char* name);
-    int SwitchObject(int id);
-    int SwitchObject(const char* name);
-
-private:
-    CDB *m_pDB;
-    CGMServerWait *m_pServer;
+    public:
+        CDB(); 
+        CDB(const char *filename) : CSQLite { filename } {}
 
 };
-
-#endif /* _HWCTRL_H_ */
+#endif /* _CDB_H_ */

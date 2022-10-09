@@ -28,7 +28,7 @@ using namespace std;
 #include <cjson/cJSON.h>
 #include <math.h>
 
-HWCtrl::HWCtrl(CSQLite *pDB, CGMServerWait *pServer)
+HWCtrl::HWCtrl(CDB *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
     m_pServer = pServer;

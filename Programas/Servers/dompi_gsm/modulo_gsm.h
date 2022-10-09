@@ -37,9 +37,9 @@ public:
 
     unsigned int m_time_out;
 
-    ModGSM();
-    ModGSM(CGMServerWait *pServer);
-    ModGSM(CGMServerWait *pServer, const char* port);
+    ModGSM(const char* tempdir);
+    ModGSM(const char* tempdir, CGMServerWait *pServer);
+    ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port);
     virtual ~ModGSM();
 
     int Open();
@@ -60,6 +60,7 @@ private:
     CGMServerWait* m_pServer;
     CSerial* m_pSerial;
     MODEM_STATUS m_modem_status;
+    char m_temp_dir[FILENAME_MAX+1];
     char m_port[256];
     char m_imei[32];
     long m_next_task_time;
@@ -73,6 +74,9 @@ private:
     void GetModemStatus(void);
     void SMSDelRead(void);
     void SMSDelSent(void);
+
+    void ModemError(void);
+    int SaveRecvSMS(const char* from, const char* msg);
 
 };
 

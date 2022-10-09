@@ -53,6 +53,7 @@ public:
 
     int GetConfig(const char *raddr, char *msg, int max_msg_len);
     int SetConfig(const char *raddr, char *msg);
+    int SetTime(const char *raddr);
     int GetIO(const char *raddr, char *msg, int max_msg_len);
     int SetIO(const char *raddr, char *msg);
     int SwitchIO(const char *raddr, char *msg);
