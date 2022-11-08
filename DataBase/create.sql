@@ -89,7 +89,9 @@ Estado integer DEFAULT 0,                       -- 0=Disable
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
-Flags integer DEFAULT 0
+Flags integer DEFAULT 0                         -- bit 0: HTTPS
+                                                -- bit 1: WIEGAND
+                                                -- bit 2: DHT-22
 );
 
 # INSERT INTO TB_DOM_PERIF_NEW (Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags)

@@ -1,0 +1,291 @@
+https://kolwidi.com/blogs/blog-kolwidi/raspberry-pi-en-modo-kiosk-utilizando-chromium
+
+RASPBERRY PI EN MODO KIOSK UTILIZANDO CHROMIUM
+Publicado por Loli Diéguez en 30 de septiembre, 2019
+
+Para este tutorial de Raspberry Pi Kiosk, te mostraré cómo puedes configurar tu placa en modo Kiosk usando el popular navegador web Chromium para que muestre anuncios o mensajes pregrabados en una pantalla o en una television
+
+ 
+
+ 
+
+Utilizaremos Chromium, ya que es un navegador que permite la funcionalidad kiosk o quiosco.
+
+También es fácil de controlar mediante la simulación de teclas usando el xdotool, que instalaremos durante esta guía.
+
+Te mostraré una buena idea sobre cómo usar las tareas de inicio de sesión automático y los scripts de bash simples para realizar numerosas tareas.
+
+Ten en cuenta que, para hacer este tutorial, deberás estar instalar una versión completa de Raspbian, ya que se basa en la GUI que viene con ella para funcionar correctamente.
+
+CONFIGURANDO EL RASPBERRY PI EN MODO KIOSK
+Antes de comenzar con este tutorial, primero eliminaremos algunos paquetes que no necesitamos para nuestro Kiosk con Raspberry Pi, de este modo haremos más ligero el funcionamiento de Raspbian. 
+
+Ejecuta los siguientes comandos en tu Raspberry Pi:
+
+sudo apt-get purge wolfram-engine scratch scratch2 nuscratch sonic-pi idle3 -y
+
+sudo apt-get purge smartsim java-common minecraft-pi libreoffice* -y
+
+Ahora que hemos eliminado estos paquetes de nuestro Raspberry Pi Kiosk, necesitaremos ejecutar algunos comandos de limpieza.
+
+ 
+
+ 
+
+Para eliminar cualquier paquete innecesario y limpiar el repositorio local de paquetes recuperados, ejecuta lo siguiente:
+
+sudo apt-get clean
+
+sudo apt-get autoremove -y
+
+Ahora toca actualizar Raspbian a la ultima versión: 
+
+sudo apt-get update
+
+sudo apt-get upgrade 
+
+También, asegúrate de tener habilitado SSH ya que es muy útil si necesitas editar algún archivo más adelante.
+
+Ahora necesitamos instalar xdotool . Esta herramienta permitirá que nuestro script de bash ejecute pulsaciones de teclas sin que nadie esté en la placa directamente.
+
+También instalamos el paquete Unclutter , lo que nos permitirá ocultar el mouse de la pantalla.
+
+Simplemente ejecuta el siguiente comando en tu Raspberry Pi para instalar ambos paquetes:
+
+sudo apt-get install xdotool unclutter sed 
+
+Ahora que hemos configurado Raspbian con los paquetes necesarios y se han eliminado los que no usarás, toca configurar el Sistema Operativo de la Raspberry Pi para  iniciar sesión automáticamente.
+
+Aunque el inicio automático de escritorio es el comportamiento predeterminado, si por algún motivo lo has cambiado sigue estos pasos para revertir esto, si no es tu caso salta estos pasos y ve directo al paso donde empezamos con el script kiosk.sh.
+
+Sudo raspi-config
+
+Dentro de la herramienta de configuración, ve a 3 Opciones de arranque -> B1 Desktop / CLI -> B4 Desktop Autologin.
+
+El inicio de sesión automático de escritorio ahora debe estar habilitado y puedes salir de la herramienta raspi-config de forma segura .
+
+ 
+
+ 
+
+Con lo anterior hecho, vamos a empezar con el script.
+
+ESCRIBIR LA SECUENCIA DE COMANDOS DE RASPBERRY PI KIOSK
+La secuencia de comandos se encargará de la mayor parte del trabajo de nuestro Raspberry Pi Kiosk, incluso del lanzamiento de Chromium y la simulación de pulsaciones de teclas. 
+
+Comenzamos con el de kiosk ejecutando el siguiente comando en la Raspberry Pi.
+
+nano /home/pi/kiosk.sh 
+
+Escribe estas líneas en el archivo.
+
+#!/bin/bash 
+
+La primera línea define qué debe usar el intérprete de línea de comandos (CLI) para intentar ejecutar este archivo.
+
+Esto es útil para los casos en los que no deseas tener que especificar la aplicación específica para ejecutar el script.
+
+xset s noblank
+
+xset s off
+
+xset -dpms 
+
+Estas tres líneas son muy importantes ya que nos ayudan a evitar que el sistema de administración de energía de la Raspberry Pi se active y la placa entre en modo reposo.
+
+ 
+
+ 
+
+Básicamente, estos tres comandos configuran el xsession, actúan sobre el modo de ahorro de energía y evitarán que la Raspberry Pi entre en modo reposo o que incluso se apague por inactividad.
+
+unclutter -idle 0.5 -root &
+
+Esta línea ejecuta el programa que instalamos anteriormente (unclutter) que ocultará el puntero del ratón al pasar 5 segundos de inactividad, este es un tiempo configurable, si prefieres eliminar el mouse instantáneamente, elimina el comando -idle 0.5  del comando. 
+
+sed -i 's/"exited_cleanly":false/"exited_cleanly":true/'/home/pi/.config/chromium/Default/Preferences
+
+sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/'/home/pi/.config/chromium/Default/Preferences 
+
+Estas dos líneas de la secuencia de comandos utilizan sed para buscar en el archivo de preferencias de Chromium y borrar cualquier marca que haga aparecer la barra de advertencia.
+
+Si Chromium alguna vez se bloquea o se cierra repentinamente, las líneas de arriba garantizarán que no tengas que usar el ratón y un teclado para borrar la barra de advertencia que normalmente aparece en la parte superior del navegador.
+
+/usr/bin/chromium-browser --noerrdialogs --disable-infobars –kiosk https://kolwidi.com http://www.aemet.es/es/portada & 
+
+Esta línea lanza Chromium con estos parámetros:
+
+noerrdialogs: Esta opción le dice a Chromium que no debe mostrar ninguno de sus diálogos de error al usuario final.
+disable-infobars: Usamos esto para impedir que Chromium muestre su barra de información al usuario final.
+kiosk: Establece que Chromium funcione en modo Kiosk, lo bloquea en un conjunto particular de características y solo permite el acceso limitado tanto al navegador web como a cualquier otra funcionalidad del sistema operativo.
+https://kolwidi.com http://www.aemet.es/es/portada: Estas son las dos páginas web que abrirá el script, cada una se abrirá en una nueva pestaña. Puedes agregar páginas web / pestañas adicionales agregando a esta lista separando cada una con un espacio.
+Lo siguiente será conseguir que se muestre una web y trascurrido un tiempo pasar a la siguiente y volver a la primera web, para ello usaremos estas líneas de código:
+
+while true; do
+
+      xdotool keydown ctrl+Tab; xdotool keyup ctrl+Tab;
+
+      sleep 15
+
+done
+
+Estas líneas ejecutan un bucle while infinito que usa xdotool para simular presionar Ctrl + Tab, haciendo que Chromium cambie entre las diferentes pestañas abiertas.
+
+Después de que xdotool haya ejecutado sus pulsaciones de teclas, pone el bucle en modo de suspensión durante 15 segundos.
+
+ 
+
+ 
+
+Para cambiar el tiempo de inactividad del bucle antes de ejecutar nuevamente el comando xdotool, simplemente cambia el comando sleep 15. 
+
+También puedes usar este método para agregar una actualización de pantalla, esto puede ser importante cuando desees mostrar resultados en vivo.
+
+El comando para esto debe parecerse a lo que hemos mostrado a continuación:
+
+xdotool keydown ctrl+r; xdotool keyup ctrl+r; 
+
+Tu código completo debería ser como el siguiente, presta atención a las modificaciones que quieras hacer en tu código, como a las web que se mostrarán.
+
+#!/bin/bash
+
+xset s noblank
+
+xset s off
+
+xset -dpms
+
+unclutter -idle 0.5 -root &
+
+sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' /home/pi/.config/chromium/Default/Preferences
+
+sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' /home/pi/.config/chromium/Default/Preferences
+
+/usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk https://kolwidi.com http://www.aemet.es/es/portada &
+
+while true; do
+
+   xdotool keydown ctrl+Tab; xdotool keyup ctrl+Tab;
+
+   sleep 10
+
+done 
+
+Una vez que estés seguro de que todo está correcto, guarda el archivo presionando CTRL + X, luego Y y finalmente ENTER . 
+
+CONFIGURANDO EL RASPBERRY PI EN MODO KIOSK PARA QUE SE INICIE EN EL ARRANQUE
+Antes de comenzar, hay que determinar cual es la resolución de pantalla que se va a emplear. 
+
+ 
+
+ 
+
+
+Este valor se usa para que el sistema operativo sepa en qué pantalla se muestra el Kiosk Chromium, sin el cual el modo Kiosk no se cargará o se cargará en la pantalla incorrecta. 
+
+Ejecuta el siguiente comando para saber el valor de la variable del sistema " $ DISPLAY ".
+
+echo $DISPLAY 
+
+Anota el valor que indica el comando ya que lo necesitarás más adelante.
+
+Para que nuestra Raspberry Pi Kiosk se inicie en el arranque, tendrás que crear un archivo de servicio ejecutando el siguiente comando:
+
+sudo nano /lib/systemd/system/kiosk.service 
+
+Este archivo de servicio le dirá al sistema operativo qué archivo queremos que se ejecute, así como que deseamos que la GUI esté disponible antes de iniciar el software.
+
+Dentro de nuestro archivo de servicio de kiosk, introduce las siguientes líneas de texto:
+
+[Unit]
+
+Description=Chromium Kiosk
+
+Wants=graphical.target
+
+After=graphical.target
+
+ 
+
+[Service]
+
+Environment=DISPLAY=:0
+
+Environment=XAUTHORITY=/home/pi/.Xauthority
+
+Type=simple
+
+ExecStart=/bin/bash /home/pi/kiosk.sh
+
+Restart=on-abort
+
+User=pi
+
+Group=pi
+
+ 
+
+[Install]
+
+WantedBy=graphical.target
+
+ 
+
+Estas líneas indicarán que queremos ejecutar nuestro script kiosk.sh al inicio del sistema operativo.
+
+Mientras introduces estas líneas, es posible que tengas que modificar la línea “Environment = DISPLAY =: ”, reemplazando el “ 0 ” con el valor que anotaste en el primer paso. 
+
+Una vez que hayas introducido todo en el archivo, guarda el archivo presionando CTRL + X seguido de Y y luego ENTER.
+
+Ahora que hemos creado el archivo de servicio para nuestra Raspberry Pi Kiosk, podemos continuar y habilitarlo ejecutando el siguiente comando:
+
+sudo systemctl enable kiosk.service 
+
+Al habilitar el servicio, permitiremos que Chromium Kiosk se inicie en el arranque automáticamente y el administrador del servicio lo supervisará. 
+
+Con el servicio Kiosk ahora habilitado, puedes optar por reiniciar la Raspberry Pi o iniciar el servicio ejecutando el siguiente comando:
+
+sudo systemctl start kiosk.service 
+
+Si alguna vez deseas verificar el estado del servicio de Raspberry Pi Kiosk, puedes ejecutar el siguiente comando que devolverá información sobre el servicio:
+
+sudo systemctl status kiosk.service 
+
+Si este comando muestra el estado como "Activo: activo (en ejecución)", todo está perfecto, tu Raspberry Pi Chromium Kiosk debería estar funcionando correctamente.
+
+ 
+
+ 
+
+Si por alguna razón quieres detener el servicio, usa este comando para pararlo:
+
+sudo systemctl stop kiosk.service 
+
+Al detener el servicio de Kiosk, el administrador del servicio eliminará todos los procesos asociados con él. Este comando detendrá la ejecución de nuestro script kiosk.sh y terminará también el navegador Chromium abierto.
+
+Finalmente, si alguna vez deseas desactivar tu Kiosk, puedes utilizar el siguiente comando:
+
+sudo systemctl disable kiosk.service 
+
+FORZAR LA RESOLUCIÓN EN UNA RASPBERRY PI KIOSK
+Una cosa que podrías querer hacer es imponer la resolución que va a utilizar la Raspberry Pi. La configuración de la resolución puede ser bastante útil, ya que la detección integrada de la Raspberry Pi a veces puede fallar. 
+
+Para comenzar a configurar la resolución, primero debemos cargar la herramienta de configuración de Raspberry Pi con el siguiente comando:
+
+sudo raspi-config 
+
+Dentro de la herramienta de configuración, desearás ir a la opción de Opciones avanzadas.
+
+Dentro de ese menú, deberías ver una opción llamada " Resolución A5 ", selecciona esa opción.
+
+Aquí, busca y selecciona la resolución que mejor se adapte a tu pantalla y presione ENTER .
+
+Con tu resolución ahora configurada, deberás reiniciar la Raspberry Pi. Para ello, primero sal de la herramienta de configuración presionando ESC ,y reinicia la Raspberry pi con este comando:
+
+sudo reboot
+
+Con esto ultimo, terminarías de configurar la Raspberry Pi en modo Kiosk y al volver la placa de su reinicio ya deberías ver que se inicia Chromioum y te muestra la/las web/s que has puesto en las lineas anteriores.
+
+Espero que todo te funcione bien y si tienes alguna duda puedes preguntarnos por mail o whatsapp y te ayudaremos en todo lo que podamos.
+
+Muchas gracias por leernos y si te gustó el articulo no dudes en compartirlo :-)
