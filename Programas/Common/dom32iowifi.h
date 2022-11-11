@@ -78,6 +78,7 @@ protected:
         unsigned char id;
         char buffer[WIFI_MSG_MAX_LEN*WIFI_MSG_MAX_QUEUE];
         unsigned int delay;
+        unsigned int retry;
     } queue_list;
 
     queue_list m_queue_list[256];
@@ -110,7 +111,7 @@ protected:
 
     int HttpRespCode(const char* http);
     int RequestEnqueue(const char* dest, const char* data);
-    int RequestDequeue(const char* dest, const char* data);
+    int RequestDequeue(const char* dest, const char* data, unsigned int retry);
 
 };
 

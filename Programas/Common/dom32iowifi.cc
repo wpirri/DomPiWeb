@@ -581,14 +581,20 @@ void Dom32IoWifi::Task( void )
         {
             if(QueueView(m_queue_list[i].id, (void**)&p))
             {
-                if(RequestDequeue(m_queue_list[i].addr, p) == 0)
+                if(RequestDequeue(m_queue_list[i].addr, p, m_queue_list[i].retry) == 0)
                 {
                     QueueDel(m_queue_list[i].id);
-                    m_queue_list[i].delay = 1;
+                    m_queue_list[i].retry = 0;
+                    m_queue_list[i].delay = 2;
                 }
                 else
                 {
-                    m_queue_list[i].delay = 1;
+                    if(++m_queue_list[i].retry == 100)
+                    {
+                        QueueDel(m_queue_list[i].id);
+                        m_queue_list[i].retry = 0;
+                        m_queue_list[i].delay = 0;
+                    }
                 }
             }
         }
@@ -624,17 +630,19 @@ int Dom32IoWifi::RequestEnqueue(const char* dest, const char* data)
             strcpy(m_queue_list[i].addr, dest);
         }
         QueueAdd(m_queue_list[i].id, (void*)data);
+        m_queue_list[i].delay = 0;
+        m_queue_list[i].retry = 0;
         return 0;
     }
     return (-1);
 }
 
-int Dom32IoWifi::RequestDequeue(const char* dest, const char* data)
+int Dom32IoWifi::RequestDequeue(const char* dest, const char* data, unsigned int retry)
 {
     CTcp q;
     char buffer[WIFI_MSG_MAX_LEN];
 
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s]", data);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s] retry: %u", data, retry);
     if(q.Query(dest, m_port, data, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);

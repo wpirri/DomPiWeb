@@ -431,7 +431,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_io]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_time_config]");
 				}
 			}
 			/* ************************************************************* *
@@ -684,14 +684,15 @@ int main(/*int argc, char** argv, char** env*/void)
 		else
 		{
 			/* expiracion del timer */
-			timer_count++;
-			if(timer_count == 100)
+			if(++timer_count == 10)
 			{
 				timer_count = 0;
 				pD32W->Timer();
 			}
-			pD32W->Task();
 		}
+
+		pD32W->Task();
+
 		if(json_req) cJSON_Delete(json_req);
 		if(json_resp) cJSON_Delete(json_resp);
 	}
