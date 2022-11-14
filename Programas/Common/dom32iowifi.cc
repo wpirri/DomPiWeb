@@ -38,9 +38,18 @@ using namespace std;
 
 #define BUFFER_LEN 32767
 
-Dom32IoWifi::Dom32IoWifi(CGLog *pLog)
+Dom32IoWifi::Dom32IoWifi(CGMServerWait *pServer)
 {
-    m_pLog = pLog;
+    if(pServer)
+    {
+        m_pLog = pServer->m_pLog;
+        m_pServer = pServer;
+    }
+    else
+    {
+        m_pLog = nullptr;
+        m_pServer = nullptr;
+    }
     /* POST
     * 1.- %s: URI
     * 2.- %s: Host
@@ -105,7 +114,7 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
-        if(rc != 0) return rc;
+        if(rc != 200) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -255,7 +264,7 @@ int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] GetConfig Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
-        if(rc != 0) return rc;
+        if(rc != 200) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -374,7 +383,7 @@ int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] GetIO Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
-        if(rc != 0) return rc;
+        if(rc != 200) return rc;
         /* Me posiciono al final de la cabecera HTTP, al principio de los datos */
         p = strstr(buffer, "\r\n\r\n");
         if(p)
@@ -561,14 +570,28 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
 int Dom32IoWifi::HttpRespCode(const char* http)
 {
     char tmp[16];
-    int rc;
     STRFunc Str;
 
     Str.Section(http, ' ', 1, tmp);
 
-    rc = atoi(tmp);
-    return (rc == 200)?0:rc;
+    return atoi(tmp);
 }
+
+int Dom32IoWifi::HttpData(const char* http, char* data)
+{
+    char* p;
+
+    *data = 0;
+
+    p = strstr((char*)http, "\r\n\r\n");
+    if(p)
+    {
+        strcpy(data, p);
+    }
+
+    return strlen(data);
+}
+
 
 void Dom32IoWifi::Task( void )
 {
@@ -641,12 +664,26 @@ int Dom32IoWifi::RequestDequeue(const char* dest, const char* data, unsigned int
 {
     CTcp q;
     char buffer[WIFI_MSG_MAX_LEN];
+    char msg[WIFI_MSG_MAX_LEN];
+    int rc;
 
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s] retry: %u", data, retry);
     if(q.Query(dest, m_port, data, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
-        return HttpRespCode(buffer);
+        rc = HttpRespCode(buffer);
+        if(rc == 200)
+        {
+            /* Hay que evaluar los datos de la respuesta */
+            if(HttpData(buffer, msg) > 0)
+            {
+                /* Si trae datos son de status de la interface */
+                m_pLog->Add(90, "Call [dompi_infoio][%s]", msg);
+                m_pServer->Call("dompi_infoio", msg, strlen(msg), NULL, 1000);
+            }
+            rc = 0;
+        }
+        return rc;
     }
     return (-1);
 }

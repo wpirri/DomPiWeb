@@ -15,7 +15,7 @@
 #ifndef _DOM32IOWIFI_H_
 #define _DOM32IOWIFI_H_
 
-#include <gmonitor/glog.h>
+#include <gmonitor/gmswaited.h>
 #include <cjson/cJSON.h>
 
 /* Definiciones para los bits de flag */
@@ -45,7 +45,7 @@ public:
         char rqst_path[33];
     } wifi_config_data;
 
-	Dom32IoWifi(CGLog *pLog = NULL);
+	Dom32IoWifi(CGMServerWait *pServer = NULL);
 	virtual ~Dom32IoWifi();
 
     int GetWifiConfig(const char *raddr, wifi_config_data *config);
@@ -108,8 +108,10 @@ protected:
     const char *url_set_wifi;
 
     CGLog *m_pLog;
+    CGMServerWait *m_pServer;
 
     int HttpRespCode(const char* http);
+    int HttpData(const char* http, char* data);
     int RequestEnqueue(const char* dest, const char* data);
     int RequestDequeue(const char* dest, const char* data, unsigned int retry);
 

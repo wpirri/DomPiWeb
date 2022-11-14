@@ -124,15 +124,15 @@ int main(/*int argc, char** argv, char** env*/void)
     pPI = new Dom32IoPi();
 	pPI->LoadConfig();
 	
-	m_pServer->Suscribe("dompi_pi_set_port_config", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_pi_set_port_config", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_pi_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_pi_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_port", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_pi_set_port", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_pi_get_port", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_io", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_switch_io", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_pulse_io", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_pi_set_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_switch_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_pulse_io", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_pi_get_io", GM_MSG_TYPE_CR);
 
 	blink = 0;
@@ -160,6 +160,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, "dompi_pi_set_port_config"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Port )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -175,14 +176,9 @@ int main(/*int argc, char** argv, char** env*/void)
 													json_Direccion_IP->valuestring,
 													json_IO_Config->valuestring,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
 								}
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
@@ -194,44 +190,33 @@ int main(/*int argc, char** argv, char** env*/void)
 													json_Direccion_IP->valuestring,
 													json_IO_Config->valuestring,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
 								}
 							}
 							else
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
+								m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Invalid Port");
 							}
 						}
 						else if(json_AN_Config)
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"5\", \"resp_msg\":\"No Implementado\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: No Implementado");
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -323,15 +308,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_port"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				/* TODO: Envio de estado de port completo */
 
 
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_port]");
-				}
+
 			}
 			/* ************************************************************* *
 			 *
@@ -435,6 +416,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Estado )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -445,9 +427,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{	/* Puerto1 */
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
-									rc = pPI->SetIO(
-														power2(atol(json_E_S->valuestring)-1),
-														&return_int1);
+									rc = pPI->SetIO(power2(atol(json_E_S->valuestring)-1), &return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->SetIO(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
 														power2(atol(json_E_S->valuestring)-1),
@@ -456,32 +436,23 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								else
 								{	/* Apagar */
-									rc = pPI->ResetIO(
-														power2(atol(json_E_S->valuestring)-1),
-														&return_int1);
+									rc = pPI->ResetIO(power2(atol(json_E_S->valuestring)-1), &return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->ResetIO(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
 														power2(atol(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: Error on Send I/O");
 								}
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
 								if( atoi(json_Estado->valuestring) == 1 )
 								{	/* Encender */
-									rc = pPI->SetEX(
-														power2(atol(json_E_S->valuestring)-1),
-														&return_int1);
+									rc = pPI->SetEX(power2(atol(json_E_S->valuestring)-1), &return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->SetEX(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
 														power2(atol(json_E_S->valuestring)-1),
@@ -490,50 +461,36 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								else
 								{	/* Apagar */
-									rc = pPI->ResetEX(
-														power2(atol(json_E_S->valuestring)-1),
-														&return_int1);
+									rc = pPI->ResetEX(power2(atol(json_E_S->valuestring)-1), &return_int1);
 									m_pServer->m_pLog->Add(100, "pPI->ResetEX(%s, 0x%02X, 0x%02X) = %i", 
 														json_Direccion_IP->valuestring,
 														power2(atol(json_E_S->valuestring)-1),
 														return_int1,
 														rc);
 								}
-
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: Error on Send I/O");
 								}
 							}
 							else
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
+								m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: Invalid Port");
 							}
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: No es salida");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_set_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -541,6 +498,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_switch_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -557,60 +515,42 @@ int main(/*int argc, char** argv, char** env*/void)
 													power2(atol(json_E_S->valuestring)-1),
 													return_int1,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Error en SwitchIO");
 								}
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
 							{	/* Puerto2 */
-								rc = pPI->SwitchEX(
-													power2(atol(json_E_S->valuestring)-1),
-													&return_int1);
+								rc = pPI->SwitchEX(power2(atol(json_E_S->valuestring)-1), &return_int1);
 								m_pServer->m_pLog->Add(100, "pPI->SwitchEX(%s, 0x%02X, 0x%02X) = %i", 
 													json_Direccion_IP->valuestring,
 													power2(atol(json_E_S->valuestring)-1),
 													return_int1,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: SwitchEX");
 								}
 							}
 							else
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
+								m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Invalid Port");
 							}
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_switch_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -618,6 +558,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_E_S && json_Segundos )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -636,14 +577,9 @@ int main(/*int argc, char** argv, char** env*/void)
 													atoi(json_Segundos->valuestring),
 													return_int1,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Error en PulseIO");
 								}
 							}
 							else if( atoi(json_Port->valuestring) == 2 )
@@ -658,40 +594,29 @@ int main(/*int argc, char** argv, char** env*/void)
 													atoi(json_Segundos->valuestring),
 													return_int1,
 													rc);
-								if(rc == 0)
+								if(rc != 0)
 								{
-									/* OK */
-									sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"0x%02X\"}}", return_int1);
-								}
-								else
-								{
-									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+									m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: PulseEX");
 								}
 							}
 							else
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Port\"}}");
+								m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Invalid Port");
 							}
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: No es salida");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(50, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(10, "ERROR al responder mensaje [dompi_hw_pulse_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -846,15 +771,15 @@ int main(/*int argc, char** argv, char** env*/void)
 void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
-	m_pServer->UnSuscribe("dompi_pi_set_port_config", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_pi_set_port_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_pi_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_pi_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_port", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_pi_set_port", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_pi_get_port", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_io", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_switch_io", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_pulse_io", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_pi_set_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_switch_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_pulse_io", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_pi_get_io", GM_MSG_TYPE_CR);
 	delete m_pServer;
 	exit(0);

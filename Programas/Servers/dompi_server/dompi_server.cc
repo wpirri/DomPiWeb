@@ -3081,15 +3081,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Me fijo si es estado o pulso */
 				if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
 				{
-					m_pServer->m_pLog->Add(90, "Call [dompi_hw_pulse_io][%s]", message);
-					rc = m_pServer->Call("dompi_hw_pulse_io", message, strlen(message), &call_resp, internal_timeout);
-					m_pServer->m_pLog->Add(90, "Resp [dompi_hw_pulse_io] [%s]", (const char*)call_resp.data);
+					m_pServer->m_pLog->Add(90, "Post [dompi_hw_pulse_io][%s]", message);
+					rc = m_pServer->Post("dompi_hw_pulse_io", message, strlen(message));
 				}
 				else
 				{
-					m_pServer->m_pLog->Add(90, "Call [dompi_hw_set_io][%s]", message);
-					rc = m_pServer->Call("dompi_hw_set_io", message, strlen(message), &call_resp, internal_timeout);
-					m_pServer->m_pLog->Add(90, "Resp [dompi_hw_set_io] [%s]", (const char*)call_resp.data);
+					m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_io][%s]", message);
+					rc = m_pServer->Post("dompi_hw_set_io", message, strlen(message));
 
 					/* Notifico a la nube */
 					m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
@@ -3162,7 +3160,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_query_result);
 			}
 		}
-
 		/* ********************************************************************
 		 *   Timer
 		 *
@@ -3234,10 +3231,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj2, "MAC", json_MAC->valuestring);
 								cJSON_AddStringToObject(json_un_obj2, "Tipo_HW", json_Tipo_HW->valuestring);
 								cJSON_PrintPreallocated(json_un_obj2, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(90, "Call [dompi_hw_set_port_config][%s]", message);
-								m_pServer->Call("dompi_hw_set_port_config", message, strlen(message), &call_resp, internal_timeout);
-								m_pServer->m_pLog->Add(90, "Resp [dompi_hw_set_port_config] [%s]", (const char*)call_resp.data);
-								m_pServer->Free(call_resp);
+								m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
+								m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
 							}
 						}
 						cJSON_Delete(json_arr2);
@@ -3330,7 +3325,6 @@ int main(/*int argc, char** argv, char** env*/void)
 			delta_t = 1000;
 			next_t = t + 10;
 		}
-
 	}
 	m_pServer->m_pLog->Add(1, "ERROR en la espera de mensajes");
 	OnClose(0);

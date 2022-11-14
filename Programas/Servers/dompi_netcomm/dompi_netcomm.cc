@@ -114,20 +114,20 @@ int main(/*int argc, char** argv, char** env*/void)
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
-    pD32W = new Dom32IoWifi(m_pServer->m_pLog);
+    pD32W = new Dom32IoWifi(m_pServer);
 
 	CGMServerBase::GMIOS call_server_resp;
 	CGMClient::GMIOS call_client_resp;
 
 
-	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_time_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_set_time_config", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_MSG);
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
@@ -149,6 +149,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, "dompi_hw_set_port_config"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Port )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
@@ -156,37 +157,19 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_port_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_set_port_config", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_port_config][%s]", message);
+							m_pServer->Post("dompi_pi_set_port_config", message, strlen(message));
 						}
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_port_config][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_set_port_config", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_port_config][%s]", message);
+							m_pClient->Post("dompi_pi_set_port_config", message, strlen(message));
 							delete(m_pClient);
 						}
 
@@ -194,29 +177,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
-						if(pD32W->SetConfig(json_Direccion_IP->valuestring, message) == 0)
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error al encolar mensaje\"}}");
-						}
-					}
-					else
-					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						pD32W->SetConfig(json_Direccion_IP->valuestring, message);
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_port_config] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -300,16 +266,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_comm_config"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
 				/* TODO: Enviar configuracion de WiFFi */
 
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_comm_config]");
-				}
 			}
 			/* ************************************************************* *
 			 *
@@ -403,35 +364,19 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_time_config"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
-					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok (No es necesario)\"}}");
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	
 						/* Interface Vía IP mensajeria HTTP */
 						/* Envío de configuración a WiFi */
-						if(pD32W->SetTime(json_Direccion_IP->valuestring) == 0)
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error al encolar mensaje\"}}");
-						}
+						pD32W->SetTime(json_Direccion_IP->valuestring);
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_time_config]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_time_config] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -439,6 +384,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -446,37 +392,19 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_set_io", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_io][%s]", message);
+							m_pServer->Post("dompi_pi_set_io", message, strlen(message));
 						}
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_set_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_set_io", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_io][%s]", message);
+							m_pClient->Post("dompi_pi_set_io", message, strlen(message));
 							delete(m_pClient);
 						}
 
@@ -490,27 +418,16 @@ int main(/*int argc, char** argv, char** env*/void)
 						{	
 							/* Enviar mensaje al WiFi */
 							pD32W->SetIO(json_Direccion_IP->valuestring, json_req);
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-						}
-						else
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_set_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -518,6 +435,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_switch_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -525,40 +443,21 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_switch_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_switch_io", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_switch_io][%s]", message);
+							m_pServer->Post("dompi_pi_switch_io", message, strlen(message));
 						}
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_switch_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_switch_io", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_switch_io][%s]", message);
+							m_pClient->Post("dompi_pi_switch_io", message, strlen(message));
 							delete(m_pClient);
 						}
-
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	
@@ -569,27 +468,20 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* Enviar mensaje al WiFi */
 							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req);
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_switch_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -597,6 +489,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -604,37 +497,19 @@ int main(/*int argc, char** argv, char** env*/void)
 						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
 						{
 							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_pulse_io][%s]", message);
-							rc = m_pServer->Call("dompi_pi_pulse_io", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_pulse_io][%s]", message);
+							m_pServer->Post("dompi_pi_pulse_io", message, strlen(message));
 						}
 						else
 						{
 							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_pulse_io][%s]", message);
 							gminit.m_host = json_Direccion_IP->valuestring;
 							gminit.m_port = 5533;
 
 							m_pClient = new CGMClient(&gminit);
 
-							rc = m_pClient->Call("dompi_pi_pulse_io", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
+							m_pServer->m_pLog->Add(90, "Post [dompi_pi_pulse_io][%s]", message);
+							m_pClient->Post("dompi_pi_pulse_io", message, strlen(message));
 							delete(m_pClient);
 						}
 
@@ -648,27 +523,20 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* Enviar mensaje al WiFi */
 							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req);
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"No es salida\"}}");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+						m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: HW no soportado");
 					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"4\", \"resp_msg\":\"Datos insuficientes\"}}");
-				}
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_pulse_io]");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Datos insuficientes");
 				}
 			}
 
@@ -683,7 +551,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		}
 		else
 		{
-			/* expiracion del timer */
+			/* expiracion del timer 1ms*/
 			if(++timer_count == 10)
 			{
 				timer_count = 0;
@@ -705,15 +573,15 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_hw_get_port", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_MSG);
 
 
 	delete m_pServer;
