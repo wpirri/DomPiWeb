@@ -100,7 +100,7 @@ Dom32IoWifi::~Dom32IoWifi()
 
 }
 
-int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config)
+int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1], tmp[16];
     char *p;
@@ -138,7 +138,7 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config)
     return (-1);
 }
 
-int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config)
+int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char data[256];
@@ -181,72 +181,72 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config)
     }
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion WiFi para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
-int Dom32IoWifi::GetConfig(const char *raddr, char *msg, int max_msg_len)
+int Dom32IoWifi::GetConfig(const char *raddr, char *msg, int max_msg_len, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = GetConfig(raddr, json_obj);
+    rc = GetConfig(raddr, json_obj, fcn);
     cJSON_PrintPreallocated(json_obj, msg, max_msg_len, 0);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::SetConfig(const char *raddr, char *msg)
+int Dom32IoWifi::SetConfig(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = SetConfig(raddr, json_obj);
+    rc = SetConfig(raddr, json_obj, fcn);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::GetIO(const char *raddr, char *msg, int max_msg_len)
+int Dom32IoWifi::GetIO(const char *raddr, char *msg, int max_msg_len, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = GetIO(raddr, json_obj);
+    rc = GetIO(raddr, json_obj, fcn);
     cJSON_PrintPreallocated(json_obj, msg, max_msg_len, 0);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::SetIO(const char *raddr, char* msg)
+int Dom32IoWifi::SetIO(const char *raddr, char* msg, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = SetIO(raddr, json_obj);
+    rc = SetIO(raddr, json_obj, fcn);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::SwitchIO(const char *raddr, char* msg)
+int Dom32IoWifi::SwitchIO(const char *raddr, char* msg, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = SwitchIO(raddr, json_obj);
+    rc = SwitchIO(raddr, json_obj, fcn);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::PulseIO(const char *raddr, char* msg)
+int Dom32IoWifi::PulseIO(const char *raddr, char* msg, void(*fcn)(const char* id, const char* data))
 {
     int rc;
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
-    rc = PulseIO(raddr, json_obj);
+    rc = PulseIO(raddr, json_obj, fcn);
     cJSON_Delete(json_obj);
     return rc;
 }
 
-int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char *p;
@@ -281,73 +281,63 @@ int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj)
     return (-1);
 }
 
-int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char data[1024];
-    char port[16];
-    char estado[16];
-    cJSON *json_un_obj;
+    //char port[16];
+    //char estado[16];
+    //char flag_name[16];
+    //char flag_value[16];
+    cJSON *json_Ports, *json_un_obj;
+    cJSON *json_Port;
+    cJSON *json_Tipo_ASS;
+    //cJSON *json_Flag_Name;
+    //cJSON *json_Flag_Value;
 
-    json_un_obj = json_obj;
     data[0] = 0;
-    port[0] = 0;
-    estado[0] = 0;
-    while( json_un_obj )
+
+    if(m_pLog) m_pLog->Add(10, "[Dom32IoWifi] Enviando Config a: %s", raddr);
+
+    cJSON_PrintPreallocated(json_obj, buffer, BUFFER_LEN, 0);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi::SetConfig] raddr: %s json: %s", raddr, buffer);
+
+    json_Ports = cJSON_GetObjectItemCaseSensitive(json_obj, "Ports");
+
+    cJSON_PrintPreallocated(json_Ports, buffer, BUFFER_LEN, 0);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi::SetConfig] Ports: %s", buffer);
+
+    cJSON_ArrayForEach(json_un_obj, json_Ports)
     {
-        /* Voy hasta el elemento con datos */
-        if(json_un_obj->type == cJSON_Object)
+        json_Port = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Port");
+        json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo_ASS");
+
+        if(json_Port && json_Tipo_ASS)
         {
-            json_un_obj = json_un_obj->child;
-        }
-        else
-        {
-            if(json_un_obj->type == cJSON_String)
+            if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi::SetConfig] %s = %s", json_Port->string, json_Tipo_ASS->valuestring);
+            if(data[0] != 0) strcat(data, "&");
+            strcat(data, json_Port->string);
+            strcat(data, "=");
+            if( !strcmp(json_Tipo_ASS->valuestring, "0"))
             {
-                if(json_un_obj->string && json_un_obj->valuestring)
-                {
-                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
-                    {
-                        if( !strcmp(json_un_obj->string, "Port"))
-                        {
-                            strcpy(port, json_un_obj->valuestring);
-                        }
-                        else if( !strcmp(json_un_obj->string, "Tipo_ASS"))
-                        {
-                            strcpy(estado, json_un_obj->valuestring);
-                        }
-                        if(port[0] && estado[0])
-                        {
-                            if(data[0] != 0) strcat(data, "&");
-                            strcat(data, port);
-                            strcat(data, "=");
-                            if( !strcmp(estado, "0"))
-                            {
-                                strcat(data, "out");
-                            }
-                            else if( !strcmp(estado, "1"))
-                            {
-                                strcat(data, "in");
-                            }
-                            else
-                            {
-                                strcat(data, estado);
-                            }
-                            port[0] = 0;
-                            estado[0] = 0;
-                        }
-                    }
-                }
+                strcat(data, "out");
             }
-            json_un_obj = json_un_obj->next;
+            else if( !strcmp(json_Tipo_ASS->valuestring, "1"))
+            {
+                strcat(data, "in");
+            }
+            else
+            {
+                strcat(data, json_Tipo_ASS->valuestring);
+            }
         }
     }
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion I/O para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
-int Dom32IoWifi::SetTime(const char *raddr)
+int Dom32IoWifi::SetTime(const char *raddr, void(*fcn)(const char* id, const char* data))
 {
     time_t t;
     struct tm *tm_time;
@@ -363,10 +353,10 @@ int Dom32IoWifi::SetTime(const char *raddr)
 
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion Fecha y Hora para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
-int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char *p;
@@ -401,7 +391,7 @@ int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj)
 
 }
 
-int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char data[1024];
@@ -453,10 +443,10 @@ int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj)
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando estado de I/O para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
-int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char data[1024];
@@ -508,10 +498,10 @@ int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj)
     }
     sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando switch de I/O para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
-int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
+int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
 {
     char buffer[BUFFER_LEN+1];
     char data[1024];
@@ -564,7 +554,7 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj)
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando pulso de I/O para %s [%s]", raddr, buffer);
-    return RequestEnqueue(raddr, buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
 }
 
 int Dom32IoWifi::HttpRespCode(const char* http)
@@ -586,7 +576,7 @@ int Dom32IoWifi::HttpData(const char* http, char* data)
     p = strstr((char*)http, "\r\n\r\n");
     if(p)
     {
-        strcpy(data, p);
+        strcpy(data, p+4);
     }
 
     return strlen(data);
@@ -596,7 +586,7 @@ int Dom32IoWifi::HttpData(const char* http, char* data)
 void Dom32IoWifi::Task( void )
 {
     int i;
-    char *p;
+    queue_data *p;
 
     for(i = 0; i < MAX_QUEUE_COUNT && m_queue_list[i].addr[0] != 0; i++)
     {
@@ -634,9 +624,10 @@ void Dom32IoWifi::Timer( void )
     }
 }
 
-int Dom32IoWifi::RequestEnqueue(const char* dest, const char* data)
+int Dom32IoWifi::RequestEnqueue(const char* dest, const char* data, void(*fcn)(const char* id, const char* data))
 {
     int i;
+    queue_data qd;
 
     for(i = 0; i < MAX_QUEUE_COUNT && m_queue_list[i].addr[0] != 0; i++)
     {
@@ -648,11 +639,13 @@ int Dom32IoWifi::RequestEnqueue(const char* dest, const char* data)
         if(m_queue_list[i].addr[0] == 0)
         {
             /* Cola Nueva */
-            m_queue_list[i].id = QueueOpen(WIFI_MSG_MAX_QUEUE, WIFI_MSG_MAX_LEN, m_queue_list[i].buffer);
+            m_queue_list[i].id = QueueOpen(WIFI_MSG_MAX_QUEUE, sizeof(queue_data), m_queue_list[i].buffer);
             if(m_queue_list[i].id == INVALID_QUEUE) return (-1);
             strcpy(m_queue_list[i].addr, dest);
         }
-        QueueAdd(m_queue_list[i].id, (void*)data);
+        qd.fcn = fcn;
+        strcpy(qd.buffer, data);
+        QueueAdd(m_queue_list[i].id, (void*)&qd);
         m_queue_list[i].delay = 0;
         m_queue_list[i].retry = 0;
         return 0;
@@ -660,15 +653,20 @@ int Dom32IoWifi::RequestEnqueue(const char* dest, const char* data)
     return (-1);
 }
 
-int Dom32IoWifi::RequestDequeue(const char* dest, const char* data, unsigned int retry)
+int Dom32IoWifi::RequestDequeue(const char* dest, queue_data* qdata, unsigned int retry)
 {
     CTcp q;
     char buffer[WIFI_MSG_MAX_LEN];
     char msg[WIFI_MSG_MAX_LEN];
     int rc;
+    int i;
+    STRFunc Str;
+    char label[256];
+    char value[256];
+    cJSON *json_request;
 
-    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s] retry: %u", data, retry);
-    if(q.Query(dest, m_port, data, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s] retry: %u", qdata->buffer, retry);
+    if(q.Query(dest, m_port, qdata->buffer, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
@@ -677,9 +675,24 @@ int Dom32IoWifi::RequestDequeue(const char* dest, const char* data, unsigned int
             /* Hay que evaluar los datos de la respuesta */
             if(HttpData(buffer, msg) > 0)
             {
+                /*
+                ID=ecfabc3b6690&IO1=in&IO2=in&IO3=in&IO4=in&IO5=in&IO6=in
+
+                {"ID":"ecfabc3b6642","IO1":"1","IO2":"0","IO3":"1","IO4":"1","IO5":"1","IO6":"1","OUT1":"0","OUT2":"1","OUT3":"0","OUT4":"0","GETCONF":"1"}
+                
+                */
+                json_request = cJSON_CreateObject();
+                for(i = 0; Str.ParseDataIdx(msg, label, value, i); i++)
+                {
+                    cJSON_AddStringToObject(json_request, label, value);                    
+                }
+                cJSON_PrintPreallocated(json_request, msg, 255, 0);
                 /* Si trae datos son de status de la interface */
-                m_pLog->Add(90, "Call [dompi_infoio][%s]", msg);
-                m_pServer->Call("dompi_infoio", msg, strlen(msg), NULL, 1000);
+                if(qdata->fcn)
+                {
+                    (qdata->fcn)(dest, msg);
+                }
+                cJSON_Delete(json_request);
             }
             rc = 0;
         }

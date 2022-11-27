@@ -61,6 +61,11 @@ int power2(int exp)
 	}
 }
 
+void dompi_infoio(const char* dest, const char* data)
+{
+	m_pServer->m_pLog->Add(100, "Call [dompi_infoio] %s -> [%s]", dest, data);
+	//m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, internal_timeout);
+}
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -150,7 +155,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_hw_set_port_config"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
-				if(json_Direccion_IP && json_Tipo_HW && json_Port )
+				if(json_Direccion_IP && json_Tipo_HW)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
 					{
@@ -177,7 +182,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
-						pD32W->SetConfig(json_Direccion_IP->valuestring, message);
+						pD32W->SetConfig(json_Direccion_IP->valuestring, message, nullptr);
 					}
 				}
 				else
@@ -234,7 +239,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{
-						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024);
+						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024, nullptr);
 						m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -323,7 +328,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == 1)
 					{	/* Interface Vía IP con dos puertos */
-						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &wifi_data);
+						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &wifi_data, nullptr);
 						m_pServer->m_pLog->Add(100, "pD32W->GetWifiConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -371,7 +376,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{	
 						/* Interface Vía IP mensajeria HTTP */
 						/* Envío de configuración a WiFi */
-						pD32W->SetTime(json_Direccion_IP->valuestring);
+						pD32W->SetTime(json_Direccion_IP->valuestring, nullptr);
 					}
 				}
 				else
@@ -417,7 +422,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{	
 							/* Enviar mensaje al WiFi */
-							pD32W->SetIO(json_Direccion_IP->valuestring, json_req);
+							pD32W->SetIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
 						}
 					}
 					else
@@ -467,7 +472,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req);
+							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
 						}
 						else
 						{
@@ -522,7 +527,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req);
+							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
 						}
 						else
 						{

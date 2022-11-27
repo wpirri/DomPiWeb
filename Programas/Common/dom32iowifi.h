@@ -48,23 +48,23 @@ public:
 	Dom32IoWifi(CGMServerWait *pServer = NULL);
 	virtual ~Dom32IoWifi();
 
-    int GetWifiConfig(const char *raddr, wifi_config_data *config);
-    int SetWifiConfig(const char *raddr, wifi_config_data *config);
+    int GetWifiConfig(const char *raddr, wifi_config_data *config, void(*fcn)(const char* id, const char* data));
+    int SetWifiConfig(const char *raddr, wifi_config_data *config, void(*fcn)(const char* id, const char* data));
 
-    int GetConfig(const char *raddr, char *msg, int max_msg_len);
-    int SetConfig(const char *raddr, char *msg);
-    int SetTime(const char *raddr);
-    int GetIO(const char *raddr, char *msg, int max_msg_len);
-    int SetIO(const char *raddr, char *msg);
-    int SwitchIO(const char *raddr, char *msg);
-    int PulseIO(const char *raddr, char *msg);
+    int GetConfig(const char *raddr, char *msg, int max_msg_len, void(*fcn)(const char* id, const char* data));
+    int SetConfig(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
+    int SetTime(const char *raddr, void(*fcn)(const char* id, const char* data));
+    int GetIO(const char *raddr, char *msg, int max_msg_len, void(*fcn)(const char* id, const char* data));
+    int SetIO(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
+    int SwitchIO(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
+    int PulseIO(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
 
-    int GetConfig(const char *raddr, cJSON *json);
-    int SetConfig(const char *raddr, cJSON *json);
-    int GetIO(const char *raddr, cJSON *json);
-    int SetIO(const char *raddr, cJSON *json);
-    int SwitchIO(const char *raddr, cJSON *json);
-    int PulseIO(const char *raddr, cJSON *json);
+    int GetConfig(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
+    int SetConfig(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
+    int GetIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
+    int SetIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
+    int SwitchIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
+    int PulseIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
 
     void Task( void );
     void Timer( void );
@@ -72,11 +72,17 @@ public:
     int m_timeout;
 
 protected:
+    typedef struct _queue_data
+    {
+        char buffer[WIFI_MSG_MAX_LEN];
+        void(*fcn)(const char* id, const char* data);
+    } queue_data;
+    
     typedef struct _queue_list
     {
         char addr[16];
         unsigned char id;
-        char buffer[WIFI_MSG_MAX_LEN*WIFI_MSG_MAX_QUEUE];
+        char buffer[sizeof(queue_data)*WIFI_MSG_MAX_QUEUE];
         unsigned int delay;
         unsigned int retry;
     } queue_list;
@@ -112,8 +118,8 @@ protected:
 
     int HttpRespCode(const char* http);
     int HttpData(const char* http, char* data);
-    int RequestEnqueue(const char* dest, const char* data);
-    int RequestDequeue(const char* dest, const char* data, unsigned int retry);
+    int RequestEnqueue(const char* dest, const char* data, void(*fcn)(const char* id, const char* data));
+    int RequestDequeue(const char* dest, queue_data* data, unsigned int retry);
 
 };
 
