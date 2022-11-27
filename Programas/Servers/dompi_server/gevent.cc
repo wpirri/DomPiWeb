@@ -135,21 +135,24 @@ int GEvent::ExtIOEvent(const char* json_evt)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
                 json_status = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Estado");
-                if(atoi(json_status->valuestring) == 0)
+                if(json_raddr)
                 {
-                    m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                    if(atoi(json_status->valuestring) == 0)
+                    {
+                        m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                    }
+                    /* Actualizo la tabla de Dispositivos */
+                    sprintf(query, "UPDATE TB_DOM_PERIF "
+                                        "SET Ultimo_Ok = %lu, "
+                                        "Direccion_IP = \"%s\", "
+                                        "Estado = 1 "
+                                        "WHERE MAC = \"%s\"",
+                                        t,
+                                        json_raddr->valuestring,
+                                        json_hw_mac->valuestring);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                    m_pDB->Query(NULL, query);
                 }
-                /* Actualizo la tabla de Dispositivos */
-                sprintf(query, "UPDATE TB_DOM_PERIF "
-                                    "SET Ultimo_Ok = %lu, "
-                                    "Direccion_IP = \"%s\", "
-                                    "Estado = 1 "
-                                    "WHERE MAC = \"%s\"",
-                                    t,
-                                    json_raddr->valuestring,
-                                    json_hw_mac->valuestring);
-                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                m_pDB->Query(NULL, query);
                 /* Actualizo los assign que vengan  en el mensaje */
                 json_un_obj = json_obj;
                 while( json_un_obj )
@@ -243,7 +246,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             }
             else
             {
-                m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_hw_mac->valuestring, json_raddr->valuestring);
+                m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_hw_mac->valuestring, (json_raddr)?json_raddr->valuestring:"-");
                 cJSON_Delete(json_arr);
                 cJSON_Delete(json_obj);
                 return 0;

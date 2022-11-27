@@ -235,6 +235,111 @@ const char *auto_columns[] = {
 		"Flags",
 		0};
 
+void CheckUpdateHWConfig()
+{
+	int rc;
+	char query[4096];
+	char message[4096];
+
+    cJSON *json_Config;
+    cJSON *json_arr_Perif;
+    cJSON *json_Perif;
+    cJSON *json_arr_Assign;
+    cJSON *json_HW_Id;
+    cJSON *json_MAC;
+    cJSON *json_Tipo;
+    cJSON *json_Flags;
+
+
+	/* Controlo si hay que actualizar configuración de dispositivo */
+	json_arr_Perif = cJSON_CreateArray();
+	sprintf(query, "SELECT * "
+					"FROM TB_DOM_PERIF "
+					"WHERE Actualizar <> 0 "
+					"ORDER BY Id");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_arr_Perif, query);
+	if(rc == 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
+		{
+			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
+			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
+			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
+			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
+
+			m_pServer->m_pLog->Add(50, "Actualizar HW [%s]", json_MAC->valuestring);
+
+			/* Un objeto para contener a todos */
+			json_Config = cJSON_CreateObject();
+			/* Saco los datos que necesito */
+			cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
+			cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
+			cJSON_AddItemToObject(json_Config, "Direccion_IP", cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP"));
+			cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
+/*
+			if(json_Flags)
+			{
+				if(atoi(json_Flags->valuestring) & 0x01)
+				{
+					cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
+				}
+				else
+				{
+					cJSON_AddStringToObject(json_Config, "HTTPS", "no");
+				}
+				if(atoi(json_Flags->valuestring) & 0x02)
+				{
+					cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
+				}
+				else
+				{
+					cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
+				}
+				if(atoi(json_Flags->valuestring) & 0x04)
+				{
+					cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
+				}
+				else
+				{
+					cJSON_AddStringToObject(json_Config, "DHT2x", "no");
+				}
+				cJSON_Delete(json_Flags);
+			}
+*/
+			if(atoi(json_Tipo->valuestring) == 0)
+			{
+				/* RBPi Local */
+
+				/* TODO: Actualizar I/O de RBPi  */
+			}
+			else if(atoi(json_Tipo->valuestring) == 1)
+			{
+				/* Actualizar I/O de Dom32IOWiFi */
+				json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
+				sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
+								"FROM TB_DOM_ASSIGN AS ASS "
+								"WHERE Dispositivo = %s", json_HW_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				pDB->Query(json_arr_Assign, query);
+				cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
+				m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
+			}
+			/* Borro la marca */
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Actualizar = 0 "
+							"WHERE Id = %s", json_HW_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			pDB->Query(NULL, query);
+
+			cJSON_Delete(json_Config);
+		}
+	}
+	//cJSON_Delete(json_arr_Perif);
+}
+
 void RunDaily( void )
 {
 	m_pServer->m_pLog->Add(100, "[Daily] Mantenimiento de la base de datos.");
@@ -394,7 +499,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Tipo;
 	cJSON *json_Tipo_HW;
 	cJSON *json_Tipo_ASS;
-	//cJSON *json_Port;
+	cJSON *json_Port;
 	cJSON *json_Estado;
 	//cJSON *json_Flags;
 	cJSON *json_Objeto;
@@ -406,6 +511,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Hora_Fin;
 	cJSON *json_Dias_Semana;
 	cJSON *json_ASS_Estado;
+	cJSON *json_Config;
+	cJSON *json_ConfigPorts;
 	
 
 	update_hw_config_id = 0;
@@ -3184,68 +3291,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			m_pServer->m_pLog->Add(60, "Control de tareas programadas...");
 
-			/* Controlo si hay que actualizar configuración de dispositivo */
-			json_arr = cJSON_CreateArray();
-			sprintf(query, "SELECT * "
-							"FROM TB_DOM_PERIF "
-							"WHERE Actualizar <> 0 "
-							"ORDER BY Id");
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(json_arr, query);
-			if(rc == 0)
-			{
-				/* Recorro el array */
-				cJSON_ArrayForEach(json_un_obj, json_arr)
-				{
-					/* Saco los datos que necesito */
-					json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Id");
-					json_MAC = cJSON_GetObjectItemCaseSensitive(json_un_obj, "MAC");
-					json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP");
-					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
-
-					m_pServer->m_pLog->Add(50, "Actualizar [%s]", json_MAC->valuestring);
-					if(atoi(json_Tipo_HW->valuestring) == 0)
-					{
-						/* RBPi Local */
-
-						/* TODO: Actualizar I/O de RBPi  */
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{
-						/* Actualizar I/O de Dom32IOWiFi */
-						json_arr2 = cJSON_CreateArray();
-						sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
-										"FROM TB_DOM_ASSIGN AS ASS "
-										"WHERE Dispositivo = %s", json_HW_Id->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(json_arr2, query);
-						if(rc == 0)
-						{
-							/* Recorro el array */
-							cJSON_ArrayForEach(json_un_obj2, json_arr2)
-							{
-								json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj2, "Objeto");
-								m_pServer->m_pLog->Add(50, "Actualizar tipo de Assign [%s]", json_Objeto->valuestring);
-								/* Le agrego los datos del dispositivo */
-								cJSON_AddStringToObject(json_un_obj2, "Direccion_IP", json_Direccion_IP->valuestring);
-								cJSON_AddStringToObject(json_un_obj2, "MAC", json_MAC->valuestring);
-								cJSON_AddStringToObject(json_un_obj2, "Tipo_HW", json_Tipo_HW->valuestring);
-								cJSON_PrintPreallocated(json_un_obj2, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
-								m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
-							}
-						}
-						cJSON_Delete(json_arr2);
-					}
-					/* Borro la marca */
-					sprintf(query, "UPDATE TB_DOM_PERIF "
-									"SET Actualizar = 0 "
-									"WHERE Id = %s", json_HW_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					pDB->Query(NULL, query);
-				}
-			}
-			cJSON_Delete(json_arr);
+			CheckUpdateHWConfig();
 
 			/* Control del modulo de automatización */
 			json_arr = cJSON_CreateArray();
