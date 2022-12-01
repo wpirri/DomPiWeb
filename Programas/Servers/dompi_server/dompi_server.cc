@@ -102,6 +102,7 @@ using namespace std;
 #include "strfunc.h"
 
 #define MAX_BUFFER_LEN 32767
+#define BT_BUF_SIZE 256
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
@@ -248,7 +249,7 @@ void CheckUpdateHWConfig()
     cJSON *json_HW_Id;
     cJSON *json_MAC;
     cJSON *json_Tipo;
-    cJSON *json_Flags;
+    //cJSON *json_Flags;
 
 
 	/* Controlo si hay que actualizar configuración de dispositivo */
@@ -267,7 +268,7 @@ void CheckUpdateHWConfig()
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
-			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
+			//json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
 
 			m_pServer->m_pLog->Add(50, "Actualizar HW [%s]", json_MAC->valuestring);
 
@@ -481,9 +482,9 @@ int main(/*int argc, char** argv, char** env*/void)
 
     cJSON *json_obj;
     cJSON *json_un_obj;
-    cJSON *json_un_obj2;
+    //cJSON *json_un_obj2;
     cJSON *json_arr = NULL;
-    cJSON *json_arr2 = NULL;
+    //cJSON *json_arr2 = NULL;
     cJSON *json_user;
     cJSON *json_pass;
     cJSON *json_channel;
@@ -493,26 +494,26 @@ int main(/*int argc, char** argv, char** env*/void)
 
     cJSON *json_HW_Id;
     cJSON *json_ASS_Id;
-    cJSON *json_AUTO_Id;
+    //cJSON *json_AUTO_Id;
     cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
-	cJSON *json_Tipo;
-	cJSON *json_Tipo_HW;
+	//cJSON *json_Tipo;
+	//cJSON *json_Tipo_HW;
 	cJSON *json_Tipo_ASS;
-	cJSON *json_Port;
+	//cJSON *json_Port;
 	cJSON *json_Estado;
 	//cJSON *json_Flags;
 	cJSON *json_Objeto;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
-	cJSON *json_Min;
-	cJSON *json_Max;
-	cJSON *json_Hora_Inicio;
-	cJSON *json_Hora_Fin;
-	cJSON *json_Dias_Semana;
-	cJSON *json_ASS_Estado;
-	cJSON *json_Config;
-	cJSON *json_ConfigPorts;
+	//cJSON *json_Min;
+	//cJSON *json_Max;
+	//cJSON *json_Hora_Inicio;
+	//cJSON *json_Hora_Fin;
+	//cJSON *json_Dias_Semana;
+	//cJSON *json_ASS_Estado;
+	//cJSON *json_Config;
+	//cJSON *json_ConfigPorts;
 	
 
 	update_hw_config_id = 0;
@@ -3212,7 +3213,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					pDB->Query(NULL, query);
 				}
-				m_pServer->Free(call_resp);
 			}
 		}
 		cJSON_Delete(json_arr);
@@ -3307,16 +3307,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Recorro el array */
 				cJSON_ArrayForEach(json_un_obj, json_arr)
 				{
-					json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_Id");
-					json_Tipo = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
-					json_Min = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Min_Sensor");
-					json_Max = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Max_Sensor");
-					json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Inicio");
-					json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
-					json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
+					//json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_Id");
+					//json_Tipo = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
+					//json_Min = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Min_Sensor");
+					//json_Max = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Max_Sensor");
+					//json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Inicio");
+					//json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
+					//json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
 					json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
 					json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
-					json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Estado");
+					//json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Estado");
 					json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "PERIF_Id");
 
 
@@ -3436,7 +3436,7 @@ void OnClose(int sig)
 	delete pEV;
 	delete pConfig;
 	delete pDB;
-	delete m_pServer;
+
 	exit(0);
 }
 

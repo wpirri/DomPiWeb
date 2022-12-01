@@ -43,6 +43,8 @@ CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
 
+#define BT_BUF_SIZE 256
+
 void OnClose(int sig);
 
 int power2(int exp)
@@ -64,7 +66,7 @@ int power2(int exp)
 void dompi_infoio(const char* dest, const char* data)
 {
 	m_pServer->m_pLog->Add(100, "Call [dompi_infoio] %s -> [%s]", dest, data);
-	//m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, internal_timeout);
+	m_pServer->Call("dompi_infoio", data, strlen(data), nullptr, internal_timeout);
 }
 
 int main(/*int argc, char** argv, char** env*/void)
@@ -588,7 +590,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_MSG);
 
-
 	delete m_pServer;
+	
 	exit(0);
 }
