@@ -65,8 +65,8 @@ int power2(int exp)
 
 void dompi_infoio(const char* dest, const char* data)
 {
-	m_pServer->m_pLog->Add(100, "Call [dompi_infoio] %s -> [%s]", dest, data);
-	m_pServer->Call("dompi_infoio", data, strlen(data), nullptr, internal_timeout);
+	//m_pServer->m_pLog->Add(100, "Call [dompi_infoio] %s -> [%s]", dest, data);
+	//m_pServer->Call("dompi_infoio", data, strlen(data), nullptr, internal_timeout);
 }
 
 int main(/*int argc, char** argv, char** env*/void)
