@@ -20,6 +20,8 @@ We can use the following two commands within the terminal on our Raspberry Pi to
 -------------------------------------------------------------------------------
 apt update
 apt upgrade
+apt install chromium-browser
+apt install rpi-chromium-mods
 -------------------------------------------------------------------------------
 
 We now need also to install xdotool. This tool will allow our bash script to execute key presses without anyone being on the device. We also install the unclutter package, this will enable us to hide the mouse from the display.
