@@ -249,7 +249,7 @@ void CheckUpdateHWConfig()
     cJSON *json_HW_Id;
     cJSON *json_MAC;
     cJSON *json_Tipo;
-    //cJSON *json_Flags;
+    cJSON *json_Flags;
 
 
 	/* Controlo si hay que actualizar configuración de dispositivo */
@@ -268,7 +268,7 @@ void CheckUpdateHWConfig()
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
-			//json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
+			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
 
 			m_pServer->m_pLog->Add(50, "Actualizar HW [%s]", json_MAC->valuestring);
 
@@ -279,7 +279,7 @@ void CheckUpdateHWConfig()
 			cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
 			cJSON_AddItemToObject(json_Config, "Direccion_IP", cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP"));
 			cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
-/*
+
 			if(json_Flags)
 			{
 				if(atoi(json_Flags->valuestring) & 0x01)
@@ -308,7 +308,7 @@ void CheckUpdateHWConfig()
 				}
 				cJSON_Delete(json_Flags);
 			}
-*/
+
 			if(atoi(json_Tipo->valuestring) == 0)
 			{
 				/* RBPi Local */
