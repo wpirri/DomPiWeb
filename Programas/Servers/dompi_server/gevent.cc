@@ -198,11 +198,25 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
 
                                     }
-                                    else if( !memcmp(json_un_obj->string, "DHT", 3))
+                                    else if( !memcmp(json_un_obj->string, "TEMP", 4))
                                     {
-                                        /* TODO: Tratamiento de sensor de temperatura y humedad */
-
-
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = (%s * 100) "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                                        json_un_obj->valuestring,
+                                                        json_hw_id->valuestring,
+                                                        json_un_obj->string);
+                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                        m_pDB->Query(NULL, query);
+                                    }
+                                    else if( !memcmp(json_un_obj->string, "HUM", 3))
+                                    {
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = (%s * 100) "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                                        json_un_obj->valuestring,
+                                                        json_hw_id->valuestring,
+                                                        json_un_obj->string);
+                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                        m_pDB->Query(NULL, query);
                                     }
                                 }
                             }
