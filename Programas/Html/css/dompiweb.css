@@ -178,6 +178,12 @@ body {
 	cursor: pointer;
 	}
 	
+.home-display {
+	font-weight: bold;
+	background:darkblue;
+	color: white;
+}
+
 #home-div {
 	position: absolute; 
 	left: 170px; 

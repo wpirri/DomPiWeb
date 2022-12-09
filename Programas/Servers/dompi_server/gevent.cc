@@ -194,14 +194,20 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     }
                                     else if( !memcmp(json_un_obj->string, "WIEGAND", 7))
                                     {
-                                        /* TODO: Tratamiento de tarjeta inalambrica */
-
-
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                                        "Tipo = 6",
+                                                        json_un_obj->valuestring,
+                                                        json_hw_id->valuestring,
+                                                        json_un_obj->string);
+                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                        m_pDB->Query(NULL, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "TEMP", 4))
                                     {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = (%s * 100) "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                                        "Tipo = 6",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
@@ -210,8 +216,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     }
                                     else if( !memcmp(json_un_obj->string, "HUM", 3))
                                     {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = (%s * 100) "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                                        "Tipo = 6",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);

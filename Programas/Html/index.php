@@ -12,6 +12,7 @@
 <meta name="system-build" content="2021">
 <link href="css/index.css" rel="stylesheet" type="text/css" />
 <script src="js/weather.js" type="text/javascript"></script>
+<script src="js/ajax.js" type="text/javascript"></script>
 </head>
 <body>
 
@@ -42,12 +43,30 @@ function setForecasttWeather( forecast ) {
     //document.getElementById('temp_min').innerHTML = 'Temperatura Minima ' + Weather.kelvinToCelsius(forecast.low()).toFixed(1) + ' °C';
 }
 
-function setLocalData( local ) {
-    //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
-    document.getElementById('clima_interior').innerHTML =
+function updateLocalStatus(msg) {
+  var Temp = '0.00';
+  var Hum = '0.00';
+	jsonData = JSON.parse(msg).response;
+	for (var i = 0; i < jsonData.length; i++) { 
+		//jsonData[i].Objeto
+		//jsonData[i].Port
+		//jsonData[i].Icono0
+		//jsonData[i].Icono1
+		//jsonData[i].Estado
+		//jsonData[i].Tipo
+		//jsonData[i].Perif_Data
+		if ( jsonData[i].Tipo == 6 ) {
+			if(jsonData[i].Objeto == 'Temp Int') {
+				Temp = jsonData[i].Perif_Data;
+			} else if(jsonData[i].Objeto == 'Hum Int') {
+				Hum = jsonData[i].Perif_Data;
+			}
+    }
+	}
+  document.getElementById('clima_interior').innerHTML =
         '<br /><img class "weather-icon" src="images/home.png" />' +
-        '<br />T 0,0 °C' + 
-        '<br />Hr 0 %';
+        '<br />T '+ Temp +' °C' + 
+        '<br />Hr '+ Hum +' %';
 }
 
 // API Key methods
@@ -63,7 +82,7 @@ Weather.getCurrent( 'Buenos Aires', setCurrentWeather );
 // Get the forecast for a given city
 Weather.getForecast( 'Buenos Aires', setForecasttWeather );
 // Get Local data
-setLocalData();
+newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=2', updateLocalStatus, true);
 /* Reloj */
 function twoDigits(i) {
   if (i < 10) {
@@ -71,6 +90,7 @@ function twoDigits(i) {
   }
   return i;
 }
+
 function setCurrentTime( ) {
     var months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     var day_of_week = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];

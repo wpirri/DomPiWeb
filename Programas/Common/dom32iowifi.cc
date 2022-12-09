@@ -336,25 +336,30 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
 
         if(json_Port && json_Tipo_ASS)
         {
-            if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi::SetConfig] %s = %s", json_Port->valuestring, json_Tipo_ASS->valuestring);
-            if(data[0] != 0) strcat(data, "&");
-            strcat(data, json_Port->valuestring);
-            strcat(data, "=");
-            if( !strcmp(json_Tipo_ASS->valuestring, "0") || !strcmp(json_Tipo_ASS->valuestring, "3") || !strcmp(json_Tipo_ASS->valuestring, "5"))
+            /* Para tipos conocidos de port */
+            if( !memcmp(json_Port->valuestring, "IO", 2) || !memcmp(json_Port->valuestring, "OUT", 3))
             {
-                strcat(data, "out");
-            }
-            else if( !strcmp(json_Tipo_ASS->valuestring, "1") || !strcmp(json_Tipo_ASS->valuestring, "4"))
-            {
-                strcat(data, "in");
-            }
-            else if( !strcmp(json_Tipo_ASS->valuestring, "2"))
-            {
-                strcat(data, "ana");
-            }
-            else
-            {
-                strcat(data, "err");
+                if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi::SetConfig] %s = %s", json_Port->valuestring, json_Tipo_ASS->valuestring);
+
+                if(data[0] != 0) strcat(data, "&");
+                strcat(data, json_Port->valuestring);
+                strcat(data, "=");
+                if( !strcmp(json_Tipo_ASS->valuestring, "0") || !strcmp(json_Tipo_ASS->valuestring, "3") || !strcmp(json_Tipo_ASS->valuestring, "5"))
+                {
+                    strcat(data, "out");
+                }
+                else if( !strcmp(json_Tipo_ASS->valuestring, "1") || !strcmp(json_Tipo_ASS->valuestring, "4"))
+                {
+                    strcat(data, "in");
+                }
+                else if( !strcmp(json_Tipo_ASS->valuestring, "2"))
+                {
+                    strcat(data, "ana");
+                }
+                else
+                {
+                    strcat(data, "err");
+                }
             }
         }
     }

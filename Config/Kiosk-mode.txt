@@ -13,10 +13,13 @@ apt purge smartsim java-common minecraft-pi libreoffice* -y
 apt clean
 apt autoremove -y
 -------------------------------------------------------------------------------
+Para desabilitar los updates automaticos que pueden romper el funcionamiento
+-------------------------------------------------------------------------------
+systemctl disable apt-daily-upgrade.timer
 
+-------------------------------------------------------------------------------
 Now that we have removed the bulk of the unnecessary applications, we must now make sure that our installation of Raspbian is up to date. Also, make sure you have SSH enabled as it is very handy if you need to edit any files later on.
 We can use the following two commands within the terminal on our Raspberry Pi to update all the packages to their latest versions.
-
 -------------------------------------------------------------------------------
 apt update
 apt upgrade

@@ -1692,18 +1692,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Id = %s", json_un_obj->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s", json_un_obj->valuestring);
 				}
 				else
 				{
 					json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 					if(json_un_obj)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN WHERE Planta = %s", json_un_obj->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s", json_un_obj->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado FROM TB_DOM_ASSIGN");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN");
 					}
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
