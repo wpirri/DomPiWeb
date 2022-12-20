@@ -19,6 +19,9 @@
         $Tipo = $obj_list[$i]['Tipo'];
         $Segundos = $obj_list[$i]['Analog_Mult_Div_Valor'];
 
+        //
+        // Icono segun el estado
+        //
         if($edit == 1 || $obj_list[$i]['Estado'] == 1)
         {
             $src = "src=\"images/".$Icono1."\"";
@@ -28,6 +31,9 @@
             $src = "src=\"images/".$Icono0."\"";
         }
 
+        //
+        //  Acciones de click sobre objeto
+        //
         if($edit == 1)
         {
             $onclick = "onClick=\"window.location.replace('edit_assign.php?Id=".$Id."');\"";
@@ -48,17 +54,33 @@
             $onclick = "";
         }
 
-        if ($Tipo == 2) {
+        //
+        // Representacion del objeto segun el tipo
+        //
+        if ($Tipo == 2)
+        {
 	        echo "<div id=\"id-".$Objeto."\" class=\"home-display\" ".$onclick.">&nbsp;9999&nbsp;</div>";
-        } else if ($Tipo == 6) {
-			if($Port[0] == 'T') {
+        }
+        else if ($Tipo == 6)
+        {
+			if($Port[0] == 'T')
+            {
+                // Display de temperatura
                 echo "<div id=\"id-".$Objeto."\" class=\"home-display\" ".$onclick.">&nbsp;T 00.0 °C&nbsp;</div>";
-			} else if($Port[0] == 'H') {
+			}
+            else if($Port[0] == 'H')
+            {
+                // Display de humedad
                 echo "<div id=\"id-".$Objeto."\" class=\"home-display\" ".$onclick.">&nbsp;Hr 00.0 %&nbsp;</div>";
-			} else {
+			}
+            else
+            {
                 echo "<div id=\"id-".$Objeto."\" class=\"home-display\" ".$onclick.">&nbsp;".$Port."&nbsp;</div>";
 			}
-        } else {
+        }
+        else
+        {
+            // Display generico
 	        echo "<img id=\"id-".$Objeto."\" class=\"home-image\" ".$src." ".$onclick."/>";
         }
             
