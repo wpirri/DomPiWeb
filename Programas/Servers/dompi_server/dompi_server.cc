@@ -1529,6 +1529,12 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "'");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
+										/* Recopilo algunos datos para actualizar la tabla de HW */
+										if( !strcmp(json_un_obj->string, "Dispositivo"))
+										{
+											/* Mando a actualiza la configuración del HW */
+											update_hw_config_id = atoi(json_un_obj->valuestring);
+										}
 									}
 								}
 							}
