@@ -131,7 +131,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_arr = cJSON_CreateArray();
             rc = m_pDB->Query(json_arr, query);
-            if(rc == 0)
+            if(rc == 0 && json_arr->child)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
                 json_status = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Estado");
