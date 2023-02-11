@@ -171,6 +171,7 @@ int CSerial::Recv(char* data, unsigned int max_data_len, int time_out)
       i++;
     }
     t = time(&t);
+    usleep(250);
   }
   *(data + i) = 0;
   return i;

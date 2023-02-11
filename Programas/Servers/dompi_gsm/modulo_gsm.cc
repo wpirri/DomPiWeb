@@ -235,6 +235,10 @@ int ModGSM::QueryModem(const char* wait_for, char* recv, int recv_max, const cha
                 strcat(recv, buffer);
             }
         }
+        else
+        {
+            usleep(100);
+        }
         t = time(&t);
     } while ( t <= t_end );
     if(wait_for)
