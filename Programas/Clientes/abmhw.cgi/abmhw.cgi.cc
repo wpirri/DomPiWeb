@@ -130,13 +130,34 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   Str.EscapeHttp(request_uri, request_uri);
   Str.EscapeHttp(post_data, post_data);
-
+ 
   if(trace)
   {
-    openlog("abmhw.cgi", 0, LOG_USER);
-    syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
-              remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
+    openlog("auth.cgi", 0, LOG_USER);
+
+    syslog(LOG_DEBUG, "REMOTE_ADDR: %s",remote_addr);
+    syslog(LOG_DEBUG, "REQUEST_URI: [%s]",request_uri);
+    syslog(LOG_DEBUG, "REQUEST_METHOD: %s",request_method);
+    syslog(LOG_DEBUG, "CONTENT_LENGTH: %s",s_content_length);
+    syslog(LOG_DEBUG, "CONFIG_FILE: /etc/dompicloud.config");
+    syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
   }
+
+  /*
+  if(content_length == 0)
+  {
+    fputs("error=99&msg=Sin Datos\r\n", stdout);
+    cJSON_Delete(json_request);
+    return 0;
+  }
+  */
+ 
+  if(trace)
+  {
+    syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
+  }
+
+
 
   gminit.m_host = server_address;
   gminit.m_port = 5533;
