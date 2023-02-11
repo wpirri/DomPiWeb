@@ -290,7 +290,7 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
     cJSON *json_Tipo_ASS;
     cJSON *json_flag_HTTPS;
     cJSON *json_flag_WIEGAND;
-    cJSON *json_flag_DHT2x;
+ //   cJSON *json_flag_DHT2x;
 
     data[0] = 0;
 
@@ -315,14 +315,14 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
         strcat(data, "=");
         strcat(data, json_flag_WIEGAND->valuestring);
     }
-    json_flag_DHT2x = cJSON_GetObjectItemCaseSensitive(json_obj, "DHT2x");
-    if(json_flag_DHT2x)
-    {
-        if(data[0] != 0) strcat(data, "&");
-        strcat(data, "DHT2x");
-        strcat(data, "=");
-        strcat(data, json_flag_DHT2x->valuestring);
-    }
+//    json_flag_DHT2x = cJSON_GetObjectItemCaseSensitive(json_obj, "DHT2x");
+//    if(json_flag_DHT2x)
+//    {
+//        if(data[0] != 0) strcat(data, "&");
+//        strcat(data, "DHT2x");
+//        strcat(data, "=");
+//        strcat(data, json_flag_DHT2x->valuestring);
+//    }
 
     json_Ports = cJSON_GetObjectItemCaseSensitive(json_obj, "Ports");
 

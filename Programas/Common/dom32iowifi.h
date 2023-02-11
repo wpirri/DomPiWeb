@@ -21,10 +21,10 @@
 /* Definiciones para los bits de flag */
 #define FLAG_HTTPS_ENABLE    0x01
 #define FLAG_WIEGAND_ENABLE  0x02
-#define FLAG_DHT2x_ENABLE    0x04
+//#define FLAG_DHT2x_ENABLE    0x04
 #define FLAG_HTTPS_DISABLE    0x01^0xFF
 #define FLAG_WIEGAND_DISABLE  0x02^0xFF
-#define FLAG_DHT2x_DISABLE    0x04^0xFF
+//#define FLAG_DHT2x_DISABLE    0x04^0xFF
 
 #define WIFI_MSG_MAX_LEN    4096
 #define WIFI_MSG_MAX_QUEUE  8

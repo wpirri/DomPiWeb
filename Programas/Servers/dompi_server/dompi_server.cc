@@ -1,3 +1,4 @@
+
 /***************************************************************************
     Copyright (C) 2021   Walter Pirri
 
@@ -298,14 +299,14 @@ void CheckUpdateHWConfig()
 				{
 					cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
 				}
-				if(atoi(json_Flags->valuestring) & 0x04)
-				{
-					cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
-				}
-				else
-				{
-					cJSON_AddStringToObject(json_Config, "DHT2x", "no");
-				}
+				//if(atoi(json_Flags->valuestring) & 0x04)
+				//{
+				//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
+				//}
+				//else
+				//{
+				//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
+				//}
 				cJSON_Delete(json_Flags);
 			}
 
