@@ -1977,7 +1977,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
 				if(json_Objeto && json_Accion)
 				{
-					/* TODO: Completar accion que viene desde la nube */
+					m_pServer->m_pLog->Add(100, "[COMANDO] Objeto: %s - Accion: %s", 
+						json_Objeto->valuestring, json_Accion->valuestring);
+
 					if( !strcmp(json_Accion->valuestring, "on"))
 					{
 						/* Actualizo el estado en la base */

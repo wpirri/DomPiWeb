@@ -30,8 +30,6 @@ include('head-abm.php');
     }
 </script>
 
-</form>
-
 </body>
 
 <?php
