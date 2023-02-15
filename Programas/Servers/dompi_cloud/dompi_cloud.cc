@@ -173,7 +173,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_MSG);
 	m_pServer->Suscribe("dompi_ass_status_update", GM_MSG_TYPE_MSG);
 
-	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, 3000 )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, 250 )) >= 0)
 	{
 		if(rc > 0)
 		{

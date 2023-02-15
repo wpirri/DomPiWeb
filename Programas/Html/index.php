@@ -24,7 +24,9 @@
   <td align="center"><div id="clima_interior" class="clima">interior</div></td>
 </tr></table>
 </div>
+
 <script type="text/javascript">
+
 /* Clima */
 function setCurrentWeather( current ) {
     //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
@@ -69,20 +71,6 @@ function updateLocalStatus(msg) {
         '<br />Hr '+ Hum +' %';
 }
 
-// API Key methods
-var apiKey = '0b39d49d1a75d80d40e7f32edf2cc7c1';
-Weather.setApiKey( apiKey );
-var tempApiKey = Weather.getApiKey();
-// Language methods
-var langugage = "es";
-Weather.setLanguage( langugage );
-var tempLanguage = Weather.getLanguage();
-// Get current weather for a given city
-Weather.getCurrent( 'Buenos Aires', setCurrentWeather );
-// Get the forecast for a given city
-Weather.getForecast( 'Buenos Aires', setForecasttWeather );
-// Get Local data
-newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=2', updateLocalStatus, true);
 /* Reloj */
 function twoDigits(i) {
   if (i < 10) {
@@ -119,8 +107,30 @@ function setCurrentTime( ) {
               '<br /><div id="fecha">' + dd + '</div>' +
               '<br /><div id="mes">' + months[mm] + '</div>';
 
+    if(++timer_counter > 120)
+    {
+      timer_counter = 0;
+      // Get Local data
+      newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=2', updateLocalStatus, false);
+    }
+
     setTimeout("setCurrentTime()", 500);
-}
+  }
+
+var timer_counter = 118;
+// API Key methods
+var apiKey = '0b39d49d1a75d80d40e7f32edf2cc7c1';
+Weather.setApiKey( apiKey );
+var tempApiKey = Weather.getApiKey();
+// Language methods
+var langugage = "es";
+Weather.setLanguage( langugage );
+var tempLanguage = Weather.getLanguage();
+// Get current weather for a given city
+Weather.getCurrent( 'Buenos Aires', setCurrentWeather );
+// Get the forecast for a given city
+Weather.getForecast( 'Buenos Aires', setForecasttWeather );
+
 setCurrentTime();
 
 /* On Click de la página */
