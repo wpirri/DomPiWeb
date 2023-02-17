@@ -226,15 +226,21 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
-				rc = 0;
+				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
 				if(m_CloudHost1Address[0])
 				{
 					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
 				}
-				else /*if(m_CloudHost2Address[0])*/
+				else if(m_CloudHost2Address[0])
 				{
 					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
 				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_ass_change] No hay servidores definodos para reporte a la nube");
+					rc = (-1);
+				}
+
 
 				if( rc > 0 && strlen(message) )
 				{
@@ -261,14 +267,19 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
-				rc = 0;
+				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
 				if(m_CloudHost1Address[0])
 				{
 					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
 				}
-				else /*if(m_CloudHost2Address[0])*/
+				else if(m_CloudHost2Address[0])
 				{
 					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_ass_status_update] No hay servidores definodos para reporte a la nube");
+					rc = (-1);
 				}
 
 				if( rc > 0 && strlen(message) )
@@ -309,7 +320,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 				cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-				rc = 0;
+				rc = (-1);
 				if(m_CloudHost1Address[0])
 				{
 					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
@@ -334,6 +345,10 @@ int main(/*int argc, char** argv, char** env*/void)
 						m_pServer->Post("dompi_cloud_notification", message, strlen(message));
 					}
 				}
+			}
+			else
+			{
+				m_pServer->m_pLog->Add(1, "No hay servidores definodos para reporte a la nube");
 			}
 		}
 		/* Después de recibir un mensaje o expirar el timer */

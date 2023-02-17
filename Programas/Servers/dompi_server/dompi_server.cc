@@ -3298,9 +3298,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			cJSON_PrintPreallocated(json_System_Config->child, message, MAX_BUFFER_LEN, 0);
 			m_pServer->m_pLog->Add(90, "Post [dompi_cloud_config][%s]", message);
 			/* Se envía a todos */
-			m_pServer->Post("dompi_cloud_config", message, strlen(message));
-			update_system_config = 0;
-			update_ass_t = 0;
+			rc = m_pServer->Post("dompi_cloud_config", message, strlen(message));
+			if(rc == 0)
+			{
+				update_system_config = 0;
+				update_ass_t = 0;
+			}
 		}
 
 
