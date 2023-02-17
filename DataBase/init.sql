@@ -8,5 +8,5 @@ INSERT INTO TB_DOM_FUNCTION (Id, Funcion) VALUES (0, 'Ninguna');
 INSERT INTO TB_DOM_USER (id, Usuario, Nombre_Completo, Pin_WEB) VALUES (0, 'nadie', 'Nadie', '****');
 INSERT INTO TB_DOM_USER (id, Usuario, Nombre_Completo, Pin_WEB) VALUES (1, 'admin', 'Administrador del sistema', 'admin');
 INSERT INTO TB_DOM_CONFIG (id, Creacion, System_Key, Cloud_Host_1_Address, Cloud_Host_1_Proto, Cloud_Host_2_Address, Cloud_Host_2_Proto, Planta1)
-  VALUES (1, '0000/00/00 00:00:00', '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF', 'witchblade.com.ar', 'http', 'pueyrredon2679.com.ar', 'http', 'home1.jpg');
+  VALUES (1, '0000/00/00 00:00:00', 'CALLEYNUM00000-CP0000', 'witchblade.com.ar', 'http', 'pueyrredon2679.com.ar', 'http', 'home1.jpg');
 INSERT INTO TB_DOM_AUTO (Id, Objeto, Tipo, Objeto_Salida, Objeto_Sensor) VALUES(0,'Ninguno',1,0,0);

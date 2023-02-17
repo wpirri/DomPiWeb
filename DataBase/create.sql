@@ -115,7 +115,7 @@ Port varchar(128) NOT NULL,                 -- Nombre con el que se identifica e
 Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma, 5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param, 6=Periferico
 Estado integer DEFAULT 0,                   -- 1 / 0 para digitales 0 a n para analogicos
 Estado_HW integer DEFAULT 0,                -- Estado reportado por el HW
-Perif_Data varchar(128);
+Perif_Data varchar(128),
 Icono0 varchar(32),
 Icono1 varchar(32),
 Grupo_Visual integer DEFAULT 0,
@@ -127,7 +127,7 @@ Analog_Mult_Div integer DEFAULT 0,          -- 0=Multiplicar por valor, 1=Dividi
 Analog_Mult_Div_Valor integer DEFAULT 1,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
-FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id)
+FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );
 
@@ -222,16 +222,16 @@ InZone8 integer DEFAULT 0,
 InActDes integer DEFAULT 0,
 OutSiren integer DEFAULT 0,
 OutBuzer integer DEFAULT 0,
-FOREIGN KEY(InZone1) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone2) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone3) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone4) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone5) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone6) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone7) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InZone8) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(InActDes) REFERENCES TB_DOM_ASSIGN(Id)
-FOREIGN KEY(OutSiren) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(InZone1) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone2) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone3) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone4) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone5) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone6) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone7) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InZone8) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(InActDes) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(OutSiren) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(OutBuzer) REFERENCES TB_DOM_ASSIGN(Id)
 );
 
