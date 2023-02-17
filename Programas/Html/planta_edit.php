@@ -23,10 +23,15 @@ include("obj_style.php");
 $edit = 1;
 include("obj_draw.php");
 ?>
-	<img class="home-image" id="plano1" src="images/home1.jpg" />
+	<img class="home-image" id="plano1" src="images/home.png" />
 </div>
 
 <script type="text/javascript" >
+
+function updateHomePicture(msg) {
+	jsonData = JSON.parse(msg).response;
+	document.getElementById('plano1').src = 'images/' + jsonData[0].Planta1;
+}
 
 function ScrollMap(x, y) {
 	map = document.getElementById('home-div');
@@ -40,6 +45,7 @@ function EditObject( name )
 }
 
 function OnLoad( ) {
+	newAJAXCommand('/cgi-bin/abmsys.cgi?funcion=get_current', updateHomePicture, false);
 	ScrollMap(1000,0);
 }
 

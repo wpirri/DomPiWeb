@@ -11,7 +11,7 @@ CC=g++
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: statusio
+all: statusio.cgi
 
 statusio.cgi.o: statusio.cgi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c statusio.cgi.cc
@@ -20,7 +20,7 @@ config.o: ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
-statusio: $(OBJECTS)
+statusio.cgi: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:

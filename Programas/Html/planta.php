@@ -30,19 +30,20 @@ include("obj_style.php");
 <?php
 include("obj_draw.php");
 ?>
-	<img class="home-image" id="plano1" src="images/home1.jpg" />
+	<img class="home-image" id="plano1" src="images/home.png" />
 </div>
 
 <script type="text/javascript" >
+
+function updateHomePicture(msg) {
+	jsonData = JSON.parse(msg).response;
+	document.getElementById('plano1').src = 'images/' + jsonData[0].Planta1;
+}
 
 function ScrollMap(x, y) {
 	map = document.getElementById('home-div');
 	map.scrollLeft = x;
 	map.scrollTop = y;
-}
-
-function OnLoad( ) {
-	ScrollMap(1000,0);
 }
 
 function updateHomeStatus(msg) {
@@ -77,11 +78,11 @@ function updateHomeStatus(msg) {
 	}
 }
 
-function InitUpdate() {
+function OnLoad( ) {
+	newAJAXCommand('/cgi-bin/abmsys.cgi?funcion=get_current', updateHomePicture, false);
 	newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=<?php echo $PLANTA; ?>', updateHomeStatus, true);
+	ScrollMap(1000,0);
 }
-
-InitUpdate();
 
 </script>
 

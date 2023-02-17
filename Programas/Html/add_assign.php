@@ -22,7 +22,7 @@ include('head-abm.php');
 
     function AddAssignToPlanta(id) {
         newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=addassigntoplanta&Id=' + id, null, false);
-        window.location.replace('planta_edit.php', 1000);
+        setTimeout("window.location.replace('planta_edit.php');", 1000);
     }
 </script>
 

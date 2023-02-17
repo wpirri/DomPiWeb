@@ -74,6 +74,7 @@ CSQLite::CSQLite()
 {
   m_db_file[0] = 0;   
   m_db = NULL;
+  m_last_query_time = 0;
 }
 
 CSQLite::CSQLite(const char *filename)
@@ -81,6 +82,7 @@ CSQLite::CSQLite(const char *filename)
   strncpy(m_db_file, filename, FILENAME_MAX);
   m_db_file[FILENAME_MAX] = 0;
   m_db = NULL;
+  m_last_query_time = 0;
 }
 
 CSQLite::~CSQLite()
@@ -125,6 +127,7 @@ int CSQLite::Query(cJSON *json_array, const char *query_fmt, ...)
   char query[1024];
   va_list arg;
   char *msg;
+  time_t t;
 
   m_last_error_text[0] = 0;
 
@@ -136,7 +139,11 @@ int CSQLite::Query(cJSON *json_array, const char *query_fmt, ...)
     syslog(LOG_DEBUG, "QUERY: [%s]", query);
 #endif  
 
+  t = time(&t);
+  m_last_query_time = t;
   rc = sqlite3_exec(m_db, query, CSQLite_Query_Callback, json_array, &msg);
+  t = time(&t);
+  m_last_query_time = t - m_last_query_time;
   if(rc == SQLITE_OK)
   {
     if(query[0] != 's' && query[0] != 'S')
@@ -190,6 +197,12 @@ long CSQLite::NextId(const char* table_name, const char* row_name)
     return (-1);
   }
 }
+
+  long CSQLite::LastQueryTime()
+  {
+    return m_last_query_time;
+  }
+
 
 void CSQLite::Manten( void )
 {

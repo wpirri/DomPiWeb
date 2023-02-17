@@ -11,7 +11,7 @@ CC=g++
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: infoio
+all: infoio.cgi
 
 infoio.cgi.o: infoio.cgi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c infoio.cgi.cc
@@ -20,7 +20,7 @@ config.o: ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
-infoio: $(OBJECTS)
+infoio.cgi: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:

@@ -41,12 +41,15 @@ public:
     int Query(cJSON *json_array, const char *query_fmt, ...);
     long NextId(const char* table_name, const char* row_name);
 
+    long LastQueryTime();
+
     void Manten(void);
 
     char m_last_error_text[CSQLITE_MAX_ERROR_TEXT+1];
 private:
     sqlite3 *m_db;
     char m_db_file[FILENAME_MAX+1];
+    long m_last_query_time;
 
 };
 #endif /* _CSQLITE_H_ */
