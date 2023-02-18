@@ -147,10 +147,11 @@ const char *system_columns[] = {
 	0};
 
 const char *user_columns[] = {
-	"Id integer primary key",
+	"Id",
 	"Usuario",
 	"Nombre_Completo",
 	"Pin_Teclado",
+	"Pin_SMS",
 	"Pin_WEB",
 	"Telefono_Voz",
 	"Telefono_SMS",
@@ -185,6 +186,7 @@ const char *assign_columns[] = {
 	"Tipo",
 	"Estado",
 	"Estado_HW",
+	"Perif_Data",
 	"Icono0",
 	"Icono1",
 	"Grupo_Visual",
@@ -220,6 +222,7 @@ const char *auto_columns[] = {
 		"Id",
 		"Objeto",
 		"Tipo",
+		"Objeto_Salida",
 		"Objeto_Sensor",
 		"Min_Sensor",
 		"Max_Sensor",
@@ -917,12 +920,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				if(json_un_obj)
 				{
 					if( strcmp(json_un_obj->valuestring, "admin") )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Nombre = \'%s\'", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Id = %s", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -975,7 +978,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									if(ExisteColumna(json_un_obj->string, user_columns))
 									{
-										if( !strcmp(json_un_obj->string, "Nombre") )
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
 											strcpy(query_where, json_un_obj->string);
 											strcat(query_where, "='");
