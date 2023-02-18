@@ -103,12 +103,14 @@ function fillAbmDelete(json_list, dst_div, title) {
 	for (i = 0; i < headers.length; i++) { 
 		output += '<tr>';
 		output += '<th>';
-		output += headers[i];
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
 		output += '</th>';
 		var val = json_list[0][headers[i]]; 
-		if (val == null || val == 'NULL') val = '';   
+		if (val == null || val == 'NULL') val = '&nbsp';   
 		output += '<td>';
-		output += val;
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += val; }
 		output += '</th>';
 		output += '</tr>\n';
 	}
@@ -123,16 +125,19 @@ function fillAbmEdit(json_list, dst_div, title) {
 	var i = 0;
 
 	// Header
-	for (i = 0; i < headers.length; i++) { 
+	for (i = 0; i < headers.length; i++) {
 		output += '<tr>';
 		output += '<th>';
-		output += headers[i];
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
 		output += '</th>';
 		var val = json_list[0][headers[i]]; 
 		if (val == null || val == 'NULL') val = '';   
 		output += '<td>';
-		output += '<input type="text" id="';
-		output += headers[i] + '" name="';
+		output += '<input type="';
+		if(headers[i] == 'Id') { output += 'hidden'; }
+		else { output += 'text'; }
+		output += '" id="' + headers[i] + '" name="';
 		output += headers[i] + '" ';
 		output += 'class="abm-edit-input-text" value="';
 		output += val;
@@ -155,11 +160,14 @@ function fillAbmForm(json_list, dst_div, title)
 	for (i = 0; i < headers.length; i++) { 
 		output += '<tr>';
 		output += '<th>';
-		output += headers[i];
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
 		output += '</th>';
 		output += '<td>';
-		output += '<input type="text" id="';
-		output += headers[i] + '" name="';
+		output += '<input type="';
+		if(headers[i] == 'Id') { output += 'hidden'; }
+		else { output += 'text'; }
+		output += '" id="' + headers[i] + '" name="';
 		output += headers[i] + '" ';
 		output += 'class="abm-edit-input-text" />';
 		output += '</th>';
