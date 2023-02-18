@@ -5,7 +5,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto
 OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o
 OUTPUT=dompi_cloud
-DEFINE=-D __NO__DEBUG__
+DEFINE=-D __NO__DEBUG__ -D __NO_DEBUG_TCP
 CC=g++
 
 #.cc.o:
