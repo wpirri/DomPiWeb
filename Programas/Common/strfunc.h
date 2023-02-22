@@ -46,6 +46,9 @@ public:
 
   int ParseCommand(const char *buffer, char *comando, char *objeto, char *parametro);
 
+  void ToUpper(const char* in, char* out);
+  void ToLower(const char* in, char* out);
+
 
 private:
 

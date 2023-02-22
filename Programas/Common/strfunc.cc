@@ -25,6 +25,7 @@ using namespace std;
 #include <sys/msg.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
 
 STRFunc::STRFunc()
 {
@@ -214,4 +215,26 @@ int STRFunc::ParseCommand(const char *buffer, char *comando, char *objeto, char 
     *parametro = 0;
 
     return 0;
+}
+
+void STRFunc::ToUpper(const char* in, char* out)
+{
+    while(*in)
+    {
+        *out = toupper(*in);
+        in++;
+        out++;
+    }
+    *out = 0;
+}
+
+void STRFunc::ToLower(const char* in, char* out)
+{
+    while(*in)
+    {
+        *out = tolower(*in);
+        in++;
+        out++;
+    }
+    *out = 0;
 }
