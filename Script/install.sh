@@ -115,3 +115,6 @@ echo "Configurando y reiniciando httpd..."
 # Agregando CGI al Apache
 a2enmod cgi
 service apache2 restart
+
+# Limpiesa final
+rm -rv $SYTEM_HOME/*

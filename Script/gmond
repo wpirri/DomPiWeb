@@ -48,6 +48,7 @@ CheckUpdate()
         mv ${UPDATE_FILE} ${OLD_UPDATE_FILE}
         cp -uvr $SYTEM_HOME/html/* $DOCUMENT_ROOT
         cp -uvr $SYTEM_HOME/cgi/* $CGI_ROOT
+        rm -rv $SYTEM_HOME/*
     fi
 }
 
