@@ -19,7 +19,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmForm(JSON.parse(msg).response, 'hw_add_div', '<?php echo $TITLE; ?>');
+        fillHWForm(JSON.parse(msg).response, 'hw_add_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {

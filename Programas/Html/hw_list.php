@@ -17,7 +17,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmList(JSON.parse(msg).response, 'hw_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'hw_edit.php', 'hw_delete.php');
+        fillHWList(JSON.parse(msg).response, 'hw_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'hw_edit.php', 'hw_delete.php');
     }
 
     function OnLoad() {

@@ -17,7 +17,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmDelete(JSON.parse(msg).response, 'hw_delete_div', '<?php echo $TITLE; ?>');
+        fillHWDelete(JSON.parse(msg).response, 'hw_delete_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {

@@ -19,7 +19,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'hw_edit_div', '<?php echo $TITLE; ?>');
+        fillHWEdit(JSON.parse(msg).response, 'hw_edit_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {
