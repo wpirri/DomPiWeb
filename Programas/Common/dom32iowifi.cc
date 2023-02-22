@@ -179,6 +179,10 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config, void
         strcat(data, "ce2=");
         strcat(data, config->wifi_host2);
     }
+    if(data[0]) strcat(data, "&");
+    strcat(data, "path=");
+    strcat(data, config->rqst_path);
+
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion WiFi para %s [%s]", raddr, buffer);
     return RequestEnqueue(raddr, buffer, fcn);
