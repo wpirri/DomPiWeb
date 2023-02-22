@@ -185,7 +185,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, "dompi_cloud_config")) /* typo MSG, no se responde */
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
+
 				json_obj = cJSON_Parse(message);
+				message[0] = 0;
 
 				if((json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "System_Key")) != NULL)
 				{
@@ -219,6 +222,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_ass_change")) /* typo MSG, no se responde */
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
+
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
@@ -260,6 +265,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_ass_status_update")) /* typo MSG, no se responde */
 			{
+				m_pServer->Resp(NULL, 0, GME_OK);
+
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
