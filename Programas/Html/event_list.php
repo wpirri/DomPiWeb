@@ -17,7 +17,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmList(JSON.parse(msg).response, 'event_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'event_edit.php', 'event_delete.php');
+        fillEvList(JSON.parse(msg).response, 'event_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'event_edit.php', 'event_delete.php');
     }
 
     function OnLoad() {

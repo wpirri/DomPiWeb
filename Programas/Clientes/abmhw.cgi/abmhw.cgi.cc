@@ -143,28 +143,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
   }
 
-  /*
-  if(content_length == 0)
-  {
-    fputs("error=99&msg=Sin Datos\r\n", stdout);
-    cJSON_Delete(json_request);
-    return 0;
-  }
-  */
- 
-  if(trace)
-  {
-    syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
-  }
-
-
-
   gminit.m_host = server_address;
   gminit.m_port = 5533;
 
   pClient = new CGMClient(&gminit);
-
-  json_obj = cJSON_CreateObject();
 
   if(strchr(request_uri, '?'))
   {

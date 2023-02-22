@@ -19,7 +19,12 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'event_edit_div', '<?php echo $TITLE; ?>');
+        fillEvEdit(JSON.parse(msg).response, 'event_edit_div', '<?php echo $TITLE; ?>');
+    }
+
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmev.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 
     function SaveData() {
@@ -39,7 +44,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmev.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 

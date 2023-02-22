@@ -115,6 +115,17 @@ int update_system_config;
 int internal_timeout;
 time_t last_daily;
 
+int ExcluirDeABM(const char* label)
+{
+	if( !strcmp(label, "REMOTE_ADDR")) return 1;
+	if( !strcmp(label, "REQUEST_URI")) return 1;
+	if( !strcmp(label, "REQUEST_METHOD")) return 1;
+	if( !strcmp(label, "CONTENT_LENGTH")) return 1;
+	if( !strcmp(label, "GET")) return 1;
+	if( !strcmp(label, "POST")) return 1;
+	return 0;
+}
+
 void CheckUpdateHWConfig()
 {
 	int rc;
@@ -725,28 +736,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -836,24 +850,27 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
 									}
 								}
 							}
@@ -1074,28 +1091,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -1187,26 +1207,29 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
 									}
 								}
 							}
@@ -1370,33 +1393,36 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
-									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
-									/* Recopilo algunos datos para actualizar la tabla de HW */
-									if( !strcmp(json_un_obj->string, "Dispositivo"))
-									{
-										/* Mando a actualiza la configuración del HW */
-										update_hw_config_id = atoi(json_un_obj->valuestring);
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+										/* Recopilo algunos datos para actualizar la tabla de HW */
+										if( !strcmp(json_un_obj->string, "Dispositivo"))
+										{
+											/* Mando a actualiza la configuración del HW */
+											update_hw_config_id = atoi(json_un_obj->valuestring);
+										}
 									}
 								}
 							}
@@ -1487,32 +1513,35 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
-									}
-									/* Recopilo algunos datos para actualizar la tabla de HW */
-									if( !strcmp(json_un_obj->string, "Dispositivo"))
-									{
-										/* Mando a actualiza la configuración del HW */
-										update_hw_config_id = atoi(json_un_obj->valuestring);
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
+										/* Recopilo algunos datos para actualizar la tabla de HW */
+										if( !strcmp(json_un_obj->string, "Dispositivo"))
+										{
+											/* Mando a actualiza la configuración del HW */
+											update_hw_config_id = atoi(json_un_obj->valuestring);
+										}
 									}
 								}
 							}
@@ -2009,28 +2038,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									strcat(query_values, json_un_obj->valuestring);
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2039,6 +2071,55 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 				cJSON_Delete(json_obj);
 
+				/* El formulario tiene dos checkbox que si se tildan vienen en 1
+				   y si no están tidados no vienen */
+				if( !strstr(query_into, "ON_a_OFF"))
+				{
+					if(strlen(query_into) == 0)
+					{
+						strcpy(query_into, "(");
+					}
+					else
+					{
+						strcat(query_into, ",");
+					}
+					strcat(query_into, "ON_a_OFF");
+
+					if(strlen(query_values) == 0)
+					{
+						strcpy(query_values, "(");
+					}
+					else
+					{
+						strcat(query_values, ",");
+					}
+					strcat(query_values, "'0'");
+				}
+
+				if( !strstr(query_into, "OFF_a_ON"))
+				{
+					if(strlen(query_into) == 0)
+					{
+						strcpy(query_into, "(");
+					}
+					else
+					{
+						strcat(query_into, ",");
+					}
+					strcat(query_into, "OFF_a_ON");
+
+					if(strlen(query_values) == 0)
+					{
+						strcpy(query_values, "(");
+					}
+					else
+					{
+						strcat(query_values, ",");
+					}
+					strcat(query_values, "'0'");
+				}
+
+				/* Cierro la sentencia */
 				strcat(query_into, ")");
 				strcat(query_values, ")");
 				sprintf(query, "INSERT INTO TB_DOM_EVENT %s VALUES %s", query_into, query_values);
@@ -2120,27 +2201,30 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
-
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
+										if( !strcmp(json_un_obj->string, "Id") )
 										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 
+											strcpy(hw_id, json_un_obj->valuestring);
+										}
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+
+										}
 									}
 								}
 							}
@@ -2480,37 +2564,40 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										if( !strcmp(json_un_obj->string, "Creacion"))
+										{
+											sprintf(&query_values[strlen(query_values)], "%04i/%02i/%02i %02i:%02i:%02i", 
+												s_tm->tm_year + 1900, s_tm->tm_mon+1, s_tm->tm_mday,
+												s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec);
+										}
+										else
+										{
+											strcat(query_values, json_un_obj->valuestring);
+										}
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									if( !strcmp(json_un_obj->string, "Creacion"))
-									{
-										sprintf(&query_values[strlen(query_values)], "%04i/%02i/%02i %02i:%02i:%02i", 
-											s_tm->tm_year + 1900, s_tm->tm_mon+1, s_tm->tm_mday,
-											s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec);
-									}
-									else
-									{
-										strcat(query_values, json_un_obj->valuestring);
-									}
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2707,35 +2794,38 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									/* Dato */
-									if(strlen(query_into) == 0)
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_into, "(");
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										if( !strcmp(json_un_obj->string, "Actualizar"))
+										{
+											strcat(query_values, "1");
+										}
+										else
+										{ 
+											strcat(query_values, json_un_obj->valuestring);
+										}
+										strcat(query_values, "'");
 									}
-									else
-									{
-										strcat(query_into, ",");
-									}
-									strcat(query_into, json_un_obj->string);
-									/* Valor */
-									if(strlen(query_values) == 0)
-									{
-										strcpy(query_values, "(");
-									}
-									else
-									{
-										strcat(query_values, ",");
-									}
-									strcat(query_values, "'");
-									if( !strcmp(json_un_obj->string, "Actualizar"))
-									{
-										strcat(query_values, "1");
-									}
-									else
-									{ 
-										strcat(query_values, json_un_obj->valuestring);
-									}
-									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2826,33 +2916,36 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if( !strcmp(json_un_obj->string, "Id") )
+									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										strcpy(query_where, json_un_obj->string);
-										strcat(query_where, "='");
-										strcat(query_where, json_un_obj->valuestring);
-										strcat(query_where, "'");
+										if( !strcmp(json_un_obj->string, "Id") )
+										{
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
 
-										strcpy(hw_id, json_un_obj->valuestring);
-									}
-									else
-									{
-										/* Dato = Valor */
-										if(strlen(query_values) > 0)
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, json_un_obj->string);
-										strcat(query_values, "='");
-										if( !strcmp(json_un_obj->string, "Actualizar"))
-										{
-											strcat(query_values, "1");
+											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
-										{ 
-											strcat(query_values, json_un_obj->valuestring);
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											if( !strcmp(json_un_obj->string, "Actualizar"))
+											{
+												strcat(query_values, "1");
+											}
+											else
+											{ 
+												strcat(query_values, json_un_obj->valuestring);
+											}
+											strcat(query_values, "'");
 										}
-										strcat(query_values, "'");
 									}
 								}
 							}
