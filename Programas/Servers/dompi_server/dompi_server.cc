@@ -115,131 +115,6 @@ int update_system_config;
 int internal_timeout;
 time_t last_daily;
 
-const char *system_columns[] = {
-	"Id",
-	"Creacion",
-	"System_Key",
-	"Cloud_Host_1_Address",
-	"Cloud_Host_1_Port",
-	"Cloud_Host_1_Proto",
-	"Cloud_Host_2_Address",
-	"Cloud_Host_2_Port",
-	"Cloud_Host_2_Proto",
-	"Planta1",
-	"Planta2",
-	"Planta3",
-	"Planta4",
-	"Planta5",
-	"Wifi_AP1",
-	"Wifi_AP1_pass",
-	"Wifi_AP2",
-	"Wifi_AP2_pass",
-	"Wifi_Report",
-	"Gprs_APN_auto",
-	"Gprs_APN",
-	"Gprs_DNS1",
-	"Gprs_DNS2",
-	"Gprs_user",
-	"Gprs_pass",
-	"Gprs_Auth",
-	"Send_Method",
-	"Flags",
-	0};
-
-const char *user_columns[] = {
-	"Id",
-	"Usuario",
-	"Nombre_Completo",
-	"Pin_Teclado",
-	"Pin_SMS",
-	"Pin_WEB",
-	"Telefono_Voz",
-	"Telefono_SMS",
-	"eMail",
-	"Permisos",
-	"Dias",
-	"Horas",
-	"Estado",
-	"Contador_Error",
-	"Ultimo_Acceso",
-	"Ultimo_Error",
-	"Flags",
-	0};
-
-const char *perif_columns[] = {
-	"Id",
-	"MAC",
-	"Dispositivo",
-	"Tipo",
-	"Estado",
-	"Direccion_IP",
-	"Ultimo_Ok",
-	"Actualizar",
-	"Flags",
-	0};
-
-const char *assign_columns[] = { 
-	"Id",
-	"Objeto",
-	"Dispositivo",
-	"Port",
-	"Tipo",
-	"Estado",
-	"Estado_HW",
-	"Perif_Data",
-	"Icono0",
-	"Icono1",
-	"Grupo_Visual",
-	"Planta",
-	"Cord_x",
-	"Cord_y",
-	"Coeficiente",
-	"Analog_Mult_Div",
-	"Analog_Mult_Div_Valor",
-	"Actualizar",
-	"Flag",
-	0};
-
-const char *event_columns[] = {
-		"Id",
-		"Evento",
-		"Objeto_Origen",
-		"Objeto_Destino",
-		"Grupo_Destino",
-		"Funcion_Destino",
-		"Variable_Destino",
-		"ON_a_OFF",
-		"OFF_a_ON",
-		"Enviar",
-		"Parametro_Evento",
-		"Condicion_Variable",
-		"Condicion_Igualdad",
-		"Condicion_Valor",
-		"Flags",
-		0};
-
-const char *auto_columns[] = {
-		"Id",
-		"Objeto",
-		"Tipo",
-		"Objeto_Salida",
-		"Objeto_Sensor",
-		"Min_Sensor",
-		"Max_Sensor",
-		"Hora_Inicio",
-		"Hora_Fin",
-		"Dias_Semana",
-		"Estado",
-		"Icono0",
-		"Icono1",
-		"Grupo_Visual",
-		"Planta",
-		"Cord_x",
-		"Cord_y",
-		"Actualizar",
-		"Flags",
-		0};
-
 void CheckUpdateHWConfig()
 {
 	int rc;
@@ -261,7 +136,7 @@ void CheckUpdateHWConfig()
 	sprintf(query, "SELECT * "
 					"FROM TB_DOM_PERIF "
 					"WHERE Actualizar <> 0 "
-					"ORDER BY Id");
+					"ORDER BY Id;");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_arr_Perif, query);
 	m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -326,7 +201,7 @@ void CheckUpdateHWConfig()
 				json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
 				sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
 								"FROM TB_DOM_ASSIGN AS ASS "
-								"WHERE Dispositivo = %s", json_HW_Id->valuestring);
+								"WHERE Dispositivo = %s;", json_HW_Id->valuestring);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr_Assign, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -338,7 +213,7 @@ void CheckUpdateHWConfig()
 			/* Borro la marca */
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 0 "
-							"WHERE Id = %s", json_HW_Id->valuestring);
+							"WHERE Id = %s;", json_HW_Id->valuestring);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -375,19 +250,6 @@ void CheckDaily()
 		RunDaily();
 		last_daily = now;
 	}
-}
-
-int ExisteColumna(const char* columna, const char** lista)
-{
-	int i = 0;
-
-	if(!columna || !lista) return 0;
-	while(lista[i])
-	{
-		if( !strcmp(columna, lista[i])) return 1;
-		i++;
-	}
-	return 0;
 }
 
 void LoadSystemConfig(void)
@@ -436,15 +298,14 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  cambiar <objeto>\r\n"
 					"  pulso <objeto>, [segundos]\r\n"
 					"  estado <objeto>\r\n"
-					"  actualizar <dispositivo>, [modulo]\r\n"
-					"  modulo <dispositivo>, [modulo]\r\n"
+					"  actualizar <dispositivo>, <modulo>\r\n"
 					"  manten\r\n"
 					"  sms <numero>, <mensaje>\r\n"
 					"  help\r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
-					"    dispositivo: Nombre de un dispositivo existente.\r\n"
-					"    modulo: config, wifi, porta, portb o portc.\r\n"
+					"    dispositivo: MAC de un dispositivo existente.\r\n"
+					"    modulo: wifi, ports.\r\n"
 					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
 					"    numero: Numero de telefono destino del mensaje.\r\n"
 					"    mensaje: Mensaje a enviar.\r\n"
@@ -471,6 +332,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char temp_s[64];
 	time_t t;
 	time_t next_t;
+	struct tm *s_tm;
 	int delta_t;
 	time_t update_ass_t;
 	char s[16];
@@ -510,6 +372,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Segundos;
 	cJSON *json_Planta;
 	cJSON *json_Id;
+	cJSON *json_Config;
 	
 
 	update_hw_config_id = 0;
@@ -807,7 +670,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -862,31 +725,28 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, user_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										strcpy(query_into, "(");
 									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
 								}
 							}
 						}
@@ -925,7 +785,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( strcmp(json_un_obj->valuestring, "admin") )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Id = %s", json_un_obj->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_USER WHERE Id = %s;", json_un_obj->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -976,27 +836,24 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, user_columns))
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
 										{
-											strcpy(query_where, json_un_obj->string);
-											strcat(query_where, "='");
-											strcat(query_where, json_un_obj->valuestring);
-											strcat(query_where, "'");
+											strcat(query_values, ",");
 										}
-										else
-										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											strcat(query_values, json_un_obj->valuestring);
-											strcat(query_values, "'");
-										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
 								}
 							}
@@ -1044,7 +901,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_arr = cJSON_CreateArray();
 					sprintf(query, "SELECT Permisos,Dias,Horas,Estado,Contador_Error,"
-					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE Nombre = \'%s\'", json_user->valuestring);
+					"Pin_Teclado,Pin_SMS,Pin_WEB FROM TB_DOM_USER WHERE UPPER(Usuario) = UPPER(\'%s\');", json_user->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1162,7 +1019,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1217,31 +1074,28 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, perif_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										strcpy(query_into, "(");
 									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
 								}
 							}
 						}
@@ -1280,7 +1134,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( memcmp(json_Id->valuestring, "00", 2) )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE Id = %s", json_Id->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_PERIF WHERE Id = %s;", json_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1333,29 +1187,26 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, perif_columns))
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
-										{
-											strcpy(query_where, json_un_obj->string);
-											strcat(query_where, "='");
-											strcat(query_where, json_un_obj->valuestring);
-											strcat(query_where, "'");
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
 
-											strcpy(hw_id, json_un_obj->valuestring);
-										}
-										else
+										strcpy(hw_id, json_un_obj->valuestring);
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
 										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											strcat(query_values, json_un_obj->valuestring);
-											strcat(query_values, "'");
+											strcat(query_values, ",");
 										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
 									}
 								}
 							}
@@ -1367,7 +1218,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(strlen(query_where) && strlen(hw_id))
 				{
 					strcat(query_values, ",Actualizar = 1");
-					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1399,7 +1250,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_query_result = cJSON_CreateArray();
 				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.Tipo "
 								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
-								"WHERE ASS.Dispositivo = HW.Id");
+								"WHERE ASS.Dispositivo = HW.Id;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_query_result, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1464,7 +1315,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1519,36 +1370,33 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, assign_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
-										/* Recopilo algunos datos para actualizar la tabla de HW */
-										if( !strcmp(json_un_obj->string, "Dispositivo"))
-										{
-											/* Mando a actualiza la configuración del HW */
-											update_hw_config_id = atoi(json_un_obj->valuestring);
-										}
+										strcpy(query_into, "(");
+									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
+									/* Recopilo algunos datos para actualizar la tabla de HW */
+									if( !strcmp(json_un_obj->string, "Dispositivo"))
+									{
+										/* Mando a actualiza la configuración del HW */
+										update_hw_config_id = atoi(json_un_obj->valuestring);
 									}
 								}
 							}
@@ -1588,7 +1436,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_ASSIGN WHERE Id = %s", json_Id->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1639,35 +1487,32 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, assign_columns))
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
-										{
-											strcpy(query_where, json_un_obj->string);
-											strcat(query_where, "='");
-											strcat(query_where, json_un_obj->valuestring);
-											strcat(query_where, "'");
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
 
-											strcpy(hw_id, json_un_obj->valuestring);
-										}
-										else
+										strcpy(hw_id, json_un_obj->valuestring);
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
 										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											strcat(query_values, json_un_obj->valuestring);
-											strcat(query_values, "'");
+											strcat(query_values, ",");
 										}
-										/* Recopilo algunos datos para actualizar la tabla de HW */
-										if( !strcmp(json_un_obj->string, "Dispositivo"))
-										{
-											/* Mando a actualiza la configuración del HW */
-											update_hw_config_id = atoi(json_un_obj->valuestring);
-										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+									}
+									/* Recopilo algunos datos para actualizar la tabla de HW */
+									if( !strcmp(json_un_obj->string, "Dispositivo"))
+									{
+										/* Mando a actualiza la configuración del HW */
+										update_hw_config_id = atoi(json_un_obj->valuestring);
 									}
 								}
 							}
@@ -1678,7 +1523,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1715,13 +1560,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
@@ -1758,13 +1603,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
@@ -1802,7 +1647,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 									"SET Estado = 1 "
-									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+									"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1839,7 +1684,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 									"SET Estado = 0 "
-									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+									"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1876,7 +1721,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 									"SET Estado = (1 - Estado) "
-									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+									"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1916,7 +1761,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = %i "
-										"WHERE Objeto = \'%s\'",
+										"WHERE UPPER(Objeto) = UPPER(\'%s\');",
 										atoi(json_Segundos->valuestring)+1,
 										json_un_obj->valuestring);
 					}
@@ -1924,7 +1769,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 2 "
-										"WHERE Objeto = \'%s\'",
+										"WHERE UPPER(Objeto) = UPPER(\'%s\');",
 										json_un_obj->valuestring);
 					}
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -1962,7 +1807,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
 									"SET Icono0 = \"lamp0.png\",Icono1 = \"lamp1.png\",Planta = 1,Cord_x = 200,Cord_y = 50 "
-									"WHERE Id = %s", json_Id->valuestring);
+									"WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2007,7 +1852,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 1 "
-										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
+										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2017,7 +1862,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = 0 "
-										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
+										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2027,7 +1872,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Actualizo el estado en la base */
 						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
 										"SET Estado = (1 - Estado) "
-										"WHERE Objeto = \'%s\'", json_Objeto->valuestring);
+										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2044,7 +1889,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_arr = cJSON_CreateArray();
 				strcpy(query, "SELECT EV.Id, EV.Evento, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
 				               "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
-							   "WHERE EV.Objeto_Origen = ASS.Id");
+							   "WHERE EV.Objeto_Origen = ASS.Id;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2109,7 +1954,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2164,31 +2009,28 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, event_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										strcpy(query_into, "(");
 									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									strcat(query_values, json_un_obj->valuestring);
+									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2227,7 +2069,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_EVENT WHERE Id = %s", json_Id->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_EVENT WHERE Id = %s;", json_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						if(rc != 0)
@@ -2278,30 +2120,27 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, event_columns))
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
-										{
-											strcpy(query_where, json_un_obj->string);
-											strcat(query_where, "='");
-											strcat(query_where, json_un_obj->valuestring);
-											strcat(query_where, "'");
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
 
-											strcpy(hw_id, json_un_obj->valuestring);
-										}
-										else
+										strcpy(hw_id, json_un_obj->valuestring);
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
 										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											strcat(query_values, json_un_obj->valuestring);
-											strcat(query_values, "'");
-
+											strcat(query_values, ",");
 										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+
 									}
 								}
 							}
@@ -2312,7 +2151,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2390,47 +2229,127 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "sms") )
 						{
-							json_un_obj = cJSON_CreateObject();
-							cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
-							cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
-							cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-							m_pServer->m_pLog->Add(90, "Call [dompi_send_sms][%s]", message);
-							rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
-							if(rc == 0)
+							if(objeto && parametro)
 							{
-								m_pServer->m_pLog->Add(90, "Resp [dompi_send_sms][%s]", (const char*)call_resp.data);
-								strcpy(message, (const char*)call_resp.data);
-								m_pServer->Free(call_resp);
+								json_un_obj = cJSON_CreateObject();
+								cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
+								cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
+								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+								m_pServer->m_pLog->Add(90, "Call [dompi_send_sms][%s]", message);
+								rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
+								if(rc == 0)
+								{
+									m_pServer->m_pLog->Add(90, "Resp [dompi_send_sms][%s]", (const char*)call_resp.data);
+									strcpy(message, (const char*)call_resp.data);
+									m_pServer->Free(call_resp);
+								}
+								else
+								{
+									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error en envio de SMS\"}}", rc);
+								}
 							}
 							else
 							{
-								message[0] = 0;
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
 							}
 						}
-						/* TODO: Compltar varios comandos sobre objetos */
+						/* TODO: Completar varios comandos sobre objetos */
 						else if( !strcmp(comando, "encender") )
 						{
-
+							if(objeto)
+							{
+								/* Actualizo el estado en la base */
+								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+												"SET Estado = 1 "
+												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(NULL, query);
+								m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
+							}
 						}
 						else if( !strcmp(comando, "apagar") )
 						{
-
+							if(objeto)
+							{
+								/* Actualizo el estado en la base */
+								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+												"SET Estado = 0 "
+												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(NULL, query);
+								m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
+							}
 						}
-						else if( !strcmp(comando, "cambiar") )
+						else if( !strcmp(comando, "cambiar") || !strcmp(comando, "switch") )
 						{
-
+							if(objeto)
+							{
+								/* Actualizo el estado en la base */
+								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+												"SET Estado = (1 - Estado ) "
+												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(NULL, query);
+								m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
+							}
 						}
 						else if( !strcmp(comando, "pulso") )
 						{
-
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"No implementado\"}}");
 						}
 						else if( !strcmp(comando, "estado") )
 						{
-
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"No implementado\"}}");
 						}
 						else if( !strcmp(comando, "actualizar") )
 						{
+							/* Saco los datos que necesito */
+							if( !memcmp(parametro, "wifi", 4))
+							{
+								json_arr = cJSON_CreateArray();
+								sprintf(query, "SELECT Id, MAC, Direccion_IP, Tipo AS Tipo_HW "
+												"FROM TB_DOM_PERIF "
+												"WHERE UPPER(MAC) = UPPER(\'%s\');", objeto);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(json_arr, query);
+								m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+								/* Obtengo el primero del array del resultado del query */
+								cJSON_ArrayForEach(json_un_obj, json_arr) { break; }
+								/* Obtengo el primero del array de configuracion del sistema */
+								cJSON_ArrayForEach(json_Config, json_System_Config){ break; }
 
+								cJSON_AddStringToObject(json_Config, "Id",
+									cJSON_GetObjectItemCaseSensitive(json_un_obj, "Id")->valuestring);
+								cJSON_AddStringToObject(json_Config, "MAC",
+									cJSON_GetObjectItemCaseSensitive(json_un_obj, "MAC")->valuestring);
+								cJSON_AddStringToObject(json_Config, "Direccion_IP",
+									cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP")->valuestring);
+								cJSON_AddStringToObject(json_Config, "Tipo_HW",
+									cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo_HW")->valuestring);
+								cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+
+								m_pServer->m_pLog->Add(90, "POST [dompi_hw_set_comm_config][%s]", message);
+								/* Se envía a todos */
+								m_pServer->Post("dompi_hw_set_comm_config", message, strlen(message));
+								cJSON_Delete(json_arr);
+							}
+							else if( !memcmp(objeto, "port", 4))
+							{
+								/* Actualizar I/O de Dom32IOWiFi */
+
+							}
 						}
 					}
 				}
@@ -2487,7 +2406,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_CONFIG WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_CONFIG WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2543,6 +2462,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_DeleteItemFromObjectCaseSensitive(json_un_obj, "Id");
 				cJSON_AddStringToObject(json_un_obj, "Id", temp_s);
   
+				t = time(&t);
+				s_tm = localtime(&t);
+
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2558,31 +2480,37 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, system_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
+										strcpy(query_into, "(");
 									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									if( !strcmp(json_un_obj->string, "Creacion"))
+									{
+										sprintf(&query_values[strlen(query_values)], "%04i/%02i/%02i %02i:%02i:%02i", 
+											s_tm->tm_year + 1900, s_tm->tm_mon+1, s_tm->tm_mday,
+											s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec);
+									}
+									else
+									{
+										strcat(query_values, json_un_obj->valuestring);
+									}
+									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2646,7 +2574,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Grupo, ASS.Objeto AS Salida, AU.Estado AS Estado "
 									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
 									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
-										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s)", json_un_obj->valuestring);
+										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s);", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_query_result, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2686,7 +2614,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					json_arr = cJSON_CreateArray();
 					sprintf(query, "SELECT * "
 									"FROM TB_DOM_AUTO "
-									"WHERE Id = 0 OR Tipo = %s", json_un_obj->valuestring);
+									"WHERE Id = 0 OR Tipo = %s;", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2724,7 +2652,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_AUTO WHERE Id = %s", json_Id->valuestring);
+					sprintf(query, "SELECT * FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2779,38 +2707,35 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, auto_columns))
+									/* Dato */
+									if(strlen(query_into) == 0)
 									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										if( !strcmp(json_un_obj->string, "Actualizar"))
-										{
-											strcat(query_values, "1");
-										}
-										else
-										{ 
-											strcat(query_values, json_un_obj->valuestring);
-										}
-										strcat(query_values, "'");
+										strcpy(query_into, "(");
 									}
+									else
+									{
+										strcat(query_into, ",");
+									}
+									strcat(query_into, json_un_obj->string);
+									/* Valor */
+									if(strlen(query_values) == 0)
+									{
+										strcpy(query_values, "(");
+									}
+									else
+									{
+										strcat(query_values, ",");
+									}
+									strcat(query_values, "'");
+									if( !strcmp(json_un_obj->string, "Actualizar"))
+									{
+										strcat(query_values, "1");
+									}
+									else
+									{ 
+										strcat(query_values, json_un_obj->valuestring);
+									}
+									strcat(query_values, "'");
 								}
 							}
 						}
@@ -2850,7 +2775,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
 					{
-						sprintf(query, "DELETE FROM TB_DOM_AUTO WHERE Id = %s", json_Id->valuestring);
+						sprintf(query, "DELETE FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2901,36 +2826,33 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
 								{
-									if(ExisteColumna(json_un_obj->string, auto_columns))
+									if( !strcmp(json_un_obj->string, "Id") )
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
-										{
-											strcpy(query_where, json_un_obj->string);
-											strcat(query_where, "='");
-											strcat(query_where, json_un_obj->valuestring);
-											strcat(query_where, "'");
+										strcpy(query_where, json_un_obj->string);
+										strcat(query_where, "='");
+										strcat(query_where, json_un_obj->valuestring);
+										strcat(query_where, "'");
 
-											strcpy(hw_id, json_un_obj->valuestring);
+										strcpy(hw_id, json_un_obj->valuestring);
+									}
+									else
+									{
+										/* Dato = Valor */
+										if(strlen(query_values) > 0)
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, json_un_obj->string);
+										strcat(query_values, "='");
+										if( !strcmp(json_un_obj->string, "Actualizar"))
+										{
+											strcat(query_values, "1");
 										}
 										else
-										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											if( !strcmp(json_un_obj->string, "Actualizar"))
-											{
-												strcat(query_values, "1");
-											}
-											else
-											{ 
-												strcat(query_values, json_un_obj->valuestring);
-											}
-											strcat(query_values, "'");
+										{ 
+											strcat(query_values, json_un_obj->valuestring);
 										}
+										strcat(query_values, "'");
 									}
 								}
 							}
@@ -2941,7 +2863,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_AUTO SET %s WHERE %s", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_AUTO SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -2980,7 +2902,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Estado,Estado_Sensor,Estado_Salida "
 									"FROM TB_DOM_AUTO "
-									"WHERE Id = %s", json_Id->valuestring);
+									"WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
@@ -2988,7 +2910,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Estado,Estado_Sensor,Estado_Salida "
 										"FROM TB_DOM_AUTO "
-										"WHERE Planta = %s", json_Planta->valuestring);
+										"WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
@@ -3027,14 +2949,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y "
-									"FROM TB_DOM_AUTO WHERE Id = %s", json_Id->valuestring);
+									"FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
 						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y "
-										"FROM TB_DOM_AUTO WHERE Planta = %s", json_Planta->valuestring);
+										"FROM TB_DOM_AUTO WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
@@ -3073,7 +2995,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_AUTO "
 									"SET Estado = 1 "
-									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+									"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3110,7 +3032,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_AUTO "
 									"SET Estado = 0 "
-									"WHERE Objeto = \'%s\'", json_un_obj->valuestring);
+									"WHERE UPPER(Objeto) = UPPER(\'%s\')", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3176,7 +3098,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(50, "Actualizar configuracion de HW MAC: %s", update_hw_config_mac);
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE MAC = \'%s\'", update_hw_config_mac);
+							"WHERE UPPER(MAC) = UPPER(\'%s\');", update_hw_config_mac);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3189,7 +3111,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(50, "Actualizar configuracion de HW Id: %i", update_hw_config_id);
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Actualizar = 1 "
-							"WHERE Id = %i", update_hw_config_id);
+							"WHERE Id = %i;", update_hw_config_id);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3202,7 +3124,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(50, "Actualizar estado de I/O de HW Id: %i", update_ass_status_hwid);
 			sprintf(query, "UPDATE TB_DOM_ASSIGN "
 							"SET Actualizar = 1 "
-							"WHERE Dispositivo = %i", update_ass_status_hwid);
+							"WHERE Dispositivo = %i;", update_ass_status_hwid);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3215,7 +3137,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(50, "Actualizar estado de I/O de HW Id: %i", update_ass_status_hwid);
 			sprintf(query, "UPDATE TB_DOM_ASSIGN "
 							"SET Actualizar = 1 "
-							"WHERE Id = %i", update_ass_status_id);
+							"WHERE Id = %i;", update_ass_status_id);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3228,7 +3150,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(50, "Actualizar estado de I/O de Assign: %s", update_ass_status_name);
 			sprintf(query, "UPDATE TB_DOM_ASSIGN "
 							"SET Actualizar = 1 "
-							"WHERE Id = %s", update_ass_status_name);
+							"WHERE Id = %s;", update_ass_status_name);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3241,7 +3163,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
 						"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
 						"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-						"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) )");
+						"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 		rc = pDB->Query(json_arr, query);
 		m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3282,7 +3204,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(iEstado != 1) iEstado = 0;
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
 									"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-									"WHERE Id = %s", iEstado, iEstado, json_ASS_Id->valuestring);
+									"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3323,7 +3245,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			update_ass_t = t + 60;
 			/* Genero un listado de los objetos con su estado para subir a la nube */
 			json_query_result = cJSON_CreateArray();
-			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0");
+			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(json_query_result, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3374,7 +3296,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								"ASS.Id AS ASS_Id, ASS.Estado AS ASS_Estado "
 								"ASS.Dispositivo AS PERIF_Id "
 							"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
-							"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0");
+							"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0;");
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(json_arr, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3405,7 +3327,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			json_arr = cJSON_CreateArray();
 			sprintf(query, "SELECT Id, MAC, Direccion_IP "
 							"FROM TB_DOM_PERIF "
-							"WHERE Estado <> 0 AND Ultimo_Ok < %lu", t-90);
+							"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-90);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(json_arr, query);
 			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3423,7 +3345,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					sprintf(query, "UPDATE TB_DOM_PERIF "
 									"SET Estado = 0 "
-									"WHERE Id = %s", json_HW_Id->valuestring);
+									"WHERE Id = %s;", json_HW_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());

@@ -63,10 +63,10 @@ int power2(int exp)
 	}
 }
 
-void dompi_infoio(const char* dest, const char* data)
+/* Callback para la respuesta de infoio */
+void dompi_infoio(const char* /*dest*/, const char* /*data*/)
 {
-	//m_pServer->m_pLog->Add(100, "Call [dompi_infoio] %s -> [%s]", dest, data);
-	//m_pServer->Call("dompi_infoio", data, strlen(data), nullptr, internal_timeout);
+
 }
 
 int main(/*int argc, char** argv, char** env*/void)
@@ -118,6 +118,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Tipo_ASS;
 	cJSON *json_Port;
 	cJSON *json_Estado;
+	cJSON *json_ap1;
+	cJSON *json_ap1_pass;
+	cJSON *json_ap2;
+	cJSON *json_ap2_pass;
+	cJSON *json_host1;
+	cJSON *json_host2;
+	cJSON *json_rqst_path;
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data wifi_data;
@@ -274,10 +281,49 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_set_comm_config"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
-				memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
+				if(json_Direccion_IP && json_Tipo_HW)
+				{
+					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
+					{
+						/* Por ahora no nos metemos en la configuración WiFi de la Pi */
 
-				/* TODO: Enviar configuracion de WiFFi */
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
+					{
+						/* Envío de configuración a WiFi */
+						memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
+						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1");
+						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1_Pass");
+						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2");
+						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2_Pass");
+						json_host1 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_1_Address");
+						json_host2 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_2_Address");
+						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_req, "Rqst_Path");
+
+						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
+							json_host1 && json_host2 && json_rqst_path)
+						{
+							strcpy(wifi_data.wifi_ap1, json_ap1->valuestring);
+							strcpy(wifi_data.wifi_ap1_pass, json_ap1_pass->valuestring);
+							strcpy(wifi_data.wifi_ap2, json_ap2->valuestring);
+							strcpy(wifi_data.wifi_ap2_pass, json_ap2_pass->valuestring);
+							strcpy(wifi_data.wifi_host1, json_host1->valuestring);
+							strcpy(wifi_data.wifi_host2, json_host2->valuestring);
+							strcpy(wifi_data.rqst_path, json_rqst_path->valuestring);
+
+							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &wifi_data, NULL);
+						}
+						else
+						{
+							m_pServer->m_pLog->Add(1, "[dompi_hw_set_comm_config] ERROR: Datos insuficientes de WiFi");
+						}
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_comm_config] ERROR: Datos insuficientes");
+				}
 			}
 			/* ************************************************************* *
 			 *
