@@ -55,7 +55,7 @@ installer:
 	# * Para instalar el sistema:
 	# * 
 	# * copiar gmonitor_dompiweb_install.tar.gz a /home/gmonitor
-	# * ejecutar con el usuario root:"
+	# * ejecutar con el usuario root:
 	# * 
 	# * cd /
 	# * tar xvzf /home/gmonitor/gmonitor_dompiweb_install.tar.gz
