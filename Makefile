@@ -28,6 +28,7 @@ installer:
 	cp -av Programas/Html/* $(SYTEM_HOME)/html/
 	rm $(SYTEM_HOME)/html/Makefile
 	cp Programas/Clientes/abmassign.cgi/abmassign.cgi $(SYTEM_HOME)/cgi/
+	cp Programas/Clientes/abmat.cgi/abmat.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmev.cgi/abmev.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(SYTEM_HOME)/cgi/

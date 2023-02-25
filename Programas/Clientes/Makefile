@@ -10,6 +10,7 @@ all:
 	make -C infoio.cgi
 	make -C statusio.cgi
 	make -C abmauto.cgi
+	make -C abmat.cgi
 
 clean:
 	make -C domcli clean
@@ -21,6 +22,7 @@ clean:
 	make -C infoio.cgi clean
 	make -C statusio.cgi clean
 	make -C abmauto.cgi clean
+	make -C abmat.cgi clean
 
 install:
 	make -C domcli install
@@ -32,6 +34,7 @@ install:
 	make -C infoio.cgi install
 	make -C statusio.cgi install
 	make -C abmauto.cgi install
+	make -C abmat.cgi install
 
 uninstall:
 	make -C domcli uninstall
@@ -43,3 +46,4 @@ uninstall:
 	make -C infoio.cgi uninstall
 	make -C statusio.cgi uninstall
 	make -C abmauto.cgi uninstall
+	make -C abmat.cgi uninstall

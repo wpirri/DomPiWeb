@@ -24,7 +24,7 @@ include("head.php");
 </div>
 
 
-<div class="normal-btn" id="btn-config-hard" onclick="window.location.replace('task.php');">
+<div class="normal-btn" id="btn-config-hard" onclick="window.location.replace('task_list.php');">
 	<img id="task-icon" class="icon-btn" src="images/cron.png">&nbsp;Tareas
 </div>
 <!--
