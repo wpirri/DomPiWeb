@@ -30,7 +30,12 @@ include("obj_draw.php");
 
 function updateHomePicture(msg) {
 	jsonData = JSON.parse(msg).response;
-	document.getElementById('plano1').src = 'images/' + jsonData[0].Planta1;
+	var bg_data = jsonData[0].Planta1.split(',');
+	document.getElementById('plano1').src = 'images/' + bg_data[0];
+	if(bg_data[1] != null && bg_data[2] != null)
+	{
+		ScrollMap(bg_data[1],bg_data[2]);
+	}
 }
 
 function ScrollMap(x, y) {
@@ -46,7 +51,6 @@ function EditObject( name )
 
 function OnLoad( ) {
 	newAJAXCommand('/cgi-bin/abmsys.cgi?funcion=get_current', updateHomePicture, false);
-	ScrollMap(1000,0);
 }
 
 </script>
