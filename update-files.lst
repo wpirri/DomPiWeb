@@ -39,6 +39,7 @@
 /usr/local/sbin/dompi_netcomm
 /usr/local/sbin/dompi_cloud
 /usr/local/sbin/dompi_gsm
+/usr/local/bin/domcli
 
 /etc/sysconfig/gmonitor
 /etc/xinetd.d/gmonitor

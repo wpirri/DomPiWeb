@@ -55,6 +55,14 @@ PortAss[23] = { value: 'ANA8', label: 'ANA8' }
 var TablaAssIn = [];
 var TablaAssOut = [];
 
+var GrupoVisual = [];
+GrupoVisual[0] = { value: 0, label: 'Ninguno' }
+GrupoVisual[1] = { value: 1, label: 'Alarma' }
+GrupoVisual[2] = { value: 2, label: 'Luces' }
+GrupoVisual[3] = { value: 3, label: 'Puertas' }
+GrupoVisual[4] = { value: 4, label: 'Climatización' }
+GrupoVisual[5] = { value: 5, label: 'Cámaras' }
+
 function fillDropDownList(name, list, selected) {
 	if (selected == null) {
 		selected = (-1);
@@ -484,6 +492,8 @@ function fillAssForm(json_list, dst_div, title) {
 			output += fillDropDownList(headers[i], PortAss);
 		} else if(headers[i] == 'Tipo') {
 			output += fillDropDownList(headers[i], TipoAss);
+		} else if(headers[i] == 'Grupo_Visual') {
+			output += fillDropDownList(headers[i], GrupoVisual);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -518,6 +528,8 @@ function fillAssEdit(json_list, dst_div, title) {
 			output += fillDropDownList(headers[i], PortAss, val);
 		} else if(headers[i] == 'Tipo') {
 			output += fillDropDownList(headers[i], TipoAss, val);
+		} else if(headers[i] == 'Grupo_Visual') {
+			output += fillDropDownList(headers[i], GrupoVisual, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
 		}

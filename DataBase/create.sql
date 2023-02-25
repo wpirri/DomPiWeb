@@ -91,7 +91,7 @@ Id integer primary key,
 MAC varchar(16) NOT NULL,                       -- MAC Address
 Dispositivo varchar(128) NOT NULL,
 Tipo integer DEFAULT 0,                         -- 0=RBPi, 1=Wifi HTTP
-Estado integer DEFAULT 0,                       -- 0=Disable
+Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
