@@ -139,6 +139,7 @@ void CheckUpdateHWConfig()
     cJSON *json_HW_Id;
     cJSON *json_MAC;
     cJSON *json_Tipo;
+    cJSON *json_Direccion_IP;
     cJSON *json_Flags;
 
 
@@ -146,7 +147,7 @@ void CheckUpdateHWConfig()
 	json_arr_Perif = cJSON_CreateArray();
 	sprintf(query, "SELECT * "
 					"FROM TB_DOM_PERIF "
-					"WHERE Actualizar <> 0 "
+					"WHERE Actualizar <> 0 AND Estado <> 0"
 					"ORDER BY Id;");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_arr_Perif, query);
@@ -160,76 +161,79 @@ void CheckUpdateHWConfig()
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
 			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
+			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
 
-			m_pServer->m_pLog->Add(50, "Actualizar HW [%s]", json_MAC->valuestring);
-
-			/* Un objeto para contener a todos */
-			json_Config = cJSON_CreateObject();
-			/* Saco los datos que necesito */
-			cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
-			cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
-			cJSON_AddItemToObject(json_Config, "Direccion_IP", cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP"));
-			cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
-
-			if(json_Flags)
+			if(json_MAC && json_Tipo && json_HW_Id && json_Flags && json_Direccion_IP)
 			{
-				if(atoi(json_Flags->valuestring) & 0x01)
-				{
-					cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
-				}
-				else
-				{
-					cJSON_AddStringToObject(json_Config, "HTTPS", "no");
-				}
-				if(atoi(json_Flags->valuestring) & 0x02)
-				{
-					cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
-				}
-				else
-				{
-					cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
-				}
-				//if(atoi(json_Flags->valuestring) & 0x04)
-				//{
-				//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
-				//}
-				//else
-				//{
-				//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
-				//}
-				cJSON_Delete(json_Flags);
-			}
+				m_pServer->m_pLog->Add(10, "Actualizar HW [%s]", json_MAC->valuestring);
 
-			if(atoi(json_Tipo->valuestring) == 0)
-			{
-				/* RBPi Local */
+				/* Un objeto para contener a todos */
+				json_Config = cJSON_CreateObject();
+				/* Saco los datos que necesito */
+				cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
+				cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
+				cJSON_AddItemToObject(json_Config, "Direccion_IP", json_Direccion_IP);
+				cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
 
-				/* TODO: Actualizar I/O de RBPi  */
-			}
-			else if(atoi(json_Tipo->valuestring) == 1)
-			{
-				/* Actualizar I/O de Dom32IOWiFi */
-				json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
-				sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
-								"FROM TB_DOM_ASSIGN AS ASS "
-								"WHERE Dispositivo = %s;", json_HW_Id->valuestring);
+				if(json_Flags)
+				{
+					if(atoi(json_Flags->valuestring) & 0x01)
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "no");
+					}
+					if(atoi(json_Flags->valuestring) & 0x02)
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
+					}
+					//if(atoi(json_Flags->valuestring) & 0x04)
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
+					//}
+					//else
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
+					//}
+				}
+
+				if(atoi(json_Tipo->valuestring) == 0)
+				{
+					/* RBPi Local */
+
+					/* TODO: Actualizar I/O de RBPi  */
+				}
+				else if(atoi(json_Tipo->valuestring) == 1)
+				{
+					/* Actualizar I/O de Dom32IOWiFi */
+					json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
+					sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
+									"FROM TB_DOM_ASSIGN AS ASS "
+									"WHERE Dispositivo = %s;", json_HW_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr_Assign, query);
+					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
+					/* Se envía a todos */
+					m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
+				}
+				/* Borro la marca */
+				sprintf(query, "UPDATE TB_DOM_PERIF "
+								"SET Actualizar = 0 "
+								"WHERE Id = %s;", json_HW_Id->valuestring);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_arr_Assign, query);
+				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-				cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
-				m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
-				/* Se envía a todos */
-				m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
-			}
-			/* Borro la marca */
-			sprintf(query, "UPDATE TB_DOM_PERIF "
-							"SET Actualizar = 0 "
-							"WHERE Id = %s;", json_HW_Id->valuestring);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(NULL, query);
-			m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 
-			cJSON_Delete(json_Config);
+				cJSON_Delete(json_Config);
+			}
 		}
 	}
 	//cJSON_Delete(json_arr_Perif);
@@ -237,7 +241,7 @@ void CheckUpdateHWConfig()
 
 void RunDaily( void )
 {
-	m_pServer->m_pLog->Add(100, "[Daily] Mantenimiento de la base de datos.");
+	m_pServer->m_pLog->Add(10, "[Daily] Mantenimiento de la base de datos.");
 	if(pDB) pDB->Manten();
 
 
@@ -585,7 +589,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_arr = cJSON_CreateArray();
-					sprintf(query, ".schema %s", json_un_obj->valuestring);
+					sprintf(query, ".schema %s;", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -771,7 +775,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_USER %s VALUES %s", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_USER %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -881,7 +885,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where))
 				{
-					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s", query_values, query_where);
+					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1434,7 +1438,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_ASSIGN %s VALUES %s", query_into, query_values);
+				sprintf(query, "INSERT INTO TB_DOM_ASSIGN %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add(100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
