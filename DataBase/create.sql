@@ -205,7 +205,10 @@ Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
 Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
-Ultima_Ejecucion varchar(32),
+Ultimo_Mes integer DEFAULT 0,
+Ultimo_Dia integer DEFAULT 0,
+Ultima_Hora integer DEFAULT 0,
+Ultimo_Minuto integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
