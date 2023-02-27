@@ -127,10 +127,12 @@ int GEvent::ExtIOEvent(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE MAC = \"%s\"", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE MAC = \"%s\";", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_arr = cJSON_CreateArray();
             rc = m_pDB->Query(json_arr, query);
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
             if(rc == 0 && json_arr->child)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
@@ -146,12 +148,14 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         "SET Ultimo_Ok = %lu, "
                                         "Direccion_IP = \"%s\", "
                                         "Estado = 1 "
-                                        "WHERE MAC = \"%s\"",
+                                        "WHERE MAC = \"%s\";",
                                         t,
                                         json_raddr->valuestring,
                                         json_hw_mac->valuestring);
                     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    m_pDB->Query(NULL, query);
+                    rc = m_pDB->Query(NULL, query);
+                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                 }
                 /* Actualizo los assign que vengan  en el mensaje */
                 json_un_obj = json_obj;
@@ -176,54 +180,64 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
                                         /* Actualizo el estado del HW */
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado_HW = %i "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\"",
+                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\";",
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        m_pDB->Query(NULL, query);
+                                        rc = m_pDB->Query(NULL, query);
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                         /* En las entradas actualizo también el estado a mostrar */
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
-                                                        "(Tipo = 1 OR Tipo = 2 OR Tipo = 4)",
+                                                        "(Tipo = 1 OR Tipo = 2 OR Tipo = 4);",
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        m_pDB->Query(NULL, query);
+                                        rc = m_pDB->Query(NULL, query);
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "WIEGAND", 7))
                                     {
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
-                                                        "Tipo = 6",
+                                                        "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        m_pDB->Query(NULL, query);
+                                        rc = m_pDB->Query(NULL, query);
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "TEMP", 4))
                                     {
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
-                                                        "Tipo = 6",
+                                                        "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        m_pDB->Query(NULL, query);
+                                        rc = m_pDB->Query(NULL, query);
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "HUM", 3))
                                     {
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
                                                         "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
-                                                        "Tipo = 6",
+                                                        "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        m_pDB->Query(NULL, query);
+                                        rc = m_pDB->Query(NULL, query);
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                     }
                                 }
                             }
@@ -308,9 +322,11 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                     "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
                     "WHERE EV.Objeto_Origen = ASS.Id AND "
                     "ASS.Dispositivo = %i AND ASS.Port = \"%s\" AND %s",
-                    hw_id, port, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+                    hw_id, port, (estado)?"OFF_a_ON = 1;":"ON_a_OFF = 1;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
     if(rc == 0)
     {
         /* Recorro el array */
@@ -343,25 +359,25 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
             {
                 if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
                 {
-                    SendEventObj(   atoi(Objeto_Destino->valuestring), 
+                    ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
                 {
-                    SendEventGrp(   atoi(Objeto_Destino->valuestring), 
+                    ChangeGroupById(   atoi(Objeto_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
                 {
-                    SendEventFun(   atoi(Objeto_Destino->valuestring), 
+                    ChangeFcnById(   atoi(Objeto_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
                 {
-                    SendEventVar(   atoi(Objeto_Destino->valuestring), 
+                    ChangeVarById(   atoi(Objeto_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
@@ -374,92 +390,126 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
     return 0;
 }
 
-int GEvent::SendEventObj(int id, int ev, int val)
+int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 {
+	int rc = 0;
 	char query[4096];
-    int rc;
-    cJSON *json_arr;
-    cJSON *json_obj;
 
-    m_pServer->m_pLog->Add(90, "[SendEventObj] ass id: %i - ev: %i - val: %i", id, ev, val);
-
-    json_arr = cJSON_CreateArray();
-    sprintf(query,  "SELECT HW.Direccion_IP, HW.Tipo AS Tipo_HW, ASS.Tipo AS Tipo_ASS, ASS.Port "
-                    "FROM TB_DOM_PERIF AS HW, TB_DOM_ASSIGN AS ASS "
-                    "WHERE HW.Id = ASS.Dispositivo AND "
-                    "ASS.Id = %i", id);
-    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-    rc = m_pDB->Query(json_arr, query);
-    if(rc == 0)
-    {
-        cJSON_ArrayForEach(json_obj, json_arr)
-        {
-            cJSON_PrintPreallocated(json_obj, query, 4095, 0);
-            m_pServer->m_pLog->Add(100, "[RESULT]: %s", query); 
-
-            switch(ev)
-            {
-                case 1:     /* On */
-                    /* Actualizo el estado en la base */
-                    sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 1 "
-                                    "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    m_pDB->Query(NULL, query);
-                    break;
-                case 2:     /* Off */
-                    /* Actualizo el estado en la base */
-                    sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = 0 "
-                                    "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    m_pDB->Query(NULL, query);
-                    break;
-                case 3:     /* Switch */
-                    /* Actualizo el estado en la base */
-                    sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = (1 - Estado) "
-                                    "WHERE Id = %i", id);
-                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    m_pDB->Query(NULL, query);
-                    break;
-                case 4:     /* Pulso */
-                    /* Actualizo el estado en la base */
-                    sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                                    "SET Estado = %i "
-                                    "WHERE Id = %i", 2 + val, id);
-                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    m_pDB->Query(NULL, query);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    cJSON_Delete(json_arr);
-    return 0;
+	m_pServer->m_pLog->Add(50, "[ChangeAssignByName] name= %s, accion= %i param= %i", name, accion, param);
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = 1 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = 0 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = (1 - Estado) "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 4: /* Pulso */
+			if(param > 0)
+			{
+				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+								"SET Estado = %i "
+								"WHERE UPPER(Objeto) = UPPER(\'%s\');", max(2, param), name);
+			}
+			else
+			{
+				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor) "
+								"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			}
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
 }
 
-int GEvent::SendEventGrp(int id, int ev, int val)
+int GEvent::ChangeAssignById(int id, int accion, int param)
 {
-    m_pServer->m_pLog->Add(90, "[SendEventGrp] id: %i - ev: %i - val: %i", id, ev, val);
-    m_pServer->m_pLog->Add(1, "[SendEventGrp] ERROR - Falta desarrollar");
+	int rc = 0;
+	char query[4096];
 
-    return 0;
+	m_pServer->m_pLog->Add(50, "[ChangeAssignById] id= %i, accion= %i param= %i", id, accion, param);
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = 0 "
+							"WHERE Id = %i;", id);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Estado = (1 - Estado) "
+							"WHERE Id = %i;", id);
+			break;
+		case 4: /* Pulso */
+			if(param > 0)
+			{
+				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+								"SET Estado = %i "
+							    "WHERE Id = %i;", max(2, param), id);
+			}
+			else
+			{
+				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor) "
+								"WHERE Id = %i;", id);
+			}
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
 }
 
-int GEvent::SendEventFun(int id, int ev, int val)
+int GEvent::ChangeGroupByName(const char* name, int accion, int param)
 {
-    m_pServer->m_pLog->Add(90, "[SendEventFun] id: %i - ev: %i - val: %i", id, ev, val);
-    m_pServer->m_pLog->Add(1, "[SendEventFun] ERROR - Falta desarrollar");
-
-    return 0;
+    return (-1);
 }
 
-int GEvent::SendEventVar(int id, int ev, int val)
+int GEvent::ChangeGroupById(int id, int accion, int param)
 {
-    m_pServer->m_pLog->Add(90, "[SendEventVar] id: %i - ev: %i - val: %i", id, ev, val);
-    m_pServer->m_pLog->Add(1, "[SendEventVar] ERROR - Falta desarrollar");
+    return (-1);
+}
 
-    return 0;
+int GEvent::ChangeFcnByName(const char* name, int accion, int param)
+{
+    return (-1);
+}
+
+int GEvent::ChangeFcnById(int id, int accion, int param)
+{
+    return (-1);
+}
+
+int GEvent::ChangeVarByName(const char* name, int accion, int param)
+{
+    return (-1);
+}
+
+int GEvent::ChangeVarById(int id, int accion, int param)
+{
+    return (-1);
 }

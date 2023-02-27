@@ -31,6 +31,7 @@ installer:
 	cp Programas/Clientes/abmat.cgi/abmat.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmev.cgi/abmev.cgi $(SYTEM_HOME)/cgi/
+	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmsys.cgi/abmsys.cgi $(SYTEM_HOME)/cgi/
 	cp Programas/Clientes/abmuser.cgi/abmuser.cgi $(SYTEM_HOME)/cgi/

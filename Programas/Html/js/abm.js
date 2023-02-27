@@ -63,12 +63,12 @@ GrupoVisual[3] = { value: 3, label: 'Puertas' }
 GrupoVisual[4] = { value: 4, label: 'Climatización' }
 GrupoVisual[5] = { value: 5, label: 'Cámaras' }
 
-var TablaTareaEvento = [];
-TablaTareaEvento[0] = { value: 0, label: 'Ninguno' }
-TablaTareaEvento[1] = { value: 1, label: 'Encender' }
-TablaTareaEvento[2] = { value: 2, label: 'Apagar' }
-TablaTareaEvento[3] = { value: 3, label: 'Cambiar' }
-TablaTareaEvento[4] = { value: 4, label: 'Pulso' }
+var TablaAcciones = [];
+TablaAcciones[0] = { value: 0, label: 'Ninguno' }
+TablaAcciones[1] = { value: 1, label: 'Encender' }
+TablaAcciones[2] = { value: 2, label: 'Apagar' }
+TablaAcciones[3] = { value: 3, label: 'Cambiar' }
+TablaAcciones[4] = { value: 4, label: 'Pulso' }
 
 var TablaMeses = [];
 TablaMeses[0] = { value: 0, label: 'Todos' }
@@ -274,6 +274,8 @@ function getAbmTableHedaer(json_list) {
 	} 
 	return headers; 
 }
+
+/* ==== Generico =========================================================== */
 
 function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
@@ -867,6 +869,8 @@ function fillEvForm(json_list, dst_div, title) {
 			output += fillDropDownList(headers[i], ListaSiNo);
 		} else if(headers[i] == 'OFF_a_ON') {
 			output += fillDropDownList(headers[i], ListaSiNo);
+		} else if(headers[i] == 'Enviar') {
+			output += fillDropDownList(headers[i], TablaAcciones);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -909,38 +913,10 @@ function fillEvEdit(json_list, dst_div, title) {
 			output += fillDropDownList(headers[i], ListaSiNo, val);
 		} else if(headers[i] == 'OFF_a_ON') {
 			output += fillDropDownList(headers[i], ListaSiNo, val);
+		} else if(headers[i] == 'Enviar') {
+			output += fillDropDownList(headers[i], TablaAcciones, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
-		}
-		output += '</td>';
-		output += '</tr>\n';
-	}
-	output += '</table>\n';
-	document.getElementById(dst_div).innerHTML = output;
-} 
-
-function fillEvDelete(json_list, dst_div, title) { 
-	// Getting the all column names 
-	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_delete_table>\n';
-	var i = 0;
-
-	// Header
-	for (i = 0; i < headers.length; i++) { 
-		output += '<tr>';
-		output += '<th>';
-		if(headers[i] == 'Id') { output += '&nbsp;'; }
-		else { output += headers[i]; }
-		output += '</th>';
-		var val = json_list[0][headers[i]]; 
-		if (val == null || val == 'NULL') val = '&nbsp';   
-		output += '<td>';
-		if(headers[i] == 'Id') {
-			output += '&nbsp;';
-		} else if(headers[i] == 'Tipo') {
-			output += TipoAss[val].label;
-		} else {
-			output += val;
 		}
 		output += '</td>';
 		output += '</tr>\n';
@@ -1028,7 +1004,7 @@ function fillTaskForm(json_list, dst_div, title) {
 		} else if(headers[i] == 'Variable_Destino') {
 			output += fillDropDownList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Evento') {
-			output += fillDropDownList(headers[i], TablaTareaEvento);
+			output += fillDropDownList(headers[i], TablaAcciones);
 		} else if(headers[i] == 'Mes') {
 			output += fillDropDownList(headers[i], TablaMeses);
 		} else if(headers[i] == 'Dia') {
@@ -1074,7 +1050,7 @@ function fillTaskEdit(json_list, dst_div, title) {
 		} else if(headers[i] == 'Variable_Destino') {
 			output += fillDropDownList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Evento') {
-			output += fillDropDownList(headers[i], TablaTareaEvento, val);
+			output += fillDropDownList(headers[i], TablaAcciones, val);
 		} else if(headers[i] == 'Mes') {
 			output += fillDropDownList(headers[i], TablaMeses, val);
 		} else if(headers[i] == 'Dia') {
@@ -1093,10 +1069,11 @@ function fillTaskEdit(json_list, dst_div, title) {
 	document.getElementById(dst_div).innerHTML = output;
 } 
 
-function fillTaskDelete(json_list, dst_div, title) { 
+/* ==== Grupo ============================================================== */
+function fillGroupForm(json_list, dst_div, title) {
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_delete_table>\n';
+	var output = '<p class=abm-table-title>' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1106,16 +1083,44 @@ function fillTaskDelete(json_list, dst_div, title) {
 		if(headers[i] == 'Id') { output += '&nbsp;'; }
 		else { output += headers[i]; }
 		output += '</th>';
-		var val = json_list[0][headers[i]]; 
-		if (val == null || val == 'NULL') val = '&nbsp';   
 		output += '<td>';
-		if(headers[i] == 'Id') {
-			output += '&nbsp;';
-		} else if(headers[i] == 'Tipo') {
-			output += TipoAss[val].label;
-		} else {
-			output += val;
-		}
+		output += '<input type="';
+		if(headers[i] == 'Id') { output += 'hidden'; }
+		else { output += 'text'; }
+		output += '" id="' + headers[i] + '" name="';
+		output += headers[i] + '" ';
+		output += 'class="abm-edit-input-text" />';
+		output += '</td>';
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+}
+
+function fillGroupEdit(json_list, dst_div, title) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) {
+		output += '<tr>';
+		output += '<th>';
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
+		output += '</th>';
+		var val = json_list[0][headers[i]]; 
+		if (val == null || val == 'NULL') val = '';   
+		output += '<td>';
+		output += '<input type="';
+		if(headers[i] == 'Id') { output += 'hidden'; }
+		else { output += 'text'; }
+		output += '" id="' + headers[i] + '" name="';
+		output += headers[i] + '" ';
+		output += 'class="abm-edit-input-text" value="';
+		output += val;
+		output += '" />';
 		output += '</td>';
 		output += '</tr>\n';
 	}

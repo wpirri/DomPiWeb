@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS TB_DOM_EVENT_CHANGE;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_FUNCTION;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
-DROP TABLE IF EXISTS TB_DOM_GROUP_LIST;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
 DROP TABLE IF EXISTS TB_DOM_GRUPO_VISUAL;
@@ -140,18 +139,11 @@ FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 # ALTER TABLE TB_DOM_ASSIGN ADD COLUMN Estado_HW integer DEFAULT 0; 
 # ALTER TABLE TB_DOM_ASSIGN ADD COLUMN Perif_Data varchar(128); 
 
-CREATE TABLE IF NOT EXISTS TB_DOM_GROUP ( 
+CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
 Id integer primary key,
-Grupo varchar(128) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_GROUP_LIST (
-Grupo integer primary key,
-Objeto integer NOT NULL,
-Principal integer DEFAULT 0,            -- Define el estado del resto del grupo
-Invertir integer DEFAULT 0,             -- Mantiene estado invertido con respecto al grupo
-FOREIGN KEY(Grupo) REFERENCES TB_DOM_GROUP(Id),
-FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+Grupo varchar(128) NOT NULL,
+Listado_Objetos varchar(256),
+Estado integer DEFAULT 0            -- Define el estado que deben tener los objetos del grupo
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FLAG (

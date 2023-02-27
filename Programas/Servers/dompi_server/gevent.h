@@ -28,10 +28,14 @@ public:
 
     int CheckEvent(int hw_id, const char* port, int estado);
 
-    int SendEventObj(int id, int ev, int val);
-    int SendEventGrp(int id, int ev, int val);
-    int SendEventFun(int id, int ev, int val);
-    int SendEventVar(int id, int ev, int val);
+    int ChangeAssignByName(const char* name, int accion, int param);
+    int ChangeAssignById(int id, int accion, int param);
+    int ChangeGroupByName(const char* name, int accion, int param);
+    int ChangeGroupById(int id, int accion, int param);
+    int ChangeFcnByName(const char* name, int accion, int param);
+    int ChangeFcnById(int id, int accion, int param);
+    int ChangeVarByName(const char* name, int accion, int param);
+    int ChangeVarById(int id, int accion, int param);
 
 private:
     CDB *m_pDB;
