@@ -117,6 +117,54 @@ time_t last_daily;
 time_t update_ass_t;
 
 
+void CheckHWOffline( void )
+{
+	char query[4096];
+	int rc;
+	time_t t;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_HW_Id;
+	cJSON *json_MAC;
+	cJSON *json_Direccion_IP;
+
+	/* Dispositivos offline */
+	t = time(&t);
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT Id, MAC, Direccion_IP "
+					"FROM TB_DOM_PERIF "
+					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-180);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			/* Saco los datos que necesito */
+			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_MAC = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "MAC");
+			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Direccion_IP");
+
+			m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: OFF LINE", json_MAC->valuestring,json_Direccion_IP->valuestring );
+
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Estado = 0 "
+							"WHERE Id = %s;", json_HW_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+/* ********************************************************************
+ *   Actualización completa de la nube cada 10 min
+ * *******************************************************************/
 void UpdateCloud( void )
 {
 	char query[4096];
@@ -126,17 +174,12 @@ void UpdateCloud( void )
 	cJSON *json_QueryRow;
 	time_t t;
 
-	/* ********************************************************************
-		*   Actualizaciones de la nube
-		*
-		*
-		* *******************************************************************/
-	/* Tomo la hora para los cálculos de abajo */
 	t = time(&t);
-	/* Actualizacion de objetos en la nube */
+
 	if(t >= update_ass_t)
 	{
-		update_ass_t = t + 60;
+		/* Actualizacion de objetos en la nube */
+		update_ass_t = t + 600;
 
 		json_QueryArray = cJSON_CreateArray();
 
@@ -284,13 +327,15 @@ void AssignTask( void )
 	int iEstado;
 
 
-	/* Controlo si hay que actualizar estados de Assign */
+	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
 	json_QueryArray = cJSON_CreateArray();
 	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
 							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
 					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-					"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-					"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
+					"WHERE ASS.Dispositivo = PERIF.Id AND "
+					     "PERIF.Estado = 1 AND "
+					     "(ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
+					     "( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -737,8 +782,6 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_cmdline;
 
     cJSON *json_HW_Id;
-    cJSON *json_MAC;
-	cJSON *json_Direccion_IP;
 	cJSON *json_Objeto;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
@@ -2230,11 +2273,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_cmd"))
 			{
-				json_obj = cJSON_Parse(message);
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				/* Viene: [{"System_Key":"D3S4RR0LL0","Time_Stamp":"1655813951","Objeto":"Luz Cocina","Accion":"switch"}] */
+				json_obj = cJSON_Parse(message);
 				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_obj, "Objeto");
 				json_Accion = cJSON_GetObjectItemCaseSensitive(json_obj, "Accion");
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
 				if(json_Objeto && json_Accion)
 				{
 					m_pServer->m_pLog->Add(100, "[COMANDO] Objeto: %s - Accion: %s", 
@@ -2242,36 +2287,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					if( !strcmp(json_Accion->valuestring, "on"))
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 1 "
-										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(NULL, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						pEV->ChangeAssignByName(json_Objeto->valuestring, 1, 0);
 					}
 					else if( !strcmp(json_Accion->valuestring, "off"))
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = 0 "
-										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(NULL, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						pEV->ChangeAssignByName(json_Objeto->valuestring, 2, 0);
 					}
 					else if( !strcmp(json_Accion->valuestring, "switch"))
 					{
-						/* Actualizo el estado en la base */
-						sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-										"SET Estado = (1 - Estado) "
-										"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_Objeto->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(NULL, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						pEV->ChangeAssignByName(json_Objeto->valuestring, 3, 0);
 					}
 				}
 			}
@@ -3287,14 +3311,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(objeto)
 							{
-								/* Actualizo el estado en la base */
-								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-												"SET Estado = 1 "
-												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
-								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-								rc = pDB->Query(NULL, query);
-								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								pEV->ChangeAssignByName(objeto, 1, 0);
 							}
 							else
 							{
@@ -3305,14 +3322,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(objeto)
 							{
-								/* Actualizo el estado en la base */
-								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-												"SET Estado = 0 "
-												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
-								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-								rc = pDB->Query(NULL, query);
-								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								pEV->ChangeAssignByName(objeto, 2, 0);
 							}
 							else
 							{
@@ -3323,14 +3333,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(objeto)
 							{
-								/* Actualizo el estado en la base */
-								sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-												"SET Estado = (1 - Estado ) "
-												"WHERE UPPER(Objeto) = UPPER(\'%s\');", objeto);
-								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-								rc = pDB->Query(NULL, query);
-								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								pEV->ChangeAssignByName(objeto, 3, 0);
 							}
 							else
 							{
@@ -3339,7 +3342,14 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "pulso") )
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"No implementado\"}}");
+							if(objeto)
+							{
+								pEV->ChangeAssignByName(objeto, 4, 0);
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
+							}
 						}
 						else if( !strcmp(comando, "estado") )
 						{
@@ -4269,53 +4279,11 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			CheckAutoModules();
 
-
-			/* Dispositivos offline */
-			t = time(&t);
-			json_arr = cJSON_CreateArray();
-			sprintf(query, "SELECT Id, MAC, Direccion_IP "
-							"FROM TB_DOM_PERIF "
-							"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-180);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(json_arr, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			if(rc >= 0)
-			{
-				/* Recorro el array */
-				cJSON_ArrayForEach(json_un_obj, json_arr)
-				{
-					/* Saco los datos que necesito */
-					json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Id");
-					json_MAC = cJSON_GetObjectItemCaseSensitive(json_un_obj, "MAC");
-					json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Direccion_IP");
-
-					m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: OFF LINE", json_MAC->valuestring,json_Direccion_IP->valuestring );
-
-					sprintf(query, "UPDATE TB_DOM_PERIF "
-									"SET Estado = 0 "
-									"WHERE Id = %s;", json_HW_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				}
-			}
-			cJSON_Delete(json_arr);
+			CheckHWOffline();
 
 			/* Controles del modulo de alarma */
 
-
-
-
-
-			
 			/* Tareas programadas en TB_DOM_AT */
-
-
-
-
-
 
 			/*  */
 			delta_t = 1000;
