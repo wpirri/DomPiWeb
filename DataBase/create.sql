@@ -143,7 +143,8 @@ CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
 Id integer primary key,
 Grupo varchar(128) NOT NULL,
 Listado_Objetos varchar(256),
-Estado integer DEFAULT 0            -- Define el estado que deben tener los objetos del grupo
+Estado integer DEFAULT 0,            -- Define el estado que deben tener los objetos del grupo
+Actualizar integer DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FLAG (

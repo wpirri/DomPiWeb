@@ -54,6 +54,7 @@ PortAss[23] = { value: 'ANA8', label: 'ANA8' }
 
 var TablaAssIn = [];
 var TablaAssOut = [];
+var TablaGrupos = [];
 
 var GrupoVisual = [];
 GrupoVisual[0] = { value: 0, label: 'Ninguno' }
@@ -209,14 +210,31 @@ TablaMinutos[58] = { value: 58, label: '58' }
 TablaMinutos[59] = { value: 59, label: '59' }
 TablaMinutos[60] = { value: 60, label: 'Todos' }
 
-function fillDropDownList(name, list, selected) {
+function fillSimpleList(name, list, selected) {
 	if (selected == null) {
 		selected = (-1);
 	}
-	var out = '<select name="' + name + '" id="' + name + '">\n';
+	var out = '<select name="' + name + '" id="' + name + '" class="abm-select">\n';
 
 	for (var i = 0; i < list.length; i++) {
 		if(selected == list[i].value) {
+			out += '<option selected value="' + list[i].value + '">' + list[i].label + '</option>\n';
+		} else {
+			out += '<option value="' + list[i].value + '">' + list[i].label + '</option>\n';
+		}
+	}
+	out += '</select>\n';
+	return out;
+}
+
+function fillMultiList(name, size, list, selected) {
+	if (selected == null) {
+		selected = [];
+	}
+	var out = '<select name="' + name + '" id="' + name + '" size="' + size + '" class="abm-multi-select" multiple>\n';
+
+	for (var i = 1; i < list.length; i++) {
+		if( selected != null && selected.includes(list[i].value, 0) ) {
 			out += '<option selected value="' + list[i].value + '">' + list[i].label + '</option>\n';
 		} else {
 			out += '<option value="' + list[i].value + '">' + list[i].label + '</option>\n';
@@ -273,6 +291,34 @@ function getAbmTableHedaer(json_list) {
 		} 
 	} 
 	return headers; 
+}
+
+function collectFormData(form_name) {
+	var kvpairs = [];
+	var form = document.getElementById(form_name);
+
+	for ( var i = 0; i < form.elements.length; i++ ) {
+		var e = form.elements[i];
+		if(e.type == "select-multiple")
+		{
+			var select_data = '';
+			for(var j = 0; j < e.length; j++) {
+				if(e[j].selected)
+				{
+					if(select_data.length > 0) {
+						select_data += ',';
+					}
+					select_data +=e[j].value;
+				}
+			}
+			kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(select_data));
+		}
+		else
+		{
+			kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(e.value));
+		}
+	}
+	return kvpairs.join('&');
 }
 
 /* ==== Generico =========================================================== */
@@ -483,7 +529,7 @@ function fillHWForm(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Tipo') {
-			output += fillDropDownList(headers[i], TipoHW);
+			output += fillSimpleList(headers[i], TipoHW);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -513,7 +559,7 @@ function fillHWEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
 		} else if(headers[i] == 'Tipo') {
-			output += fillDropDownList(headers[i], TipoHW, val);
+			output += fillSimpleList(headers[i], TipoHW, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
 		}
@@ -684,13 +730,13 @@ function fillAssForm(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Dispositivo') {
-			output += fillDropDownList(headers[i], TablaHW);
+			output += fillSimpleList(headers[i], TablaHW);
 		} else if(headers[i] == 'Port') {
-			output += fillDropDownList(headers[i], PortAss);
+			output += fillSimpleList(headers[i], PortAss);
 		} else if(headers[i] == 'Tipo') {
-			output += fillDropDownList(headers[i], TipoAss);
+			output += fillSimpleList(headers[i], TipoAss);
 		} else if(headers[i] == 'Grupo_Visual') {
-			output += fillDropDownList(headers[i], GrupoVisual);
+			output += fillSimpleList(headers[i], GrupoVisual);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -720,13 +766,13 @@ function fillAssEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
 		} else if(headers[i] == 'Dispositivo') {
-			output += fillDropDownList(headers[i], TablaHW, val);
+			output += fillSimpleList(headers[i], TablaHW, val);
 		} else if(headers[i] == 'Port') {
-			output += fillDropDownList(headers[i], PortAss, val);
+			output += fillSimpleList(headers[i], PortAss, val);
 		} else if(headers[i] == 'Tipo') {
-			output += fillDropDownList(headers[i], TipoAss, val);
+			output += fillSimpleList(headers[i], TipoAss, val);
 		} else if(headers[i] == 'Grupo_Visual') {
-			output += fillDropDownList(headers[i], GrupoVisual, val);
+			output += fillSimpleList(headers[i], GrupoVisual, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
 		}
@@ -856,21 +902,21 @@ function fillEvForm(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Objeto_Origen') {
-			output += fillDropDownList(headers[i], TablaAssIn);
+			output += fillSimpleList(headers[i], TablaAssIn);
 		} else if(headers[i] == 'Objeto_Destino') {
-			output += fillDropDownList(headers[i], TablaAssOut);
+			output += fillSimpleList(headers[i], TablaAssOut);
 		} else if(headers[i] == 'Grupo_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], TablaGrupos);
 		} else if(headers[i] == 'Funcion_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Variable_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'ON_a_OFF') {
-			output += fillDropDownList(headers[i], ListaSiNo);
+			output += fillSimpleList(headers[i], ListaSiNo);
 		} else if(headers[i] == 'OFF_a_ON') {
-			output += fillDropDownList(headers[i], ListaSiNo);
+			output += fillSimpleList(headers[i], ListaSiNo);
 		} else if(headers[i] == 'Enviar') {
-			output += fillDropDownList(headers[i], TablaAcciones);
+			output += fillSimpleList(headers[i], TablaAcciones);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -900,21 +946,21 @@ function fillEvEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Objeto_Origen') {
-			output += fillDropDownList(headers[i], TablaAssIn, val);
+			output += fillSimpleList(headers[i], TablaAssIn, val);
 		} else if(headers[i] == 'Objeto_Destino') {
-			output += fillDropDownList(headers[i], TablaAssOut, val);
+			output += fillSimpleList(headers[i], TablaAssOut, val);
 		} else if(headers[i] == 'Grupo_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], TablaGrupos, val);
 		} else if(headers[i] == 'Funcion_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Variable_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'ON_a_OFF') {
-			output += fillDropDownList(headers[i], ListaSiNo, val);
+			output += fillSimpleList(headers[i], ListaSiNo, val);
 		} else if(headers[i] == 'OFF_a_ON') {
-			output += fillDropDownList(headers[i], ListaSiNo, val);
+			output += fillSimpleList(headers[i], ListaSiNo, val);
 		} else if(headers[i] == 'Enviar') {
-			output += fillDropDownList(headers[i], TablaAcciones, val);
+			output += fillSimpleList(headers[i], TablaAcciones, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		}
@@ -996,23 +1042,23 @@ function fillTaskForm(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Objeto_Destino') {
-			output += fillDropDownList(headers[i], TablaAssOut);
+			output += fillSimpleList(headers[i], TablaAssOut);
 		} else if(headers[i] == 'Grupo_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], TablaGrupos);
 		} else if(headers[i] == 'Funcion_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Variable_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Evento') {
-			output += fillDropDownList(headers[i], TablaAcciones);
+			output += fillSimpleList(headers[i], TablaAcciones);
 		} else if(headers[i] == 'Mes') {
-			output += fillDropDownList(headers[i], TablaMeses);
+			output += fillSimpleList(headers[i], TablaMeses);
 		} else if(headers[i] == 'Dia') {
-			output += fillDropDownList(headers[i], TablaDias);
+			output += fillSimpleList(headers[i], TablaDias);
 		} else if(headers[i] == 'Hora') {
-			output += fillDropDownList(headers[i], TablaHoras);
+			output += fillSimpleList(headers[i], TablaHoras);
 		} else if(headers[i] == 'Minuto') {
-			output += fillDropDownList(headers[i], TablaMinutos);
+			output += fillSimpleList(headers[i], TablaMinutos);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -1042,23 +1088,23 @@ function fillTaskEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Objeto_Destino') {
-			output += fillDropDownList(headers[i], TablaAssOut, val);
+			output += fillSimpleList(headers[i], TablaAssOut, val);
 		} else if(headers[i] == 'Grupo_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], TablaGrupos, val);
 		} else if(headers[i] == 'Funcion_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Variable_Destino') {
-			output += fillDropDownList(headers[i], ListaVacia);
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Evento') {
-			output += fillDropDownList(headers[i], TablaAcciones, val);
+			output += fillSimpleList(headers[i], TablaAcciones, val);
 		} else if(headers[i] == 'Mes') {
-			output += fillDropDownList(headers[i], TablaMeses, val);
+			output += fillSimpleList(headers[i], TablaMeses, val);
 		} else if(headers[i] == 'Dia') {
-			output += fillDropDownList(headers[i], TablaDias, val);
+			output += fillSimpleList(headers[i], TablaDias, val);
 		} else if(headers[i] == 'Hora') {
-			output += fillDropDownList(headers[i], TablaHoras, val);
+			output += fillSimpleList(headers[i], TablaHoras, val);
 		} else if(headers[i] == 'Minuto') {
-			output += fillDropDownList(headers[i], TablaMinutos, val);
+			output += fillSimpleList(headers[i], TablaMinutos, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		}
@@ -1084,12 +1130,13 @@ function fillGroupForm(json_list, dst_div, title) {
 		else { output += headers[i]; }
 		output += '</th>';
 		output += '<td>';
-		output += '<input type="';
-		if(headers[i] == 'Id') { output += 'hidden'; }
-		else { output += 'text'; }
-		output += '" id="' + headers[i] + '" name="';
-		output += headers[i] + '" ';
-		output += 'class="abm-edit-input-text" />';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		} else if(headers[i] == 'Listado_Objetos') {
+			output += fillMultiList(headers[i], 10, TablaAssOut);
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		}
 		output += '</td>';
 		output += '</tr>\n';
 	}
@@ -1113,17 +1160,25 @@ function fillGroupEdit(json_list, dst_div, title) {
 		var val = json_list[0][headers[i]]; 
 		if (val == null || val == 'NULL') val = '';   
 		output += '<td>';
-		output += '<input type="';
-		if(headers[i] == 'Id') { output += 'hidden'; }
-		else { output += 'text'; }
-		output += '" id="' + headers[i] + '" name="';
-		output += headers[i] + '" ';
-		output += 'class="abm-edit-input-text" value="';
-		output += val;
-		output += '" />';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		} else if(headers[i] == 'Listado_Objetos') {
+			output += fillMultiList(headers[i], 10, TablaAssOut, val.split(','));
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		}
 		output += '</td>';
 		output += '</tr>\n';
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
 } 
+
+function loadGrpTable(json_list) {
+	for (var i = 0; i < json_list.length; i++) { 
+		var item = [];
+		item['value'] = json_list[i].Id;
+		item['label'] = json_list[i].Grupo;
+		TablaGrupos[i] = item;
+	}	
+}

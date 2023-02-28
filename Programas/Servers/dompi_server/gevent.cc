@@ -486,12 +486,98 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 
 int GEvent::ChangeGroupByName(const char* name, int accion, int param)
 {
-    return (-1);
+	int rc = 0;
+	char query[4096];
+
+	m_pServer->m_pLog->Add(50, "[ChangeGroupByName] name= %s, accion= %i param= %i", name, accion, param);
+
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = 1, Actualizar = 1 "
+							"WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = 0, Actualizar = 1 "
+							"WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = (1 - Estado), Actualizar = 1 "
+							"WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
+			break;
+		case 4: /* Pulso */
+			if(param > 0)
+			{
+				sprintf(query, 	"UPDATE TB_DOM_GROUP "
+								"SET Estado = %i, Actualizar = 1 "
+                                "WHERE UPPER(Grupo) = UPPER(\'%s\');", max(2, param), name);
+			}
+			else
+			{
+				sprintf(query, 	"UPDATE TB_DOM_GROUP "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1" 
+                                "WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
+			}
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
 }
 
 int GEvent::ChangeGroupById(int id, int accion, int param)
 {
-    return (-1);
+	int rc = 0;
+	char query[4096];
+
+	m_pServer->m_pLog->Add(50, "[ChangeGroupById] id= %i, accion= %i param= %i", id, accion, param);
+
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = 1, Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = 0, Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_GROUP "
+							"SET Estado = (1 - Estado), Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 4: /* Pulso */
+			if(param > 0)
+			{
+				sprintf(query, 	"UPDATE TB_DOM_GROUP "
+								"SET Estado = %i, Actualizar = 1 "
+							    "WHERE Id = %i;", max(2, param), id);
+			}
+			else
+			{
+				sprintf(query, 	"UPDATE TB_DOM_GROUP "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1" 
+								"WHERE Id = %i;", id);
+			}
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
 }
 
 int GEvent::ChangeFcnByName(const char* name, int accion, int param)

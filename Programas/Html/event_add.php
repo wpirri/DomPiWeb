@@ -24,21 +24,16 @@ include('head-abm.php');
 
     function LoadAssData(msg) {
         loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmgroup.cgi', LoadGrpData, false);
+    }
+
+    function LoadGrpData(msg) {
+        loadGrpTable(JSON.parse(msg).response);
         newAJAXCommand('/cgi-bin/abmev.cgi?funcion=get&Id=0', LoadData, false);
     }
 
     function SaveData() {
-        /* Send form data to /cgi-bin/abmuser.cgi?funcion=update */
-
-        var kvpairs = [];
-        var form = document.getElementById('add_form');
-
-        for ( var i = 0; i < form.elements.length; i++ ) {
-            var e = form.elements[i];
-            kvpairs.push(encodeURIComponent(e.name) + '=' + encodeURIComponent(e.value));
-        }
-
-        newAJAXCommand('/cgi-bin/abmev.cgi?funcion=add', null, false, kvpairs.join('&'));
+        newAJAXCommand('/cgi-bin/abmev.cgi?funcion=add', null, false, collectFormData('add_form'));
 
         window.location.replace('event_list.php');
     }

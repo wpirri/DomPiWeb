@@ -3,7 +3,7 @@ $TITLE='Variables';
 include('head-abm.php');
 ?>
 
-<body onload='OnLoad;'>
+<body onload='OnLoad();'>
 
 <div id='working_list_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $CONFIG_MENU?>');" >
 	<img id='working_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver

@@ -114,6 +114,234 @@ int load_system_config;
 int update_system_config;
 int internal_timeout;
 time_t last_daily;
+time_t update_ass_t;
+
+
+void UpdateCloud( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	time_t t;
+
+	/* ********************************************************************
+		*   Actualizaciones de la nube
+		*
+		*
+		* *******************************************************************/
+	/* Tomo la hora para los cálculos de abajo */
+	t = time(&t);
+	/* Actualizacion de objetos en la nube */
+	if(t >= update_ass_t)
+	{
+		update_ass_t = t + 60;
+
+		json_QueryArray = cJSON_CreateArray();
+
+		/* Genero un listado de los objetos con su estado para subir a la nube */
+		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
+		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+		rc = pDB->Query(json_QueryArray, query);
+		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		if(rc >= 0)
+		{
+			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+			{
+				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_ass_status_update][%s]", message);
+				/* Se envía a todos */
+				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
+			}
+		}
+		cJSON_Delete(json_QueryArray);
+	}
+}
+
+void CheckAutoModules( void )
+{
+	char query[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+
+	/* Control del modulo de automatización */
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT AU.Id AS AUTO_Id, AU.Tipo, AU.Min_Sensor, AU.Max_Sensor, "
+						"AU.Hora_Inicio, AU.Hora_Fin, AU.Dias_Semana, AU.Estado AS AUTO_Estado, "
+						"ASS.Id AS ASS_Id, ASS.Estado AS ASS_Estado, "
+						"ASS.Dispositivo AS PERIF_Id "
+					"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
+					"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			//json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "AUTO_Id");
+			//json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
+			//json_Min = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Min_Sensor");
+			//json_Max = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Max_Sensor");
+			//json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Inicio");
+			//json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Fin");
+			//json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Fin");
+			//json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+			//json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
+			//json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Estado");
+			//json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "PERIF_Id");
+
+
+			/* TODO: Falta terminar modulos de automatización */
+
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+
+}
+/* Marcar para actualizar estado de los assign por Grupo */
+void GroupTask( void )
+{
+	char query[4096];
+	int rc;
+	char *id, *p;
+	int accion;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_Id;
+	cJSON *json_Grupo;
+	cJSON *json_Listado_Objetos;
+	cJSON *json_Estado;
+
+	json_QueryArray = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE ACTUALIZAR = 1;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_Grupo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo");
+			json_Listado_Objetos = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Listado_Objetos");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+
+			m_pServer->m_pLog->Add(20, "[GroupTask] Actualizando estado de I/O de Grupo [%s]", json_Grupo->valuestring);
+			/* Encender o apagar */
+			if(atoi(json_Estado->valuestring))
+			{
+				/* Grupo encendido -> mando a encender los miembros */
+				accion = 1;
+			}
+			else
+			{
+				/* Grupo apagado -> mando a apagar los miembros */
+				accion = 2;
+			}
+			/* Recorro el listado de id separados por , */
+			p = json_Listado_Objetos->valuestring;
+			while(*p)
+			{
+				id = p;
+				while(*p && *p != ',') p++;
+				if(*p)
+				{
+					*p = 0;
+					p++;
+				}
+				pEV->ChangeAssignById(atoi(id), accion, 0);
+			}
+			sprintf(query, "UPDATE TB_DOM_GROUP "
+							"SET Actualizar = 0 "
+							"WHERE Id = %s;", json_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void AssignTask( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_Objeto;
+	cJSON *json_ASS_Id;
+	cJSON *json_Estado;
+	cJSON *json_Tipo_ASS;
+	int iEstado;
+
+
+	/* Controlo si hay que actualizar estados de Assign */
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
+							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
+					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
+					"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
+					"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
+			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
+			m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+			/* Me fijo si es estado o pulso */
+			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
+			{
+				m_pServer->m_pLog->Add(90, "Post [dompi_hw_pulse_io][%s]", message);
+				/* Se envía a todos */
+				rc = m_pServer->Post("dompi_hw_pulse_io", message, strlen(message));
+			}
+			else
+			{
+				m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_io][%s]", message);
+				/* Se envía a todos */
+				rc = m_pServer->Post("dompi_hw_set_io", message, strlen(message));
+
+				/* Notifico a la nube */
+				m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
+				/* Se envía a todos */
+				m_pServer->Post("dompi_ass_change", message, strlen(message));
+			}
+
+			if(rc == 0)
+			{
+				/* Borro la diferencia */
+				iEstado = atoi(json_Estado->valuestring);
+				if(iEstado != 1) iEstado = 0;
+				sprintf(query, "UPDATE TB_DOM_ASSIGN "
+								"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+								"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
 
 int ExcluirDeABM(const char* label)
 {
@@ -200,7 +428,7 @@ void CheckTask()
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc == 0)
+	if(rc >= 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
@@ -281,7 +509,7 @@ void CheckUpdateHWConfig()
 	rc = pDB->Query(json_arr_Perif, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc == 0)
+	if(rc >= 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
@@ -349,10 +577,13 @@ void CheckUpdateHWConfig()
 					rc = pDB->Query(json_arr_Assign, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
-					m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
-					/* Se envía a todos */
-					m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
+					if(rc >= 0)
+					{
+						cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
+						/* Se envía a todos */
+						m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
+					}
 				}
 				/* Borro la marca */
 				sprintf(query, "UPDATE TB_DOM_PERIF "
@@ -411,7 +642,7 @@ void LoadSystemConfig(void)
 	rc = pDB->Query(json_System_Config, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc == 0)
+	if(rc >= 0)
 	{
 		load_system_config = 0;
 		update_system_config = 1;
@@ -480,9 +711,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	time_t next_t;
 	struct tm *s_tm;
 	int delta_t;
-	time_t update_ass_t;
 	char s[16];
-	int iEstado;
 
 	char comando[1024];
 	char objeto[1024];
@@ -508,11 +737,8 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_cmdline;
 
     cJSON *json_HW_Id;
-    cJSON *json_ASS_Id;
     cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
-	cJSON *json_Tipo_ASS;
-	cJSON *json_Estado;
 	cJSON *json_Objeto;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
@@ -769,7 +995,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -801,7 +1027,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -836,7 +1062,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -922,12 +1148,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_USER %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1077,7 +1304,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						//json_response = cJSON_GetObjectItemCaseSensitive(json_arr, "response");
 
@@ -1131,7 +1358,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -1163,7 +1390,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -1198,7 +1425,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -1284,12 +1511,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_PERIF %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1439,7 +1667,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_query_result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_query_result);
@@ -1471,7 +1699,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -1506,7 +1734,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -1598,12 +1826,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_ASSIGN %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1773,7 +2002,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					if(json_obj) cJSON_Delete(json_obj);
 					json_obj = cJSON_CreateObject();
@@ -1817,7 +2046,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					if(json_obj) cJSON_Delete(json_obj);
 					json_obj = cJSON_CreateObject();
@@ -2061,7 +2290,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2093,7 +2322,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2128,7 +2357,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -2214,12 +2443,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Cierro la sentencia */
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_EVENT %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -2367,7 +2597,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2399,7 +2629,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2434,7 +2664,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -2522,12 +2752,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Cierro la sentencia */
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_AT %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -2674,7 +2905,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2706,7 +2937,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -2741,7 +2972,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -2829,12 +3060,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Cierro la sentencia */
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+				
 				sprintf(query, "INSERT INTO TB_DOM_GROUP %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -3126,7 +3358,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								rc = pDB->Query(json_arr, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-								if(rc == 0)
+								if(rc >= 0)
 								{
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_un_obj, json_arr) { break; }
@@ -3181,7 +3413,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -3216,7 +3448,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -3330,15 +3562,14 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
-				sprintf(query, "INSERT INTO TB_DOM_CONFIG %s VALUES %s;", query_into, query_values);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 
 				load_system_config = 1;
-
+				sprintf(query, "INSERT INTO TB_DOM_CONFIG %s VALUES %s;", query_into, query_values);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -3389,7 +3620,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_query_result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_query_result);
@@ -3430,7 +3661,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_arr);
@@ -3469,7 +3700,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_arr, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -3562,13 +3793,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
+
 				sprintf(query, "INSERT INTO TB_DOM_AUTO %s VALUES %s;", query_into, query_values);
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 0)
+				if(rc != 1)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -3744,7 +3975,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					if(json_obj) cJSON_Delete(json_obj);
 					json_obj = cJSON_CreateObject();
@@ -3791,7 +4022,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(json_arr, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc == 0)
+				if(rc >= 0)
 				{
 					if(json_obj) cJSON_Delete(json_obj);
 					json_obj = cJSON_CreateObject();
@@ -3917,6 +4148,9 @@ int main(/*int argc, char** argv, char** env*/void)
 		 *
 		 *
 		 * *******************************************************************/
+		GroupTask();
+
+		AssignTask();
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -3988,63 +4222,6 @@ int main(/*int argc, char** argv, char** env*/void)
 			update_ass_status_name[0] = 0;
 		}
 
-		/* Controlo si hay que actualizar estados de Assign */
-		json_arr = cJSON_CreateArray();
-		sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-								"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
-						"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-						"WHERE ASS.Dispositivo = PERIF.Id AND (ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-						"( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
-		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = pDB->Query(json_arr, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		if(rc == 0)
-		{
-			/* Recorro el array */
-			cJSON_ArrayForEach(json_un_obj, json_arr)
-			{
-				json_Objeto = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Objeto");
-				json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
-				json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
-				json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo_ASS");
-				m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
-				cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-				/* Me fijo si es estado o pulso */
-				if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
-				{
-					m_pServer->m_pLog->Add(90, "Post [dompi_hw_pulse_io][%s]", message);
-					/* Se envía a todos */
-					rc = m_pServer->Post("dompi_hw_pulse_io", message, strlen(message));
-				}
-				else
-				{
-					m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_io][%s]", message);
-					/* Se envía a todos */
-					rc = m_pServer->Post("dompi_hw_set_io", message, strlen(message));
-
-					/* Notifico a la nube */
-					m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
-					/* Se envía a todos */
-					m_pServer->Post("dompi_ass_change", message, strlen(message));
-				}
-
-				if(rc == 0)
-				{
-					/* Borro la diferencia */
-					iEstado = atoi(json_Estado->valuestring);
-					if(iEstado != 1) iEstado = 0;
-					sprintf(query, "UPDATE TB_DOM_ASSIGN "
-									"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-									"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				}
-			}
-		}
-		cJSON_Delete(json_arr);
 
 		if(load_system_config)
 		{
@@ -4064,40 +4241,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 
+		UpdateCloud();
 
-		/* ********************************************************************
-		 *   Actualizaciones de la nube
-		 *
-		 *
-		 * *******************************************************************/
-		/* Tomo la hora para los cálculos de abajo */
-		t = time(&t);
-		/* Actualizacion de objetos en la nube */
-		if(t >= update_ass_t)
-		{
-			update_ass_t = t + 60;
-			/* Genero un listado de los objetos con su estado para subir a la nube */
-			json_query_result = cJSON_CreateArray();
-			strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(json_query_result, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			if(rc == 0)
-			{
-				json_obj = cJSON_CreateObject();
-				cJSON_AddItemToObject(json_obj, "Objetos", json_query_result);
-				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				cJSON_Delete(json_obj);
-				m_pServer->m_pLog->Add(90, "Post [dompi_ass_status_update][%s]", message);
-				/* Se envía a todos */
-				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
-			}
-			else
-			{
-				cJSON_Delete(json_query_result);
-			}
-		}
 		/* ********************************************************************
 		 *   Timer
 		 *
@@ -4112,48 +4257,18 @@ int main(/*int argc, char** argv, char** env*/void)
 		}
 		else
 		{
+			/* El timer ya está vencido */
+			m_pServer->m_pLog->Add(100, "[TIMER] Tareas dentro del timer");
+
 			/* Tareas diarias */
 			CheckTask();
-			CheckDaily();
 
-			/* El timer ya está vencido */
-			m_pServer->m_pLog->Add(60, "Control de tareas programadas...");
+			CheckDaily();
 
 			CheckUpdateHWConfig();
 
-			/* Control del modulo de automatización */
-			json_arr = cJSON_CreateArray();
-			sprintf(query, "SELECT AU.Id AS AUTO_Id, AU.Tipo, AU.Min_Sensor, AU.Max_Sensor, "
-								"AU.Hora_Inicio, AU.Hora_Fin, AU.Dias_Semana, AU.Estado AS AUTO_Estado, "
-								"ASS.Id AS ASS_Id, ASS.Estado AS ASS_Estado, "
-								"ASS.Dispositivo AS PERIF_Id "
-							"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
-							"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0;");
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(json_arr, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			if(rc == 0)
-			{
-				/* Recorro el array */
-				cJSON_ArrayForEach(json_un_obj, json_arr)
-				{
-					//json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "AUTO_Id");
-					//json_Tipo = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Tipo");
-					//json_Min = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Min_Sensor");
-					//json_Max = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Max_Sensor");
-					//json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Inicio");
-					//json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
-					//json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Hora_Fin");
-					json_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "Estado");
-					json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Id");
-					//json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_un_obj, "ASS_Estado");
-					json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_un_obj, "PERIF_Id");
+			CheckAutoModules();
 
-
-				}
-			}
-			cJSON_Delete(json_arr);
 
 			/* Dispositivos offline */
 			t = time(&t);
@@ -4165,7 +4280,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			rc = pDB->Query(json_arr, query);
 			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			if(rc == 0)
+			if(rc >= 0)
 			{
 				/* Recorro el array */
 				cJSON_ArrayForEach(json_un_obj, json_arr)
