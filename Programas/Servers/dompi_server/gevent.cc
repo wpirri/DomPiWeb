@@ -365,19 +365,19 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                 }
                 else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
                 {
-                    ChangeGroupById(   atoi(Objeto_Destino->valuestring), 
+                    ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
                 {
-                    ChangeFcnById(   atoi(Objeto_Destino->valuestring), 
+                    ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
                 {
-                    ChangeVarById(   atoi(Objeto_Destino->valuestring), 
+                    ChangeVarById(   atoi(Variable_Destino->valuestring), 
                                     atoi(Enviar->valuestring),
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
