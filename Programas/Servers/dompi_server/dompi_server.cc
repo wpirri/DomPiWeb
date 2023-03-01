@@ -503,11 +503,18 @@ void CheckTask()
 				}
 				else if(atoi(json_Grupo_Destino->valuestring) != 0)
 				{
-
+					m_pServer->m_pLog->Add(10, "[TASK] Grupo: %s", json_Grupo_Destino->valuestring);
+					rc = pEV->ChangeGroupById(atoi(json_Grupo_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
 				}
 				else if(atoi(json_Funcion_Destino->valuestring) != 0)
 				{
-
+					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Funcion_Destino->valuestring);
+					rc = pEV->ChangeFcnById(atoi(json_Funcion_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+				}
+				else if(atoi(json_Condicion_Variable->valuestring) != 0)
+				{
+					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Condicion_Variable->valuestring);
+					rc = pEV->ChangeVarById(atoi(json_Condicion_Variable->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
 				}
 				/* Actualizo la ejecución */
 				sprintf(query, "UPDATE TB_DOM_AT "
@@ -742,12 +749,15 @@ int main(/*int argc, char** argv, char** env*/void)
 	char typ[1];
 	char message[MAX_BUFFER_LEN+1];
 	char cmdline[1024];
+	char db_host[32];
+	char db_user[32];
+	char db_password[32];
 	char query[4096];
 	char query_into[1024];
 	char query_values[2048];
 	char query_where[512];
 	unsigned long message_len;
-	char db_filename[FILENAME_MAX+1];
+	//char db_filename[FILENAME_MAX+1];
 	int checked;
 	char hw_id[16];
 	long temp_l;
@@ -817,7 +827,10 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(10, "Leyendo configuración...");
 	pConfig = new DPConfig("/etc/dompiweb.config");
-	pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
+	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
+	pConfig->GetParam("DBHOST", db_host);
+	pConfig->GetParam("DBUSER", db_user);
+	pConfig->GetParam("DBPASSWORD", db_password);
 
 	internal_timeout = 1000;
 	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
@@ -825,8 +838,10 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 
-	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
-	pDB = new CDB(db_filename);
+	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
+	//pDB = new CDB(db_filename);
+	m_pServer->m_pLog->Add(10, "Conectado a la base de datos DB_DOMPIWEB...");
+	pDB = new CDB(db_host, "DB_DOMPIWEB", db_user, db_password);
 	if(pDB->Open() != 0)
 	{
 		m_pServer->m_pLog->Add(1, "ERROR al conectar con la base de datos");
@@ -834,7 +849,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	}
 	else
 	{
-		m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s", db_filename);
+		//m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s", db_filename);
+		m_pServer->m_pLog->Add(10, "Conectado a la base de datos DB_DOMPIWEB");
 	}
 
 	json_System_Config = NULL;

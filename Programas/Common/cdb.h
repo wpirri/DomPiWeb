@@ -15,6 +15,7 @@
 #ifndef _CDB_H_
 #define _CDB_H_
 
+/*
 #include "csqlite.h"
 
 class CDB : public CSQLite
@@ -24,4 +25,16 @@ class CDB : public CSQLite
         CDB(const char *filename) : CSQLite { filename } {}
 
 };
+*/
+
+#include "cmydb.h"
+
+class CDB : public CMyDB
+{
+    public:
+        CDB(); 
+        CDB(const char* host, const char* dbname, const char* username, const char* userpass) : CMyDB { host,dbname,username,userpass } {}
+};
+
+
 #endif /* _CDB_H_ */

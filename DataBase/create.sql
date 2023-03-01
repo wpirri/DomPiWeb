@@ -1,3 +1,6 @@
+CREATE DATABASE DB_DOMPIWEB;
+
+\u DB_DOMPIWEB
 
 DROP TABLE IF EXISTS TB_DOM_AUTO;
 DROP TABLE IF EXISTS TB_DOM_ALARM;
@@ -136,9 +139,6 @@ FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );
 
-# ALTER TABLE TB_DOM_ASSIGN ADD COLUMN Estado_HW integer DEFAULT 0; 
-# ALTER TABLE TB_DOM_ASSIGN ADD COLUMN Perif_Data varchar(128); 
-
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
 Id integer primary key,
 Grupo varchar(128) NOT NULL,
@@ -240,10 +240,11 @@ FOREIGN KEY(OutBuzer) REFERENCES TB_DOM_ASSIGN(Id)
 -- Sistema de riego
 -- Calefaccion
 -- Aire acondicionado
+-- Fotocelula
 CREATE TABLE IF NOT EXISTS TB_DOM_AUTO (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
-Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Aire acondicionado
+Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Aire acondicionado 3 = Fotocelula
 Objeto_Salida integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
 Objeto_Sensor integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
 Min_Sensor integer DEFAULT 0,

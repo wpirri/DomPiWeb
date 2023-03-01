@@ -1,9 +1,10 @@
 #!/usr/bin/make -f
 
-INCLUDE=-I../../Common/
+INCLUDE=-I../../Common/ `mysql_config --cflags`
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lsqlite3 -lcjson -lssl -lcrypto
-OBJECTS=dompi_server.o csqlite.o config.o strfunc.o gevent.o
+NO_LIBS=-lsqlite3
+LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
+OBJECTS=dompi_server.o cmydb.o config.o strfunc.o gevent.o
 OUTPUT=dompi_server
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -18,12 +19,17 @@ dompi_server.o: dompi_server.cc
 
 gevent.o: gevent.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c gevent.cc
-csqlite.o: ../../Common/csqlite.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/csqlite.cc
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
+
+#cpgdb.o: ../../Common/cpgdb.cc ../../Common/cpgdb.h
+#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cpgdb.cc
+#csqlite.o: ../../Common/csqlite.cc
+#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/csqlite.cc
+cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cmydb.cc
 
 dompi_server: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
