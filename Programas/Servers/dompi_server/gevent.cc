@@ -127,13 +127,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE MAC = \"%s\";", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_arr = cJSON_CreateArray();
             rc = m_pDB->Query(json_arr, query);
             m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-            if(rc == 0 && json_arr->child)
+            if(rc >= 0 && json_arr->child)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Id");
                 json_status = cJSON_GetObjectItemCaseSensitive(json_arr->child, "Estado");
@@ -146,9 +146,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     /* Actualizo la tabla de Dispositivos */
                     sprintf(query, "UPDATE TB_DOM_PERIF "
                                         "SET Ultimo_Ok = %lu, "
-                                        "Direccion_IP = \"%s\", "
+                                        "Direccion_IP = \'%s\', "
                                         "Estado = 1 "
-                                        "WHERE MAC = \"%s\";",
+                                        "WHERE UPPER(MAC) = UPPER(\'%s\');",
                                         t,
                                         json_raddr->valuestring,
                                         json_hw_mac->valuestring);
@@ -180,7 +180,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
                                         /* Actualizo el estado del HW */
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado_HW = %i "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\";",
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\';",
                                                         ival,
                                                         json_hw_id->valuestring,
                                                         json_un_obj->string);
@@ -190,7 +190,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                         /* En las entradas actualizo también el estado a mostrar */
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
                                                         "(Tipo = 1 OR Tipo = 2 OR Tipo = 4);",
                                                         ival,
                                                         json_hw_id->valuestring,
@@ -202,8 +202,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     }
                                     else if( !memcmp(json_un_obj->string, "WIEGAND", 7))
                                     {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
@@ -215,8 +215,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     }
                                     else if( !memcmp(json_un_obj->string, "TEMP", 4))
                                     {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
@@ -228,8 +228,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                     }
                                     else if( !memcmp(json_un_obj->string, "HUM", 3))
                                     {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \"%s\" "
-                                                        "WHERE Dispositivo = \"%s\" AND Port = \"%s\" AND "
+                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring,
                                                         json_hw_id->valuestring,
@@ -321,7 +321,7 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                     "EV.Enviar, EV.Parametro_Evento, EV.Condicion_Variable, EV.Condicion_Igualdad, EV.Condicion_Valor, EV.Flags "
                     "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
                     "WHERE EV.Objeto_Origen = ASS.Id AND "
-                    "ASS.Dispositivo = %i AND ASS.Port = \"%s\" AND %s",
+                    "ASS.Dispositivo = %i AND ASS.Port = \'%s\' AND %s",
                     hw_id, port, (estado)?"OFF_a_ON = 1;":"ON_a_OFF = 1;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_arr, query);
