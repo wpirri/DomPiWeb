@@ -20,18 +20,18 @@ include("head.php");
 </div>
 
 <div class="normal-btn" id="btn-config-aire" onclick="window.location.replace('aire_edit.php');">
-	<img id="aire-icon" class="icon-btn" src="images/aire.png">&nbsp;Aire
+	<img id="aire-icon" class="icon-btn" src="images/termost.png">&nbsp;Aire
 </div>
 
 
-<div class="normal-btn" id="btn-config-hard" onclick="window.location.replace('task_list.php');">
+<div class="normal-btn" id="btn-config-task" onclick="window.location.replace('task_list.php');">
 	<img id="task-icon" class="icon-btn" src="images/cron.png">&nbsp;Tareas
 </div>
-<!--
-<div class="normal-btn" id="btn-config-assign" onclick="window.location.replace('ass_list.php');">
-	<img id="net-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Objetos
-</div>
 
+<div class="normal-btn" id="btn-config-analog" onclick="window.location.replace('analog_list.php');">
+	<img id="analog-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Anal&oacute;gico
+</div>
+<!--
 <div class="normal-btn" id="btn-config-groups" onclick="window.location.replace('group_list.php');">
 	<img id="group-icon" class="icon-btn" src="images/group.png">&nbsp;Grupos
 </div>

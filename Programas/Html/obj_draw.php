@@ -14,7 +14,12 @@
         $Port = $obj_list[$i]['Port'];
         $Icono0 = $obj_list[$i]['Icono0'];
         $Icono1 = $obj_list[$i]['Icono1'];
-        $Objeto = str_replace(" ", "-", $obj_list[$i]['Objeto']);
+
+        // Sustituciones (Mantener: obj_style.php objdraw.php planta.php)
+        $Objeto = $obj_list[$i]['Objeto'];
+        $Objeto = str_replace(" ", "", $Objeto);
+        $Objeto = str_replace(".", "", $Objeto);
+
         $Nombre = $obj_list[$i]['Objeto'];
         $Tipo = $obj_list[$i]['Tipo'];
         $Segundos = $obj_list[$i]['Analog_Mult_Div_Valor'];

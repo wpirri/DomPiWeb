@@ -62,7 +62,8 @@ function updateHomeStatus(msg) {
 		//jsonData[i].Tipo
 		//jsonData[i].Perif_Data
 		var Objeto = jsonData[i].Objeto;
-		var objId = Objeto.replace(/ /g, "-");
+		// Sustituciones (Mantener: obj_style.php objdraw.php planta.php)
+		var objId = Objeto.replace(/ /g, '').replace(/\./g, '');
 		if ( jsonData[i].Tipo == 2 ) {
 			document.getElementById('id-'+objId).innerHTML = '&nbsp' + jsonData[i].Estado + '&nbsp';
 		} else if ( jsonData[i].Tipo == 6 ) {

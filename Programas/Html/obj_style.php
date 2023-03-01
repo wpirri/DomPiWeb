@@ -9,7 +9,11 @@
     $count = count($obj_list);
     for ($i = 0; $i < $count; $i++)
     {
-        $Objeto = str_replace(" ", "-", $obj_list[$i]['Objeto']);
+        // Sustituciones (Mantener: obj_style.php objdraw.php planta.php)
+        $Objeto = $obj_list[$i]['Objeto'];
+        $Objeto = str_replace(" ", "", $Objeto);
+        $Objeto = str_replace(".", "", $Objeto);
+
         $Cord_x = $obj_list[$i]['Cord_x'];
         $Cord_y = $obj_list[$i]['Cord_y'];
         //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono0']."</p>";

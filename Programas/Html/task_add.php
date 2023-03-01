@@ -24,6 +24,11 @@ include('head-abm.php');
 
     function LoadAssData(msg) {
         loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmgroup.cgi', LoadGrpData, false);
+    }
+
+    function LoadGrpData(msg) {
+        loadGrpTable(JSON.parse(msg).response);
         newAJAXCommand('/cgi-bin/abmat.cgi?funcion=get&Id=0', LoadData, false);
     }
 
