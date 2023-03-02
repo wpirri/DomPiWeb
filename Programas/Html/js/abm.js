@@ -1203,20 +1203,26 @@ function fillAnalogForm(json_list, dst_div, title) {
 	for (i = 0; i < headers.length; i++) { 
 		output += '<tr>';
 		output += '<th>';
-		if(headers[i] == 'Id') { output += '&nbsp;'; }
-		else { output += headers[i]; }
+		if(headers[i] == 'Id') 
+			{ output += '&nbsp;'; }
+		else if(headers[i] == 'Tipo') 
+			{ output += '&nbsp;'; }
+		else 
+			{ output += headers[i]; }
 		output += '</th>';
 		output += '<td>';
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Tipo') {
-			output += fillSimpleList(headers[i], TipoAuto);
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut);
 		} else if(headers[i] == 'Objeto_Sensor') {
 			output += fillSimpleList(headers[i], TablaAssIn);
 		} else if(headers[i] == 'Grupo_Visual') {
 			output += fillSimpleList(headers[i], GrupoVisual);
+		} else if(headers[i] == 'Dias_Semana') {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -1237,8 +1243,12 @@ function fillAnalogEdit(json_list, dst_div, title) {
 	for (i = 0; i < headers.length; i++) {
 		output += '<tr>';
 		output += '<th>';
-		if(headers[i] == 'Id') { output += '&nbsp;'; }
-		else { output += headers[i]; }
+		if(headers[i] == 'Id') 
+			{ output += '&nbsp;'; }
+		else if(headers[i] == 'Tipo') 
+			{ output += '&nbsp;'; }
+		else 
+			{ output += headers[i]; }
 		output += '</th>';
 		var val = json_list[0][headers[i]]; 
 		if (val == null || val == 'NULL') val = '';   
@@ -1246,7 +1256,7 @@ function fillAnalogEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Tipo') {
-			output += fillSimpleList(headers[i], TipoAuto, val);
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut, val);
 		} else if(headers[i] == 'Objeto_Sensor') {

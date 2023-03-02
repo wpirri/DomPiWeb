@@ -143,6 +143,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   pClient = new CGMClient(&gminit);
 
+  /* Datos del GET */
   if(strchr(request_uri, '?'))
   {
     strcpy(buffer, strchr(request_uri, '?')+1);
@@ -150,6 +151,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     /* Recorro los parametros del GET */
     for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
     {
+      if(trace)
+      {
+        syslog(LOG_DEBUG, "GET: %s: %s", label, value);
+      }
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "funcion"))
       {
@@ -162,11 +167,16 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
   }
 
+  /* Datos del POST */
   if(content_length > 0)
   {
     /* Recorro los datos del POST */
     for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
     {
+      if(trace)
+      {
+        syslog(LOG_DEBUG, "POST: %s: %s", label, value);
+      }
       /* lo agrego al JSon */
       cJSON_AddStringToObject(json_obj, label, value);
     }

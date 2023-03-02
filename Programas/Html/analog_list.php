@@ -21,7 +21,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list?Tipo=3', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list&Tipo=4', LoadData, false);
     }
 </script>
 
