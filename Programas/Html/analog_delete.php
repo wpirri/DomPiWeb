@@ -1,5 +1,5 @@
 <?php
-$TITLE='Borrar Analogico'; 
+$TITLE='Borrar Iluminación'; 
 include('head-abm.php');
 ?>
 

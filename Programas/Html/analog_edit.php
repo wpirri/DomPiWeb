@@ -1,5 +1,5 @@
 <?php
-$TITLE='Editar Analogico'; 
+$TITLE='Editar Iluminación'; 
 include('head-abm.php');
 ?>
 

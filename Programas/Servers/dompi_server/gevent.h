@@ -26,7 +26,8 @@ public:
 
     int ExtIOEvent(const char* json_evt);
 
-    int CheckEvent(int hw_id, const char* port, int estado);
+    void CheckEvent(int hw_id, const char* port, int estado);
+    void CheckAuto(int hw_id, const char* port, int estado);
 
     int ChangeAssignByName(const char* name, int accion, int param);
     int ChangeAssignById(int id, int accion, int param);

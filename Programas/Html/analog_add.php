@@ -1,5 +1,5 @@
 <?php
-$TITLE='Analogico Nuevo'; 
+$TITLE='Iluminación Nueva'; 
 include('head-abm.php');
 ?>
 

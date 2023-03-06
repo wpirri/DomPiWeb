@@ -245,14 +245,23 @@ CREATE TABLE IF NOT EXISTS TB_DOM_AUTO (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
 Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Aire acondicionado 3 = Fotocelula
-Objeto_Salida integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
-Objeto_Sensor integer NOT NULL,               -- Discpositivo - Id de TB_DOM_ASSIGN
+Objeto_Sensor integer NOT NULL,             -- Discpositivo - Id de input de TB_DOM_ASSIGN
+Objeto_Salida integer NOT NULL,             -- Discpositivo - Id de TB_DOM_ASSIGN
+Grupo_Salida integer NOT NULL,              -- Grupo - Id de TB_DOM_GROUP
+Funcion_Salida integer NOT NULL,            -- Función - Id de TB_DOM_FUNCTION
+Variable_Salida integer NOT NULL,           -- Variable - Id de TB_DOM_FLAG
+Parametro_Evento integer DEFAULT 0,         -- Se pasa si es Variable o Funcion
 Min_Sensor integer DEFAULT 0,
+Enviar_Min integer default 0,               -- Accion a enviar al pasar el minimo
 Max_Sensor integer DEFAULT 0,
+Enviar_Max integer default 0,               -- Accion a enviar al pasar el màximo
 Hora_Inicio integer DEFAULT 0,
+Minuto_Inicio integer DEFAULT 0,
 Hora_Fin integer DEFAULT 0,
-Dias_Semana integer DEFAULT 0,
-Estado integer DEFAULT 0,                   -- 0 = Disable 1 = Enable
+Minuto_Fin integer DEFAULT 0,
+Dias_Semana varchar(128),                   -- Lu,Ma,Mi,Ju,Vi,Sa,Do
+Estado integer DEFAULT 0,                   -- 0 = Bajo el minimo 1 = Sobre el maximo
+Habilitado integer DEFAULT 1,                   -- 0 = Disable 1 = Enable
 Icono0 varchar(32),
 Icono1 varchar(32),
 Grupo_Visual integer DEFAULT 0,
@@ -262,6 +271,9 @@ Cord_y integer DEFAULT 0,
 Actualizar integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Grupo_Salida) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Funcion_Salida) REFERENCES TB_DOM_FUNCTION(Id),
+FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
 );

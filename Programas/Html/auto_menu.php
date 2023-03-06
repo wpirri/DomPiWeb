@@ -29,7 +29,7 @@ include("head.php");
 </div>
 
 <div class="normal-btn" id="btn-config-analog" onclick="window.location.replace('analog_list.php');">
-	<img id="analog-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Anal&oacute;gico
+	<img id="analog-icon" class="icon-btn" src="images/lamp1.png">&nbsp;Iluminaci&oacute;n
 </div>
 <!--
 <div class="normal-btn" id="btn-config-groups" onclick="window.location.replace('group_list.php');">

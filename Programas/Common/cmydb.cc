@@ -185,7 +185,7 @@ int CMyDB::Query(cJSON *json_array, const char* query_fmt, ...)
 #ifdef TRACE_ON
             syslog(LOG_INFO, "CMyDB::Query Fila: %i Columna: %i Valor: %s", rc+1, i+1, row[i]);
 #endif
-            cJSON_AddStringToObject(json_obj,row_names[i], row[i]);
+            cJSON_AddStringToObject(json_obj,row_names[i], (row[i])?row[i]:"NULL");
           }
           rc++;
           cJSON_AddItemToArray(json_array, json_obj);

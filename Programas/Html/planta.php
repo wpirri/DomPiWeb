@@ -37,11 +37,16 @@ include("obj_draw.php");
 
 function updateHomePicture(msg) {
 	jsonData = JSON.parse(msg).response;
-	var bg_data = jsonData[0].Planta1.split(',');
-	document.getElementById('plano1').src = 'images/' + bg_data[0];
-	if(bg_data[1] != null && bg_data[2] != null)
-	{
-		ScrollMap(bg_data[1],bg_data[2]);
+	if(jsonData) {
+		var bg_data = jsonData[0].Planta1.split(',');
+		document.getElementById('plano1').src = 'images/' + bg_data[0];
+		if(bg_data[1] != null && bg_data[2] != null)
+		{
+			ScrollMap(bg_data[1],bg_data[2]);
+		}
+	}
+	else {
+		newAJAXCommand('/cgi-bin/abmsys.cgi?funcion=get_current', updateHomePicture, false);
 	}
 }
 
@@ -53,6 +58,9 @@ function ScrollMap(x, y) {
 
 function updateHomeStatus(msg) {
 	jsonData = JSON.parse(msg).response;
+
+	if(!jsonData) return;
+
 	for (var i = 0; i < jsonData.length; i++) { 
 		//jsonData[i].Objeto
 		//jsonData[i].Port

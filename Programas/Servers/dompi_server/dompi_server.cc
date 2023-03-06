@@ -117,609 +117,31 @@ time_t last_daily;
 time_t update_ass_t;
 
 
-void CheckHWOffline( void )
-{
-	char query[4096];
-	int rc;
-	time_t t;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-	cJSON *json_HW_Id;
-	cJSON *json_MAC;
-	cJSON *json_Direccion_IP;
-
-	/* Dispositivos offline */
-	t = time(&t);
-	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT Id, MAC, Direccion_IP "
-					"FROM TB_DOM_PERIF "
-					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-180);
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			/* Saco los datos que necesito */
-			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
-			json_MAC = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "MAC");
-			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Direccion_IP");
-
-			m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: OFF LINE", json_MAC->valuestring,json_Direccion_IP->valuestring );
-
-			sprintf(query, "UPDATE TB_DOM_PERIF "
-							"SET Estado = 0 "
-							"WHERE Id = %s;", json_HW_Id->valuestring);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(NULL, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		}
-	}
-	cJSON_Delete(json_QueryArray);
-}
-
+void LoadSystemConfig(void);
+int power2(int exp);
+void CheckDaily();
+void RunDaily( void );
+void CheckUpdateHWConfig();
+void CheckTask();
+int ExcluirDeABM(const char* label);
+void AssignTask( void );
+/* Marcar para actualizar estado de los assign por Grupo */
+void GroupTask( void );
+void CheckAutoModules( void );
 /* ********************************************************************
  *   Actualización completa de la nube cada 10 min
  * *******************************************************************/
-void UpdateCloud( void )
-{
-	char query[4096];
-	char message[4096];
-	int rc;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-	time_t t;
-
-	t = time(&t);
-
-	if(t >= update_ass_t)
-	{
-		/* Actualizacion de objetos en la nube */
-		update_ass_t = t + 600;
-
-		json_QueryArray = cJSON_CreateArray();
-
-		/* Genero un listado de los objetos con su estado para subir a la nube */
-		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
-		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		if(rc >= 0)
-		{
-			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-			{
-				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-				m_pServer->m_pLog->Add(90, "Post [dompi_ass_status_update][%s]", message);
-				/* Se envía a todos */
-				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
-			}
-		}
-		cJSON_Delete(json_QueryArray);
-	}
-}
-
-void CheckAutoModules( void )
-{
-	char query[4096];
-	int rc;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-
-	/* Control del modulo de automatización */
-	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT AU.Id AS AUTO_Id, AU.Tipo, AU.Min_Sensor, AU.Max_Sensor, "
-						"AU.Hora_Inicio, AU.Hora_Fin, AU.Dias_Semana, AU.Estado AS AUTO_Estado, "
-						"ASS.Id AS ASS_Id, ASS.Estado AS ASS_Estado, "
-						"ASS.Dispositivo AS PERIF_Id "
-					"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
-					"WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0;");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			//json_AUTO_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "AUTO_Id");
-			//json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
-			//json_Min = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Min_Sensor");
-			//json_Max = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Max_Sensor");
-			//json_Hora_Inicio = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Inicio");
-			//json_Hora_Fin = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Fin");
-			//json_Dias_Semana = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Hora_Fin");
-			//json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
-			//json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
-			//json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Estado");
-			//json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "PERIF_Id");
-
-
-			/* TODO: Falta terminar modulos de automatización */
-
-		}
-	}
-	cJSON_Delete(json_QueryArray);
-
-}
-/* Marcar para actualizar estado de los assign por Grupo */
-void GroupTask( void )
-{
-	char query[4096];
-	int rc;
-	char *id, *p;
-	int accion;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-	cJSON *json_Id;
-	cJSON *json_Grupo;
-	cJSON *json_Listado_Objetos;
-	cJSON *json_Estado;
-
-	json_QueryArray = cJSON_CreateArray();
-	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE ACTUALIZAR = 1;");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
-			json_Grupo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo");
-			json_Listado_Objetos = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Listado_Objetos");
-			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
-
-			m_pServer->m_pLog->Add(20, "[GroupTask] Actualizando estado de I/O de Grupo [%s]", json_Grupo->valuestring);
-			/* Encender o apagar */
-			if(atoi(json_Estado->valuestring))
-			{
-				/* Grupo encendido -> mando a encender los miembros */
-				accion = 1;
-			}
-			else
-			{
-				/* Grupo apagado -> mando a apagar los miembros */
-				accion = 2;
-			}
-			/* Recorro el listado de id separados por , */
-			p = json_Listado_Objetos->valuestring;
-			while(*p)
-			{
-				id = p;
-				while(*p && *p != ',') p++;
-				if(*p)
-				{
-					*p = 0;
-					p++;
-				}
-				pEV->ChangeAssignById(atoi(id), accion, 0);
-			}
-			sprintf(query, "UPDATE TB_DOM_GROUP "
-							"SET Actualizar = 0 "
-							"WHERE Id = %s;", json_Id->valuestring);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(NULL, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		}
-	}
-	cJSON_Delete(json_QueryArray);
-}
-
-void AssignTask( void )
-{
-	char query[4096];
-	char message[4096];
-	int rc;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-	cJSON *json_Objeto;
-	cJSON *json_ASS_Id;
-	cJSON *json_Estado;
-	cJSON *json_Tipo_ASS;
-	int iEstado;
-
-
-	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
-	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
-					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-					"WHERE ASS.Dispositivo = PERIF.Id AND "
-					     "PERIF.Estado = 1 AND "
-					     "(ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-					     "( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
-			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
-			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
-			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
-			m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
-			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-			/* Me fijo si es estado o pulso */
-			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
-			{
-				m_pServer->m_pLog->Add(90, "Post [dompi_hw_pulse_io][%s]", message);
-				/* Se envía a todos */
-				rc = m_pServer->Post("dompi_hw_pulse_io", message, strlen(message));
-			}
-			else
-			{
-				m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_io][%s]", message);
-				/* Se envía a todos */
-				rc = m_pServer->Post("dompi_hw_set_io", message, strlen(message));
-
-				/* Notifico a la nube */
-				m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
-				/* Se envía a todos */
-				m_pServer->Post("dompi_ass_change", message, strlen(message));
-			}
-
-			if(rc == 0)
-			{
-				/* Borro la diferencia */
-				iEstado = atoi(json_Estado->valuestring);
-				if(iEstado != 1) iEstado = 0;
-				sprintf(query, "UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-								"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(NULL, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			}
-		}
-	}
-	cJSON_Delete(json_QueryArray);
-}
-
-int ExcluirDeABM(const char* label)
-{
-	if( !strcmp(label, "REMOTE_ADDR")) return 1;
-	if( !strcmp(label, "REQUEST_URI")) return 1;
-	if( !strcmp(label, "REQUEST_METHOD")) return 1;
-	if( !strcmp(label, "CONTENT_LENGTH")) return 1;
-	if( !strcmp(label, "GET")) return 1;
-	if( !strcmp(label, "POST")) return 1;
-	return 0;
-}
-
-void CheckTask()
-{
-	int rc;
-	char query[4096];
-	time_t t;
-	struct tm *now;
-	char dia_semana[3];
-
-    cJSON *json_QueryArray;
-    cJSON *json_QueryRow;
-	cJSON *json_Id;
-	cJSON *json_Agenda;
-	cJSON *json_Objeto_Destino;
-	cJSON *json_Grupo_Destino;
-	cJSON *json_Funcion_Destino;
-	cJSON *json_Variable_Destino;
-	cJSON *json_Evento;
-	cJSON *json_Parametro_Evento;
-	cJSON *json_Condicion_Variable;
-	cJSON *json_Condicion_Igualdad;
-	cJSON *json_Condicion_Valor;
-	
-	t = time(&t);
-	now = localtime(&t);
-
-	switch(now->tm_wday)
-	{
-		case 0:
-			strcpy(dia_semana, "Do");
-			break;
-		case 1:
-			strcpy(dia_semana, "Lu");
-			break;
-		case 2:
-			strcpy(dia_semana, "Ma");
-			break;
-		case 3:
-			strcpy(dia_semana, "Mi");
-			break;
-		case 4:
-			strcpy(dia_semana, "Ju");
-			break;
-		case 5:
-			strcpy(dia_semana, "Vi");
-			break;
-		case 6:
-			strcpy(dia_semana, "Sa");
-			break;
-		default:
-			strcpy(dia_semana, "XX");
-			break;
-	}
-
-	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT * "
-					"FROM TB_DOM_AT "
-					"WHERE ((Mes = 0) OR (Mes = %i)) AND "
-					      "((Dia = 0) OR (Dia = %i)) AND  "
-					      "((Hora > 23) OR (Hora = %i)) AND  "
-					      "((Minuto > 59) OR (Minuto = %i)) AND  "
-							"( (Ultimo_Mes <> %i) OR "
-							  "(Ultimo_Dia <> %i) OR "
-							  "(Ultima_Hora <> %i) OR "
-							  "(Ultimo_Minuto <> %i) ) AND "
-						  /*"CHARINDEX(\'%s\', Dias_Semana) > 0 "*/
-						  "INSTR(Dias_Semana, \'%s\') > 0 "
-					"ORDER BY Id;",
-					now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min,
-					now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min,
-					dia_semana);
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
-			json_Agenda = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Agenda");
-			json_Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto_Destino");
-			json_Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo_Destino");
-			json_Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Funcion_Destino");
-			json_Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Variable_Destino");
-			json_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Evento");
-			json_Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Parametro_Evento");
-			json_Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Variable");
-			json_Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Igualdad");
-			json_Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Valor");
-
-			if(json_Agenda && json_Objeto_Destino && json_Grupo_Destino && json_Funcion_Destino &&
-			   json_Variable_Destino && json_Evento && json_Parametro_Evento && 
-			   json_Condicion_Variable && json_Condicion_Igualdad && json_Condicion_Valor)
-			{
-				m_pServer->m_pLog->Add(10, "[TASK] Ejecutando tarea: %s", json_Agenda->valuestring);
-				
-				if(atoi(json_Objeto_Destino->valuestring) != 0)
-				{
-					m_pServer->m_pLog->Add(10, "[TASK] Objeto: %s", json_Objeto_Destino->valuestring);
-					rc = pEV->ChangeAssignById(atoi(json_Objeto_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-				}
-				else if(atoi(json_Grupo_Destino->valuestring) != 0)
-				{
-					m_pServer->m_pLog->Add(10, "[TASK] Grupo: %s", json_Grupo_Destino->valuestring);
-					rc = pEV->ChangeGroupById(atoi(json_Grupo_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-				}
-				else if(atoi(json_Funcion_Destino->valuestring) != 0)
-				{
-					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Funcion_Destino->valuestring);
-					rc = pEV->ChangeFcnById(atoi(json_Funcion_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-				}
-				else if(atoi(json_Condicion_Variable->valuestring) != 0)
-				{
-					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Condicion_Variable->valuestring);
-					rc = pEV->ChangeVarById(atoi(json_Condicion_Variable->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-				}
-				/* Actualizo la ejecución */
-				sprintf(query, "UPDATE TB_DOM_AT "
-								"SET  Ultimo_Mes = %i, "
-									 "Ultimo_Dia = %i, "
-									 "Ultima_Hora = %i, "
-									 "Ultimo_Minuto = %i "
-								"WHERE Id = %s;",
-								now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min, json_Id->valuestring);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(NULL, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			}
-		}
-	}
-	cJSON_Delete(json_QueryArray);
-}
-
-void CheckUpdateHWConfig()
-{
-	int rc;
-	char query[4096];
-	char message[4096];
-
-    cJSON *json_Config;
-    cJSON *json_arr_Perif;
-    cJSON *json_Perif;
-    cJSON *json_arr_Assign;
-    cJSON *json_HW_Id;
-    cJSON *json_MAC;
-    cJSON *json_Tipo;
-    cJSON *json_Direccion_IP;
-    cJSON *json_Flags;
-
-
-	/* Controlo si hay que actualizar configuración de dispositivo */
-	json_arr_Perif = cJSON_CreateArray();
-	sprintf(query, "SELECT * "
-					"FROM TB_DOM_PERIF "
-					"WHERE Actualizar <> 0 AND Estado <> 0 "
-					"ORDER BY Id;");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_arr_Perif, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		/* Recorro el array */
-		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
-		{
-			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
-			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
-			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
-			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
-			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
-
-			if(json_MAC && json_Tipo && json_HW_Id && json_Flags && json_Direccion_IP)
-			{
-				m_pServer->m_pLog->Add(10, "Actualizar HW [%s]", json_MAC->valuestring);
-
-				/* Un objeto para contener a todos */
-				json_Config = cJSON_CreateObject();
-				/* Saco los datos que necesito */
-				cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
-				cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
-				cJSON_AddItemToObject(json_Config, "Direccion_IP", json_Direccion_IP);
-				cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
-
-				if(json_Flags)
-				{
-					if(atoi(json_Flags->valuestring) & 0x01)
-					{
-						cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
-					}
-					else
-					{
-						cJSON_AddStringToObject(json_Config, "HTTPS", "no");
-					}
-					if(atoi(json_Flags->valuestring) & 0x02)
-					{
-						cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
-					}
-					else
-					{
-						cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
-					}
-					//if(atoi(json_Flags->valuestring) & 0x04)
-					//{
-					//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
-					//}
-					//else
-					//{
-					//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
-					//}
-				}
-
-				if(atoi(json_Tipo->valuestring) == 0)
-				{
-					/* RBPi Local */
-
-					/* TODO: Actualizar I/O de RBPi  */
-				}
-				else if(atoi(json_Tipo->valuestring) == 1)
-				{
-					/* Actualizar I/O de Dom32IOWiFi */
-					json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
-					sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
-									"FROM TB_DOM_ASSIGN AS ASS "
-									"WHERE Dispositivo = %s;", json_HW_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_arr_Assign, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
-						/* Se envía a todos */
-						m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
-					}
-				}
-				/* Borro la marca */
-				sprintf(query, "UPDATE TB_DOM_PERIF "
-								"SET Actualizar = 0 "
-								"WHERE Id = %s;", json_HW_Id->valuestring);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(NULL, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-
-				cJSON_Delete(json_Config);
-			}
-		}
-	}
-	//cJSON_Delete(json_arr_Perif);
-}
-
-void RunDaily( void )
-{
-	m_pServer->m_pLog->Add(10, "[Daily] Mantenimiento de la base de datos.");
-
-	if(pDB) pDB->Manten();
-
-}
-
-void CheckDaily()
-{
-	time_t now;
-	struct tm *tmNow, *tmLastDaily;
-	int day_now, day_last;
-
-	now = time(&now);
-	tmNow = localtime(&now);
-	day_now = tmNow->tm_mday;
-	tmLastDaily = localtime(&last_daily);
-	day_last = tmLastDaily->tm_mday;
-
-	if(day_now != day_last)
-	{
-		RunDaily();
-		last_daily = now;
-	}
-}
-
-void LoadSystemConfig(void)
-{
-	char query[4096];
-	int rc;
-
-	if(pDB == NULL) return;
-
-	if(json_System_Config) cJSON_Delete(json_System_Config);
-	json_System_Config = cJSON_CreateArray();
-	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_System_Config, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
-	{
-		load_system_config = 0;
-		update_system_config = 1;
-	}
-}
-
-int power2(int exp)
-{
-	switch(exp)
-	{
-		case 0x00: return 0x01;
-		case 0x01: return 0x02;
-		case 0x02: return 0x04;
-		case 0x03: return 0x08;
-		case 0x04: return 0x10;
-		case 0x05: return 0x20;
-		case 0x06: return 0x40;
-		case 0x07: return 0x80;
-		default:   return 0x00;
-	}
-}
+void UpdateCloud( void );
+void CheckHWOffline( void );
+void OnClose(int sig);
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
 char cli_help[] = 	"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
 					"Comandos disponibles:\r\n"
 					"  listar <tipo>\r\n"
 					"  encender <objeto>\r\n"
@@ -738,9 +160,10 @@ char cli_help[] = 	"------------------------------------------------------------
 					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
 					"    numero: Numero de telefono destino del mensaje.\r\n"
 					"    mensaje: Mensaje a enviar.\r\n"
-					"-------------------------------------------------------------------------------\r\n";
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
 
-void OnClose(int sig);
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -4293,7 +3716,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			CheckUpdateHWConfig();
 
-			CheckAutoModules();
+			pEV->CheckAuto(0, nullptr, 0);
 
 			CheckHWOffline();
 
@@ -4386,3 +3809,554 @@ void OnClose(int sig)
 	exit(0);
 }
 
+void CheckHWOffline( void )
+{
+	char query[4096];
+	int rc;
+	time_t t;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_HW_Id;
+	cJSON *json_MAC;
+	cJSON *json_Direccion_IP;
+
+	/* Dispositivos offline */
+	t = time(&t);
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT Id, MAC, Direccion_IP "
+					"FROM TB_DOM_PERIF "
+					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-180);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			/* Saco los datos que necesito */
+			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_MAC = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "MAC");
+			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Direccion_IP");
+
+			m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: OFF LINE", json_MAC->valuestring,json_Direccion_IP->valuestring );
+
+			sprintf(query, "UPDATE TB_DOM_PERIF "
+							"SET Estado = 0 "
+							"WHERE Id = %s;", json_HW_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void UpdateCloud( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	time_t t;
+
+	t = time(&t);
+
+	if(t >= update_ass_t)
+	{
+		/* Actualizacion de objetos en la nube */
+		update_ass_t = t + 600;
+
+		json_QueryArray = cJSON_CreateArray();
+
+		/* Genero un listado de los objetos con su estado para subir a la nube */
+		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
+		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+		rc = pDB->Query(json_QueryArray, query);
+		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		if(rc >= 0)
+		{
+			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+			{
+				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_ass_status_update][%s]", message);
+				/* Se envía a todos */
+				m_pServer->Post("dompi_ass_status_update", message, strlen(message));
+			}
+		}
+		cJSON_Delete(json_QueryArray);
+	}
+}
+
+void GroupTask( void )
+{
+	char query[4096];
+	int rc;
+	char *id, *p;
+	int accion;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_Id;
+	cJSON *json_Grupo;
+	cJSON *json_Listado_Objetos;
+	cJSON *json_Estado;
+
+	json_QueryArray = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE ACTUALIZAR = 1;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_Grupo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo");
+			json_Listado_Objetos = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Listado_Objetos");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+
+			m_pServer->m_pLog->Add(20, "[GroupTask] Actualizando estado de I/O de Grupo [%s]", json_Grupo->valuestring);
+			/* Encender o apagar */
+			if(atoi(json_Estado->valuestring))
+			{
+				/* Grupo encendido -> mando a encender los miembros */
+				accion = 1;
+			}
+			else
+			{
+				/* Grupo apagado -> mando a apagar los miembros */
+				accion = 2;
+			}
+			/* Recorro el listado de id separados por , */
+			p = json_Listado_Objetos->valuestring;
+			while(*p)
+			{
+				id = p;
+				while(*p && *p != ',') p++;
+				if(*p)
+				{
+					*p = 0;
+					p++;
+				}
+				pEV->ChangeAssignById(atoi(id), accion, 0);
+			}
+			sprintf(query, "UPDATE TB_DOM_GROUP "
+							"SET Actualizar = 0 "
+							"WHERE Id = %s;", json_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void AssignTask( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_Objeto;
+	cJSON *json_ASS_Id;
+	cJSON *json_Estado;
+	cJSON *json_Tipo_ASS;
+	int iEstado;
+
+
+	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
+							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
+					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
+					"WHERE ASS.Dispositivo = PERIF.Id AND "
+					     "PERIF.Estado = 1 AND "
+					     "(ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
+					     "( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
+			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
+			m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+			/* Me fijo si es estado o pulso */
+			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
+			{
+				m_pServer->m_pLog->Add(90, "Post [dompi_hw_pulse_io][%s]", message);
+				/* Se envía a todos */
+				rc = m_pServer->Post("dompi_hw_pulse_io", message, strlen(message));
+			}
+			else
+			{
+				m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_io][%s]", message);
+				/* Se envía a todos */
+				rc = m_pServer->Post("dompi_hw_set_io", message, strlen(message));
+
+				/* Notifico a la nube */
+				m_pServer->m_pLog->Add(90, "Post [dompi_ass_change][%s]", message);
+				/* Se envía a todos */
+				m_pServer->Post("dompi_ass_change", message, strlen(message));
+			}
+
+			if(rc == 0)
+			{
+				/* Borro la diferencia */
+				iEstado = atoi(json_Estado->valuestring);
+				if(iEstado != 1) iEstado = 0;
+				sprintf(query, "UPDATE TB_DOM_ASSIGN "
+								"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+								"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+int ExcluirDeABM(const char* label)
+{
+	if( !strcmp(label, "REMOTE_ADDR")) return 1;
+	if( !strcmp(label, "REQUEST_URI")) return 1;
+	if( !strcmp(label, "REQUEST_METHOD")) return 1;
+	if( !strcmp(label, "CONTENT_LENGTH")) return 1;
+	if( !strcmp(label, "GET")) return 1;
+	if( !strcmp(label, "POST")) return 1;
+	return 0;
+}
+
+void CheckTask()
+{
+	int rc;
+	char query[4096];
+	time_t t;
+	struct tm *now;
+	char dia_semana[3];
+
+    cJSON *json_QueryArray;
+    cJSON *json_QueryRow;
+	cJSON *json_Id;
+	cJSON *json_Agenda;
+	cJSON *json_Objeto_Destino;
+	cJSON *json_Grupo_Destino;
+	cJSON *json_Funcion_Destino;
+	cJSON *json_Variable_Destino;
+	cJSON *json_Evento;
+	cJSON *json_Parametro_Evento;
+	cJSON *json_Condicion_Variable;
+	cJSON *json_Condicion_Igualdad;
+	cJSON *json_Condicion_Valor;
+	
+	t = time(&t);
+	now = localtime(&t);
+
+	switch(now->tm_wday)
+	{
+		case 0:
+			strcpy(dia_semana, "Do");
+			break;
+		case 1:
+			strcpy(dia_semana, "Lu");
+			break;
+		case 2:
+			strcpy(dia_semana, "Ma");
+			break;
+		case 3:
+			strcpy(dia_semana, "Mi");
+			break;
+		case 4:
+			strcpy(dia_semana, "Ju");
+			break;
+		case 5:
+			strcpy(dia_semana, "Vi");
+			break;
+		case 6:
+			strcpy(dia_semana, "Sa");
+			break;
+		default:
+			strcpy(dia_semana, "XX");
+			break;
+	}
+
+	json_QueryArray = cJSON_CreateArray();
+	sprintf(query, "SELECT * "
+					"FROM TB_DOM_AT "
+					"WHERE ((Mes = 0) OR (Mes = %i)) AND "
+					      "((Dia = 0) OR (Dia = %i)) AND  "
+					      "((Hora > 23) OR (Hora = %i)) AND  "
+					      "((Minuto > 59) OR (Minuto = %i)) AND  "
+							"( (Ultimo_Mes <> %i) OR "
+							  "(Ultimo_Dia <> %i) OR "
+							  "(Ultima_Hora <> %i) OR "
+							  "(Ultimo_Minuto <> %i) ) AND "
+						  /*"CHARINDEX(\'%s\', Dias_Semana) > 0 "*/
+						  "INSTR(Dias_Semana, \'%s\') > 0 "
+					"ORDER BY Id;",
+					now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min,
+					now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min,
+					dia_semana);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_Agenda = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Agenda");
+			json_Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto_Destino");
+			json_Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo_Destino");
+			json_Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Funcion_Destino");
+			json_Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Variable_Destino");
+			json_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Evento");
+			json_Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Parametro_Evento");
+			json_Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Variable");
+			json_Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Igualdad");
+			json_Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Valor");
+
+			if(json_Agenda && json_Objeto_Destino && json_Grupo_Destino && json_Funcion_Destino &&
+			   json_Variable_Destino && json_Evento && json_Parametro_Evento && 
+			   json_Condicion_Variable && json_Condicion_Igualdad && json_Condicion_Valor)
+			{
+				m_pServer->m_pLog->Add(10, "[TASK] Ejecutando tarea: %s", json_Agenda->valuestring);
+				
+				if(atoi(json_Objeto_Destino->valuestring) != 0)
+				{
+					m_pServer->m_pLog->Add(10, "[TASK] Objeto: %s", json_Objeto_Destino->valuestring);
+					rc = pEV->ChangeAssignById(atoi(json_Objeto_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+				}
+				else if(atoi(json_Grupo_Destino->valuestring) != 0)
+				{
+					m_pServer->m_pLog->Add(10, "[TASK] Grupo: %s", json_Grupo_Destino->valuestring);
+					rc = pEV->ChangeGroupById(atoi(json_Grupo_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+				}
+				else if(atoi(json_Funcion_Destino->valuestring) != 0)
+				{
+					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Funcion_Destino->valuestring);
+					rc = pEV->ChangeFcnById(atoi(json_Funcion_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+				}
+				else if(atoi(json_Condicion_Variable->valuestring) != 0)
+				{
+					m_pServer->m_pLog->Add(10, "[TASK] Función: %s", json_Condicion_Variable->valuestring);
+					rc = pEV->ChangeVarById(atoi(json_Condicion_Variable->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+				}
+				/* Actualizo la ejecución */
+				sprintf(query, "UPDATE TB_DOM_AT "
+								"SET  Ultimo_Mes = %i, "
+									 "Ultimo_Dia = %i, "
+									 "Ultima_Hora = %i, "
+									 "Ultimo_Minuto = %i "
+								"WHERE Id = %s;",
+								now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min, json_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void CheckUpdateHWConfig()
+{
+	int rc;
+	char query[4096];
+	char message[4096];
+
+    cJSON *json_Config;
+    cJSON *json_arr_Perif;
+    cJSON *json_Perif;
+    cJSON *json_arr_Assign;
+    cJSON *json_HW_Id;
+    cJSON *json_MAC;
+    cJSON *json_Tipo;
+    cJSON *json_Direccion_IP;
+    cJSON *json_Flags;
+
+
+	/* Controlo si hay que actualizar configuración de dispositivo */
+	json_arr_Perif = cJSON_CreateArray();
+	sprintf(query, "SELECT * "
+					"FROM TB_DOM_PERIF "
+					"WHERE Actualizar <> 0 AND Estado <> 0 "
+					"ORDER BY Id;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_arr_Perif, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
+		{
+			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
+			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
+			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
+			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
+			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
+
+			if(json_MAC && json_Tipo && json_HW_Id && json_Flags && json_Direccion_IP)
+			{
+				m_pServer->m_pLog->Add(10, "Actualizar HW [%s]", json_MAC->valuestring);
+
+				/* Un objeto para contener a todos */
+				json_Config = cJSON_CreateObject();
+				/* Saco los datos que necesito */
+				cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
+				cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
+				cJSON_AddItemToObject(json_Config, "Direccion_IP", json_Direccion_IP);
+				cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
+
+				if(json_Flags)
+				{
+					if(atoi(json_Flags->valuestring) & 0x01)
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "no");
+					}
+					if(atoi(json_Flags->valuestring) & 0x02)
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
+					}
+					//if(atoi(json_Flags->valuestring) & 0x04)
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
+					//}
+					//else
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
+					//}
+				}
+
+				if(atoi(json_Tipo->valuestring) == 0)
+				{
+					/* RBPi Local */
+
+					/* TODO: Actualizar I/O de RBPi  */
+				}
+				else if(atoi(json_Tipo->valuestring) == 1)
+				{
+					/* Actualizar I/O de Dom32IOWiFi */
+					json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
+					sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
+									"FROM TB_DOM_ASSIGN AS ASS "
+									"WHERE Dispositivo = %s;", json_HW_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_arr_Assign, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(90, "Post [dompi_hw_set_port_config][%s]", message);
+						/* Se envía a todos */
+						m_pServer->Post("dompi_hw_set_port_config", message, strlen(message));
+					}
+				}
+				/* Borro la marca */
+				sprintf(query, "UPDATE TB_DOM_PERIF "
+								"SET Actualizar = 0 "
+								"WHERE Id = %s;", json_HW_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
+				cJSON_Delete(json_Config);
+			}
+		}
+	}
+	//cJSON_Delete(json_arr_Perif);
+}
+
+void RunDaily( void )
+{
+	m_pServer->m_pLog->Add(10, "[Daily] Mantenimiento de la base de datos.");
+
+	if(pDB) pDB->Manten();
+
+}
+
+void CheckDaily()
+{
+	time_t now;
+	struct tm *tmNow, *tmLastDaily;
+	int day_now, day_last;
+
+	now = time(&now);
+	tmNow = localtime(&now);
+	day_now = tmNow->tm_mday;
+	tmLastDaily = localtime(&last_daily);
+	day_last = tmLastDaily->tm_mday;
+
+	if(day_now != day_last)
+	{
+		RunDaily();
+		last_daily = now;
+	}
+}
+
+void LoadSystemConfig(void)
+{
+	char query[4096];
+	int rc;
+
+	if(pDB == NULL) return;
+
+	if(json_System_Config) cJSON_Delete(json_System_Config);
+	json_System_Config = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_System_Config, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		load_system_config = 0;
+		update_system_config = 1;
+	}
+}
+
+int power2(int exp)
+{
+	switch(exp)
+	{
+		case 0x00: return 0x01;
+		case 0x01: return 0x02;
+		case 0x02: return 0x04;
+		case 0x03: return 0x08;
+		case 0x04: return 0x10;
+		case 0x05: return 0x20;
+		case 0x06: return 0x40;
+		case 0x07: return 0x80;
+		default:   return 0x00;
+	}
+}

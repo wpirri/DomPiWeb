@@ -43,14 +43,9 @@ PortAss[12] = { value: 'OUT5', label: 'OUT5' }
 PortAss[13] = { value: 'OUT6', label: 'OUT6' }
 PortAss[14] = { value: 'OUT7', label: 'OUT7' }
 PortAss[15] = { value: 'OUT8', label: 'OUT8' }
-PortAss[16] = { value: 'ANA1', label: 'ANA1' }
-PortAss[17] = { value: 'ANA2', label: 'ANA2' }
-PortAss[18] = { value: 'ANA3', label: 'ANA3' }
-PortAss[19] = { value: 'ANA4', label: 'ANA4' }
-PortAss[20] = { value: 'ANA5', label: 'ANA5' }
-PortAss[21] = { value: 'ANA6', label: 'ANA6' }
-PortAss[22] = { value: 'ANA7', label: 'ANA7' }
-PortAss[23] = { value: 'ANA8', label: 'ANA8' }
+PortAss[16] = { value: 'ANA8', label: 'TEMP' }
+PortAss[17] = { value: 'ANA8', label: 'HUM' }
+PortAss[18] = { value: 'ANA8', label: 'WIEGAND' }
 
 var TablaAssIn = [];
 var TablaAssOut = [];
@@ -59,7 +54,7 @@ var TablaGrupos = [];
 var GrupoVisual = [];
 GrupoVisual[0] = { value: 0, label: 'Ninguno' }
 GrupoVisual[1] = { value: 1, label: 'Alarma' }
-GrupoVisual[2] = { value: 2, label: 'Luces' }
+GrupoVisual[2] = { value: 2, label: 'Iluminación' }
 GrupoVisual[3] = { value: 3, label: 'Puertas' }
 GrupoVisual[4] = { value: 4, label: 'Climatización' }
 GrupoVisual[5] = { value: 5, label: 'Cámaras' }
@@ -1068,6 +1063,8 @@ function fillTaskForm(json_list, dst_div, title) {
 			output += fillSimpleList(headers[i], TablaHoras);
 		} else if(headers[i] == 'Minuto') {
 			output += fillSimpleList(headers[i], TablaMinutos);
+		} else if(headers[i] == 'Dias_Semana') {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -1217,12 +1214,22 @@ function fillAnalogForm(json_list, dst_div, title) {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut);
+		} else if(headers[i] == 'Grupo_Salida') {
+			output += fillSimpleList(headers[i], TablaGrupos);
+		} else if(headers[i] == 'Funcion_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Variable_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Objeto_Sensor') {
 			output += fillSimpleList(headers[i], TablaAssIn);
 		} else if(headers[i] == 'Grupo_Visual') {
 			output += fillSimpleList(headers[i], GrupoVisual);
 		} else if(headers[i] == 'Dias_Semana') {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
+		} else if(headers[i] == 'Enviar_Max') {
+			output += fillSimpleList(headers[i], TablaAcciones);
+		} else if(headers[i] == 'Enviar_Min') {
+			output += fillSimpleList(headers[i], TablaAcciones);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -1259,10 +1266,20 @@ function fillAnalogEdit(json_list, dst_div, title) {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut, val);
+		} else if(headers[i] == 'Grupo_Salida') {
+			output += fillSimpleList(headers[i], TablaGrupos, val);
+		} else if(headers[i] == 'Funcion_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Variable_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
 		} else if(headers[i] == 'Objeto_Sensor') {
 			output += fillSimpleList(headers[i], TablaAssIn, val);
 		} else if(headers[i] == 'Grupo_Visual') {
 			output += fillSimpleList(headers[i], GrupoVisual, val);
+		} else if(headers[i] == 'Enviar_Max') {
+			output += fillSimpleList(headers[i], TablaAcciones, val);
+		} else if(headers[i] == 'Enviar_Min') {
+			output += fillSimpleList(headers[i], TablaAcciones, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		}
