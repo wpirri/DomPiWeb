@@ -17,8 +17,8 @@ all: dompi_server
 dompi_server.o: dompi_server.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_server.cc
 
-gevent.o: gevent.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c gevent.cc
+gevent.o: ../../Common/gevent.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/gevent.cc
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc

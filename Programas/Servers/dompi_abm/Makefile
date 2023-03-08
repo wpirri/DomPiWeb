@@ -4,25 +4,26 @@ INCLUDE=-I../../Common/ `mysql_config --cflags`
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o cmydb.o
-OUTPUT=dompi_cloud
-DEFINE=-D __NO__DEBUG__ -D __NO_DEBUG_TCP
+OBJECTS=dompi_abm.o cmydb.o config.o strfunc.o gevent.o
+OUTPUT=dompi_abm
+DEFINE=-D __NO__DEBUG__
 CC=g++
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: dompi_cloud
+all: dompi_abm
 
-dompi_cloud.o: dompi_cloud.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_cloud.cc
+dompi_abm.o: dompi_abm.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_abm.cc
 
-ctcp.o: ../../Common/ctcp.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/ctcp.cc
+gevent.o: ../../Common/gevent.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/gevent.cc
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
+
 #cpgdb.o: ../../Common/cpgdb.cc ../../Common/cpgdb.h
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cpgdb.cc
 #csqlite.o: ../../Common/csqlite.cc
@@ -30,7 +31,7 @@ strfunc.o: ../../Common/strfunc.cc
 cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cmydb.cc
 
-dompi_cloud: $(OBJECTS)
+dompi_abm: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:

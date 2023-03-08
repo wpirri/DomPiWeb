@@ -134,14 +134,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	CGMClient::GMIOS call_client_resp;
 
 
-	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_hw_set_time_config", GM_MSG_TYPE_MSG);
-	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_MSG);
-	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_MSG);
-	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_hw_set_time_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
@@ -164,6 +164,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_hw_set_port_config"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
@@ -281,6 +282,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_set_comm_config"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
@@ -418,6 +420,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_set_time_config"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 1)
@@ -438,6 +441,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_set_io"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -489,6 +493,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_switch_io"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -543,6 +548,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
+				
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == 0)
@@ -626,15 +632,15 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_set_port", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_port", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_MSG);
-	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_MSG);
-	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
 
 	delete m_pServer;
 	
