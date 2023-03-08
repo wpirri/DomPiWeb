@@ -581,19 +581,50 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                     }
                     break;
                 }
-                /* Controlo horario de funcionamiento */
-                if(atoi(Hora_Inicio->valuestring) || atoi(Minuto_Inicio->valuestring) || atoi(Hora_Inicio->valuestring) || atoi(Minuto_Inicio->valuestring))
+
+                /* Si hay valores validos en el horario */
+                if( (atoi(Hora_Inicio->valuestring) != atoi(Hora_Fin->valuestring)) || (atoi(Minuto_Inicio->valuestring) != atoi(Minuto_Fin->valuestring)) )
                 {
-                    if( (lt->tm_hour < atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ||
-                        (lt->tm_hour > atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) )
+                    /* Controlo horario de funcionamiento */
+                    if( (atoi(Hora_Inicio->valuestring) > atoi(Hora_Fin->valuestring)) ||
+                        ( (atoi(Hora_Inicio->valuestring) == atoi(Hora_Fin->valuestring)) &&
+                          ( atoi(Minuto_Inicio->valuestring) > atoi(Minuto_Fin->valuestring)) ) )
                     {
-                        if(atoi(Estado->valuestring) == 1)
+                        /* El período de actividad termina al dia siguiente de que empieza - Inicio > Fin   */
+                        if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
+                            (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
+                            &&
+                            (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
+                            (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
                         {
-                            m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por horario.", Objeto->valuestring);
-                            enviar = 2;
+                            /* Fuera de horario */
+                            if(atoi(Estado->valuestring) == 1)
+                            {
+                                m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por horario.", Objeto->valuestring);
+                                enviar = 2;
+                            }
+                            break;
                         }
-                        break;
                     }
+                    else
+                    {
+                        /* El período de actividad empieza y termina el mismo día - Fin > Inicio */
+                        if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
+                            (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
+                            ||
+                            (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
+                            (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
+                        {
+                            /* Fuera de horario */
+                            if(atoi(Estado->valuestring) == 1)
+                            {
+                                m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por horario.", Objeto->valuestring);
+                                enviar = 2;
+                            }
+                            break;
+                        }
+                    }
+
                 }
                 /* Si llegó hasta acá está habilitado, el día de la semana es apto y está en horario de funcionamiento */
 
