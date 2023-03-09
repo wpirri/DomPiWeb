@@ -20,6 +20,7 @@ include('head-abm.php');
 <script type="text/javascript" >
     function LoadData(msg) {
         fillAnalogForm(JSON.parse(msg).response, 'analog_add_div', '<?php echo $TITLE; ?>');
+        document.getElementById('Tipo').value = '4';
     }
 
     function LoadAssData(msg) {

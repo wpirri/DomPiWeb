@@ -1211,7 +1211,7 @@ function fillAnalogForm(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Tipo') {
-			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut);
 		} else if(headers[i] == 'Grupo_Salida') {

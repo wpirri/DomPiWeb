@@ -1,5 +1,5 @@
 <?php
-$TITLE='Circuito de Riego'; 
+$TITLE='Aire Acondicionado'; 
 include('head-abm.php');
 ?>
 
@@ -9,7 +9,7 @@ include('head-abm.php');
 	<img id='riego_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
-<div id='riego_list_add_btn' class='abm-add-btn' onclick="window.location.replace('riego_add.php');" >
+<div id='riego_list_add_btn' class='abm-add-btn' onclick="window.location.replace('');" >
 	<img id='riego_list_add__icon' class='icon-btn' src='images/add.png'>&nbsp;Nuevo
 </div>
 
@@ -17,11 +17,11 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmList(JSON.parse(msg).response, 'riego_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'riego_edit.php', 'riego_delete.php');
+
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list&Tipo=1', LoadData, false);
+
     }
 </script>
 

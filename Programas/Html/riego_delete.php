@@ -1,5 +1,5 @@
 <?php
-$TITLE='Borrar Grupo de Riego'; 
+$TITLE='Borrar Circuito de Riego'; 
 include('head-abm.php');
 ?>
 
@@ -20,13 +20,18 @@ include('head-abm.php');
         fillAbmDelete(JSON.parse(msg).response, 'riego_delete_div', '<?php echo $TITLE; ?>');
     }
 
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+    }
+
     function SaveData() {
         newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=delete&Id=<?php echo $_GET['Id']; ?>', null, false);
         window.location.replace('riego_list.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 

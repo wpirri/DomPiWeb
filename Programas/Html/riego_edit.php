@@ -1,5 +1,5 @@
 <?php
-$TITLE='Editar Grupo de Riego'; 
+$TITLE='Editar Circuito de Riego'; 
 include('head-abm.php');
 ?>
 
@@ -19,7 +19,17 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'riego_edit_div', '<?php echo $TITLE; ?>');
+        fillAnalogEdit(JSON.parse(msg).response, 'riego_edit_div', '<?php echo $TITLE; ?>');
+    }
+
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmgroup.cgi', LoadGrpData, false);
+    }
+
+    function LoadGrpData(msg) {
+        loadGrpTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 
     function SaveData() {
@@ -29,7 +39,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 

@@ -22,8 +22,8 @@ include("obj_style.php");
 	<img id="auto-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatización
 </div>
 
-<div class="normal-btn" id="btn-planta-alarm" onclick="window.location.replace('alarm.php');">
-	<img id="config-icon" class="icon-btn" src="images/lock0.png">&nbsp;Alarma
+<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('');">
+	<!--<img id="config-icon" class="icon-btn" src="images/">&nbsp;Xxxxx -->
 </div>
 
 <div class="home-group" id="home-div">
@@ -42,7 +42,7 @@ function updateHomePicture(msg) {
 		document.getElementById('plano1').src = 'images/' + bg_data[0];
 		if(bg_data[1] != null && bg_data[2] != null)
 		{
-			ScrollMap(bg_data[1],bg_data[2]);
+			setTimeout("ScrollMap(" + bg_data[1] + "," + bg_data[2] + ");", 1000);
 		}
 	}
 	else {

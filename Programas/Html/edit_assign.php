@@ -19,17 +19,22 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'ass_edit_div', '<?php echo $TITLE; ?>');
+        fillAssEdit(JSON.parse(msg).response, 'ass_edit_div', '<?php echo $TITLE; ?>');
+    }
+
+    function LoadHWData(msg) {
+        loadHWTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
     }
 
     function SaveData() {
         newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=update', null, false, collectFormData('edit_form'));
 
-        window.location.replace('planta_edit.php', 1000);
+        setTimeout( "window.location.replace('planta_edit.php')", 1000);
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=get&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmhw.cgi', LoadHWData, false);
     }
 </script>
 

@@ -1,5 +1,5 @@
 <?php
-$TITLE='Grupo de Riego Nuevo'; 
+$TITLE='Circuito de Riego Nuevo'; 
 include('head-abm.php');
 ?>
 
@@ -19,17 +19,28 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmForm(JSON.parse(msg).response, 'riego_add_div', '<?php echo $TITLE; ?>');
+        fillAnalogForm(JSON.parse(msg).response, 'riego_add_div', '<?php echo $TITLE; ?>');
+        document.getElementById('Tipo').value = '1';
+    }
+
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmgroup.cgi', LoadGrpData, false);
+    }
+
+    function LoadGrpData(msg) {
+        loadGrpTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=0', LoadData, false);
     }
 
     function SaveData() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=add&Tipo=1', null, false, collectFormData('add_form'));
+        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=add', null, false, collectFormData('add_form'));
 
         window.location.replace('riego_list.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=get&Id=0', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 

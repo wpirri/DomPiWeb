@@ -14,7 +14,7 @@ include("obj_style.php");
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
-<div class="normal-btn" id="btn-planta-add" onclick="window.location.replace('add_assign.php');">
+<div class="normal-btn" id="btn-planta-add" onclick="window.location.replace('planta_add_assign.php');">
 	<img id="config-icon" class="icon-btn" src="images/add.png">&nbsp;Nuevo
 </div>
 
@@ -34,7 +34,7 @@ function updateHomePicture(msg) {
 	document.getElementById('plano1').src = 'images/' + bg_data[0];
 	if(bg_data[1] != null && bg_data[2] != null)
 	{
-		ScrollMap(bg_data[1],bg_data[2]);
+		setTimeout("ScrollMap(" + bg_data[1] + "," + bg_data[2] + ");", 1000);
 	}
 }
 
@@ -42,11 +42,6 @@ function ScrollMap(x, y) {
 	map = document.getElementById('home-div');
 	map.scrollLeft = x;
 	map.scrollTop = y;
-}
-
-function EditObject( name )
-{
-	alert('Edit: ' + name);
 }
 
 function OnLoad( ) {

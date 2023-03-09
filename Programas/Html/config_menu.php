@@ -49,31 +49,29 @@ include("head.php");
 	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
 </div>
 -->
-<div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm.php');">
+<div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm_list.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
 
-<div class="normal-btn" id="btn-config-cameras" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-cameras" onclick="window.location.replace('camera_list.php');">
 	<img id="camera-icon" class="icon-btn" src="images/camara.png">&nbsp;C&aacute;maras
 </div>
 
 
-<div class="normal-btn" id="btn-config-upload" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-upload" onclick="window.location.replace('update_list.php');">
 	<img id="upload-icon" class="icon-btn" src="images/upload.png">&nbsp;Actualizaci&oacute;n
 </div>
 
-<div class="normal-btn" id="btn-config-download" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-download" onclick="window.location.replace('download_list.php');">
 	<img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;Descargas
 </div>
 
-<div class="normal-btn" id="btn-config-dummy2" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-dummy2" onclick="window.location.replace('');">
 	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
 </div>
 
-<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('working_list.php');">
+<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
 	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
-</div>
-
 </div>
 
 </body>
