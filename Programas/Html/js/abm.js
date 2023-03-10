@@ -820,6 +820,7 @@ function fillAssDelete(json_list, dst_div, title) {
 function loadAssTable(json_list) {
 	var x = 0;
 	var y = 0;
+
 	for (var i = 0; i < json_list.length; i++) { 
 		var item = [];
 		item['value'] = json_list[i].Id;
@@ -829,10 +830,13 @@ function loadAssTable(json_list) {
 			json_list[i].Tipo == 4 || 
 			json_list[i].Tipo == 6) {
 			TablaAssIn[x++] = item;
+		} else if(json_list[i].Tipo == 0) {
+			TablaAssIn[x++] = item;
+			TablaAssOut[y++] = item;
 		} else {
 			TablaAssOut[y++] = item;
 		}
-	}	
+	}
 }
 
 /* ==== Evento ============================================================= */
