@@ -143,7 +143,7 @@ int CSerial::Send(const char* fmt, ...)
   vsprintf(tx_buffer, fmt, arg);
   va_end(arg);
 
-  if(write(m_sfd, tx_buffer, strlen(tx_buffer)) != strlen(tx_buffer))
+  if(write(m_sfd, tx_buffer, (int)strlen(tx_buffer)) != (int)strlen(tx_buffer))
   {
     return 0;
   }
@@ -162,7 +162,7 @@ int CSerial::Recv(char* data, unsigned int max_data_len, int time_out)
   i = 0;
   max_t = t + time_out + 1;
 
-  while(i < max_data_len && t <= max_t )
+  while(i < (int)max_data_len && t <= max_t )
   {
     if(read(m_sfd, &ch, 1) > 0)
     {

@@ -132,6 +132,11 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config, void
             Str.ParseData(p, "ce2p", tmp);
             config->wifi_host2_port = atoi(tmp);
             Str.ParseData(p, "rqst", config->rqst_path);
+
+            if(fcn)
+            {
+                (fcn)(raddr, p);
+            }
         }
         return 0;
     }
@@ -279,6 +284,10 @@ int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
             {
                 cJSON_AddStringToObject(json_obj, label, value);                    
             }
+            if(fcn)
+            {
+                (fcn)(raddr, p);
+            }
         }
         return 0;
     }
@@ -418,6 +427,10 @@ int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char
             for(i = 0; Str.ParseDataIdx(p, label, value, i); i++)
             {
                 cJSON_AddStringToObject(json_obj, label, value);                    
+            }
+            if(fcn)
+            {
+                (fcn)(raddr, p);
             }
         }
         return 0;

@@ -188,7 +188,7 @@ int ModGSM::QueryModem(const char* wait_for, const char* fmt, ...)
     char buffer[4096];
 
     va_start(arg, fmt);
-    vsprintf(buffer, fmt, arg);
+    vsnprintf(buffer, 4095, fmt, arg);
     va_end(arg);
 
     return QueryModem(wait_for, nullptr, 0, buffer);
@@ -202,7 +202,7 @@ int ModGSM::QueryModem(const char* wait_for, char* recv, int recv_max, const cha
     int len;
 
     va_start(arg, fmt);
-    vsprintf(buffer, fmt, arg);
+    vsnprintf(buffer, 4095, fmt, arg);
     va_end(arg);
 
     if(m_modem_status < MODEM_STATUS_OPEN || !m_pSerial)
@@ -229,7 +229,7 @@ int ModGSM::QueryModem(const char* wait_for, char* recv, int recv_max, const cha
             {
                 if( !memcmp(wait_for, buffer, strlen(wait_for)) ) break;
             }
-            if(recv && recv_max && ((strlen(recv)+len+2) < recv_max ) )
+            if(recv && recv_max && ((int)(strlen(recv)+len+2) < recv_max ) )
             {
                 if(strlen(recv)) strcat(recv, ",");
                 strcat(recv, buffer);
@@ -379,7 +379,7 @@ void ModGSM::CheckSMS( void )
             p++;
             /* Copio la parte numerica */
             i = 0;
-            while(*p && ( (*p >= '0' && *p <= '9') || *p == '+' ) && i < (sizeof(from)-1))
+            while(*p && ( (*p >= '0' && *p <= '9') || *p == '+' ) && i < (int)(sizeof(from)-1))
             {
                 from[i] = *p;
                 i++;
@@ -396,7 +396,7 @@ void ModGSM::CheckSMS( void )
             if(!(*p)) break;
             /* Copio el texto hasta el final */
             i = 0;
-            while(*p && *p != 0x0A && *p !=0x0D && i < (sizeof(msg)-1))
+            while(*p && *p != 0x0A && *p !=0x0D && i < (int)(sizeof(msg)-1))
             {
                 if(*p == ',')
                 {
@@ -507,13 +507,13 @@ int ModGSM::SendSMS(const char* dest, const char* msg)
     return (-1);
 }
 
-int ModGSM::SendTCP(const char* host, unsigned port, const char* msg)
+int ModGSM::SendTCP(const char* /*host*/, unsigned /*port*/, const char* /*msg*/)
 {
 
     return (-1);
 }
 
-int ModGSM::SendUDP(const char* host, unsigned port, const char* msg)
+int ModGSM::SendUDP(const char* /*host*/, unsigned /*port*/, const char* /*msg*/)
 {
 
     return (-1);
@@ -560,8 +560,8 @@ void ModGSM::ModemError(void)
 int ModGSM::SaveRecvSMS(const char* from, const char* msg)
 {
     FILE *f;
-    char filename[FILENAME_MAX];
-    char filename_tmp[FILENAME_MAX];
+    char filename[FILENAME_MAX+1];
+    char filename_tmp[FILENAME_MAX+1];
     time_t t;
     char sms_buffer[1024];
 
@@ -571,18 +571,18 @@ int ModGSM::SaveRecvSMS(const char* from, const char* msg)
 
     if( m_temp_dir[strlen(m_temp_dir) - 1] != '/' )
     {
-        sprintf(filename, "%s/recv-sms-%10lu", m_temp_dir, t);
-        sprintf(filename_tmp, "%s/recv-tmp-%10lu", m_temp_dir, t);
+        snprintf(filename, FILENAME_MAX, "%s/recv-sms-%10lu", m_temp_dir, t);
+        snprintf(filename_tmp, FILENAME_MAX, "%s/recv-tmp-%10lu", m_temp_dir, t);
     }
     else
     {
-        sprintf(filename, "%srecv-sms-%10lu", m_temp_dir, t);
-        sprintf(filename_tmp, "%srecv-tmp-%10lu", m_temp_dir, t);
+        snprintf(filename, FILENAME_MAX, "%srecv-sms-%10lu", m_temp_dir, t);
+        snprintf(filename_tmp, FILENAME_MAX, "%srecv-tmp-%10lu", m_temp_dir, t);
     }
     f = fopen(filename_tmp, "w");
     if(f)
     {
-        sprintf(sms_buffer, "SMS:%s:%s\n", from, msg);
+        snprintf(sms_buffer, 1023, "SMS:%s:%s\n", from, msg);
         if(fwrite(sms_buffer, sizeof(char), strlen(sms_buffer), f) != strlen(sms_buffer))
         {
             fclose(f);
