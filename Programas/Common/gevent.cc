@@ -371,7 +371,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     rc = m_pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-    if(rc == 0)
+    if(rc >= 0)
     {
         /* Recorro el array */
         cJSON_ArrayForEach(json_QueryRow, json_QueryArray)

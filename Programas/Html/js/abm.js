@@ -27,25 +27,25 @@ TipoAss[5] = { value: 5, label: 'Salida Pulso' }
 TipoAss[6] = { value: 6, label: 'Periferico' }
 
 var PortAss = [];
-PortAss[0] =  { value: 'IO1',  label: 'IO1' }
-PortAss[1] =  { value: 'IO2',  label: 'IO2' }
-PortAss[2] =  { value: 'IO3',  label: 'IO3' }
-PortAss[3] =  { value: 'IO4',  label: 'IO4' }
-PortAss[4] =  { value: 'IO5',  label: 'IO5' }
-PortAss[5] =  { value: 'IO6',  label: 'IO6' }
-PortAss[6] =  { value: 'IO7',  label: 'IO7' }
-PortAss[7] =  { value: 'IO8',  label: 'IO8' }
-PortAss[8] =  { value: 'OUT1', label: 'OUT1' }
-PortAss[9] =  { value: 'OUT2', label: 'OUT2' }
-PortAss[10] = { value: 'OUT3', label: 'OUT3' }
-PortAss[11] = { value: 'OUT4', label: 'OUT4' }
-PortAss[12] = { value: 'OUT5', label: 'OUT5' }
-PortAss[13] = { value: 'OUT6', label: 'OUT6' }
-PortAss[14] = { value: 'OUT7', label: 'OUT7' }
-PortAss[15] = { value: 'OUT8', label: 'OUT8' }
-PortAss[16] = { value: 'ANA8', label: 'TEMP' }
-PortAss[17] = { value: 'ANA8', label: 'HUM' }
-PortAss[18] = { value: 'ANA8', label: 'WIEGAND' }
+PortAss[0] =  { value: 'IO1',  		label: 'IO1' }
+PortAss[1] =  { value: 'IO2',  		label: 'IO2' }
+PortAss[2] =  { value: 'IO3',  		label: 'IO3' }
+PortAss[3] =  { value: 'IO4',  		label: 'IO4' }
+PortAss[4] =  { value: 'IO5',  		label: 'IO5' }
+PortAss[5] =  { value: 'IO6',  		label: 'IO6' }
+PortAss[6] =  { value: 'IO7',  		label: 'IO7' }
+PortAss[7] =  { value: 'IO8',  		label: 'IO8' }
+PortAss[8] =  { value: 'OUT1', 		label: 'OUT1' }
+PortAss[9] =  { value: 'OUT2', 		label: 'OUT2' }
+PortAss[10] = { value: 'OUT3', 		label: 'OUT3' }
+PortAss[11] = { value: 'OUT4', 		label: 'OUT4' }
+PortAss[12] = { value: 'OUT5', 		label: 'OUT5' }
+PortAss[13] = { value: 'OUT6', 		label: 'OUT6' }
+PortAss[14] = { value: 'OUT7', 		label: 'OUT7' }
+PortAss[15] = { value: 'OUT8', 		label: 'OUT8' }
+PortAss[16] = { value: 'TEMP', 		label: 'TEMP' }
+PortAss[17] = { value: 'HUM', 		label: 'HUM' }
+PortAss[18] = { value: 'WIEGAND', 	label: 'WIEGAND' }
 
 var TablaAssIn = [];
 var TablaAssOut = [];
@@ -1263,7 +1263,7 @@ function fillAnalogEdit(json_list, dst_div, title) {
 		if(headers[i] == 'Id') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Tipo') {
-			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="4"/>';
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Objeto_Salida') {
 			output += fillSimpleList(headers[i], TablaAssOut, val);
 		} else if(headers[i] == 'Grupo_Salida') {

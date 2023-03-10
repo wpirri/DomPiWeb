@@ -224,7 +224,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc >= 0)
 					{
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
@@ -415,7 +415,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -446,7 +446,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc < 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -530,7 +530,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -781,7 +781,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -810,7 +810,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc <= 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -899,7 +899,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1097,7 +1097,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1126,7 +1126,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc <= 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -1345,7 +1345,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1540,7 +1540,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1569,7 +1569,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc <= 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -1657,7 +1657,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -1851,7 +1851,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -1882,7 +1882,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc <= 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -1970,7 +1970,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -2162,7 +2162,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -2191,7 +2191,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc <= 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}
@@ -2279,7 +2279,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pDB->Query(NULL, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc == 0)
+					if(rc <= 0)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 					}
@@ -2465,7 +2465,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -2677,7 +2677,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc != 1)
+				if(rc <= 0)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
@@ -2708,7 +2708,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pDB->Query(NULL, query);
 						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc != 0)
+						if(rc < 0)
 						{
 							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 						}

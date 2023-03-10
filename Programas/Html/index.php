@@ -111,7 +111,7 @@ function setCurrentTime( ) {
     {
       timer_counter = 0;
       // Get Local data
-      newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=2', updateLocalStatus, false);
+      newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=1', updateLocalStatus, false);
     }
 
     setTimeout("setCurrentTime()", 500);
