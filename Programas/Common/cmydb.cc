@@ -28,7 +28,7 @@ using namespace std;
 #include <string.h>
 #include <syslog.h>
 
-#define __TRACE_ON
+#define MYDB_QUERY_RETRY 2
 
 CMyDB::CMyDB(void)
 {
@@ -138,6 +138,7 @@ int CMyDB::Query(cJSON *json_array, const char* query_fmt, ...)
     char row_names[256][256];
     cJSON *json_obj;
     time_t t1, t2;
+    int retry;
 
     va_start(arg, query_fmt);
     vsprintf(query, query_fmt, arg);
@@ -149,63 +150,66 @@ int CMyDB::Query(cJSON *json_array, const char* query_fmt, ...)
 
     t1 = time(&t1);
     m_last_query_time = 0;
+    retry = 0;
+    rc = 0;
 
-#ifdef TRACE_ON
-    syslog(LOG_INFO, "CMyDB::Query([%s])", query);
-#endif
+    while(retry < MYDB_QUERY_RETRY)
+    {
+        retry++;
 
-    if(mysql_real_query(m_pMYConn, query, strlen(query)) != 0)
-    {
-        strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
-        syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s]", query, m_last_error_text);
-        return (-1);        
-    }
-    result = mysql_store_result(m_pMYConn);
-    if (result)  // there are rows
-    {
-        num_fields = mysql_num_fields(result);
-        for(i = 0; i < num_fields; i++)
+        if(mysql_real_query(m_pMYConn, query, strlen(query)) != 0)
         {
-          field = mysql_fetch_field(result);
-          if(field)
-          {
-#ifdef TRACE_ON
-            syslog(LOG_INFO, "CMyDB::Query Columna: %i Nombre: %s", i+1, field->name);
-#endif
-            strcpy(row_names[i], field->name);
-          }
+            strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
+            syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s] %s", query, m_last_error_text, (retry < MYDB_QUERY_RETRY)?"Reintentando...":"Error Fatal");
+            Open();
+            rc = (-1);
+            continue;
         }
-        rc = 0;
-        /* TODO: Falta trerse los datos y generar el JSON */
-        while((row = mysql_fetch_row(result)) != NULL)
+
+        result = mysql_store_result(m_pMYConn);
+        if (result)  // there are rows
         {
-          json_obj = cJSON_CreateObject();
-          for(i = 0; i < num_fields; i++)
-          {
-#ifdef TRACE_ON
-            syslog(LOG_INFO, "CMyDB::Query Fila: %i Columna: %i Valor: %s", rc+1, i+1, row[i]);
-#endif
-            cJSON_AddStringToObject(json_obj,row_names[i], (row[i])?row[i]:"NULL");
-          }
-          rc++;
-          cJSON_AddItemToArray(json_array, json_obj);
+            num_fields = mysql_num_fields(result);
+            for(i = 0; i < num_fields; i++)
+            {
+                field = mysql_fetch_field(result);
+                if(field)
+                {
+                    strcpy(row_names[i], field->name);
+                }
+            }
+            rc = 0;
+            /* TODO: Falta trerse los datos y generar el JSON */
+            while((row = mysql_fetch_row(result)) != NULL)
+            {
+                json_obj = cJSON_CreateObject();
+                for(i = 0; i < num_fields; i++)
+                {
+                    cJSON_AddStringToObject(json_obj,row_names[i], (row[i])?row[i]:"NULL");
+                }
+                rc++;
+                cJSON_AddItemToArray(json_array, json_obj);
+            }
+            mysql_free_result(result);
         }
-        mysql_free_result(result);
-    }
-    else  // mysql_store_result() returned nothing; should it have?
-    {
-        if(mysql_field_count(m_pMYConn) == 0)
+        else  // mysql_store_result() returned nothing; should it have?
         {
-            // query does not return data
-            // (it was not a SELECT)
-            rc = mysql_affected_rows(m_pMYConn);
+            if(mysql_field_count(m_pMYConn) == 0)
+            {
+                // query does not return data
+                // (it was not a SELECT)
+                rc = mysql_affected_rows(m_pMYConn);
+            }
+            else // mysql_store_result() should have returned data
+            {
+                strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
+                syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s] %s", query, m_last_error_text, (retry < MYDB_QUERY_RETRY)?"Reintentando...":"Error Fatal");
+                Open();
+                rc = (-1);
+                continue;
+            }
         }
-        else // mysql_store_result() should have returned data
-        {
-          strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
-          syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s]", query, m_last_error_text);
-          return (-1);        
-        }
+        break;
     }
 
     t2 = time(&t2);
@@ -241,33 +245,39 @@ long CMyDB::NextId(const char* table_name, const char* row_name)
     char query[1024];
     MYSQL_RES *result;
     MYSQL_ROW row;
+    int retry = 0;
 
-    m_last_error_text[0] = 0;
-
-    sprintf(query, "SELECT MAX(%s) FROM %s;", row_name, table_name);
-
-    if(!IsOpen()) Open();
-
-#ifdef TRACE_ON
-    syslog(LOG_INFO, "CMyDB::Query([%s])", query);
-#endif
-
-    if(mysql_real_query(m_pMYConn, query, strlen(query)) != 0)
+    while(retry < MYDB_QUERY_RETRY)
     {
-        strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
-        syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s]", query, m_last_error_text);
-        return (-1);        
-    }
-    result = mysql_store_result(m_pMYConn);
-    if (result)  // there are rows
-    {
-        if(mysql_num_fields(result) == 1)
+        retry++;
+
+        m_last_error_text[0] = 0;
+
+        sprintf(query, "SELECT MAX(%s) FROM %s;", row_name, table_name);
+
+        if(!IsOpen()) Open();
+
+        if(mysql_real_query(m_pMYConn, query, strlen(query)) != 0)
         {
-            row = mysql_fetch_row(result);
-            rc = atol(row[0])+1;
+            strncpy(m_last_error_text, mysql_error(m_pMYConn), CMYDB_MAX_ERROR_TEXT);
+            syslog(LOG_INFO, "CMyDB::Query([%s]) ERROR: [%s] %s", query, m_last_error_text, (retry < MYDB_QUERY_RETRY)?"Reintentando...":"Error Fatal");
+            Open();
+            rc = (-1);
+            continue;
         }
-        mysql_free_result(result);
+        result = mysql_store_result(m_pMYConn);
+        if (result)  // there are rows
+        {
+            if(mysql_num_fields(result) == 1)
+            {
+                row = mysql_fetch_row(result);
+                rc = atol(row[0])+1;
+            }
+            mysql_free_result(result);
+        }
+        break;
     }
+
     return rc;
 }
 
