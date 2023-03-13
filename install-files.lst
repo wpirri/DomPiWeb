@@ -24,8 +24,6 @@
 /usr/sbin/gmon_start
 /usr/sbin/gmon_status
 /usr/sbin/gmon_stop
-/usr/sbin/gmonitor-start.sh
-/usr/sbin/gmonitor-stop.sh
 
 /usr/bin/gm_loglevel
 /usr/bin/gm_safcfg
@@ -44,6 +42,7 @@
 /usr/lib/libgmshared.la
 /usr/lib/libgmshared.so.0.0.0
 
+/usr/local/sbin/dompi_abm
 /usr/local/sbin/dompi_server
 /usr/local/sbin/dompi_netcomm
 /usr/local/sbin/dompi_cloud

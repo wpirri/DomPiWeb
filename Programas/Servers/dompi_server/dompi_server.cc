@@ -116,14 +116,16 @@ cJSON *json_System_Config;
 time_t last_daily;
 
 void OnClose(int sig);
-void LoadSystemConfig(void);
-void CheckDaily();
-void RunDaily( void );
-void CheckUpdateHWConfig();
-void CheckTask();
-void AssignTask( void );
-void GroupTask( void );
 void CheckHWOffline( void );
+void GroupTask( void );
+void AssignTask( void );
+void CheckTask();
+void CheckUpdateHWConfig();
+void RunDaily( void );
+void CheckDaily();
+void LoadSystemConfig(void);
+int CheckWirelessCard( const char* card );
+void CheckWiegandData(void);
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -967,6 +969,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		 *
 		 *
 		 * *******************************************************************/
+		CheckWiegandData();
+
 		GroupTask();
 
 		AssignTask();
@@ -1239,17 +1243,6 @@ void AssignTask( void )
 	cJSON_Delete(json_QueryArray);
 }
 
-int ExcluirDeABM(const char* label)
-{
-	if( !strcmp(label, "REMOTE_ADDR")) return 1;
-	if( !strcmp(label, "REQUEST_URI")) return 1;
-	if( !strcmp(label, "REQUEST_METHOD")) return 1;
-	if( !strcmp(label, "CONTENT_LENGTH")) return 1;
-	if( !strcmp(label, "GET")) return 1;
-	if( !strcmp(label, "POST")) return 1;
-	return 0;
-}
-
 void CheckTask()
 {
 	int rc;
@@ -1426,10 +1419,10 @@ void CheckUpdateHWConfig()
 				/* Un objeto para contener a todos */
 				json_Config = cJSON_CreateObject();
 				/* Saco los datos que necesito */
-				cJSON_AddItemToObject(json_Config, "Id", json_HW_Id);
-				cJSON_AddItemToObject(json_Config, "MAC", json_MAC);
-				cJSON_AddItemToObject(json_Config, "Direccion_IP", json_Direccion_IP);
-				cJSON_AddItemToObject(json_Config, "Tipo_HW", json_Tipo);
+				cJSON_AddStringToObject(json_Config, "Id", json_HW_Id->valuestring);
+				cJSON_AddStringToObject(json_Config, "MAC", json_MAC->valuestring);
+				cJSON_AddStringToObject(json_Config, "Direccion_IP", json_Direccion_IP->valuestring);
+				cJSON_AddStringToObject(json_Config, "Tipo_HW", json_Tipo->valuestring);
 
 				if(json_Flags)
 				{
@@ -1542,4 +1535,170 @@ void LoadSystemConfig(void)
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 	if(rc >= 0) m_pServer->m_pLog->Add(1, "[LoadSystemConfig] Lectura de configuracion OK.");
+}
+
+int CheckWirelessCard( const char* card )
+{
+	int rc;
+	char query[4096];
+	int auth = 0;
+	time_t t;
+	struct tm *now;
+	char dia_semana[3];
+	
+    cJSON *QueryResult;
+    cJSON *QueryRow;
+	cJSON *Nombre_Completo;
+	cJSON *Permisos;
+	cJSON *Dias_Semana;
+	cJSON *Hora_Desde;
+	cJSON *Minuto_Desde;
+	cJSON *Hora_Hasta;
+	cJSON *Minuto_Hasta;
+	cJSON *Estado;
+
+	int i_now, i_desde, i_hasta;
+
+	t = time(&t);
+	now = localtime(&t);
+	i_now = (now->tm_hour * 100) + now->tm_min;
+
+	switch(now->tm_wday)
+	{
+		case 0:
+			strcpy(dia_semana, "Do");
+			break;
+		case 1:
+			strcpy(dia_semana, "Lu");
+			break;
+		case 2:
+			strcpy(dia_semana, "Ma");
+			break;
+		case 3:
+			strcpy(dia_semana, "Mi");
+			break;
+		case 4:
+			strcpy(dia_semana, "Ju");
+			break;
+		case 5:
+			strcpy(dia_semana, "Vi");
+			break;
+		case 6:
+			strcpy(dia_semana, "Sa");
+			break;
+		default:
+			strcpy(dia_semana, "XX");
+			break;
+	}
+
+	if(!card) return 0;
+	if(strlen(card) == 0) return 0;
+
+	m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Tarjeta: %s", card);
+
+	QueryResult = cJSON_CreateArray();
+	sprintf(query, "SELECT Nombre_Completo, Permisos, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
+					"FROM TB_DOM_USER "
+					"WHERE UPPER(Tarjeta) = UPPER(\'%s\');", card);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(QueryResult, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(QueryRow, QueryResult)
+		{
+			Nombre_Completo = cJSON_GetObjectItemCaseSensitive(QueryRow, "Nombre_Completo");
+			Permisos = cJSON_GetObjectItemCaseSensitive(QueryRow, "Permisos");
+			Dias_Semana = cJSON_GetObjectItemCaseSensitive(QueryRow, "Dias_Semana");
+			Hora_Desde = cJSON_GetObjectItemCaseSensitive(QueryRow, "Hora_Desde");
+			Minuto_Desde = cJSON_GetObjectItemCaseSensitive(QueryRow, "Minuto_Desde");
+			Hora_Hasta = cJSON_GetObjectItemCaseSensitive(QueryRow, "Hora_Hasta");
+			Minuto_Hasta = cJSON_GetObjectItemCaseSensitive(QueryRow, "Minuto_Hasta");
+			Estado = cJSON_GetObjectItemCaseSensitive(QueryRow, "Estado");
+
+			m_pServer->m_pLog->Add(20, "[CheckWirelessCard] Verificando Tarjeta: %s de Usuario: %s", card, Nombre_Completo->valuestring);
+
+			/* Controlo día de la semana */
+			if(strstr(Dias_Semana->valuestring, dia_semana))
+			{
+				i_desde = (atoi(Hora_Desde->valuestring) * 100) + atoi(Minuto_Desde->valuestring);
+				i_hasta = (atoi(Hora_Hasta->valuestring) * 100) + atoi(Minuto_Hasta->valuestring);
+
+				m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Hora %i <= %i <= %i", i_desde, i_now, i_hasta);
+				/* Controlo horario */
+				if(i_desde == i_hasta)
+				{
+					auth = atoi(Estado->valuestring);
+				}
+				else if( i_desde <= i_hasta && i_now >= i_desde && i_now <= i_hasta )
+				{
+					auth = atoi(Estado->valuestring);
+				}
+				else if( i_desde > i_hasta && ( i_now >= i_desde || i_now <= i_hasta ) )
+				{
+					auth = atoi(Estado->valuestring);
+				}
+
+				if(auth)
+				{
+					m_pServer->m_pLog->Add(10, "[CheckWirelessCard] Aceptada Tarjeta: %s de Usuario: %s", card, Nombre_Completo->valuestring);
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[CheckWirelessCard] Tarjeta: %s de Usuario: %s Acceso denegado", card, Nombre_Completo->valuestring);
+				}
+			}
+		}
+	}
+	cJSON_Delete(QueryResult);
+
+	return auth;
+}
+
+void CheckWiegandData( void )
+{
+	int rc;
+	char query[4096];
+
+    cJSON *QueryResult;
+    cJSON *QueryRow;
+    cJSON *Id;
+    cJSON *Dispositivo;
+    cJSON *Perif_Data;
+
+	m_pServer->m_pLog->Add(100, "[CheckWiegandData]");
+
+	QueryResult = cJSON_CreateArray();
+	sprintf(query, "SELECT Id, Dispositivo, Perif_Data "
+					"FROM TB_DOM_ASSIGN "
+					"WHERE Port = \'CARD\' AND NOT ISNULL(Perif_Data);");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(QueryResult, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		/* Recorro el array */
+		cJSON_ArrayForEach(QueryRow, QueryResult)
+		{
+			Id = cJSON_GetObjectItemCaseSensitive(QueryRow, "Id");
+			Dispositivo = cJSON_GetObjectItemCaseSensitive(QueryRow, "Dispositivo");
+			Perif_Data = cJSON_GetObjectItemCaseSensitive(QueryRow, "Perif_Data");
+			/* Verifico si el código el válido */
+			rc = CheckWirelessCard( Perif_Data->valuestring );
+			/* Ejecuto el Evento */
+			pEV->CheckEvent(atoi(Dispositivo->valuestring), "CARD", rc);
+			/* Borro el dato */
+			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+							"SET Perif_Data = NULL "
+							"WHERE Id = %s;", Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(QueryResult);
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/make -f
+ #!/usr/bin/make -f
 
 GMON_USER=gmonitor
 SYTEM_HOME=/home/$(GMON_USER)

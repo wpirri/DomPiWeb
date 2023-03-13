@@ -234,14 +234,13 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                             }
                                         }
                                     }
-                                    else if( !memcmp(json_un_obj->string, "WIEGAND", 7))
+                                    else if( !memcmp(json_un_obj->string, "CARD", 4))
                                     {
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'CARD\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring,
-                                                        json_hw_id->valuestring,
-                                                        json_un_obj->string);
+                                                        json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
@@ -252,11 +251,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         ival = atoi(numcpy(s, json_un_obj->valuestring));
 
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'TEMP\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring, ival,
-                                                        json_hw_id->valuestring,
-                                                        json_un_obj->string);
+                                                        json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
@@ -269,11 +267,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         ival = atoi(numcpy(s, json_un_obj->valuestring));
 
                                         sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
+                                                        "WHERE Dispositivo = \'%s\' AND Port = \'HUM\' AND "
                                                         "Tipo = 6;",
                                                         json_un_obj->valuestring, ival,
-                                                        json_hw_id->valuestring,
-                                                        json_un_obj->string);
+                                                        json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());

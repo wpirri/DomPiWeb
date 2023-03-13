@@ -45,7 +45,7 @@ PortAss[14] = { value: 'OUT7', 		label: 'OUT7' }
 PortAss[15] = { value: 'OUT8', 		label: 'OUT8' }
 PortAss[16] = { value: 'TEMP', 		label: 'TEMP' }
 PortAss[17] = { value: 'HUM', 		label: 'HUM' }
-PortAss[18] = { value: 'WIEGAND', 	label: 'WIEGAND' }
+PortAss[18] = { value: 'CARD', 	label: 'CARD' }
 
 var TablaAssIn = [];
 var TablaAssOut = [];
