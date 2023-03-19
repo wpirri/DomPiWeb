@@ -825,14 +825,15 @@ function loadAssTable(json_list) {
 		var item = [];
 		item['value'] = json_list[i].Id;
 		item['label'] = json_list[i].Objeto;
-		if(json_list[i].Tipo == 1 || 
-			json_list[i].Tipo == 2 || 
-			json_list[i].Tipo == 4 || 
-			json_list[i].Tipo == 6) {
-			TablaAssIn[x++] = item;
-		} else if(json_list[i].Tipo == 0) {
+		if(json_list[i].Id == 0) {
 			TablaAssIn[x++] = item;
 			TablaAssOut[y++] = item;
+		}
+		else if(json_list[i].Tipo == 1 || 
+				json_list[i].Tipo == 2 || 
+				json_list[i].Tipo == 4 || 
+				json_list[i].Tipo == 6) {
+				TablaAssIn[x++] = item;
 		} else {
 			TablaAssOut[y++] = item;
 		}
