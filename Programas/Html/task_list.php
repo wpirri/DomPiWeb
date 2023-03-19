@@ -5,7 +5,7 @@ include('head-abm.php');
 
 <body onload='OnLoad();'>
 
-<div id='task_list_back_btn' class='back-btn' onclick="window.location.replace('auto_menu.php');" >
+<div id='task_list_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $AUTO_MENU?>');" >
 	<img id='task_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
