@@ -264,6 +264,9 @@ Minuto_Inicio integer DEFAULT 0,
 Hora_Fin integer DEFAULT 0,
 Minuto_Fin integer DEFAULT 0,
 Dias_Semana varchar(128),                   -- Lu,Ma,Mi,Ju,Vi,Sa,Do
+Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
+Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
+Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
 Estado integer DEFAULT 0,                   -- 0 = Bajo el minimo 1 = Sobre el maximo
 Habilitado integer DEFAULT 1,                   -- 0 = Disable 1 = Enable
 Icono0 varchar(32),
