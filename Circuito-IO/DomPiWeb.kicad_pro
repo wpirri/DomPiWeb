@@ -55,7 +55,15 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "courtyards_overlap|100000001|61500001|00000000-0000-0000-0000-00006106974f|00000000-0000-0000-0000-000061069779",
+        "courtyards_overlap|102000001|108500001|00000000-0000-0000-0000-00006092c58a|00000000-0000-0000-0000-00006108e173",
+        "courtyards_overlap|117000001|108500001|00000000-0000-0000-0000-00006092c58a|00000000-0000-0000-0000-00006094c62e",
+        "courtyards_overlap|119550001|81650001|137920d5-1813-4723-8f10-b19944f96332|13b732fe-9397-43cf-8135-a088fcc25e12",
+        "courtyards_overlap|127000001|108500001|00000000-0000-0000-0000-000060944978|00000000-0000-0000-0000-00006094c62e",
+        "courtyards_overlap|153874999|71049999|00000000-0000-0000-0000-00006094b323|d3743ed7-4c9c-4d31-b539-3bbf56050409",
+        "courtyards_overlap|167500001|108500001|aed6fd45-9008-49c0-8589-6686d15e36cc|c41835e2-2b20-4f99-a85d-b1859480e6e6"
+      ],
       "meta": {
         "filename": "board_design_settings.json",
         "version": 2
@@ -355,7 +363,7 @@
       {
         "bus_width": 12.0,
         "clearance": 0.25,
-        "diff_pair_gap": 0.2,
+        "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.25,
         "line_style": 0,
@@ -372,15 +380,33 @@
       {
         "bus_width": 12.0,
         "clearance": 0.25,
-        "diff_pair_gap": 0.5,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.25,
+        "line_style": 0,
+        "microvia_diameter": 1.0,
+        "microvia_drill": 0.5,
+        "name": "Fino",
+        "nets": [],
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.25,
+        "via_diameter": 1.0,
+        "via_drill": 0.5,
+        "wire_width": 6.0
+      },
+      {
+        "bus_width": 12.0,
+        "clearance": 0.25,
+        "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 1.0,
         "line_style": 0,
         "microvia_diameter": 1.0,
         "microvia_drill": 0.8,
-        "name": "1mm",
+        "name": "Grueso",
         "nets": [
-          "GND"
+          "Net-(C1-Pad1)"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
@@ -391,21 +417,21 @@
       },
       {
         "bus_width": 12.0,
-        "clearance": 1.0,
+        "clearance": 0.25,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 2.5,
         "line_style": 0,
         "microvia_diameter": 1.0,
-        "microvia_drill": 0.5,
-        "name": "2m5",
+        "microvia_drill": 1.0,
+        "name": "Muy Grueso",
         "nets": [
           "Net-(C2-Pad1)",
           "Net-(C3-Pad1)",
           "Net-(D1-Pad2)",
           "Net-(D5-Pad1)",
-          "Net-(J10-Pad2)",
-          "Net-(J11-Pad2)"
+          "Net-(J11-Pad1)",
+          "Net-(K1-Pad11)"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
