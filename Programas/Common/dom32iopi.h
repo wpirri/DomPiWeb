@@ -36,19 +36,13 @@ public:
 
     void LoadConfig( void );
 
-    int GetIOStatus(int *iostatus);
-    int GetEXStatus(int *exstatus);
-    int GetConfig(int *ioconfig, int *exconfig);
-    int ConfigIO(int ioconfig, int *config);
-    int ConfigEX(int exconfig, int *config);
-    int SetIO(int mask, int *iostatus);
-    int SetEX(int mask, int *exstatus);
-    int ResetIO(int mask, int *iostatus);
-    int ResetEX(int mask, int *exstatus);
-    int SwitchIO(int mask, int *iostatus);
-    int SwitchEX(int mask, int *exstatus);
-    int PulseIO(int mask, int sec, int *iostatus);
-    int PulseEX(int mask, int sec, int *exstatus);
+    int GetIOStatus(int port, int *iostatus);
+    int GetConfig(int port, int *ioconfig);
+    int ConfigIO(int port, int ioconfig, int *config);
+    int SetIO(int mask, int port, int *iostatus);
+    int ResetIO(int mask, int port, int *iostatus);
+    int SwitchIO(int mask, int port, int *iostatus);
+    int PulseIO(int mask, int port, int sec, int *iostatus);
 
     void SetStatusLed(int status);
 

@@ -124,22 +124,22 @@ int main(/*int argc, char** argv, char** env*/void)
     pPI = new Dom32IoPi();
 	pPI->LoadConfig();
 	
-	m_pServer->Suscribe("dompi_pi_set_port_config", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->Suscribe("dompi_pi_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_NOT);
 	m_pServer->Suscribe("dompi_pi_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_port", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_set_port", GM_MSG_TYPE_NOT);
 	m_pServer->Suscribe("dompi_pi_get_port", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_pi_set_io", GM_MSG_TYPE_MSG);
-	m_pServer->Suscribe("dompi_pi_switch_io", GM_MSG_TYPE_MSG);
-	m_pServer->Suscribe("dompi_pi_pulse_io", GM_MSG_TYPE_MSG);
+	m_pServer->Suscribe("dompi_pi_set_io", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_pi_switch_io", GM_MSG_TYPE_NOT);
+	m_pServer->Suscribe("dompi_pi_pulse_io", GM_MSG_TYPE_NOT);
 	m_pServer->Suscribe("dompi_pi_get_io", GM_MSG_TYPE_CR);
 
 	blink = 0;
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10 )) >= 0)
 	{
 		json_req = NULL;
-		//json_resp = NULL;
+
 		if(rc > 0)
 		{
 			message[message_len] = 0;
@@ -167,31 +167,17 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						if(json_IO_Config)
 						{
-							if( atoi(json_Port->valuestring) == 1 )
-							{
-								rc = pPI->ConfigIO(
+							rc = pPI->ConfigIO( atoi(json_Port->valuestring)
 												atol(json_IO_Config->valuestring),
 												NULL);
-								m_pServer->m_pLog->Add(100, "pPI->ConfigIO(%s, %s) = %i", 
-													json_Direccion_IP->valuestring,
-													json_IO_Config->valuestring,
-													rc);
-								if(rc != 0)
-								{
-									m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
-								}
+							m_pServer->m_pLog->Add(100, "pPI->ConfigIO(%s, %s) = %i", 
+												json_Direccion_IP->valuestring,
+												json_IO_Config->valuestring,
+												rc);
+							if(rc != 0)
+							{
+								m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
 							}
-							else if( atoi(json_Port->valuestring) == 2 )
-							{
-								rc = pPI->ConfigEX(
-												atol(json_IO_Config->valuestring),
-												NULL);
-								m_pServer->m_pLog->Add(100, "pPI->ConfigEX(%s, %s) = %i", 
-													json_Direccion_IP->valuestring,
-													json_IO_Config->valuestring,
-													rc);
-								if(rc != 0)
-								{
 									m_pServer->m_pLog->Add(1, "[dompi_pi_set_port_config] ERROR: Error al configurar I/O");
 								}
 							}
@@ -771,15 +757,15 @@ int main(/*int argc, char** argv, char** env*/void)
 void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
-	m_pServer->UnSuscribe("dompi_pi_set_port_config", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_pi_get_port_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_set_comm_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_pi_get_comm_config", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_port", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_set_port", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_pi_get_port", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_pi_set_io", GM_MSG_TYPE_MSG);
-	m_pServer->UnSuscribe("dompi_pi_switch_io", GM_MSG_TYPE_MSG);
-	m_pServer->UnSuscribe("dompi_pi_pulse_io", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_pi_set_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_pi_switch_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_pi_pulse_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_pi_get_io", GM_MSG_TYPE_CR);
 	delete m_pServer;
 	exit(0);

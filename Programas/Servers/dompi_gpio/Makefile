@@ -6,6 +6,7 @@ LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lwiringPi -lssl -lcrypto
 OBJECTS=dompi_gpio.o dom32iopi.o config.o 
 OUTPUT=dompi_gpio
 DEFINE=-D __NO__DEBUG__
+HWNAME=uname -m
 CC=g++
 
 #.cc.o:
@@ -26,7 +27,7 @@ dom32iopi.o: ../../Common/dom32iopi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iopi.cc
 
 dompi_gpio: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT)
 
 clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
