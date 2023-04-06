@@ -2,6 +2,7 @@
 
 all:
 	make -C abmassign.cgi
+	make -C abmalarma.cgi
 	make -C abmat.cgi
 	make -C abmauto.cgi
 	make -C abmev.cgi
@@ -15,6 +16,7 @@ all:
 
 clean:
 	make -C abmassign.cgi clean
+	make -C abmalarma.cgi clean
 	make -C abmat.cgi clean
 	make -C abmauto.cgi clean
 	make -C abmev.cgi clean
@@ -28,6 +30,7 @@ clean:
 
 install:
 	make -C abmassign.cgi install
+	make -C abmalarma.cgi install
 	make -C abmat.cgi install
 	make -C abmauto.cgi install
 	make -C abmev.cgi install
@@ -41,6 +44,7 @@ install:
 
 uninstall:
 	make -C abmassign.cgi uninstall
+	make -C abmalarma.cgi uninstall
 	make -C abmat.cgi uninstall
 	make -C abmauto.cgi uninstall
 	make -C abmev.cgi uninstall

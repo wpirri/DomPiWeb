@@ -8,8 +8,9 @@ ListaSiNo[1] = { value: 1, label: 'Si' }
 var TipoHW = [];
 TipoHW[0] = { value: 0, label: 'Ninguno' }
 TipoHW[1] = { value: 1, label: 'WiFi' }
-TipoHW[2] = { value: 2, label: 'DSC' }
-TipoHW[3] = { value: 3, label: 'Garnet' }
+TipoHW[2] = { value: 2, label: 'RBPi' }
+TipoHW[3] = { value: 3, label: 'DSC' }
+TipoHW[4] = { value: 4, label: 'Garnet' }
 
 var EstadoHW = [];
 EstadoHW[0] = { value: 0, label: '<img src="images/no.png">' }
@@ -1289,6 +1290,164 @@ function fillAnalogEdit(json_list, dst_div, title) {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		}
 		output += '</td>';
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+/* ==== Alarma ============================================================== */
+function fillAlarmPartList(json_list, dst_div, title, index_label, edit_link, zone_link, out_link, delete_link) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		if(headers[i] != 'Id') {
+			output += '<th>';
+			output += headers[i];
+			output += '</th>';
+		}
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Editar</th>';
+	output += '<th>Zonas</th>';
+	output += '<th>Salidas</th>';
+	output += '<th>Borrar</th>';
+	output += '</tr>\n';
+	// Datos - Salteo el primero de la lista
+	for (i = 1; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			if(headers[j] == 'Id') {
+				index_value = val;
+			} else {
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				output += '<td>';
+				if(headers[j] == 'OFF' || headers[j] == 'ON') {
+					output += EstadoHW[val].label;
+				} else {
+					output += val;
+				}
+				output += '</td>';
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + zone_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + out_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+function fillAlarmZoneList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		if(headers[i] != 'Id') {
+			output += '<th>';
+			output += headers[i];
+			output += '</th>';
+		}
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Editar</th>';
+	output += '<th>Borrar</th>';
+	output += '</tr>\n';
+	// Datos - Salteo el primero de la lista
+	for (i = 0; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			if(headers[j] == 'Id') {
+				index_value = val;
+			} else {
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				output += '<td>';
+				output += val;
+				output += '</td>';
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+function fillAlarmOutList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		if(headers[i] != 'Id') {
+			output += '<th>';
+			output += headers[i];
+			output += '</th>';
+		}
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Editar</th>';
+	output += '<th>Borrar</th>';
+	output += '</tr>\n';
+	// Datos - Salteo el primero de la lista
+	for (i = 0; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			if(headers[j] == 'Id') {
+				index_value = val;
+			} else {
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				output += '<td>';
+				output += val;
+				output += '</td>';
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+		output += val;
 		output += '</tr>\n';
 	}
 	output += '</table>\n';
