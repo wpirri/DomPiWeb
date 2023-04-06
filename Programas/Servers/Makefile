@@ -1,7 +1,6 @@
 #!/usr/bin/make -f
 
 all:
-#	make -C dompi_gpio
 	make -C dompi_abm
 	make -C dompi_cloud
 	make -C dompi_garnet
@@ -10,7 +9,6 @@ all:
 	make -C dompi_server
 
 clean:
-#	make -C dompi_gpio clean
 	make -C dompi_abm clean
 	make -C dompi_cloud clean
 	make -C dompi_garnet clean
@@ -19,7 +17,6 @@ clean:
 	make -C dompi_server clean
 
 install:
-#	make -C dompi_gpio install
 	make -C dompi_abm install
 	make -C dompi_cloud install
 	make -C dompi_garnet install
@@ -28,7 +25,6 @@ install:
 	make -C dompi_server install
 
 uninstall:
-#	make -C dompi_gpio uninstall
 	make -C dompi_abm uninstall
 	make -C dompi_cloud uninstall
 	make -C dompi_garnet uninstall
