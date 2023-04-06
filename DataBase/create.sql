@@ -2,10 +2,11 @@ CREATE DATABASE DB_DOMPIWEB;
 
 \u DB_DOMPIWEB
 
+DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA
+DROP TABLE IF EXISTS TB_DOM_ALARM_SALIDA
+DROP TABLE IF EXISTS TB_DOM_ALARM_PARTICION
 DROP TABLE IF EXISTS TB_DOM_AUTO;
-DROP TABLE IF EXISTS TB_DOM_ALARM;
 DROP TABLE IF EXISTS TB_DOM_AT;
-DROP TABLE IF EXISTS TB_DOM_EVENT_CHANGE;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_FUNCTION;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
@@ -15,6 +16,8 @@ DROP TABLE IF EXISTS TB_DOM_GRUPO_VISUAL;
 DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
 DROP TABLE IF EXISTS TB_DOM_CONFIG;
+
+DROP TABLE IF EXISTS TB_DOM_ALARM;
 
 CREATE TABLE IF NOT EXISTS TB_DOM_CONFIG (
 Id integer primary key,
@@ -96,7 +99,7 @@ CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 Id integer primary key,
 MAC varchar(16) NOT NULL,                       -- MAC Address
 Dispositivo varchar(128) NOT NULL,
-Tipo integer DEFAULT 0,                         -- 0=RBPi, 1=Wifi HTTP
+Tipo integer DEFAULT 0,                         -- 0=Ninguno, 1=Wifi 2=RBPi 3=DSC 4=Garnet
 Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
@@ -213,33 +216,33 @@ FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
 );
 
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM (
-Part integer primary key,
-ActStatus integer DEFAULT 0,
-MemStatus integer DEFAULT 0,
-InZone1 integer DEFAULT 0,
-InZone2 integer DEFAULT 0,
-InZone3 integer DEFAULT 0,
-InZone4 integer DEFAULT 0,
-InZone5 integer DEFAULT 0,
-InZone6 integer DEFAULT 0,
-InZone7 integer DEFAULT 0,
-InZone8 integer DEFAULT 0,
-InActDes integer DEFAULT 0,
-OutSiren integer DEFAULT 0,
-OutBuzer integer DEFAULT 0,
-FOREIGN KEY(InZone1) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone2) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone3) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone4) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone5) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone6) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone7) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InZone8) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(InActDes) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(OutSiren) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(OutBuzer) REFERENCES TB_DOM_ASSIGN(Id)
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+ActStatus integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
+MemStatus integer DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto integer NOT NULL,
+Tipo integer DEFAULT 0,                     -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
+Grupo integer DEFAULT 0,                     -- 0= Parcial 1= Total 3= 24Hs
+Activa integer DEFAULT 0,
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto integer NOT NULL,
+Tipo integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+);
+
 
 -- Sistema de riego
 -- Calefaccion
