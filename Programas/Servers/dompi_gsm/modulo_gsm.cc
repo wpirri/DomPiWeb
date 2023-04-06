@@ -86,7 +86,8 @@ using namespace std;
 
 ModGSM::ModGSM(const char* tempdir)
 {
-    m_port[0] = 0;
+    strcpy(m_port_path, "/dev/ttyUSB");
+    m_last_port = 0;
     strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = nullptr;
     m_modem_status = MODEM_STATUS_NOT_INIT;
@@ -97,7 +98,8 @@ ModGSM::ModGSM(const char* tempdir)
 
 ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer)
 {
-    m_port[0] = 0;
+    strcpy(m_port_path, "/dev/ttyUSB");
+    m_last_port = 0;
     strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
@@ -106,10 +108,10 @@ ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer)
     m_get_status_time = 0;
 }
 
-ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port)
+ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port_path)
 {
-    if(port) strcpy(m_port, port);
-    else m_port[0] = 0;
+    if(port_path) strcpy(m_port_path, port_path);
+    m_last_port = 0;
     strncpy(m_temp_dir, tempdir, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
@@ -125,52 +127,61 @@ ModGSM::~ModGSM()
 
 int ModGSM::Open()
 {
-    if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] Open");
+    char port_name[256];
+    int retry = MAX_PORT_NUMBER+1;
 
-    if(m_port[0] == 0)
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] Open");
+
+
+    while(retry)
     {
-        if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error en Open [no port]");
-        m_modem_status = MODEM_STATUS_ERROR;
-        return (-1);
-    }
+        Close();
+        m_pSerial = new CSerial();
 
-    Close();
+        sprintf(port_name, "%s%i", m_port_path, m_last_port);
+        if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] Intentando abrir [%s]", port_name);
+        if(m_pSerial->Open(port_name) != 0)
+        {
+            delete m_pSerial;
+            m_pSerial = nullptr;
 
-    m_pSerial = new CSerial();
-    if(m_pSerial->Open(m_port) != 0)
-    {
-        if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error en Open [%s]", m_port);
-        m_modem_status = MODEM_STATUS_ERROR;
+            retry--;
+            m_last_port++;
+            if(m_last_port > MAX_PORT_NUMBER) m_last_port = 0;
+
+            continue;
+        }
+
+        m_modem_status = MODEM_STATUS_OPEN;
+        while(1)
+        {
+            if(QueryModem("OK", "ATZ") < 0) break;
+            if(QueryModem("OK", "ATE0") < 0) break;
+            if(QueryModem("OK", "ATS0=0") < 0) break;
+            if(QueryModem("OK", m_imei, 32, "AT+GSN") < 0) break;
+            if(QueryModem("OK", "AT+CNMI=2,1,0,0,0") < 0) break;
+            if(QueryModem("OK", "AT+CMGF=1") < 0) break;
+            if(QueryModem("OK", "AT+CREG=0") < 0) break;
+
+            m_modem_status = MODEM_STATUS_SMS_READY;
+            if(m_pServer) m_pServer->m_pLog->Add(20, "[ModGSM] Open [%s] OK", port_name);
+            return 0;
+        }
         delete m_pSerial;
         m_pSerial = nullptr;
-        return (-1);
+
+        retry--;
+        m_last_port++;
+        if(m_last_port > MAX_PORT_NUMBER) m_last_port = 0;
     }
-
-    m_modem_status = MODEM_STATUS_OPEN;
-    while(1)
-    {
-        if(QueryModem("OK", "ATZ") < 0) break;
-        if(QueryModem("OK", "ATE0") < 0) break;
-        if(QueryModem("OK", "ATS0=0") < 0) break;
-        if(QueryModem("OK", m_imei, 32, "AT+GSN") < 0) break;
-        if(QueryModem("OK", "AT+CNMI=2,1,0,0,0") < 0) break;
-        if(QueryModem("OK", "AT+CMGF=1") < 0) break;
-        if(QueryModem("OK", "AT+CREG=0") < 0) break;
-
-        m_modem_status = MODEM_STATUS_SMS_READY;
-        if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] Open [%s] OK", m_port);
-        return 0;
-    }
-
-    if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error inicialiando modem en port [%s]", m_port);
+    if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error inicialiando modem en port [%s]", port_name);
     ModemError();
     return (-1);
 }
 
-int ModGSM::Open(const char* port)
+int ModGSM::Open(const char* port_path)
 {
-    if(port) strcpy(m_port, port);
-    else m_port[0] = 0;
+    if(port_path) strcpy(m_port_path, port_path);
     return Open();
 }
 
@@ -314,7 +325,7 @@ void ModGSM::GetSMS(int id)
     int rc;
     if(!m_pSerial) return;
 
-    if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS Id:[%i]", id);
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] GetSMS Id:[%i]", id);
     /* AT+CMGR=n */
     rc = QueryModem("OK", buffer, 4096, "AT+CMGR=%i", id);
     if(rc < 0)
@@ -324,7 +335,7 @@ void ModGSM::GetSMS(int id)
     }
     else if(rc > 0)
     {
-        if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS: Mesaje recibido [%s]", buffer);
+        if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetSMS: Mesaje recibido [%s]", buffer);
 
 
 
@@ -363,7 +374,7 @@ void ModGSM::CheckSMS( void )
     }
     else if(rc > 0)
     {
-        if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] CheckSMS: Mensaje recibido [%s]", buffer);
+        if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMS: Mensaje recibido [%s]", buffer);
         p = strstr(buffer, "+CMGL:");
         while(p)
         {
@@ -408,7 +419,7 @@ void ModGSM::CheckSMS( void )
             }
             msg[i] = 0;
 
-            if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
+            if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
             SaveRecvSMS(from, msg);
 
 
@@ -447,7 +458,7 @@ void ModGSM::GetModemStatus( void )
     else if(rc > 0)
     {
         /* Respuesta de AT+CSQ - viene con info de nivel de se?al - +CSQ: 12,0 */
-        if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetModemStatus: [%s]", buffer);
+        if(m_pServer) m_pServer->m_pLog->Add(20, "[ModGSM] GetModemStatus: [%s]", buffer);
         /*
             Wording 	Blocks 	Percent/RSSI/DB
             Excellent 	[][][][][] 	100 31 	>-51
@@ -493,7 +504,7 @@ void ModGSM::GetModemStatus( void )
 
 int ModGSM::SendSMS(const char* dest, const char* msg)
 {
-    if(m_pServer) m_pServer->m_pLog->Add(90, "[ModGSM] SendSMS dest:[%s] msg:[%s]", dest, msg);
+    if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] SendSMS dest:[%s] msg:[%s]", dest, msg);
     SMSDelSent();
     do
     {
