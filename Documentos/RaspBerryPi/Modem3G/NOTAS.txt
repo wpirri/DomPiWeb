@@ -1,0 +1,23 @@
+https://www.hackster.io/achraf-oukheir/modem-lte-3g-2g-with-raspberry-pi-3-4-a-b-29115b
+
+En caso que la Rasberry Pi no conecte automáticamente al enchufar el modem:
+
+Instalar wvdial
+Ejecutar con root wvdial y veriifcar que se establezca la conexión
+
+Crear el Servicios
+
+Crear /etc/systemd/system/wvdial.service con el siguiente contenido
+[Unit]
+Description=wvdial
+
+[Service]
+ExecStart=/usr/bin/wvdial
+Restart=on-failure
+RestartSec=5
+
+Crear /etc/udev/rules.d/99-com.rules con el siguiente contenido
+SUBSYSTEM=="tty", KERNEL=="ttyUSB0", TAG+="systemd", ENV{SYSTEMD_WANTS}+="wvdial.service"
+
+Verificar con ifconfig que se haya creado una conexiòn de red en ppp0
+
