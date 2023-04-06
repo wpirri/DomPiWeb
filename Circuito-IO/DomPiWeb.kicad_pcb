@@ -304,7 +304,7 @@
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 88606262-3ac5-44a1-aacc-18b26cf4d396)
     )
-    (fp_text value "EXP1" (at -3.225 7.575 180) (layer "F.SilkS")
+    (fp_text value "EXP1" (at -3.225 5.325 180) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 0554bea0-89b2-4e25-9ea3-4c73921c94cb)
     )
@@ -532,7 +532,7 @@
       (net 6 "Net-(D1-Pad2)") (pinfunction "Pin_1") (pintype "passive") (tstamp 41b4f8c6-4973-4fc7-9118-d582bc7f31e7))
     (pad "2" thru_hole circle locked (at 5 0 180) (size 2.6 2.6) (drill 1.3) (layers *.Cu *.Mask)
       (net 1 "GND") (pinfunction "Pin_2") (pintype "passive") (tstamp ef51df0d-fc2c-482b-a0e5-e49bae94f31f))
-    (model "${KISYS3DMOD}/TerminalBlock_Phoenix.3dshapes/TerminalBlock_Phoenix_PT-1,5-2-5.0-H_1x02_P5.00mm_Horizontal.wrl"
+    (model "${KICAD6_3DMODEL_DIR}/TerminalBlock_Phoenix.3dshapes/TerminalBlock_Phoenix_PT-1,5-2-5.0-H_1x02_P5.00mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -599,7 +599,7 @@
       (net 2 "Net-(C1-Pad1)") (pinfunction "Pin_1") (pintype "passive") (tstamp dd2d59b3-ddef-491f-bb57-eb3d3820bdeb))
     (pad "2" thru_hole circle locked (at 5 0 180) (size 2.6 2.6) (drill 1.3) (layers *.Cu *.Mask)
       (net 1 "GND") (pinfunction "Pin_2") (pintype "passive") (tstamp b44c0167-50fe-4c67-94fb-5ce2e6f52544))
-    (model "${KISYS3DMOD}/TerminalBlock_Phoenix.3dshapes/TerminalBlock_Phoenix_PT-1,5-2-5.0-H_1x02_P5.00mm_Horizontal.wrl"
+    (model "${KICAD6_3DMODEL_DIR}/TerminalBlock_Phoenix.3dshapes/TerminalBlock_Phoenix_PT-1,5-2-5.0-H_1x02_P5.00mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -1187,7 +1187,7 @@
     (property "Sheetname" "")
     (path "/00000000-0000-0000-0000-00005f98cf81")
     (attr smd)
-    (fp_text reference "R23" (at 4 0 90) (layer "F.SilkS")
+    (fp_text reference "R23" (at 3.5 0 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 8b2f3910-d416-4286-b370-dbb8999bab3f)
     )
@@ -1229,7 +1229,7 @@
     (property "Sheetname" "")
     (path "/00000000-0000-0000-0000-000062165b21")
     (attr smd)
-    (fp_text reference "R24" (at 3.525 1.025 90) (layer "F.SilkS")
+    (fp_text reference "R24" (at 3.525 0 90) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp e232824c-3f34-4fb4-ae85-f5fad5cb082a)
     )
