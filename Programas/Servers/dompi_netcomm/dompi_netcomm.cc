@@ -35,7 +35,9 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
+#include "rbpiio.h"
 #include "config.h"
+#include "defines.h"
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
@@ -127,11 +129,12 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_rqst_path;
 
     Dom32IoWifi *pD32W;
-    Dom32IoWifi::wifi_config_data wifi_data;
+    Dom32IoWifi::wifi_config_data dom32_wifi_data;
     pD32W = new Dom32IoWifi(m_pServer);
 
-	CGMServerBase::GMIOS call_server_resp;
-	CGMClient::GMIOS call_client_resp;
+	RBPiIO *pRBPi;
+    RBPiIO::rbpi_config_data rbpi_wifi_data;
+    pRBPi = new RBPiIO(m_pServer);
 
 
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
@@ -167,32 +170,18 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
-					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_port_config][%s]", message);
-							m_pServer->Post("dompi_pi_set_port_config", message, strlen(message));
-						}
-						else
-						{
-							/* remoto */
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_port_config][%s]", message);
-							m_pClient->Post("dompi_pi_set_port_config", message, strlen(message));
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
 						pD32W->SetConfig(json_Direccion_IP->valuestring, message, nullptr);
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						pRBPi->SetConfig(json_Direccion_IP->valuestring, message, nullptr);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else
@@ -207,50 +196,22 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
-					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_port_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_port_config", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
-						}
-						else
-						{
-							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_port_config][%s]", message);
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							rc = m_pClient->Call("dompi_pi_get_port_config", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024, nullptr);
 						m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
+											json_Direccion_IP->valuestring,
+											rc);
+						if(rc != 0)
+						{
+							/* Otro Error */
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
+						}
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						rc = pRBPi->GetConfig(json_Direccion_IP->valuestring, message, 1024, nullptr);
+						m_pServer->m_pLog->Add(100, "pRBPi->GetConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
 						if(rc != 0)
@@ -263,7 +224,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
-
 				}
 				else
 				{
@@ -285,15 +245,10 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0) /* RBPi Local */
-					{
-						/* Por ahora no nos metemos en la configuración WiFi de la Pi */
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1) /* Dom32IOWiFi */
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
-						memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
+						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
 						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1");
 						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1_Pass");
@@ -306,20 +261,54 @@ int main(/*int argc, char** argv, char** env*/void)
 						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
 							json_host1 && json_host2 && json_rqst_path)
 						{
-							strcpy(wifi_data.wifi_ap1, json_ap1->valuestring);
-							strcpy(wifi_data.wifi_ap1_pass, json_ap1_pass->valuestring);
-							strcpy(wifi_data.wifi_ap2, json_ap2->valuestring);
-							strcpy(wifi_data.wifi_ap2_pass, json_ap2_pass->valuestring);
-							strcpy(wifi_data.wifi_host1, json_host1->valuestring);
-							strcpy(wifi_data.wifi_host2, json_host2->valuestring);
-							strcpy(wifi_data.rqst_path, json_rqst_path->valuestring);
+							strcpy(dom32_wifi_data.wifi_ap1, json_ap1->valuestring);
+							strcpy(dom32_wifi_data.wifi_ap1_pass, json_ap1_pass->valuestring);
+							strcpy(dom32_wifi_data.wifi_ap2, json_ap2->valuestring);
+							strcpy(dom32_wifi_data.wifi_ap2_pass, json_ap2_pass->valuestring);
+							strcpy(dom32_wifi_data.wifi_host1, json_host1->valuestring);
+							strcpy(dom32_wifi_data.wifi_host2, json_host2->valuestring);
+							strcpy(dom32_wifi_data.rqst_path, json_rqst_path->valuestring);
 
-							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &wifi_data, NULL);
+							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, NULL);
 						}
 						else
 						{
 							m_pServer->m_pLog->Add(1, "[dompi_hw_set_comm_config] ERROR: Datos insuficientes de WiFi");
 						}
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						memset(&rbpi_wifi_data, 0, sizeof(RBPiIO::rbpi_config_data));
+
+						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1");
+						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1_Pass");
+						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2");
+						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2_Pass");
+						json_host1 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_1_Address");
+						json_host2 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_2_Address");
+						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_req, "Rqst_Path");
+
+						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
+							json_host1 && json_host2 && json_rqst_path)
+						{
+							strcpy(rbpi_wifi_data.wifi_ap1, json_ap1->valuestring);
+							strcpy(rbpi_wifi_data.wifi_ap1_pass, json_ap1_pass->valuestring);
+							strcpy(rbpi_wifi_data.wifi_ap2, json_ap2->valuestring);
+							strcpy(rbpi_wifi_data.wifi_ap2_pass, json_ap2_pass->valuestring);
+							strcpy(rbpi_wifi_data.wifi_host1, json_host1->valuestring);
+							strcpy(rbpi_wifi_data.wifi_host2, json_host2->valuestring);
+							strcpy(rbpi_wifi_data.rqst_path, json_rqst_path->valuestring);
+
+							pRBPi->SetWifiConfig(json_Direccion_IP->valuestring, &rbpi_wifi_data, NULL);
+						}
+						else
+						{
+							m_pServer->m_pLog->Add(1, "[dompi_hw_set_comm_config] ERROR: Datos insuficientes de WiFi");
+						}
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else
@@ -332,53 +321,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_get_comm_config"))
 			{
-				memset(&wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
-
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_comm_config][%s]", message);
-							rc = m_pServer->Call("dompi_pi_get_comm_config", message, strlen(message), &call_server_resp, internal_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_server_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pServer->Free(call_server_resp);
-						}
-						else
-						{
-							/* remoto */
-							m_pServer->m_pLog->Add(90, "Call [dompi_pi_get_comm_config][%s]", message);
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
+						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
-							m_pClient = new CGMClient(&gminit);
-
-							rc = m_pClient->Call("dompi_pi_get_comm_config", message, strlen(message), &call_client_resp, external_timeout);
-							if(rc == 0)
-							{
-								strcpy(message, (const char*)call_client_resp.data);
-							}
-							else
-							{
-								sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error\"}}", rc);
-							}
-							m_pClient->Free(call_client_resp);
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	/* Interface Vía IP con dos puertos */
-						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &wifi_data, nullptr);
+						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, nullptr);
 						m_pServer->m_pLog->Add(100, "pD32W->GetWifiConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -387,11 +336,35 @@ int main(/*int argc, char** argv, char** env*/void)
 							/* OK */
 							sprintf(message,
 									"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"AP1: %s(%s)\r\nAP2: %s(%s)\r\nHost1: %s:%i\r\nHost1: %s:%i\r\nRqstPath: %s\"}}", 
-									wifi_data.wifi_ap1, wifi_data.wifi_ap1_pass,
-									wifi_data.wifi_ap2, wifi_data.wifi_ap2_pass,
-									wifi_data.wifi_host1,wifi_data.wifi_host1_port,
-									wifi_data.wifi_host2,wifi_data.wifi_host2_port,
-									wifi_data.rqst_path);
+									dom32_wifi_data.wifi_ap1, dom32_wifi_data.wifi_ap1_pass,
+									dom32_wifi_data.wifi_ap2, dom32_wifi_data.wifi_ap2_pass,
+									dom32_wifi_data.wifi_host1,dom32_wifi_data.wifi_host1_port,
+									dom32_wifi_data.wifi_host2,dom32_wifi_data.wifi_host2_port,
+									dom32_wifi_data.rqst_path);
+						}
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error on Send\"}}");
+						}
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						memset(&rbpi_wifi_data, 0, sizeof(RBPiIO::rbpi_config_data));
+
+						rc = pRBPi->GetWifiConfig(json_Direccion_IP->valuestring, &rbpi_wifi_data, nullptr);
+						m_pServer->m_pLog->Add(100, "pRBPi->GetWifiConfig(%s, ...) = %i", 
+											json_Direccion_IP->valuestring,
+											rc);
+						if(rc == 0)
+						{
+							/* OK */
+							sprintf(message,
+									"{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"AP1: %s(%s)\r\nAP2: %s(%s)\r\nHost1: %s:%i\r\nHost1: %s:%i\r\nRqstPath: %s\"}}", 
+									rbpi_wifi_data.wifi_ap1, rbpi_wifi_data.wifi_ap1_pass,
+									rbpi_wifi_data.wifi_ap2, rbpi_wifi_data.wifi_ap2_pass,
+									rbpi_wifi_data.wifi_host1,rbpi_wifi_data.wifi_host1_port,
+									rbpi_wifi_data.wifi_host2,rbpi_wifi_data.wifi_host2_port,
+									rbpi_wifi_data.rqst_path);
 						}
 						else
 						{
@@ -423,11 +396,19 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
+					{
 						/* Interface Vía IP mensajeria HTTP */
 						/* Envío de configuración a WiFi */
 						pD32W->SetTime(json_Direccion_IP->valuestring, nullptr);
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						pRBPi->SetTime(json_Direccion_IP->valuestring, nullptr);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else
@@ -444,30 +425,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_io][%s]", message);
-							m_pServer->Post("dompi_pi_set_io", message, strlen(message));
-						}
-						else
-						{
-							/* remoto */
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_set_io][%s]", message);
-							m_pClient->Post("dompi_pi_set_io", message, strlen(message));
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	
 						/* Interface Vía IP mensajeria HTTP */
 						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
@@ -477,9 +436,18 @@ int main(/*int argc, char** argv, char** env*/void)
 							pD32W->SetIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
 						}
 					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{	
+							pRBPi->SetIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+						}
+					}
 					else
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_hw_set_io] ERROR: HW no soportado");
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else
@@ -496,29 +464,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_switch_io][%s]", message);
-							m_pServer->Post("dompi_pi_switch_io", message, strlen(message));
-						}
-						else
-						{
-							/* remoto */
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_switch_io][%s]", message);
-							m_pClient->Post("dompi_pi_switch_io", message, strlen(message));
-							delete(m_pClient);
-						}
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	
 						/* Interface Vía IP mensajeria HTTP */
 						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
@@ -532,9 +479,22 @@ int main(/*int argc, char** argv, char** env*/void)
 							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
 						}
 					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{
+							pRBPi->SwitchIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+						}
+						else
+						{
+							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
+						}
+					}
 					else
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: HW no soportado");
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else
@@ -551,30 +511,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == 0)
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
-						if( (strlen(json_Direccion_IP->valuestring) == 0 ) || !strcmp(json_Direccion_IP->valuestring, "0.0.0.0") )
-						{
-							/* local */
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_pulse_io][%s]", message);
-							m_pServer->Post("dompi_pi_pulse_io", message, strlen(message));
-						}
-						else
-						{
-							/* remoto */
-							gminit.m_host = json_Direccion_IP->valuestring;
-							gminit.m_port = 5533;
-
-							m_pClient = new CGMClient(&gminit);
-
-							m_pServer->m_pLog->Add(90, "Post [dompi_pi_pulse_io][%s]", message);
-							m_pClient->Post("dompi_pi_pulse_io", message, strlen(message));
-							delete(m_pClient);
-						}
-
-					}
-					else if(atoi(json_Tipo_HW->valuestring) == 1)
-					{	
 						/* Interface Vía IP mensajeria HTTP */
 						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
@@ -588,9 +526,23 @@ int main(/*int argc, char** argv, char** env*/void)
 							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
 						}
 					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						if( atoi(json_Tipo_ASS->valuestring) == 0 ||	/* Salida */
+							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
+							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
+						{
+							/* Enviar mensaje al WiFi */
+							pRBPi->PulseIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+						}
+						else
+						{
+							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
+						}
+					}
 					else
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: HW no soportado");
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
 					}
 				}
 				else

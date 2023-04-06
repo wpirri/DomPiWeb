@@ -101,6 +101,7 @@ using namespace std;
 #include "cdb.h"
 #include "gevent.h"
 #include "strfunc.h"
+#include "defines.h"
 
 #define MAX_BUFFER_LEN 32767
 #define BT_BUF_SIZE 256
@@ -714,7 +715,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( !memcmp(objeto, "port", 4))
 							{
-								/* Actualizar I/O de Dom32IOWiFi */
+								/* Actualizar I/O */
 
 							}
 						}
@@ -1452,15 +1453,9 @@ void CheckUpdateHWConfig()
 					//}
 				}
 
-				if(atoi(json_Tipo->valuestring) == 0)
+				if(atoi(json_Tipo->valuestring) == TIPO_HW_WIFI || atoi(json_Tipo->valuestring) == TIPO_HW_RBPI)
 				{
-					/* RBPi Local */
-
-					/* TODO: Actualizar I/O de RBPi  */
-				}
-				else if(atoi(json_Tipo->valuestring) == 1)
-				{
-					/* Actualizar I/O de Dom32IOWiFi */
+					/* Actualizar I/O de Dom32IOWiFi y RBPi*/
 					json_arr_Assign = cJSON_AddArrayToObject(json_Config, "Ports");
 					sprintf(query, "SELECT Objeto, ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port "
 									"FROM TB_DOM_ASSIGN AS ASS "
