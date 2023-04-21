@@ -25,7 +25,8 @@ inicial=[0,0,0];
 
 // Medidas de la tapa
 ancho=180;
-alto=100;
+alto_tapa_superior=100;
+alto_tapa_inferior=50;
 espesor_tapa=2;
 pared_caja=2;
 
@@ -58,13 +59,20 @@ alto_display=70;
 x_display=0 + (ancho/2) - (ancho_display/2);
 y_display=5 + pared_caja + 5;
 
-module bordes(xyz, b, h)
+// trabas entre las tapas
+posicion_trabas=20;
+ancho_trabas_tapa_superior=3;
+ancho_trabas_tapa_inferior=1;
+largo_trabas_tapa_inferior=2;
+
+
+module bordes(xyz, b, h, hb1, hb2, hb3, hb4)
 {
-    translate(xyz) cube([b, ancho_borde, altura_borde], false);
-    translate(xyz) cube([ancho_borde, h, altura_borde], false);
-    translate(xyz + [b-ancho_borde,0,0]) cube([ancho_borde, h, altura_borde], false);
+    translate(xyz) cube([b, ancho_borde, hb1], false);
+    translate(xyz) cube([ancho_borde, h, hb2], false);
+    translate(xyz + [b-ancho_borde,0,0]) cube([ancho_borde, h, hb3], false);
     
-    translate(xyz + [espesor_tapa,h-espesor_tapa,0]) cube([b - (2*espesor_tapa), espesor_tapa, altura_protector], false);
+    translate(xyz + [espesor_tapa,h-espesor_tapa,0]) cube([b - (2*espesor_tapa), espesor_tapa, hb4], false);
 }
 
 module oreja(xyz)
@@ -88,27 +96,76 @@ module oreja(xyz)
 }
 
 
-module frente(xyz)
+module frente_tapa_superior(xyz)
 {
-    translate(xyz) cube([ancho, alto, espesor_tapa], false);
+    translate(xyz) cube([ancho, alto_tapa_superior, espesor_tapa], false);
 
-    bordes(xyz + [0,0,espesor_tapa], ancho, alto);
+    bordes(xyz + [0,0,espesor_tapa], ancho, alto_tapa_superior, ancho_borde, ancho_borde, ancho_borde, altura_protector);
 
     oreja(xyz + [espesor_tapa,12,espesor_tapa]);
     oreja(xyz + [espesor_tapa,72,espesor_tapa]);
     oreja(xyz + [ancho - (espesor_tapa + espesor_guias),12,espesor_tapa]);
     oreja(xyz + [ancho - (espesor_tapa + espesor_guias),72,espesor_tapa]);
 
-    translate(xyz + [0,posicion_tapa_lateral,espesor_tapa]) cube([espesor_tapa, ancho_tapa_lateral, altura_tapa_lateral], false);
+    translate(xyz + [0,posicion_tapa_lateral,espesor_tapa])
+		cube([espesor_tapa, ancho_tapa_lateral, altura_tapa_lateral], false);
 }
 
+module ventana_display(xyz)
+{
+    translate(xyz + [x_display, y_display, 0.5]) cube([ancho_display, alto_display, espesor_tapa], false);
+}
+
+module trabas_tapa_superior(xyz)
+{
+	translate(xyz + [posicion_trabas-(ancho_trabas_tapa_superior/2),(alto_tapa_superior-espesor_guias),espesor_tapa])
+		cube([ancho_trabas_tapa_superior, espesor_guias, 5]); 
+	translate(xyz + [ancho-posicion_trabas-(ancho_trabas_tapa_superior/2),(alto_tapa_superior-espesor_guias),espesor_tapa])
+		cube([ancho_trabas_tapa_superior, espesor_guias, 5]); 
+}
+
+
+module frente_tapa_inferior(xyz)
+{
+    translate(xyz) cube([ancho, alto_tapa_inferior, espesor_tapa], false);
+
+    bordes(xyz + [0,0,espesor_tapa], ancho, alto_tapa_inferior, ancho_borde, ancho_borde, ancho_borde, ancho_borde);
+
+    oreja(xyz + [espesor_tapa,5,espesor_tapa]);
+    oreja(xyz + [ancho - (espesor_tapa + espesor_guias),5,espesor_tapa]);
+}
+
+module trabas_tapa_inferior(xyz)
+{
+	translate(xyz + [posicion_trabas-(ancho_trabas_tapa_inferior/2),alto_tapa_inferior,espesor_tapa])
+		cube([ancho_trabas_tapa_inferior, largo_trabas_tapa_inferior, altura_borde]); 
+	translate(xyz + [ancho-posicion_trabas-(ancho_trabas_tapa_inferior/2),alto_tapa_inferior,espesor_tapa])
+		cube([ancho_trabas_tapa_inferior, largo_trabas_tapa_inferior, altura_borde]); 
+}
+
+
+
+module TapaSuperior()
+{
+	difference()
+	{
+		frente_tapa_superior(inicial);
+		ventana_display(inicial);
+		trabas_tapa_superior(inicial);
+	}
+}
+
+module TapaInferior()
+{
+	frente_tapa_inferior(inicial);
+	trabas_tapa_inferior(inicial);
+
+}
 
 //
 // Construcción
 //
 
-difference()
-{
-    frente(inicial);
-    translate(inicial + [x_display, y_display, 0]) cube([ancho_display, alto_display, espesor_tapa], false);
-}
+//TapaSuperior();
+
+TapaInferior();
