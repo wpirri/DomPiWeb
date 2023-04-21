@@ -43,7 +43,7 @@ separacion_guias=11;
 ancho_rbpi=58;
 alto_rbpi=49;
 h_rbpi=3;               // Altura del soporte de Raspberry Pi
-x_rbpi=ancho-2.5-pared-ancho_rbpi-40;  // Posicion del soporte superior derecho de Raspberry Pi
+x_rbpi=ancho-pared-ancho_rbpi-55;  // Posicion del soporte superior derecho de Raspberry Pi
 y_rbpi=31;
 
 ancho_display=113.11;
