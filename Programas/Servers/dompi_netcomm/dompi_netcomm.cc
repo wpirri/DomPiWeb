@@ -567,10 +567,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				timer_count = 0;
 				pD32W->Timer();
+				pRBPi->Timer();
 			}
 		}
 
 		pD32W->Task();
+		pRBPi->Task();
 
 		if(json_req) cJSON_Delete(json_req);
 		if(json_resp) cJSON_Delete(json_resp);
