@@ -408,6 +408,10 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 			if(ps)
 			{
 				ps += 4;
+
+				/* Está viniendo algo raro al princiìo de la parte de datos que no la puedo sacar */
+				while(*ps && *ps != '{') ps++;
+
 				strcpy(receive_msg, ps);
 			}
 		}
