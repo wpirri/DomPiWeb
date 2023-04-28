@@ -1,0 +1,84 @@
+https://jorgegarciadev.gitlab.io/post/raspberry_pi_en_qemu/
+
+QEMU
+
+apt install bridge-utils qemu qemu-kvm qemu-system qemu-utils libvirt-clients libvirt-daemon-system virtinst
+
+
+Kernel: https://github.com/dhruvvyas90/qemu-rpi-kernel
+
+qemu-system-arm -kernel kernel-qemu-4.4.34-jessie -cpu arm1176 -m 256M -M versatilepb -serial stdio -append “root=/dev/sda2 rootfstype=ext4 rw” -hda 2017-11-29-raspbian-stretch-lite.img -redir tcp:5022::22 -no-reboot
+
+
+
+
+
+
+https://spad.uk/really-simple-network-bridging-with-qemu/
+
+allow virtbr0 -> /etc/qemu/bridge.conf
+
+apt install bridge-utils
+
+brctl addbr virtbr0
+brctl addif virtbr0 enp7s0
+ip addr add 192.168.10.32/24 dev virtbr0
+ip link set virtbr0 up
+
+
+iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+
+
+en /lib/systemd/system//lib/systemd/system/
+
+[Unit]
+Description=Setup qemu network bridging
+After=network-online.target
+
+[Service]
+Type=oneshot
+Restart=on-failure
+ExecStart=brctl addbr virtbr0
+ExecStart=brctl addif virtbr0 enp3s0
+ExecStart=ip addr add 192.168.0.20/24 dev virtbr0
+ExecStart=ip link set virtbr0 up
+ExecStart=iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+
+[Install]
+WantedBy=multi-user.target 
+
+
+
+
+
+-net nic,model=virtio,macaddr=52:54:00:00:00:01 -net bridge,br=virtbr0
+
+
+
+
+
+============================================================
+
+Con libvirt
+
+Levantar
+virsh net-start default
+Poner en auto
+virsh net-autostart default
+
+
+ver
+ip addr show virbr0
+
+
+virsh net-destroy default
+virsh net-start default
+
+virsh net-edit default
+
+-netdev bridge,id=hn0,br=virbr0
+
+-device virtio-net-pci,netdev=hn0,id=nic1
+
+
+https://beroal.livejournal.com/81163.html
