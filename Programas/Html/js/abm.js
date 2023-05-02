@@ -215,6 +215,26 @@ TipoAuto[4] = { value: 4, label: 'Foto Celula' }
 TipoAuto[5] = { value: 5, label: 'Caldera' }
 TipoAuto[6] = { value: 6, label: 'Pileta' }
 
+var TablaAlarmaE = [];	// Entradas de alarma
+var TablaAlarmaS = [];	// Salidas de alarma
+
+var TipoZonaAlarma = [];
+TipoZonaAlarma[0] = { value: 0, label: 'Normal' }
+TipoZonaAlarma[1] = { value: 1, label: 'Demorada' }
+TipoZonaAlarma[2] = { value: 2, label: 'Incendio' }
+TipoZonaAlarma[3] = { value: 3, label: 'Panico' }
+TipoZonaAlarma[4] = { value: 4, label: 'Emergencia Médica' }
+
+var TipoActivacionAlarma = [];
+TipoActivacionAlarma[0] = { value: 0, label: 'No' }
+TipoActivacionAlarma[1] = { value: 1, label: 'Parcial' }
+TipoActivacionAlarma[2] = { value: 2, label: 'Total' }
+
+var TipoSalidaAlarma = [];
+TipoSalidaAlarma[0] = { value: 0, label: 'Sirena' }
+TipoSalidaAlarma[1] = { value: 1, label: 'Buzer' }
+TipoSalidaAlarma[2] = { value: 2, label: 'Testigo' }
+
 function fillSimpleList(name, list, selected) {
 	if (selected == null) {
 		selected = (-1);
@@ -821,6 +841,8 @@ function fillAssDelete(json_list, dst_div, title) {
 function loadAssTable(json_list) {
 	var x = 0;
 	var y = 0;
+	var ae = 0;
+	var as = 0;
 
 	for (var i = 0; i < json_list.length; i++) { 
 		var item = [];
@@ -829,14 +851,32 @@ function loadAssTable(json_list) {
 		if(json_list[i].Id == 0) {
 			TablaAssIn[x++] = item;
 			TablaAssOut[y++] = item;
+			TablaAlarmaE[ae++] = item;
+			TablaAlarmaS[as++] = item;
 		}
-		else if(json_list[i].Tipo == 1 || 
+		else
+		{
+			if(json_list[i].Tipo ==  1  || 
 				json_list[i].Tipo == 2 || 
 				json_list[i].Tipo == 4 || 
-				json_list[i].Tipo == 6) {
+				json_list[i].Tipo == 6 )
+			{
 				TablaAssIn[x++] = item;
-		} else {
-			TablaAssOut[y++] = item;
+			}
+			if(json_list[i].Tipo ==  0 || 
+				json_list[i].Tipo == 3 || 
+				json_list[i].Tipo == 5  )
+			{
+				TablaAssOut[y++] = item;
+			}
+			if(json_list[i].Tipo ==  3)
+			{
+				TablaAlarmaS[as++] = item;
+			}
+			if(json_list[i].Tipo ==  4)
+			{
+				TablaAlarmaE[ae++] = item;
+			}
 		}
 	}
 }
@@ -1350,6 +1390,92 @@ function fillAlarmPartList(json_list, dst_div, title, index_label, edit_link, zo
 		output += val;
 		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
 		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+function fillAlarmForm(json_list, dst_div, title) {
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) { 
+		output += '<tr>';
+		output += '<th>';
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
+		output += '</th>';
+		output += '<td>';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		} else if(headers[i] == 'Entrada_Act_Total') {
+			output += fillSimpleList(headers[i], TablaAlarmaE);
+		} else if(headers[i] == 'Entrada_Act_Parcial') {
+			output += fillSimpleList(headers[i], TablaAlarmaE);
+		} else if(headers[i] == 'Testigo_Activacion') {
+			output += fillSimpleList(headers[i], TablaAlarmaS);
+		} else if(headers[i] == 'Estado_Activacion') {
+			output += fillSimpleList(headers[i], TipoActivacionAlarma);
+		} else if(headers[i] == 'Objeto_Zona') {
+			output += fillSimpleList(headers[i], TablaAlarmaE);
+		} else if(headers[i] == 'Tipo_Zona') {
+			output += fillSimpleList(headers[i], TipoZonaAlarma);
+		} else if(headers[i] == 'Objeto_Salida') {
+			output += fillSimpleList(headers[i], TablaAlarmaS);
+		} else if(headers[i] == 'Tipo_Salida') {
+			output += fillSimpleList(headers[i], TipoSalidaAlarma);
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		}
+		output += '</td>';
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+}
+
+function fillAlarmEdit(json_list, dst_div, title) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) {
+		output += '<tr>';
+		output += '<th>';
+		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else { output += headers[i]; }
+		output += '</th>';
+		var val = json_list[0][headers[i]]; 
+		if (val == null || val == 'NULL') val = '';   
+		output += '<td>';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		} else if(headers[i] == 'Entrada_Act_Total') {
+			output += fillSimpleList(headers[i], TablaAlarmaE, val);
+		} else if(headers[i] == 'Entrada_Act_Parcial') {
+			output += fillSimpleList(headers[i], TablaAlarmaE, val);
+		} else if(headers[i] == 'Testigo_Activacion') {
+			output += fillSimpleList(headers[i], TablaAlarmaS, val);
+		} else if(headers[i] == 'Estado_Activacion') {
+			output += fillSimpleList(headers[i], TipoActivacionAlarma, val);
+		} else if(headers[i] == 'Objeto_Zona') {
+			output += fillSimpleList(headers[i], TablaAlarmaE, val);
+		} else if(headers[i] == 'Tipo_Zona') {
+			output += fillSimpleList(headers[i], TipoZonaAlarma, val);
+		} else if(headers[i] == 'Objeto_Salida') {
+			output += fillSimpleList(headers[i], TablaAlarmaS, val);
+		} else if(headers[i] == 'Tipo_Salida') {
+			output += fillSimpleList(headers[i], TipoSalidaAlarma, val);
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		}
+		output += '</td>';
 		output += '</tr>\n';
 	}
 	output += '</table>\n';

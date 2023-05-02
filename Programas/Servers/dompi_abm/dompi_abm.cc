@@ -2869,7 +2869,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_query_result = cJSON_CreateArray();
-				sprintf(query, "SELECT Id, Nombre, ActStatus AS Activada, MemStatus AS Memoria "
+				sprintf(query, "SELECT Id, Nombre, Estado_Activacion AS Activada, Estado_Memoria AS Memoria "
 								"FROM TB_DOM_ALARM_PARTICION;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_query_result, query);

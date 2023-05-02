@@ -21,12 +21,13 @@ allow virtbr0 -> /etc/qemu/bridge.conf
 apt install bridge-utils
 
 brctl addbr virtbr0
-brctl addif virtbr0 enp7s0
+brctl addif virtbr0 enp0s3
 ip addr add 192.168.10.32/24 dev virtbr0
 ip link set virtbr0 up
 
 
 iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+iptables -I FORWARD -m enp0s3 --physdev-is-bridged -j ACCEPT
 
 
 en /lib/systemd/system//lib/systemd/system/

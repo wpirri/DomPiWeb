@@ -219,28 +219,34 @@ FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
 Id integer primary key,
 Nombre varchar(128) NOT NULL,
-ActStatus integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
-MemStatus integer DEFAULT 0
+Entrada_Act_Total integer NOT NULL,        -- Entrada que arma total o desarma la particion de la alarma
+Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desarma la particion de la alarma
+Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
+Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
+Estado_Memoria integer DEFAULT 0,
+FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
 Id integer primary key,
 Particion integer NOT NULL,
-Objeto integer NOT NULL,
-Tipo integer DEFAULT 0,                     -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
-Grupo integer DEFAULT 0,                     -- 0= Parcial 1= Total 3= 24Hs
+Objeto_Zona integer NOT NULL,
+Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
+Grupo integer DEFAULT 0,        -- 0= Parcial 1= Total 3= 24Hs
 Activa integer DEFAULT 0,
 FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
 Id integer primary key,
 Particion integer NOT NULL,
-Objeto integer NOT NULL,
-Tipo integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
+Objeto_Salida integer NOT NULL,
+Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
 FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id)
 );
 
 

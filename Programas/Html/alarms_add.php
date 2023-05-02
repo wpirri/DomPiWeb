@@ -18,8 +18,13 @@ include('head-abm.php');
 <div id='alarms_add_div' class='abm-div'></div>
 
 <script type="text/javascript" >
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=get_salida&Id=0', LoadData, false);
+    }
+
     function LoadData(msg) {
-        fillAbmForm(JSON.parse(msg).response, 'alarms_add_div', '<?php echo $TITLE; ?>');
+        fillAlarmForm(JSON.parse(msg).response, 'alarms_add_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {
@@ -29,7 +34,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=get_salida&Id=0', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 

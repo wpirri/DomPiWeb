@@ -18,8 +18,13 @@ include('head-abm.php');
 <div id='alarmz_edit_div' class='abm-div'></div>
 
 <script type="text/javascript" >
+    function LoadAssData(msg) {
+        loadAssTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=get_zona&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+    }
+
     function LoadData(msg) {
-        fillAbmEdit(JSON.parse(msg).response, 'alarmz_edit_div', '<?php echo $TITLE; ?>');
+        fillAlarmEdit(JSON.parse(msg).response, 'alarmz_edit_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {
@@ -29,7 +34,7 @@ include('head-abm.php');
     }
 
     function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=get_zona&Id=<?php echo $_GET['Id']; ?>', LoadData, false);
+        newAJAXCommand('/cgi-bin/abmassign.cgi', LoadAssData, false);
     }
 </script>
 
