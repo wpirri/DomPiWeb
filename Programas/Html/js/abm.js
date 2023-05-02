@@ -1407,10 +1407,13 @@ function fillAlarmForm(json_list, dst_div, title) {
 		output += '<tr>';
 		output += '<th>';
 		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else if(headers[i] == 'Particion') { output += '&nbsp;'; }
 		else { output += headers[i]; }
 		output += '</th>';
 		output += '<td>';
 		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		} else if(headers[i] == 'Particion') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		} else if(headers[i] == 'Entrada_Act_Total') {
 			output += fillSimpleList(headers[i], TablaAlarmaE);
@@ -1449,12 +1452,15 @@ function fillAlarmEdit(json_list, dst_div, title) {
 		output += '<tr>';
 		output += '<th>';
 		if(headers[i] == 'Id') { output += '&nbsp;'; }
+		else if(headers[i] == 'Particion') { output += '&nbsp;'; }
 		else { output += headers[i]; }
 		output += '</th>';
 		var val = json_list[0][headers[i]]; 
 		if (val == null || val == 'NULL') val = '';   
 		output += '<td>';
 		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		} else if(headers[i] == 'Particion') {
 			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		} else if(headers[i] == 'Entrada_Act_Total') {
 			output += fillSimpleList(headers[i], TablaAlarmaE, val);

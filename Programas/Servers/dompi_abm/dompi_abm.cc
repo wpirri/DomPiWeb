@@ -3040,7 +3040,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
 				}
-
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -3151,6 +3150,19 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
 					{
+						/* Borrado de salidas */
+						sprintf(query, "DELETE FROM TB_DOM_ALARM_SALIDA WHERE Particion = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						/* Borrado de entradas */
+						sprintf(query, "DELETE FROM TB_DOM_ALARM_ZONA WHERE Particion = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						/* Borrado de la particion */
 						sprintf(query, "DELETE FROM TB_DOM_ALARM_PARTICION WHERE Id = %s;", json_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(NULL, query);
@@ -3404,9 +3416,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Particion)
 				{
 					json_query_result = cJSON_CreateArray();
-					sprintf(query, "SELECT Z.Id AS Id,  A.Objeto AS Nombre, Z.Tipo AS Tipo, Z.Grupo AS Grupo "
+					sprintf(query, "SELECT Z.Id AS Id,  A.Objeto AS Nombre, Z.Tipo_Zona AS Tipo, Z.Grupo AS Grupo "
 									"FROM TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-									"WHERE Z.Objeto = A.Id AND Z.Particion = \'%s\';", json_Particion->valuestring);
+									"WHERE Z.Objeto_Zona = A.Id AND Z.Particion = \'%s\';", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_query_result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -3804,9 +3816,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Particion)
 				{
 					json_query_result = cJSON_CreateArray();
-					sprintf(query, "SELECT S.Id AS Id,  A.Objeto AS Nombre, S.Tipo AS Tipo "
+					sprintf(query, "SELECT S.Id AS Id,  A.Objeto AS Nombre, S.Tipo_Salida AS Tipo "
 									"FROM TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
-									"WHERE S.Objeto = A.Id AND S.Particion = \'%s\';", json_Particion->valuestring);
+									"WHERE S.Objeto_Salida = A.Id AND S.Particion = \'%s\';", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_query_result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());

@@ -25,6 +25,7 @@ include('head-abm.php');
 
     function LoadData(msg) {
         fillAlarmForm(JSON.parse(msg).response, 'alarmz_add_div', '<?php echo $TITLE; ?>');
+        document.getElementById('Particion').value = '<?php echo $_GET['Particion']; ?>';
     }
 
     function SaveData() {
