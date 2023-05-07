@@ -100,6 +100,7 @@ using namespace std;
 #include "config.h"
 #include "cdb.h"
 #include "gevent.h"
+#include "alarma.h"
 #include "strfunc.h"
 #include "defines.h"
 
@@ -112,6 +113,7 @@ DPConfig *pConfig;
 int internal_timeout;
 CDB *pDB;
 GEvent *pEV;
+CAlarma *pAlarma;
 cJSON *json_System_Config;
 
 time_t last_daily;
@@ -127,6 +129,7 @@ void CheckDaily();
 void LoadSystemConfig(void);
 int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
+
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -197,6 +200,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Segundos;
 	cJSON *json_Planta;
 	cJSON *json_Id;
+	cJSON *json_Nombre;
 	cJSON *json_Config;
 	
 	last_daily = 0;
@@ -250,6 +254,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	LoadSystemConfig();
 
 	pEV = new GEvent(pDB, m_pServer);
+	pAlarma = new CAlarma(pDB, m_pServer);
 
 	m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_status", GM_MSG_TYPE_CR);
@@ -263,6 +268,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_auto_info", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_enable", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_disable", GM_MSG_TYPE_CR);
+
+    m_pServer->Suscribe("dompi_alarm_part_info", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_part_status", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_part_on_total", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_part_on_parcial", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_part_off", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_zona_enable", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_zona_disable", GM_MSG_TYPE_CR);
 
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
@@ -291,9 +304,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_HW_Id)
 				{
 					rc = pEV->ExtIOEvent(message);
-					message[0] = 0;
+					//message[0] = 0;
 					if(rc == 1)
 					{
+						pAlarma->ExtIOEvent(message);
+						message[0] = 0;
 						/* OK */
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						/* Si está todo bien me fijo si pidio enviar configuracion */
@@ -903,6 +918,238 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			/* ****************************************************************
+			*		dompi_alarm_part_info
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_info"))
+			{
+
+			}
+			/* ****************************************************************
+			*		dompi_alarm_part_on_total
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_on_total"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+
+				if(json_Id)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 2 "
+									"WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+				else if(json_Nombre)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 2 "
+									"WHERE Id = %s;", json_Nombre->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_part_on_parcial
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_on_parcial"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+
+				if(json_Id)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 1 "
+									"WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+				else if(json_Nombre)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 1 "
+									"WHERE Id = %s;", json_Nombre->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_part_off
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_off"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+
+				if(json_Id)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 0 "
+									"WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+				else if(json_Nombre)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
+									"SET ActStatus = 0 "
+									"WHERE Id = %s;", json_Nombre->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_zona_enable
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_zona_enable"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+
+				if(json_Id)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_ZONA "
+									"SET Activa = 1 "
+									"WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_zona_disable
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_zona_disable"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+
+				if(json_Id)
+				{
+					sprintf(query,  "UPDATE TB_DOM_ALARM_ZONA "
+									"SET Activa = 0 "
+									"WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+					if(rc <= 0)
+					{
+						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
 			*		dompi_cloud_notification
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_cloud_notification"))
@@ -1048,6 +1295,14 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_auto_info", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_enable", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_disable", GM_MSG_TYPE_CR);
+
+    m_pServer->UnSuscribe("dompi_alarm_part_info", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_part_status", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_part_on_total", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_part_on_parcial", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_part_off", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_zona_enable", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_zona_disable", GM_MSG_TYPE_CR);
 
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);
@@ -1697,3 +1952,4 @@ void CheckWiegandData( void )
 	}
 	cJSON_Delete(QueryResult);
 }
+
