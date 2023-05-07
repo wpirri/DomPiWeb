@@ -26,7 +26,7 @@ inicial=[0,0,0];
 // Medidas de la caja
 ancho=180;
 alto=150;
-profundidad=45;
+profundidad=50;
 pared=2;
 
 // Detalles de la caja
@@ -35,7 +35,7 @@ ancho_ventana=40;       // ventana lateral para acceso a puertos de Raspberry Pi
 posicion_ventana=29;
 
 pos_tornillo_y=17;      // Tornillos de sujeccion para las pestañas de la tapa
-pos_tornillo_h=36;
+pos_tornillo_h=profundidad - 9;
 separacion_tornillos=60;
 espesor_guias=1;        // Guias para las pestañas de la tapa
 separacion_guias=11;
@@ -48,7 +48,7 @@ y_rbpi=31;
 
 ancho_display=113.11;
 alto_display=85.92;
-h_display=35;           // Altura del soporte del display
+h_display=profundidad-10;           // Altura del soporte del display
 x_display=(ancho/2) - (ancho_display/2);        // Posicion del soporte superios derecho del display
 y_display=pared+5;
 
@@ -153,13 +153,17 @@ module perf_tornillo_tapa(xyz)
     translate(xyz + [0,separacion_tornillos,0])
         rotate(a=[0,90,0])
         cylinder(ancho, r = 1, $fn = 100);
+
+    translate([xyz.x, alto - 10, xyz.z ])
+        rotate(a=[0,90,0])
+        cylinder(ancho, r = 1, $fn = 100);
 }
 
 module entrada_12v(xyz)
 {
     translate(xyz)
         rotate(a=[0,90,0])
-        cylinder(pared, r = 1, $fn = 100);
+        cylinder(pared, r = 5, $fn = 100);
 }
 
 module entrada_cables(xyz, ancho_ec, alto_ec)
@@ -180,7 +184,7 @@ difference()
     ventana_lateral(inicial);
     perf_tornillo_tapa(inicial + [0,pos_tornillo_y,pos_tornillo_h]);
     entrada_cables([pared+5, alto-pared-5-25,0], 35, 25);
-    entrada_12v(inicial + [0,alto-50,profundidad/2]);
+    entrada_12v(inicial + [0,17,10]);
 }
 
 guias_tapa(inicial);

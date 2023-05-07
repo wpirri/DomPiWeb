@@ -113,7 +113,7 @@ module frente_tapa_superior(xyz)
 
 module ventana_display(xyz)
 {
-    translate(xyz + [x_display, y_display, 0.5]) cube([ancho_display, alto_display, espesor_tapa], false);
+    translate(xyz + [x_display, y_display, 0]) cube([ancho_display, alto_display, espesor_tapa], false);
 }
 
 module trabas_tapa_superior(xyz)
@@ -155,6 +155,15 @@ module TapaSuperior()
 	}
 }
 
+module TapaSuperiorCiega()
+{
+	difference()
+	{
+		frente_tapa_superior(inicial);
+		trabas_tapa_superior(inicial);
+	}
+}
+
 module TapaInferior()
 {
 	frente_tapa_inferior(inicial);
@@ -167,5 +176,5 @@ module TapaInferior()
 //
 
 //TapaSuperior();
-
-TapaInferior();
+TapaSuperiorCiega();
+//TapaInferior();
