@@ -131,7 +131,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_un_obj;
     STRFunc str;
 
-    m_pServer->m_pLog->Add(100, "[ExtIOEvent] json_evt: %s", json_evt);
+    m_pServer->m_pLog->Add(100, "[GEvent::ExtIOEvent] json_evt: %s", json_evt);
 
     json_obj = cJSON_Parse(json_evt);
     if(json_obj)
