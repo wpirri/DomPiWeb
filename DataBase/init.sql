@@ -25,3 +25,4 @@ INSERT INTO TB_DOM_AT (Id, Agenda, Objeto_Destino, Grupo_Destino, Funcion_Destin
 
 CREATE USER 'dompi_web'@'%' IDENTIFIED BY 'dompi_web'; 
 GRANT SELECT, INSERT, UPDATE, DELETE ON DB_DOMPIWEB.* TO 'dompi_web'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;

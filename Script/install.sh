@@ -46,7 +46,7 @@ if [ ! -x /usr/share/doc/libapache2-mod-php ]; then
     exit 1
 fi
 
-if [ ! -x /usr/lib/x86_64-linux-gnu/libcjson.so && ! -L /usr/lib/x86_64-linux-gnu/libcjson.so ]; then
+if [ ! -x /usr/lib/x86_64-linux-gnu/libcjson.so ]; then
     echo "No se encuentra libcjson.so"
     echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
     exit 1
@@ -114,4 +114,4 @@ a2enmod cgi
 service apache2 restart
 
 # Limpiesa final
-#rm -rv $SYTEM_HOME/*
+rm -rv $SYTEM_HOME/*
