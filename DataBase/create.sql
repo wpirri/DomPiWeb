@@ -69,6 +69,8 @@ Flags integer DEFAULT 0
 # ALTER TABLE TB_DOM_CONFIG ADD COLUMN Rqst_Path varchar(256);
 # ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_1_Address varchar(64);
 # ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_2_Address varchar(64);
+#ALTER TABLE TB_DOM_CONFIG ADD COLUMN Usuario_Cloud varchar(256);
+#ALTER TABLE TB_DOM_CONFIG ADD COLUMN Clave_Cloud varchar(256);
 
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
@@ -80,7 +82,8 @@ Pin_SMS varchar(32),
 Pin_WEB varchar(32),
 Telefono_Voz varchar(32),
 Telefono_SMS varchar(32),
-eMail varchar(64),
+Usuario_Cloud varchar(256),
+Clave_Cloud varchar(256),
 Tarjeta varchar(256),
 Permisos varchar(128),
 Dias_Semana varchar(128),

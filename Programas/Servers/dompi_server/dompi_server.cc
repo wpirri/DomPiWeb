@@ -1475,7 +1475,6 @@ void AssignTask( void )
 				/* Se envía a todos */
 				rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 
-				/* Notifico a la nube. Al server mas libre. Sin esperar respuesta */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 				/* Se envía a todos */
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));

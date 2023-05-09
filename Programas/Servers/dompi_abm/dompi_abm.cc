@@ -88,6 +88,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Id;
 	cJSON *json_Nombre;
 	cJSON *json_Particion;
+	cJSON *json_Cloud_Message;
 
 	load_system_config = 0;
 	update_hw_config_id = 0;
@@ -383,6 +384,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
 				cJSON_AddStringToObject(json_obj, "Id", temp_s);
 
+				json_Cloud_Message = cJSON_CreateObject();
+
 				json_un_obj = json_obj;
 				while( json_un_obj )
 				{
@@ -423,6 +426,11 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "'");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
+
+										if( (!strcmp(json_un_obj->string, "Usuario_Cloud") || !strcmp(json_un_obj->string, "Clave_Cloud") ) && strlen(json_un_obj->valuestring) )
+										{
+											cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
+										}
 									}
 								}
 							}
@@ -451,6 +459,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				/* Si tiene los datos necesarios actualizo el usuario para la app */
+				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Usuario_Cloud") && 
+				    cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Clave_Cloud")    )
+				{
+					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
+					/* Se envía a todos */
+					m_pServer->Notify("dompi_user_change", message, strlen(message));
+				}
+				cJSON_Delete(json_Cloud_Message);
+
 			}
 			/* ****************************************************************
 			*		dompi_user_delete
@@ -503,6 +523,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
+				json_Cloud_Message = cJSON_CreateObject();
+
 				json_un_obj = json_obj;
 				while( json_un_obj )
 				{
@@ -539,6 +561,11 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_values, "='");
 											strcat(query_values, json_un_obj->valuestring);
 											strcat(query_values, "'");
+
+											if( (!strcmp(json_un_obj->string, "Usuario_Cloud") || !strcmp(json_un_obj->string, "Clave_Cloud") ) && strlen(json_un_obj->valuestring) )
+											{
+												cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
+											}
 										}
 									}
 								}
@@ -571,6 +598,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				/* Si tiene los datos necesarios actualizo el usuario para la app */
+				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Usuario_Cloud") && 
+				    cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Clave_Cloud")    )
+				{
+					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
+					/* Se envía a todos */
+					m_pServer->Notify("dompi_user_change", message, strlen(message));
+				}
+				cJSON_Delete(json_Cloud_Message);
+
 			}
 			/* ****************************************************************
 			*		dompi_user_check
@@ -3925,6 +3964,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 		if(load_system_config)
 		{
+			load_system_config = 0;
 			LoadSystemConfig();
 			/* Mando a todos a releer la configuración */
 			m_pServer->Post("dompi_reload_config", nullptr, 0);

@@ -133,6 +133,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	LoadSystemConfig();
 
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 
 	m_pServer->m_pLog->Add(1, "Interface con la nube inicializada.");
@@ -170,6 +171,52 @@ int main(/*int argc, char** argv, char** env*/void)
 				else
 				{
 					m_pServer->m_pLog->Add(1, "[dompi_ass_change] No hay servidores definodos para reporte a la nube");
+					rc = (-1);
+				}
+
+
+				if( rc > 0 && strlen(message) )
+				{
+					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
+					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
+					json_obj = cJSON_Parse(message);
+					//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+					//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+					json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+					if(json_arr && cJSON_IsArray(json_arr))
+					{
+						cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+					}
+				}
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT, no se responde */
+			{
+				m_pServer->Resp(NULL, 0, GME_OK);
+
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+
+				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+				cJSON_Delete(json_obj);
+				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
+				if(m_CloudHost1Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
+				}
+				else if(m_CloudHost2Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_user_change] No hay servidores definodos para reporte a la nube");
 					rc = (-1);
 				}
 
@@ -273,6 +320,7 @@ void OnClose(int sig)
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
 	m_pServer->UnSuscribe("dompi_ass_change", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_user_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;
