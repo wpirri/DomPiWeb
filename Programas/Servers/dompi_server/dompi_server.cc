@@ -1329,6 +1329,8 @@ void CheckHWOffline( void )
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 
+	m_pServer->m_pLog->Add(100, "[CheckHWOffline]");
+
 	/* Dispositivos offline */
 	t = time(&t);
 	json_QueryArray = cJSON_CreateArray();
@@ -1375,6 +1377,8 @@ void GroupTask( void )
 	cJSON *json_Grupo;
 	cJSON *json_Listado_Objetos;
 	cJSON *json_Estado;
+
+	m_pServer->m_pLog->Add(100, "[GroupTask]");
 
 	json_QueryArray = cJSON_CreateArray();
 	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE ACTUALIZAR = 1;");
@@ -1441,6 +1445,8 @@ void AssignTask( void )
 	cJSON *json_Tipo_ASS;
 	int iEstado;
 
+
+	m_pServer->m_pLog->Add(100, "[AssignTask]");
 
 	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
 	json_QueryArray = cJSON_CreateArray();
@@ -1524,6 +1530,8 @@ void CheckTask()
 	cJSON *json_Condicion_Igualdad;
 	cJSON *json_Condicion_Valor;
 	
+	m_pServer->m_pLog->Add(100, "[CheckTask]");
+
 	t = time(&t);
 	now = localtime(&t);
 
@@ -1650,6 +1658,8 @@ void CheckUpdateHWConfig()
     cJSON *json_Flags;
 
 
+	m_pServer->m_pLog->Add(100, "[CheckUpdateHWConfig]");
+
 	/* Controlo si hay que actualizar configuración de dispositivo */
 	json_arr_Perif = cJSON_CreateArray();
 	sprintf(query, "SELECT * "
@@ -1760,6 +1770,8 @@ void CheckDaily()
 	struct tm *tmNow, *tmLastDaily;
 	int day_now, day_last;
 
+	m_pServer->m_pLog->Add(100, "[CheckDaily]");
+
 	now = time(&now);
 	tmNow = localtime(&now);
 	day_now = tmNow->tm_mday;
@@ -1779,6 +1791,8 @@ void LoadSystemConfig(void)
 	int rc;
 
 	if(pDB == NULL) return;
+
+	m_pServer->m_pLog->Add(100, "[LoadSystemConfig]");
 
 	if(json_System_Config) cJSON_Delete(json_System_Config);
 	json_System_Config = cJSON_CreateArray();
@@ -1811,6 +1825,8 @@ int CheckWirelessCard( const char* card )
 	cJSON *Estado;
 
 	int i_now, i_desde, i_hasta;
+
+	m_pServer->m_pLog->Add(100, "[CheckWirelessCard]");
 
 	t = time(&t);
 	now = localtime(&t);
