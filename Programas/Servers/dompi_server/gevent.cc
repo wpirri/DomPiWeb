@@ -561,19 +561,15 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                 /* Controlo servicio Habilitado */
                 if(atoi(Habilitado->valuestring) == 0)
                 {
-                    if(atoi(Estado->valuestring) == 1) 
-                    {
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por inhabilitado.", Objeto->valuestring);
-                        enviar = 2;
-                    }
+                    m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] inhabilitado.", Objeto->valuestring);
                     break;
                 }
-                /* Controlo día de la semana habilitado */
+                /* Controlo día de la semana vigente */
                 if( !strstr(Dias_Semana->valuestring, dia))
                 {
                     if(atoi(Estado->valuestring) == 1)
                     {
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por día de la semana.", Objeto->valuestring);
+                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por día de la semana.", Objeto->valuestring);;
                         enviar = 2;
                     }
                     break;
@@ -632,7 +628,6 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                     {
                         Enviar_Max = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar_Max");
                         enviar = atoi(Enviar_Max->valuestring);
-                        set_estado = 1;
                         m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] %s por sensor (MAX).", Objeto->valuestring, tablaAccion[enviar]);
                         break;
                     }
@@ -648,12 +643,17 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                 else
                 {
                     /* Si no hay sensor definido */
-                    enviar = 1;
-                    break;
+                    if(atoi(Estado->valuestring) == 0)
+                    {
+                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] encendiendo sin sensor.", Objeto->valuestring);
+                        enviar = 1;
+                        break;
+                    }
                 }
 
                 break;
             } while(1);
+
             /* Si la condicion lo permite ejecuto según corresponda */
             if( enviar > 0 )
             {
@@ -678,6 +678,9 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                     ChangeVarById(   atoi(Variable_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
+
+                if(enviar == 1) set_estado = 1;
+                else set_estado = 0;
 
                 sprintf(query, "UPDATE TB_DOM_AUTO SET Estado = %i WHERE Id = %s;", set_estado, Id->valuestring);
                 m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
