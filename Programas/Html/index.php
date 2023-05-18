@@ -52,8 +52,8 @@ function updateLocalStatus(msg) {
 	for (var i = 0; i < jsonData.length; i++) { 
 		//jsonData[i].Objeto
 		//jsonData[i].Port
-		//jsonData[i].Icono0
-		//jsonData[i].Icono1
+		//jsonData[i].Icono_Apagado
+		//jsonData[i].Icono_Encendido
 		//jsonData[i].Estado
 		//jsonData[i].Tipo
 		//jsonData[i].Perif_Data

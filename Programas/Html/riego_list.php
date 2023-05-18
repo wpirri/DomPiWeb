@@ -17,7 +17,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAbmList(JSON.parse(msg).response, 'riego_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'riego_edit.php', 'riego_delete.php');
+        fillRiegoList(JSON.parse(msg).response, 'riego_list_table_div', '<?php echo $TITLE; ?>', 'Id', 'riego_edit.php', 'riego_delete.php');
     }
 
     function OnLoad() {

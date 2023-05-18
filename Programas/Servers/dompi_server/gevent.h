@@ -37,6 +37,8 @@ public:
     int ChangeFcnById(int id, int accion, int param);
     int ChangeVarByName(const char* name, int accion, int param);
     int ChangeVarById(int id, int accion, int param);
+    int ChangeAutoByName(const char* name, int accion, int param);
+    int ChangeAutoById(int id, int accion, int param);
 
 private:
     CDB *m_pDB;

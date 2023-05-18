@@ -16,7 +16,7 @@
 
         $Cord_x = $obj_list[$i]['Cord_x'];
         $Cord_y = $obj_list[$i]['Cord_y'];
-        //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono0']."</p>";
+        //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono_Apagado']."</p>";
         echo "#id-".$Objeto." {";
             echo "  z-index: 20;";
             echo "  border: 0px;";

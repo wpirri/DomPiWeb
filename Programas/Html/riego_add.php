@@ -19,7 +19,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAnalogForm(JSON.parse(msg).response, 'riego_add_div', '<?php echo $TITLE; ?>');
+        fillRiegoForm(JSON.parse(msg).response, 'riego_add_div', '<?php echo $TITLE; ?>');
         document.getElementById('Tipo').value = '1';
     }
 

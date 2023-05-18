@@ -19,7 +19,7 @@ include('head-abm.php');
 
 <script type="text/javascript" >
     function LoadData(msg) {
-        fillAnalogEdit(JSON.parse(msg).response, 'riego_edit_div', '<?php echo $TITLE; ?>');
+        fillRiegoEdit(JSON.parse(msg).response, 'riego_edit_div', '<?php echo $TITLE; ?>');
     }
 
     function LoadAssData(msg) {

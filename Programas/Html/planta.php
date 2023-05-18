@@ -64,8 +64,8 @@ function updateHomeStatus(msg) {
 	for (var i = 0; i < jsonData.length; i++) { 
 		//jsonData[i].Objeto
 		//jsonData[i].Port
-		//jsonData[i].Icono0
-		//jsonData[i].Icono1
+		//jsonData[i].Icono_Apagado
+		//jsonData[i].Icono_Encendido
 		//jsonData[i].Estado
 		//jsonData[i].Tipo
 		//jsonData[i].Perif_Data
@@ -83,10 +83,14 @@ function updateHomeStatus(msg) {
 				document.getElementById('id-'+objId).innerHTML = '&nbsp;' + jsonData[i].Perif_Data + '&nbsp;';
 			}
 		} else {
-			if(jsonData[i].Estado == 1) {
-				document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono1;
+			if(jsonData[i].Estado == 0) {
+				document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono_Apagado;
+			} else if(jsonData[i].Estado == 1) {
+				document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono_Encendido;
+			} else if(jsonData[i].Estado == 2) {
+				document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono_Auto;
 			} else {
-				document.getElementById('id-'+objId).src = 'images/' + jsonData[i].Icono0;
+				document.getElementById('id-'+objId).src = 'images/no.png';
 			}
 		}
 	}

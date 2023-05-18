@@ -129,6 +129,7 @@ void CheckDaily();
 void LoadSystemConfig(void);
 int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
+void AutoChangeNotify(void);
 
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
@@ -238,7 +239,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
-	m_pServer->m_pLog->Add(10, "Conectado a la base de datos DB_DOMPIWEB...");
+	m_pServer->m_pLog->Add(10, "Conectando a la base de datos DB_DOMPIWEB...");
 	pDB = new CDB(db_host, "DB_DOMPIWEB", db_user, db_password);
 	if(pDB->Open() != 0)
 	{
@@ -361,17 +362,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -405,17 +406,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -761,7 +762,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Estado,Estado_Sensor,Estado_Salida "
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Estado,Estado_Sensor,Estado_Salida "
 									"FROM TB_DOM_AUTO "
 									"WHERE Id = %s;", json_Id->valuestring);
 				}
@@ -769,13 +770,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Estado,Estado_Sensor,Estado_Salida "
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Estado,Estado_Sensor,Estado_Salida "
 										"FROM TB_DOM_AUTO "
 										"WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Estado,Estado_Sensor,Estado_Salida "
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Estado,Estado_Sensor,Estado_Salida "
 										"FROM TB_DOM_AUTO;");
 					}
 				}
@@ -810,19 +811,19 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y "
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
 									"FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y "
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
 										"FROM TB_DOM_AUTO WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y "
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
 										"FROM TB_DOM_AUTO;");
 					}
 				}
@@ -1175,15 +1176,47 @@ int main(/*int argc, char** argv, char** env*/void)
 
 							if( !strcmp(json_Accion->valuestring, "on"))
 							{
-								pEV->ChangeAssignByName(json_Objeto->valuestring, 1, 0);
+								if(pEV->ChangeAssignByName(json_Objeto->valuestring, 1, 0) <= 0)
+								{
+									/* Si no es un assign pruebo con un gupo */
+									if(pEV->ChangeGroupByName(json_Objeto->valuestring, 1, 0) <= 0)
+									{
+										/* Si no es un grupo pruebo con un automatismo */
+										pEV->ChangeAutoByName(json_Objeto->valuestring, 1, 0);
+									}
+								}
 							}
 							else if( !strcmp(json_Accion->valuestring, "off"))
 							{
-								pEV->ChangeAssignByName(json_Objeto->valuestring, 2, 0);
+								if(pEV->ChangeAssignByName(json_Objeto->valuestring, 2, 0) <= 0)
+								{
+									/* Si no es un assign pruebo con un gupo */
+									if(pEV->ChangeGroupByName(json_Objeto->valuestring, 2, 0) <= 0)
+									{
+										/* Si no es un grupo pruebo con un automatismo */
+										pEV->ChangeAutoByName(json_Objeto->valuestring, 2, 0);
+									}
+								}
 							}
 							else if( !strcmp(json_Accion->valuestring, "switch"))
 							{
-								pEV->ChangeAssignByName(json_Objeto->valuestring, 3, 0);
+								if(pEV->ChangeAssignByName(json_Objeto->valuestring, 3, 0) <= 0)
+								{
+									/* Si no es un assign pruebo con un gupo */
+									if(pEV->ChangeGroupByName(json_Objeto->valuestring, 3, 0) <= 0)
+									{
+										/* Si no es un grupo pruebo con un automatismo */
+										pEV->ChangeAutoByName(json_Objeto->valuestring, 3, 0);
+									}
+								}
+							}
+							else if( !strcmp(json_Accion->valuestring, "pulse"))
+							{
+								pEV->ChangeAssignByName(json_Objeto->valuestring, 4, 0);
+							}
+							else if( !strcmp(json_Accion->valuestring, "auto"))
+							{
+								pEV->ChangeAutoByName(json_Objeto->valuestring, 5, 0);
 							}
 						}
 					}
@@ -1268,6 +1301,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			pEV->CheckAuto(0, nullptr, 0);
 
 			CheckHWOffline();
+
+			AutoChangeNotify();
 
 			/* Controles del modulo de alarma */
 
@@ -1381,7 +1416,7 @@ void GroupTask( void )
 	m_pServer->m_pLog->Add(100, "[GroupTask]");
 
 	json_QueryArray = cJSON_CreateArray();
-	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE ACTUALIZAR = 1;");
+	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE Actualizar = 1;");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
@@ -1863,7 +1898,7 @@ int CheckWirelessCard( const char* card )
 	if(!card) return 0;
 	if(strlen(card) == 0) return 0;
 
-	m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Tarjeta: %s", card);
+	m_pServer->m_pLog->Add(50, "[CheckWirelessCard] Tarjeta: %s", card);
 
 	QueryResult = cJSON_CreateArray();
 	sprintf(query, "SELECT Nombre_Completo, Permisos, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
@@ -1873,7 +1908,7 @@ int CheckWirelessCard( const char* card )
 	rc = pDB->Query(QueryResult, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(QueryRow, QueryResult)
@@ -1920,6 +1955,10 @@ int CheckWirelessCard( const char* card )
 				}
 			}
 		}
+	}
+	else if(rc == 0)
+	{
+		m_pServer->m_pLog->Add(50, "[CheckWirelessCard] Tarjeta: %s desconocida", card);
 	}
 	cJSON_Delete(QueryResult);
 
@@ -1972,3 +2011,72 @@ void CheckWiegandData( void )
 	cJSON_Delete(QueryResult);
 }
 
+void AutoChangeNotify( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	char *id, *p;
+	int accion;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+	cJSON *json_Id;
+	cJSON *json_Objeto;
+	cJSON *json_Tipo;
+	cJSON *json_Estado;
+
+	int i_tipo;
+	int i_id;
+	char s_tipo[16];
+	char s_id[16];
+
+	m_pServer->m_pLog->Add(100, "[GroupTask]");
+
+	json_QueryArray = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Actualizar = 1;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
+			m_pServer->m_pLog->Add(20, "[AutoChangeNotify] Actualizando estado de automatismo [%s]", json_Objeto->valuestring);
+
+			/* Cambio el Id (le sumo 10000) */
+			i_id = atoi(json_Id->valuestring);
+			sprintf(s_id, "%d", i_id + 10000);
+			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Id");
+			cJSON_AddStringToObject(json_QueryRow, "Id", s_tipo);
+
+			/* Cambio el Tipo (le sumo 10) */
+			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
+			i_tipo = atoi(json_Tipo->valuestring);
+			sprintf(s_tipo, "%d", i_tipo + 10);
+			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Tipo");
+			cJSON_AddStringToObject(json_QueryRow, "Tipo", s_tipo);
+
+			/* Cambio el estado por el valor de Habilitado */
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Habilitado");
+			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Estado");
+			cJSON_AddStringToObject(json_QueryRow, "Estado", json_Estado->valuestring);
+
+			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+			m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+			/* Se envía a todos */
+			m_pServer->Notify("dompi_ass_change", message, strlen(message));
+
+			sprintf(query, "UPDATE TB_DOM_AUTO "
+							"SET Actualizar = 0 "
+							"WHERE Id = %i;", i_id);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}

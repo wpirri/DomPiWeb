@@ -116,7 +116,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
-	m_pServer->m_pLog->Add(10, "Conectado a la base de datos DB_DOMPIWEB...");
+	m_pServer->m_pLog->Add(10, "Conectando a la base de datos DB_DOMPIWEB...");
 	pDB = new CDB(db_host, "DB_DOMPIWEB", db_user, db_password);
 	if(pDB->Open() != 0)
 	{
@@ -170,7 +170,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 				else
 				{
-					m_pServer->m_pLog->Add(1, "[dompi_ass_change] No hay servidores definodos para reporte a la nube");
+					m_pServer->m_pLog->Add(1, "[dompi_ass_change] No hay servidores definidos para reporte a la nube");
 					rc = (-1);
 				}
 
@@ -194,7 +194,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT, no se responde */
+			else if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT, no se responde */
 			{
 				m_pServer->Resp(NULL, 0, GME_OK);
 
@@ -336,6 +336,13 @@ void UpdateCloud( void )
 	cJSON *json_QueryRow;
 	cJSON *json_Message;
 	cJSON *json_Resp;
+	cJSON *json_Id;
+	cJSON *json_Tipo;
+	cJSON *json_Estado;
+
+	int i_tipo;
+	char s_tipo[10];
+
 	time_t t;
 
 	t = time(&t);
@@ -345,9 +352,8 @@ void UpdateCloud( void )
 		/* Actualizacion de objetos en la nube cada 10 min */
 		update_ass_t = t + 600;
 
-		json_QueryArray = cJSON_CreateArray();
-
 		/* Genero un listado de los objetos con su estado para subir a la nube */
+		json_QueryArray = cJSON_CreateArray();
 		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 		rc = pDB->Query(json_QueryArray, query);
@@ -357,6 +363,7 @@ void UpdateCloud( void )
 		{
 			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 			{
+				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
 
@@ -393,6 +400,75 @@ void UpdateCloud( void )
 			}
 		}
 		cJSON_Delete(json_QueryArray);
+
+		/* Genero un listado de los automatismos con su estado para subir a la nube */
+		json_QueryArray = cJSON_CreateArray();
+		strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Id > 0;");
+		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+		rc = pDB->Query(json_QueryArray, query);
+		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+		if(rc >= 0)
+		{
+			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+			{
+				/* Cambio el Id (le sumo 10000) */
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+				i_tipo = atoi(json_Id->valuestring);
+				sprintf(s_tipo, "%d", i_tipo + 10000);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Id");
+				cJSON_AddStringToObject(json_QueryRow, "Id", s_tipo);
+
+				/* Cambio el tipo (le sumo 10) */
+				json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
+				i_tipo = atoi(json_Tipo->valuestring);
+				sprintf(s_tipo, "%d", i_tipo + 10);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Tipo");
+				cJSON_AddStringToObject(json_QueryRow, "Tipo", s_tipo);
+
+				/* Cambio el estado por el valor de Habilitado */
+				json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Habilitado");
+				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Estado");
+				cJSON_AddStringToObject(json_QueryRow, "Estado", json_Estado->valuestring);
+
+				/* Agrego datos del sistema */
+				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+
+				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
+				if(m_CloudHost1Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost1Address, m_CloudHost1Port, m_CloudHost1Proto, message, message);
+				}
+				else if(m_CloudHost2Address[0])
+				{
+					rc = DompiCloud_Notificar(m_CloudHost2Address, m_CloudHost2Port, m_CloudHost2Proto, message, message);
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_ass_status_update] No hay servidores definodos para reporte a la nube");
+					rc = (-1);
+				}
+
+				if( rc > 0 && strlen(message) )
+				{
+					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
+					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
+					json_Message = cJSON_Parse(message);
+					json_Resp = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
+					if(json_Resp && cJSON_IsArray(json_Resp))
+					{
+						cJSON_PrintPreallocated(json_Resp, message, MAX_BUFFER_LEN, 0);
+						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+					}
+					cJSON_Delete(json_Message);
+				}
+
+			}
+		}
+		cJSON_Delete(json_QueryArray);
+
 	}
 }
 

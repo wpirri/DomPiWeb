@@ -5,6 +5,11 @@ var ListaSiNo = [];
 ListaSiNo[0] = { value: 0, label: 'No' }
 ListaSiNo[1] = { value: 1, label: 'Si' }
 
+var ListaOnOffAuto = [];
+ListaOnOffAuto[0] = { value: 0, label: 'Apagado' }
+ListaOnOffAuto[1] = { value: 1, label: 'Encendido' }
+ListaOnOffAuto[2] = { value: 2, label: 'Automático' }
+
 var TipoHW = [];
 TipoHW[0] = { value: 0, label: 'Ninguno' }
 TipoHW[1] = { value: 1, label: 'WiFi' }
@@ -59,6 +64,7 @@ GrupoVisual[2] = { value: 2, label: 'Iluminación' }
 GrupoVisual[3] = { value: 3, label: 'Puertas' }
 GrupoVisual[4] = { value: 4, label: 'Climatización' }
 GrupoVisual[5] = { value: 5, label: 'Cámaras' }
+GrupoVisual[6] = { value: 6, label: 'Riego' }
 
 var TablaAcciones = [];
 TablaAcciones[0] = { value: 0, label: 'Ninguno' }
@@ -1236,6 +1242,59 @@ function loadGrpTable(json_list) {
 }
 
 /* ==== Analogico ============================================================== */
+function fillAnalogList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		if(headers[i] != 'Id') {
+			output += '<th>';
+			output += headers[i];
+			output += '</th>';
+		}
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Editar</th>';
+	output += '<th>Borrar</th>';
+	output += '</tr>\n';
+	// Datos - Salteo el primero de la lista
+	for (i = 1; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			if(headers[j] == 'Id') {
+				index_value = val;
+			} else {
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				output += '<td>';
+				if(headers[j] == 'Control') {
+					output += ListaOnOffAuto[val].label;
+				} else {
+					output += val;
+				}
+				output += '</td>';
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
 function fillAnalogForm(json_list, dst_div, title) {
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
@@ -1276,6 +1335,8 @@ function fillAnalogForm(json_list, dst_div, title) {
 			output += fillSimpleList(headers[i], TablaAcciones);
 		} else if(headers[i] == 'Enviar_Min') {
 			output += fillSimpleList(headers[i], TablaAcciones);
+		} else if(headers[i] == 'Habilitado') {
+			output += fillSimpleList(headers[i], ListaOnOffAuto);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
 		}
@@ -1326,6 +1387,8 @@ function fillAnalogEdit(json_list, dst_div, title) {
 			output += fillSimpleList(headers[i], TablaAcciones, val);
 		} else if(headers[i] == 'Enviar_Min') {
 			output += fillSimpleList(headers[i], TablaAcciones, val);
+		} else if(headers[i] == 'Habilitado') {
+			output += fillSimpleList(headers[i], ListaOnOffAuto, val);
 		} else {
 			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 		}
@@ -1580,6 +1643,164 @@ function fillAlarmOutList(json_list, dst_div, title, index_label, edit_link, del
 		output += val;
 		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
 		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+/* ==== Riego ============================================================== */
+function fillRiegoList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var i = 0;
+	var j = 0;
+	var index_value = '';
+
+	// Header
+	output += '<tr>';
+	for (i = 0; i < headers.length; i++) { 
+		if(headers[i] != 'Id') {
+			output += '<th>';
+			output += headers[i];
+			output += '</th>';
+		}
+	}
+	// Agrego las columnas de edición y borrado
+	output += '<th>Editar</th>';
+	output += '<th>Borrar</th>';
+	output += '</tr>\n';
+	// Datos - Salteo el primero de la lista
+	for (i = 1; i < json_list.length; i++) { 
+		output += '<tr>';
+		index_value = '';
+		for (j = 0; j < headers.length; j++) { 
+			var val = json_list[i][headers[j]]; 
+			if(headers[j] == 'Id') {
+				index_value = val;
+			} else {
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				output += '<td>';
+				if(headers[j] == 'Control') {
+					output += ListaOnOffAuto[val].label;
+				} else {
+					output += val;
+				}
+				output += '</td>';
+			}
+		} 
+		// Agrego los links de edición y borrado
+		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+		output += val;
+		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+		output += val;
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+} 
+
+function fillRiegoForm(json_list, dst_div, title) {
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) { 
+		output += '<tr>';
+		output += '<th>';
+		if(headers[i] == 'Id') 
+			{ output += '&nbsp;'; }
+		else if(headers[i] == 'Tipo') 
+			{ output += '&nbsp;'; }
+		else 
+			{ output += headers[i]; }
+		output += '</th>';
+		output += '<td>';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		} else if(headers[i] == 'Tipo') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		} else if(headers[i] == 'Objeto_Salida') {
+			output += fillSimpleList(headers[i], TablaAssOut);
+		} else if(headers[i] == 'Grupo_Salida') {
+			output += fillSimpleList(headers[i], TablaGrupos);
+		} else if(headers[i] == 'Funcion_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Variable_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Objeto_Sensor') {
+			output += fillSimpleList(headers[i], TablaAssIn);
+		} else if(headers[i] == 'Grupo_Visual') {
+			output += fillSimpleList(headers[i], GrupoVisual);
+		} else if(headers[i] == 'Dias_Semana') {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
+		} else if(headers[i] == 'Enviar_Max') {
+			output += fillSimpleList(headers[i], TablaAcciones);
+		} else if(headers[i] == 'Enviar_Min') {
+			output += fillSimpleList(headers[i], TablaAcciones);
+		} else if(headers[i] == 'Habilitado') {
+			output += fillSimpleList(headers[i], ListaOnOffAuto);
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+		}
+		output += '</td>';
+		output += '</tr>\n';
+	}
+	output += '</table>\n';
+	document.getElementById(dst_div).innerHTML = output;
+}
+
+function fillRiegoEdit(json_list, dst_div, title) { 
+	// Getting the all column names 
+	var headers = getAbmTableHedaer(json_list);
+	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var i = 0;
+
+	// Header
+	for (i = 0; i < headers.length; i++) {
+		output += '<tr>';
+		output += '<th>';
+		if(headers[i] == 'Id') 
+			{ output += '&nbsp;'; }
+		else if(headers[i] == 'Tipo') 
+			{ output += '&nbsp;'; }
+		else 
+			{ output += headers[i]; }
+		output += '</th>';
+		var val = json_list[0][headers[i]]; 
+		if (val == null || val == 'NULL') val = '';   
+		output += '<td>';
+		if(headers[i] == 'Id') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		} else if(headers[i] == 'Tipo') {
+			output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		} else if(headers[i] == 'Objeto_Salida') {
+			output += fillSimpleList(headers[i], TablaAssOut, val);
+		} else if(headers[i] == 'Grupo_Salida') {
+			output += fillSimpleList(headers[i], TablaGrupos, val);
+		} else if(headers[i] == 'Funcion_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Variable_Salida') {
+			output += fillSimpleList(headers[i], ListaVacia);
+		} else if(headers[i] == 'Objeto_Sensor') {
+			output += fillSimpleList(headers[i], TablaAssIn, val);
+		} else if(headers[i] == 'Grupo_Visual') {
+			output += fillSimpleList(headers[i], GrupoVisual, val);
+		} else if(headers[i] == 'Enviar_Max') {
+			output += fillSimpleList(headers[i], TablaAcciones, val);
+		} else if(headers[i] == 'Enviar_Min') {
+			output += fillSimpleList(headers[i], TablaAcciones, val);
+		} else if(headers[i] == 'Habilitado') {
+			output += fillSimpleList(headers[i], ListaOnOffAuto, val);
+		} else {
+			output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
+		}
+		output += '</td>';
 		output += '</tr>\n';
 	}
 	output += '</table>\n';

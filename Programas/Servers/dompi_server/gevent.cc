@@ -558,99 +558,125 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
 
             do
             {
-                /* Controlo servicio Habilitado */
+                /* Controlo servicio Habilitado 
+                    Habiltado   0 - Apagado
+                                1 - Encendido
+                                2 - Automático
+                */
                 if(atoi(Habilitado->valuestring) == 0)
                 {
-                    m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] inhabilitado.", Objeto->valuestring);
-                    break;
-                }
-                /* Controlo día de la semana vigente */
-                if( !strstr(Dias_Semana->valuestring, dia))
-                {
+                    m_pServer->m_pLog->Add(100, "[CheckAuto] Sistema [%s] desactivado.", Objeto->valuestring);
                     if(atoi(Estado->valuestring) == 1)
                     {
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por día de la semana.", Objeto->valuestring);;
-                        enviar = 2;
+                        /* Desabilitado y Encendido -> Mando a apagar */
+                        m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] apagado.", Objeto->valuestring);
+                        enviar = 2; /* apagar */
                     }
                     break;
                 }
-
-                /* Si hay valores validos en el horario */
-                if( (atoi(Hora_Inicio->valuestring) != atoi(Hora_Fin->valuestring)) || (atoi(Minuto_Inicio->valuestring) != atoi(Minuto_Fin->valuestring)) )
+                else if(atoi(Habilitado->valuestring) == 1)
                 {
-                    /* Controlo horario de funcionamiento */
-                    if( (atoi(Hora_Inicio->valuestring) > atoi(Hora_Fin->valuestring)) ||
-                        ( (atoi(Hora_Inicio->valuestring) == atoi(Hora_Fin->valuestring)) &&
-                          ( atoi(Minuto_Inicio->valuestring) > atoi(Minuto_Fin->valuestring)) ) )
+                    m_pServer->m_pLog->Add(100, "[CheckAuto] Sistema [%s] activado.", Objeto->valuestring);
+                    if(atoi(Estado->valuestring) == 0)
                     {
-                        /* El período de actividad termina al dia siguiente de que empieza - Inicio > Fin   */
-                        if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
-                            (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
-                            &&
-                            (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
-                            (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
+                        /* Habilitado y Apagado */
+                        m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] encendido.", Objeto->valuestring);
+                        enviar = 1; /* encender */
+                    }
+                    break;
+                }
+                else if(atoi(Habilitado->valuestring) == 2) /* Automático */
+                {
+                    m_pServer->m_pLog->Add(100, "[CheckAuto] Sistema [%s] automático.", Objeto->valuestring);
+                    /* Controlo día de la semana vigente */
+                    if( !strstr(Dias_Semana->valuestring, dia))
+                    {
+                        if(atoi(Estado->valuestring) == 1)
                         {
-                            /* Fuera de horario */
-                            if(atoi(Estado->valuestring) == 1)
+                            /* Fuera de día y encendido -> mando a apagar */
+                            m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] apagando por día de la semana.", Objeto->valuestring);;
+                            enviar = 2; /* apagar */
+                        }
+                        break;
+                    }
+
+                    /* Si hay valores validos en el horario */
+                    if( (atoi(Hora_Inicio->valuestring) != atoi(Hora_Fin->valuestring)) || (atoi(Minuto_Inicio->valuestring) != atoi(Minuto_Fin->valuestring)) )
+                    {
+                        /* Controlo horario de funcionamiento */
+                        if( (atoi(Hora_Inicio->valuestring) > atoi(Hora_Fin->valuestring)) ||
+                            ( (atoi(Hora_Inicio->valuestring) == atoi(Hora_Fin->valuestring)) &&
+                            ( atoi(Minuto_Inicio->valuestring) > atoi(Minuto_Fin->valuestring)) ) )
+                        {
+                            /* El período de actividad termina al dia siguiente de que empieza - Inicio > Fin   */
+                            if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
+                                (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
+                                &&
+                                (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
+                                (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
                             {
-                                m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por horario.", Objeto->valuestring);
-                                enviar = 2;
+                                /* Fuera de horario */
+                                if(atoi(Estado->valuestring) == 1)
+                                {
+                                    /* Fuera de horario y encendido -> mando a apagar */
+                                    m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] apagando por horario.", Objeto->valuestring);
+                                    enviar = 2; /* apagar */
+                                }
+                                break;
                             }
+                        }
+                        else
+                        {
+                            /* El período de actividad empieza y termina el mismo día - Fin > Inicio */
+                            if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
+                                (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
+                                ||
+                                (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
+                                (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
+                            {
+                                /* Fuera de horario */
+                                if(atoi(Estado->valuestring) == 1)
+                                {
+                                    /* Fuera de horario y encendido -> mando a apagar */
+                                    m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] apagando por horario.", Objeto->valuestring);
+                                    enviar = 2; /* apagar */
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    /* Si hay sensor definido evalúo el estado del sensor */
+                    if(atoi(Objeto_Sensor->valuestring) > 0)
+                    {
+                        if(atoi(Estado->valuestring) == 0 && atoi(Estado_Sensor->valuestring) >= atoi(Max_Sensor->valuestring))
+                        {
+                            Enviar_Max = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar_Max");
+                            enviar = atoi(Enviar_Max->valuestring);
+                            m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] %s por sensor (MAX).", Objeto->valuestring, tablaAccion[enviar]);
+                            break;
+                        }
+
+                        if(atoi(Estado->valuestring) == 1 && atoi(Estado_Sensor->valuestring) <= atoi(Min_Sensor->valuestring))
+                        {
+                            Enviar_Min = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar_Min");
+                            enviar = atoi(Enviar_Min->valuestring);
+                            m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] %s por sensor (MIN).", Objeto->valuestring, tablaAccion[enviar]);
                             break;
                         }
                     }
                     else
                     {
-                        /* El período de actividad empieza y termina el mismo día - Fin > Inicio */
-                        if( (lt->tm_hour < atoi(Hora_Inicio->valuestring)  ||
-                            (lt->tm_hour == atoi(Hora_Inicio->valuestring) && lt->tm_min < atoi(Minuto_Inicio->valuestring)) ) 
-                            ||
-                            (lt->tm_hour > atoi(Hora_Fin->valuestring)  ||
-                            (lt->tm_hour == atoi(Hora_Fin->valuestring) && lt->tm_min > atoi(Minuto_Fin->valuestring)) ) )
+                        /* Si no hay sensor definido */
+                        if(atoi(Estado->valuestring) == 0)
                         {
-                            /* Fuera de horario */
-                            if(atoi(Estado->valuestring) == 1)
-                            {
-                                m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] apagando por horario.", Objeto->valuestring);
-                                enviar = 2;
-                            }
+                            m_pServer->m_pLog->Add(20, "[CheckAuto] Sistema [%s] encendiendo sin sensor.", Objeto->valuestring);
+                            enviar = 1;
                             break;
                         }
                     }
 
                 }
-                /* Si llegó hasta acá está habilitado, el día de la semana es apto y está en horario de funcionamiento */
-
-                /* Si hay sensor definido evalúo el estado del sensor */
-                if(atoi(Objeto_Sensor->valuestring) > 0)
-                {
-                    if(atoi(Estado->valuestring) == 0 && atoi(Estado_Sensor->valuestring) >= atoi(Max_Sensor->valuestring))
-                    {
-                        Enviar_Max = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar_Max");
-                        enviar = atoi(Enviar_Max->valuestring);
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] %s por sensor (MAX).", Objeto->valuestring, tablaAccion[enviar]);
-                        break;
-                    }
-
-                    if(atoi(Estado->valuestring) == 1 && atoi(Estado_Sensor->valuestring) <= atoi(Min_Sensor->valuestring))
-                    {
-                        Enviar_Min = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar_Min");
-                        enviar = atoi(Enviar_Min->valuestring);
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] %s por sensor (MIN).", Objeto->valuestring, tablaAccion[enviar]);
-                        break;
-                    }
-                }
-                else
-                {
-                    /* Si no hay sensor definido */
-                    if(atoi(Estado->valuestring) == 0)
-                    {
-                        m_pServer->m_pLog->Add(20, "[CheckAuto] Evento [%s] encendiendo sin sensor.", Objeto->valuestring);
-                        enviar = 1;
-                        break;
-                    }
-                }
-
                 break;
             } while(1);
 
@@ -902,4 +928,80 @@ int GEvent::ChangeVarByName(const char* /*name*/, int /*accion*/, int /*param*/)
 int GEvent::ChangeVarById(int /*id*/, int /*accion*/, int /*param*/)
 {
     return (-1);
+}
+
+int GEvent::ChangeAutoByName(const char* name, int accion, int param)
+{
+	int rc = 0;
+	char query[4096];
+
+	m_pServer->m_pLog->Add(20, "[ChangeAutoByName] name= %s, accion= %i param= %i", name, accion, param);
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 1, Actualizar = 1 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 0, Actualizar = 1 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = MOD( (Habilitado+1),3 ), Actualizar = 1 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		case 5: /* Automatico */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 2, Actualizar = 1 "
+							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
+}
+
+int GEvent::ChangeAutoById(int id, int accion, int param)
+{
+	int rc = 0;
+	char query[4096];
+
+	m_pServer->m_pLog->Add(20, "[ChangeAutoById] id= %i, accion= %i param= %i", id, accion, param);
+	switch(accion)
+	{
+		case 1: /* Encender */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 1, Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 2: /* Apagar */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 0, Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 3:	/* Switch */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = MOD( (Habilitado+1),3 ), Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		case 5: /* Automatico */
+			sprintf(query, 	"UPDATE TB_DOM_AUTO "
+							"SET Habilitado = 2, Actualizar = 1 "
+							"WHERE Id = %i;", id);
+			break;
+		default:
+			break;
+	}
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = m_pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+	return rc;
 }

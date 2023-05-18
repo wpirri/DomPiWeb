@@ -1316,17 +1316,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Port,IcoIcono_Apagadono0,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono0,Icono1,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -1360,17 +1360,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
 				{
 					if(json_Planta)
 					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
+						sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
 					}
 					else
 					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Icono0,Icono1,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
+						strcpy(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN;");
 					}
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -1403,7 +1403,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Id)
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
-									"SET Icono0 = \"lamp0.png\",Icono1 = \"lamp1.png\",Planta = 1,Cord_x = 200,Cord_y = 50 "
+									"SET Icono_Apagado = \"lamp0.png\",Icono_Encendido = \"lamp1.png\",Planta = 1,Cord_x = 200,Cord_y = 50 "
 									"WHERE Id = %s;", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -2553,7 +2553,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_un_obj)
 				{
 					json_query_result = cJSON_CreateArray();
-					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Grupo, ASS.Objeto AS Salida, AU.Estado AS Estado "
+					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
 									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
 									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
 										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s);", json_un_obj->valuestring);

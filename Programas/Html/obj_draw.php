@@ -9,11 +9,11 @@
     $count = count($obj_list);
     for ($i = 0; $i < $count; $i++)
     {
-        //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono0']."</p>";
+        //echo "<p>".$obj_list[$i]['Objeto']." - ".$obj_list[$i]['Icono_Apagado']."</p>";
         $Id = $obj_list[$i]['Id'];
         $Port = $obj_list[$i]['Port'];
-        $Icono0 = $obj_list[$i]['Icono0'];
-        $Icono1 = $obj_list[$i]['Icono1'];
+        $Icono_Apagado = $obj_list[$i]['Icono_Apagado'];
+        $Icono_Encendido = $obj_list[$i]['Icono_Encendido'];
 
         // Sustituciones (Mantener: obj_style.php objdraw.php planta.php)
         $Objeto = $obj_list[$i]['Objeto'];
@@ -29,11 +29,11 @@
         //
         if($edit == 1 || $obj_list[$i]['Estado'] == 1)
         {
-            $src = "src=\"images/".$Icono1."\"";
+            $src = "src=\"images/".$Icono_Encendido."\"";
         }
         else
         {
-            $src = "src=\"images/".$Icono0."\"";
+            $src = "src=\"images/".$Icono_Apagado."\"";
         }
 
         //
