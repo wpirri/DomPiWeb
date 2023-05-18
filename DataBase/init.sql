@@ -7,6 +7,7 @@ INSERT INTO TB_DOM_GRUPO_VISUAL(Id, Nombre) VALUES (2, 'Luces');
 INSERT INTO TB_DOM_GRUPO_VISUAL(Id, Nombre) VALUES (3, 'Puertas');
 INSERT INTO TB_DOM_GRUPO_VISUAL(Id, Nombre) VALUES (4, 'Climatización');
 INSERT INTO TB_DOM_GRUPO_VISUAL(Id, Nombre) VALUES (5, 'Cámaras');
+INSERT INTO TB_DOM_GRUPO_VISUAL(Id, Nombre) VALUES (6, 'Riego');
 INSERT INTO TB_DOM_ASSIGN (Id, Objeto, Dispositivo, Port, Tipo) VALUES(0,'Ninguno','0',0,0);
 INSERT INTO TB_DOM_GROUP (Id, Grupo) VALUES (0, 'Ninguno');
 INSERT INTO TB_DOM_FLAG (Id, Variable) VALUES (0, 'Ninguna');
