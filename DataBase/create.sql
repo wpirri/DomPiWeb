@@ -134,9 +134,10 @@ Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Ou
 Estado integer DEFAULT 0,                   -- 1 / 0 para digitales 0 a n para analogicos
 Estado_HW integer DEFAULT 0,                -- Estado reportado por el HW
 Perif_Data varchar(128),
-Icono0 varchar(32),
-Icono1 varchar(32),
-Grupo_Visual integer DEFAULT 0,
+Icono_Apagado varchar(32),
+Icono_Encendido varchar(32),
+Grupo_Visual integer DEFAULT 0,             -- 0=Ninguno 1=Alarma 2=Iluminación 3=Puertas 4=Climatización 5=Cámaras 6=Riego
+
 Planta integer DEFAULT 0,
 Cord_x integer DEFAULT 0,
 Cord_y integer DEFAULT 0,
@@ -281,14 +282,15 @@ Minuto_Inicio integer DEFAULT 0,
 Hora_Fin integer DEFAULT 0,
 Minuto_Fin integer DEFAULT 0,
 Dias_Semana varchar(128),                   -- Lu,Ma,Mi,Ju,Vi,Sa,Do
-Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
-Condicion_Igualdad integer DEFAULT 0,             -- ==, >, <
-Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
-Estado integer DEFAULT 0,                   -- 0 = Bajo el minimo 1 = Sobre el maximo
-Habilitado integer DEFAULT 1,                   -- 0 = Disable 1 = Enable
-Icono0 varchar(32),
-Icono1 varchar(32),
-Grupo_Visual integer DEFAULT 0,
+Condicion_Variable integer DEFAULT 0,       -- Condiciona el evento
+Condicion_Igualdad integer DEFAULT 0,       -- ==, >, <
+Condicion_Valor integer DEFAULT 0,          -- Valor de condicion
+Estado integer DEFAULT 0,                   -- 0= Salida apagada 1= Salida encendida
+Habilitado integer DEFAULT 1,               -- 0=Apagado 1=Automatico 2=Encendido 
+Icono_Apagado varchar(32),
+Icono_Encendido varchar(32),
+Icono_Auto varchar(32),
+Grupo_Visual integer DEFAULT 0,             -- 0=Ninguno 1=Alarma 2=Iluminación 3=Puertas 4=Climatización 5=Cámaras 6=Riego
 Planta integer DEFAULT 0,
 Cord_x integer DEFAULT 0,
 Cord_y integer DEFAULT 0,
