@@ -2050,7 +2050,7 @@ void AutoChangeNotify( void )
 			i_id = atoi(json_Id->valuestring);
 			sprintf(s_id, "%d", i_id + 10000);
 			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Id");
-			cJSON_AddStringToObject(json_QueryRow, "Id", s_tipo);
+			cJSON_AddStringToObject(json_QueryRow, "Id", s_id);
 
 			/* Cambio el Tipo (le sumo 10) */
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
