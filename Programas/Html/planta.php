@@ -22,8 +22,8 @@ include("obj_style.php");
 	<img id="auto-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatización
 </div>
 
-<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('');">
-	<!--<img id="config-icon" class="icon-btn" src="images/">&nbsp;Xxxxx -->
+<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('tablero.php');">
+	<img id="config-icon" class="icon-btn" src="images/cron.png">&nbsp;Tablero
 </div>
 
 <div class="home-group" id="home-div">

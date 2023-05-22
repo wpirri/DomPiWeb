@@ -241,11 +241,17 @@ TipoSalidaAlarma[0] = { value: 0, label: 'Sirena' }
 TipoSalidaAlarma[1] = { value: 1, label: 'Buzer' }
 TipoSalidaAlarma[2] = { value: 2, label: 'Testigo' }
 
-function fillSimpleList(name, list, selected) {
+function fillSimpleList(name, list, selected, onchange) {
+	var out = '';
 	if (selected == null) {
 		selected = (-1);
 	}
-	var out = '<select name="' + name + '" id="' + name + '" class="abm-select">\n';
+
+	if(onchange == null) {
+		out += '<select name="' + name + '" id="' + name + '" class="abm-select">\n';
+	} else {
+		out += '<select name="' + name + '" id="' + name + '" class="abm-select" onchange="' + onchange + '">\n';
+	}
 
 	for (var i = 0; i < list.length; i++) {
 		if(selected == list[i].value) {
@@ -372,8 +378,10 @@ function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_l
 		}
 	}
 	// Agrego las columnas de edición y borrado
-	output += '<th>Editar</th>';
-	output += '<th>Borrar</th>';
+	if(edit_link.length > 0)
+		output += '<th>Editar</th>';
+	if(delete_link.length > 0)
+		output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
 	for (i = 1; i < json_list.length; i++) { 
@@ -393,10 +401,14 @@ function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_l
 			}
 		} 
 		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
+		if(edit_link.length > 0) {
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+		}
+		if(edit_link.length > 0) {
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+		}
 		output += '</tr>\n';
 	}
 	output += '</table>\n';

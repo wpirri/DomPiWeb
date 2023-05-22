@@ -2550,33 +2550,37 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Tipo");
+				json_query_result = cJSON_CreateArray();
 				if(json_un_obj)
 				{
-					json_query_result = cJSON_CreateArray();
 					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
 									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
 									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
 										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s);", json_un_obj->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_query_result, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_query_result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
-					}
-					else
-					{
-						cJSON_Delete(json_query_result);
-					}
 				}
 				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta dato Tipo\"}}");					
+					strcpy(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
+									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
+									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
+										"(AU.Objeto_Salida = ASS.Id);");
 				}
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_query_result, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc >= 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_query_result);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_query_result);
+				}
+
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
