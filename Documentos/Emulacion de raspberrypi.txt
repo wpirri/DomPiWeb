@@ -1,112 +1,93 @@
-https://jorgegarciadev.gitlab.io/post/raspberry_pi_en_qemu/
-
 QEMU
+===============================================================================
 
-apt install bridge-utils qemu qemu-kvm qemu-system qemu-utils libvirt-clients libvirt-daemon-system virtinst
+Instalar en la máquina HOST:
+apt install openssh-server bridge-utils qemu qemu-kvm qemu-system qemu-utils libvirt-clients libvirt-daemon-system virtinst net-tools
 
-
-Kernel: https://github.com/dhruvvyas90/qemu-rpi-kernel
-
-qemu-system-arm -kernel kernel-qemu-4.4.34-jessie -cpu arm1176 -m 256M -M versatilepb -serial stdio -append “root=/dev/sda2 rootfstype=ext4 rw” -hda 2017-11-29-raspbian-stretch-lite.img -redir tcp:5022::22 -no-reboot
-
-
-
-
-
-
-https://spad.uk/really-simple-network-bridging-with-qemu/
-
-allow virtbr0 -> /etc/qemu/bridge.conf
-
-apt install bridge-utils
-
-brctl addbr virtbr0
-brctl addif virtbr0 enp0s3
-ip addr add 192.168.10.32/24 dev virtbr0
-ip link set virtbr0 up
-
-
-iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
-iptables -I FORWARD -m enp0s3 --physdev-is-bridged -j ACCEPT
-
-
-en /lib/systemd/system//lib/systemd/system/
-
-[Unit]
-Description=Setup qemu network bridging
-After=network-online.target
-
-[Service]
-Type=oneshot
-Restart=on-failure
-ExecStart=brctl addbr virtbr0
-ExecStart=brctl addif virtbr0 enp3s0
-ExecStart=ip addr add 192.168.0.20/24 dev virtbr0
-ExecStart=ip link set virtbr0 up
-ExecStart=iptables -I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
-
-[Install]
-WantedBy=multi-user.target 
-
-
-
-
-
--net nic,model=virtio,macaddr=52:54:00:00:00:01 -net bridge,br=virtbr0
-
-
-
-
-
-============================================================
-
-Con libvirt
-
-Levantar
-virsh net-start default
-Poner en auto
-virsh net-autostart default
-
-
-ver
-ip addr show virbr0
-
-
-virsh net-destroy default
-virsh net-start default
-
-virsh net-edit default
-
--netdev bridge,id=hn0,br=virbr0
-
--device virtio-net-pci,netdev=hn0,id=nic1
-
-
-https://beroal.livejournal.com/81163.html
-
-
-
+Bajar Imagen de disco de RBPi:
+https://downloads.raspberrypi.org/raspbian_lite_latest
 
 ===============================================================================
-Native emulation of Rpi2/3 using Qemu's Raspi2/3 machine
+https://peterbabic.dev/blog/how-emulate-raspios-natively-qemu/
 
-https://github.com/dhruvvyas90/qemu-rpi-kernel/tree/master/native-emulation
+How to emulate Raspios natively in QEMU
+Author: Peter Babič
+Published: October 26, 2020 · 3 min read
 
-Permite usar 1G de RAM
+Download 2020-08-20-raspios-buster-armhf-lite.zip from the official site
+Install required tools
+sudo pacman -S unzip util-linux qemu qemu-arch-extra
+Minimal required QEMU version is 5.1
 
-Step by step guide to extract dtb files and kernel image from img file
-Mount the image file
+qemu-system-aarch64 --version
+# QEMU emulator version 5.1.0
+Ethernet is shared with USB controller on Raspberry Pi 3, but the changelog for QEMU 5.1 states:
 
-sudo mkdir /mnt/rpi
-sudo losetup -f --show -P <path-to-rpi-image-file>
-sudo mount /dev/loop<no>p01 /mnt/rpi
-Copy kernel files / dtb files
+The Raspberry Pi boards now support the USB controller.
 
-cp /mnt/rpi/kernel* .
-cp /mnt/rpi/*.dtb .
-Unmount the image file
+Associate the image with a loop device
 
-sudo umount /mnt/rpi
-sudo losetup -d /dev/loop<no>
-Command to emulate
-sudo qemu-system-aarch64 -M raspi3b -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1" -dtb ./dtbs/bcm2710-rpi-3-b-plus.dtb -sd 2020-08-20-raspios-buster-armhf-full.img -kernel kernel8.img -m 1G -smp 4 -serial stdio -usb -device usb-mouse -device usb-kbd
+unzip 2023-02-21-raspios-buster-armhf-lite.img.zip
+sudo losetup --show -fP 2023-02-21-raspios-buster-armhf-lite.img
+# i.e. /dev/loop0
+Copy required files over
+sudo mkdir /mnt/raspios
+sudo mount /dev/loop0p1 /mnt/raspios
+cp /mnt/raspios/kernel8.img /mnt/raspios/bcm2710-rpi-3-b.dtb .
+sudo umount /mnt/raspios
+sudo losetup -d /dev/loop0
+
+Run with QEMU
+
+Resize the raw image (2, 4, 8, 16 ... GB)
+qemu-img resize 2023-02-21-raspios-buster-armhf-lite.img 32G
+
+Run the image
+
+Archivo: start-rbpi-aarch64-buster.sh
+/usr/bin/qemu-system-aarch64 \
+    -m 1024 \
+    -M raspi3 \
+    -kernel /opt/QEMU/kernels/aarch64/kernel8.img \
+    -dtb /opt/QEMU/kernels/aarch64/bcm2710-rpi-3-b.dtb \
+    -sd /opt/QEMU/so/2023-02-21-raspios-buster-armhf-lite.img \
+    -append "console=ttyAMA0 root=/dev/mmcblk0p2 rw rootwait rootfstype=ext4" \
+    -nographic \
+    -device usb-net,netdev=net0 \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22
+
+Archivo: start.sh
+nohup /opt/QEMU/script/start-rbpi-aarch64-buster.sh > /opt/QEMU/log/out.log 2>&1 &
+
+The guest is ARM64 with networking available
+
+uname -m
+# aarch64
+
+lsusb
+# Bus 001 Device 003: ID 0525:a4a2 Netchip Technology, Inc. Linux-USB Ethernet/RNDIS Gadget
+
+ip addr
+#2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN group default qlen 1000
+#    link/ether 40:54:00:12:34:57 brd ff:ff:ff:ff:ff:ff
+#    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic noprefixroute eth0
+We are running in arm64 mode
+
+Enabe the ssh daemon
+sudo systemctl enable ssh --now
+Interact with the image
+Copy the ssh credentials over, password is raspberry
+
+ssh-copy-id -p 2222 pi@localhost
+Login to the image
+ssh -p 2222 pi@localhost
+Done!
+
+Links
+https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device/496576#496576
+https://raspberrypi.stackexchange.com/questions/100384/running-raspbian-buster-with-qemu
+https://github.com/raspberrypi/firmware
+https://www.raspberrypi.org/forums/viewtopic.php?t=195565&start=50
+https://bugs.launchpad.net/qemu/+bug/1772165
+https://lore.kernel.org/qemu-devel/20200428022232.18875-1-pauldzim@gmail.com/
+https://metebalci.com/blog/bare-metal-rpi3-network-boot/
