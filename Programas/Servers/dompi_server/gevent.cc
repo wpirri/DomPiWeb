@@ -147,7 +147,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_QueryArray = cJSON_CreateArray();
             rc = m_pDB->Query(json_QueryArray, query);
-            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
             if(rc >= 0 && json_QueryArray->child)
             {
@@ -170,7 +170,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         json_hw_mac->valuestring);
                     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                     rc = m_pDB->Query(NULL, query);
-                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                 }
                 /* Actualizo los assign que vengan  en el mensaje */
@@ -202,7 +202,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         json_un_obj->string);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                         /* En las entradas actualizo también el estado a mostrar */
                                         if(!memcmp(json_un_obj->string, "IO", 2))
@@ -215,7 +215,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                             json_un_obj->string);
                                             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                             rc = m_pDB->Query(NULL, query);
-                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                             /* Si es entrada analogica completo el dato en perifdata */
                                             sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i, Perif_Data = \'%i\' "
@@ -225,7 +225,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                             json_un_obj->string);
                                             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                             rc = m_pDB->Query(NULL, query);
-                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                             /* Si existe un assign me fijo si hay alguna automatización */
                                             if(rc > 0)
@@ -243,7 +243,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                     }
                                     else if( !memcmp(json_un_obj->string, "TEMP", 4))
@@ -257,7 +257,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
                                         CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
@@ -273,7 +273,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                                         json_hw_id->valuestring);
                                         m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                         rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
                                         CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
@@ -366,7 +366,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
                     hw_id, port, (estado)?"OFF_a_ON = 1;":"ON_a_OFF = 1;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
     if(rc >= 0)
     {
@@ -522,7 +522,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
     }
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
     if(rc >= 0)
     {
@@ -711,7 +711,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                 sprintf(query, "UPDATE TB_DOM_AUTO SET Estado = %i WHERE Id = %s;", set_estado, Id->valuestring);
                 m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                 rc = m_pDB->Query(nullptr, query);
-                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                 if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
             }
         }
@@ -762,7 +762,7 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }
@@ -809,7 +809,7 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }
@@ -857,7 +857,7 @@ int GEvent::ChangeGroupByName(const char* name, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }
@@ -905,7 +905,7 @@ int GEvent::ChangeGroupById(int id, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }
@@ -963,7 +963,7 @@ int GEvent::ChangeAutoByName(const char* name, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }
@@ -1001,7 +1001,7 @@ int GEvent::ChangeAutoById(int id, int accion, int param)
 	}
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = m_pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, m_pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
 }

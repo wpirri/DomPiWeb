@@ -67,6 +67,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char typ[1];
 	char message[MAX_BUFFER_LEN+1];
 	char db_host[32];
+	char db_name[32];
 	char db_user[32];
 	char db_password[32];
 	unsigned long message_len;
@@ -99,6 +100,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
 	pConfig->GetParam("DBHOST", db_host);
+	pConfig->GetParam("DBNAME", db_name);
 	pConfig->GetParam("DBUSER", db_user);
 	pConfig->GetParam("DBPASSWORD", db_password);
 
@@ -116,17 +118,17 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
-	m_pServer->m_pLog->Add(10, "Conectando a la base de datos DB_DOMPIWEB...");
-	pDB = new CDB(db_host, "DB_DOMPIWEB", db_user, db_password);
+	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s en %s ...", db_name, db_host);
+	pDB = new CDB(db_host, db_name, db_user, db_password);
 	if(pDB->Open() != 0)
 	{
-		m_pServer->m_pLog->Add(1, "ERROR al conectar con la base de datos");
+		m_pServer->m_pLog->Add(1, "ERROR al conectar con la base de datos %s en %s.", db_name, db_host);
 		OnClose(0);
 	}
 	else
 	{
 		//m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s", db_filename);
-		m_pServer->m_pLog->Add(10, "Conectado a la base de datos DB_DOMPIWEB");
+		m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s en %s.", db_name, db_host);
 	}
 
 	json_System_Config = NULL;
@@ -357,7 +359,7 @@ void UpdateCloud( void )
 		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 		if(rc >= 0)
 		{
@@ -406,7 +408,7 @@ void UpdateCloud( void )
 		strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Id > 0;");
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 		if(rc >= 0)
 		{
@@ -557,7 +559,7 @@ void LoadSystemConfig(void)
 	strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_System_Config, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li", rc, pDB->LastQueryTime());
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0)
 	{
 		m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
