@@ -50,28 +50,9 @@ Planta2 varchar(256),
 Planta3 varchar(256),
 Planta4 varchar(256),
 Planta5 varchar(256),
-Flags integer DEFAULT 0
+Flags integer DEFAULT 0,
+UNIQUE INDEX idx_config_id (Id)
 );
-
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_AP1 varchar(33);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_AP1_Pass varchar(65);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_AP2 varchar(33);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_AP2_Pass varchar(65);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_Report integer DEFAULT 0;
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_APN_Auto integer DEFAULT 0;
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_APN varchar(33);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_DNS1 varchar(16);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_DNS2 varchar(16);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_User varchar(17);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_Pass varchar(17);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Gprs_Auth integer DEFAULT 0;		-- 1:PAP 2:CHAP 3:PAP/CHAP
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Send_Method integer DEFAULT 0;	-- 1: First Wifi 2: First GPRS 3: Paralell
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Rqst_Path varchar(256);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_1_Address varchar(64);
-# ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_2_Address varchar(64);
-#ALTER TABLE TB_DOM_CONFIG ADD COLUMN Usuario_Cloud varchar(256);
-#ALTER TABLE TB_DOM_CONFIG ADD COLUMN Clave_Cloud varchar(256);
-
 
 CREATE TABLE IF NOT EXISTS TB_DOM_USER (
 Id integer primary key,
@@ -95,7 +76,12 @@ Estado varchar(32), -- Habilitado, Bloqueado [motivo]
 Contador_Error integer DEFAULT 0,
 Ultimo_Acceso varchar(32),
 Ultimo_Error varchar(32),
-Flags integer DEFAULT 0
+Flags integer DEFAULT 0,
+UNIQUE INDEX idx_user_id (Id),
+unique index idx_user_user_pass1 (Usuario,Pin_Teclado),
+unique index idx_user_user_pass2 (Usuario,Pin_SMS),
+unique index idx_user_user_pass3 (Usuario,Pin_WEB),
+index idx_user_tarj (Tarjeta)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
@@ -107,22 +93,19 @@ Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
-Flags integer DEFAULT 0                         -- bit 0: HTTPS
+Flags integer DEFAULT 0,                        -- bit 0: HTTPS
                                                 -- bit 1: WIEGAND
                                                 -- bit 2: DHT-22
+UNIQUE INDEX idx_perif_id (Id),
+UNIQUE INDEX idx_perif_mac (MAC)
 );
-
-# INSERT INTO TB_DOM_PERIF_NEW (Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags)
-#   SELECT Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags FROM TB_DOM_PERIF;
-# ALTER TABLE TB_DOM_PERIF RENAME TO TB_DOM_PERIF_BORRAR;
-# ALTER TABLE TB_DOM_PERIF_NEW RENAME TO TB_DOM_PERIF;
-# DROP TABLE TB_DOM_PERIF_BORRAR;
 
 CREATE TABLE TB_DOM_GRUPO_VISUAL (
 Id integer primary key,
 Nombre varchar(32) NOT NULL,
 Descripcion varchar(256),
-Icono varchar(32)
+Icono varchar(32),
+UNIQUE INDEX idx_grp_vis_id (Id),
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
@@ -137,7 +120,6 @@ Perif_Data varchar(128),
 Icono_Apagado varchar(32),
 Icono_Encendido varchar(32),
 Grupo_Visual integer DEFAULT 0,             -- 0=Ninguno 1=Alarma 2=Iluminación 3=Puertas 4=Climatización 5=Cámaras 6=Riego
-
 Planta integer DEFAULT 0,
 Cord_x integer DEFAULT 0,
 Cord_y integer DEFAULT 0,
@@ -147,7 +129,12 @@ Analog_Mult_Div_Valor integer DEFAULT 1,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
-FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
+FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
+UNIQUE INDEX idx_assign_id (Id),
+UNIQUE INDEX idx_assign_disp_port (Dispositivo, Port),
+UNIQUE INDEX idx_assign_disp_port_tipo (Dispositivo, Port, Tipo),
+INDEX idx_assign_disp (Dispositivo),
+INDEX idx_assign_grupo_vis (Grupo_Visual)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
@@ -155,18 +142,21 @@ Id integer primary key,
 Grupo varchar(128) NOT NULL,
 Listado_Objetos varchar(256),
 Estado integer DEFAULT 0,            -- Define el estado que deben tener los objetos del grupo
-Actualizar integer DEFAULT 0
+Actualizar integer DEFAULT 0,
+UNIQUE INDEX idx_group_id (Id),
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FLAG (
 Id integer primary key,
 Variable varchar(128) NOT NULL,
-Valor integer DEFAULT 0
+Valor integer DEFAULT 0,
+UNIQUE INDEX idx_flag_id (Id),
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FUNCTION (
 Id integer primary key,
-Funcion varchar(128) NOT NULL
+Funcion varchar(128) NOT NULL,
+UNIQUE INDEX idx_funcion_id (Id),
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
@@ -189,7 +179,9 @@ FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
 FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
-FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
+FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
+UNIQUE INDEX idx_event_id (Id),
+UNIQUE INDEX idx_event_obj_origen (Objeto_Origen)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_AT (
@@ -217,7 +209,10 @@ Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
 FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
-FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id)
+FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
+UNIQUE INDEX idx_at_id (Id),
+UNIQUE INDEX idx_at_obj_dest (Objeto_Destino),
+UNIQUE INDEX idx_at_fecha (Mes,Dia,Hora,Ultimo_Mes,Ultimo_Dia,Ultima_Hora,Ultimo_Minuto,Dias_Semana)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
@@ -236,7 +231,9 @@ Notificar_SMS_Activacion integer DEFAULT 0,
 Notificar_SMS_Alerta integer DEFAULT 0,
 FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_ap_id (Id),
+UNIQUE INDEX idx_ap_nombre (Nombre)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
@@ -247,7 +244,9 @@ Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= 
 Grupo integer DEFAULT 0,        -- 0= Parcial 1= Total 3= 24Hs
 Activa integer DEFAULT 0,
 FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_az_id (Id),
+INDEX idx_az_part (Particion)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
@@ -256,7 +255,9 @@ Particion integer NOT NULL,
 Objeto_Salida integer NOT NULL,
 Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
 FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id)
+FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_as_id (Id),
+INDEX idx_as_part (Particion)
 );
 
 
@@ -302,5 +303,9 @@ FOREIGN KEY(Grupo_Salida) REFERENCES TB_DOM_GROUP(Id),
 FOREIGN KEY(Funcion_Salida) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id)
+FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
+UNIQUE INDEX idx_auto_id (Id),
 );
+
+
+# sudo mysqlcheck --all-databases --optimize
