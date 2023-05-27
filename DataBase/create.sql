@@ -1,6 +1,5 @@
-CREATE DATABASE DB_DOMPIWEB;
-
-\u DB_DOMPIWEB
+-- CREATE DATABASE DB_DOMPIWEB;
+USE DB_DOMPIWEB;
 
 DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_SALIDA;
@@ -105,7 +104,7 @@ Id integer primary key,
 Nombre varchar(32) NOT NULL,
 Descripcion varchar(256),
 Icono varchar(32),
-UNIQUE INDEX idx_grp_vis_id (Id),
+UNIQUE INDEX idx_grp_vis_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
@@ -143,20 +142,20 @@ Grupo varchar(128) NOT NULL,
 Listado_Objetos varchar(256),
 Estado integer DEFAULT 0,            -- Define el estado que deben tener los objetos del grupo
 Actualizar integer DEFAULT 0,
-UNIQUE INDEX idx_group_id (Id),
+UNIQUE INDEX idx_group_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FLAG (
 Id integer primary key,
 Variable varchar(128) NOT NULL,
 Valor integer DEFAULT 0,
-UNIQUE INDEX idx_flag_id (Id),
+UNIQUE INDEX idx_flag_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_FUNCTION (
 Id integer primary key,
 Funcion varchar(128) NOT NULL,
-UNIQUE INDEX idx_funcion_id (Id),
+UNIQUE INDEX idx_funcion_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
@@ -304,8 +303,8 @@ FOREIGN KEY(Funcion_Salida) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
-UNIQUE INDEX idx_auto_id (Id),
+UNIQUE INDEX idx_auto_id (Id)
 );
 
 
-# sudo mysqlcheck --all-databases --optimize
+-- sudo mysqlcheck --all-databases --optimize
