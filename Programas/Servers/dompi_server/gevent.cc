@@ -753,7 +753,7 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 			else
 			{
 				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor) "
+								"SET Estado = Analog_Mult_Div_Valor "
 								"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			}
 			break;
