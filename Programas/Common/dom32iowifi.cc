@@ -148,45 +148,41 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config, void
     char buffer[BUFFER_LEN+1];
     char data[256];
 
-    data[0] = 0;
-    if(config->wifi_ap1[0])
+    strcpy(data, "ap1=");
+    if( config->wifi_ap1[0] && strcmp(config->wifi_ap1, "NULL") ) 
     {
-        strcpy(data, "ap1=");
         strcat(data, config->wifi_ap1);
     }
-    if(config->wifi_ap1_pass[0])
+    strcat(data, "&ap1p=");
+    if(config->wifi_ap1_pass[0] && strcmp(config->wifi_ap1_pass, "NULL") ) 
     {
-        if(data[0]) strcat(data, "&");
-        strcat(data, "ap1p=");
         strcat(data, config->wifi_ap1_pass);
     }
-    if(config->wifi_ap2[0])
+    strcat(data, "&ap2=");
+    if(config->wifi_ap2[0] && strcmp(config->wifi_ap2, "NULL") ) 
     {
-        if(data[0]) strcat(data, "&");
-        strcat(data, "ap2=");
         strcat(data, config->wifi_ap2);
     }
-    if(config->wifi_ap2_pass[0])
+    strcat(data, "&ap2p=");
+    if(config->wifi_ap2_pass[0] && strcmp(config->wifi_ap2_pass, "NULL") ) 
     {
-        if(data[0]) strcat(data, "&");
-        strcat(data, "ap2p=");
         strcat(data, config->wifi_ap2_pass);
     }
-    if(config->wifi_host1[0])
+    strcat(data, "&ce1=");
+    if(config->wifi_host1[0] && strcmp(config->wifi_host1, "NULL") ) 
     {
-        if(data[0]) strcat(data, "&");
-        strcat(data, "ce1=");
         strcat(data, config->wifi_host1);
     }
-    if(config->wifi_host2[0])
+    strcat(data, "&ce2=");
+    if(config->wifi_host2[0] && strcmp(config->wifi_host2, "NULL") ) 
     {
-        if(data[0]) strcat(data, "&");
-        strcat(data, "ce2=");
         strcat(data, config->wifi_host2);
     }
-    if(data[0]) strcat(data, "&");
-    strcat(data, "path=");
-    strcat(data, config->rqst_path);
+    strcat(data, "&path=");
+    if(config->rqst_path[0] && strcmp(config->rqst_path, "NULL") ) 
+    {
+        strcat(data, config->rqst_path);
+    }
 
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion WiFi para %s [%s]", raddr, buffer);
