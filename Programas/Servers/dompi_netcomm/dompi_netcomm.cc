@@ -35,6 +35,7 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
+#include "cdb.h"
 #include "rbpiio.h"
 #include "config.h"
 #include "defines.h"
@@ -44,6 +45,7 @@ DPConfig *pConfig;
 CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
+CDB *pDB;
 
 #define BT_BUF_SIZE 256
 
@@ -65,11 +67,103 @@ int power2(int exp)
 	}
 }
 
-/* Callback para la respuesta de infoio */
-void dompi_infoio(const char* /*dest*/, const char* /*data*/)
+
+
+
+/*  */
+void Update_Last_Connection(const char* id, const char* data)
 {
+	int rc;
+	char query[4096];
+    time_t t;
+
+	t = time(&t);
+	sprintf(query, "UPDATE TB_DOM_PERIF "
+						"SET Ultimo_Ok = %lu, "
+						"Estado = 1 "
+						"WHERE Direccion_IP = \'%s\' ;",
+						t, id);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[Update_Last_Connection] Id: %s Data: [%s]", id, data);
+}
+
+/* Callback para SetIO */
+void SetIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
 
 }
+
+/* Callback para SwitchIO */
+void SwitchIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para PulseIO */
+void PulseIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetWifiConfig */
+void GetWifiConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetWifiConfig */
+void SetWifiConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetConfig */
+void Pulse_GetConfig(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetConfig */
+void GetConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetConfig */
+void SetConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetIO */
+void GetIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetTime */
+void SetTime_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* ****************************************************************************
+ * MAIN
+ * ***************************************************************************/
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -80,6 +174,28 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	char s[16];
 	int timer_count = 0;
+
+	char db_host[32];
+	char db_name[32];
+	char db_user[32];
+	char db_password[32];
+
+	CGMInitData gminit;
+
+    cJSON *json_req;
+    cJSON *json_resp;
+	cJSON *json_Direccion_IP;
+	cJSON *json_Tipo_HW;
+	cJSON *json_Tipo_ASS;
+	cJSON *json_Port;
+	cJSON *json_Estado;
+	cJSON *json_ap1;
+	cJSON *json_ap1_pass;
+	cJSON *json_ap2;
+	cJSON *json_ap2_pass;
+	cJSON *json_host1;
+	cJSON *json_host2;
+	cJSON *json_rqst_path;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -111,22 +227,11 @@ int main(/*int argc, char** argv, char** env*/void)
 		external_timeout = atoi(s) * 1000;
 	}
 
-	CGMInitData gminit;
-
-    cJSON *json_req;
-    cJSON *json_resp;
-	cJSON *json_Direccion_IP;
-	cJSON *json_Tipo_HW;
-	cJSON *json_Tipo_ASS;
-	cJSON *json_Port;
-	cJSON *json_Estado;
-	cJSON *json_ap1;
-	cJSON *json_ap1_pass;
-	cJSON *json_ap2;
-	cJSON *json_ap2_pass;
-	cJSON *json_host1;
-	cJSON *json_host2;
-	cJSON *json_rqst_path;
+	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
+	pConfig->GetParam("DBHOST", db_host);
+	pConfig->GetParam("DBNAME", db_name);
+	pConfig->GetParam("DBUSER", db_user);
+	pConfig->GetParam("DBPASSWORD", db_password);
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data dom32_wifi_data;
@@ -136,6 +241,20 @@ int main(/*int argc, char** argv, char** env*/void)
     RBPiIO::rbpi_config_data rbpi_wifi_data;
     pRBPi = new RBPiIO(m_pServer);
 
+	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
+	//pDB = new CDB(db_filename);
+	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s en %s ...", db_name, db_host);
+	pDB = new CDB(db_host, db_name, db_user, db_password);
+	if(pDB->Open() != 0)
+	{
+		m_pServer->m_pLog->Add(1, "ERROR al conectar con la base de datos %s en %s.", db_name, db_host);
+		OnClose(0);
+	}
+	else
+	{
+		//m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s", db_filename);
+		m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s en %s.", db_name, db_host);
+	}
 
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
@@ -173,11 +292,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
-						pD32W->SetConfig(json_Direccion_IP->valuestring, message, nullptr);
+						pD32W->SetConfig(json_Direccion_IP->valuestring, message, SetConfig_CallBack);
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
 					{
-						pRBPi->SetConfig(json_Direccion_IP->valuestring, message, nullptr);
+						pRBPi->SetConfig(json_Direccion_IP->valuestring, message, SetConfig_CallBack);
 					}
 					else
 					{
@@ -198,7 +317,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
-						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024, nullptr);
+						rc = pD32W->GetConfig(json_Direccion_IP->valuestring, message, 1024, GetConfig_CallBack);
 						m_pServer->m_pLog->Add(100, "pD32W->GetConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -210,7 +329,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
 					{
-						rc = pRBPi->GetConfig(json_Direccion_IP->valuestring, message, 1024, nullptr);
+						rc = pRBPi->GetConfig(json_Direccion_IP->valuestring, message, 1024, GetConfig_CallBack);
 						m_pServer->m_pLog->Add(100, "pRBPi->GetConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -269,7 +388,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							strcpy(dom32_wifi_data.wifi_host2, json_host2->valuestring);
 							strcpy(dom32_wifi_data.rqst_path, json_rqst_path->valuestring);
 
-							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, NULL);
+							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, SetWifiConfig_CallBack);
 						}
 						else
 						{
@@ -327,7 +446,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
-						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, nullptr);
+						rc = pD32W->GetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, GetWifiConfig_CallBack);
 						m_pServer->m_pLog->Add(100, "pD32W->GetWifiConfig(%s, ...) = %i", 
 											json_Direccion_IP->valuestring,
 											rc);
@@ -400,11 +519,11 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						/* Interface Vía IP mensajeria HTTP */
 						/* Envío de configuración a WiFi */
-						pD32W->SetTime(json_Direccion_IP->valuestring, nullptr);
+						pD32W->SetTime(json_Direccion_IP->valuestring, SetTime_CallBack);
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
 					{
-						pRBPi->SetTime(json_Direccion_IP->valuestring, nullptr);
+						pRBPi->SetTime(json_Direccion_IP->valuestring, SetTime_CallBack);
 					}
 					else
 					{
@@ -433,7 +552,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{	
 							/* Enviar mensaje al WiFi */
-							pD32W->SetIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pD32W->SetIO(json_Direccion_IP->valuestring, json_req, SetIO_CallBack);
 						}
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
@@ -442,7 +561,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{	
-							pRBPi->SetIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pRBPi->SetIO(json_Direccion_IP->valuestring, json_req, SetIO_CallBack);
 						}
 					}
 					else
@@ -472,7 +591,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req, SwitchIO_CallBack);
 						}
 						else
 						{
@@ -485,7 +604,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
-							pRBPi->SwitchIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pRBPi->SwitchIO(json_Direccion_IP->valuestring, json_req, SwitchIO_CallBack);
 						}
 						else
 						{
@@ -519,7 +638,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req, PulseIO_CallBack);
 						}
 						else
 						{
@@ -533,7 +652,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pRBPi->PulseIO(json_Direccion_IP->valuestring, json_req, dompi_infoio);
+							pRBPi->PulseIO(json_Direccion_IP->valuestring, json_req, PulseIO_CallBack);
 						}
 						else
 						{

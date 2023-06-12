@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 
-INCLUDE=-I../../Common/
+INCLUDE=-I../../Common/ `mysql_config --cflags`
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
-LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto
-OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o rbpiio.o
+LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto `mysql_config --libs`
+OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o rbpiio.o cmydb.o
 OUTPUT=dompi_netcomm
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -28,6 +28,12 @@ dom32iowifi.o: ../../Common/dom32iowifi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iowifi.cc
 rbpiio.o: ../../Common/rbpiio.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/rbpiio.cc
+#cpgdb.o: ../../Common/cpgdb.cc ../../Common/cpgdb.h
+#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cpgdb.cc
+#csqlite.o: ../../Common/csqlite.cc
+#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/csqlite.cc
+cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cmydb.cc
 
 dompi_netcomm: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
