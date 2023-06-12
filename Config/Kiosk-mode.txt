@@ -8,7 +8,7 @@ Removing these packages will free up some much-needed memory and reduce the numb
 To do this just run the following three commands on your Raspberry Pi. We have split these into three different commands to make them easier to copy and write out.
 
 -------------------------------------------------------------------------------
-apt purge wolfram-engine scratch scratch2 nuscratch sonic-pi idle3 -y
+apt purge wolfram-engine scratch scratch3 nuscratch sonic-pi idle3 -y
 apt purge smartsim java-common minecraft-pi libreoffice* -y
 apt clean
 apt autoremove -y
@@ -32,6 +32,7 @@ Just run the following command on your Raspberry Pi to install the package.
 
 -------------------------------------------------------------------------------
 apt install xdotool unclutter sed
+apt autoremove -y
 -------------------------------------------------------------------------------
 
 Now that those packages have been installed we can now proceed to the next stage of this tutorial. That is setting up Raspbian to auto login to our user. Having to log in every time for a kiosk would be an annoyance.

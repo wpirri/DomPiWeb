@@ -11,7 +11,7 @@ sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' /home/pi/.config/chromium
 rm -rf /home/pi/.cache/?hromium/?efault/?ache/*
 
 if [ -x /usr/bin/chromium-browser ]; then
-        /usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk http://192.168.10.24/
+        /usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk http://192.168.10.9/
 else
-        /usr/bin/chromium --noerrdialogs --disable-infobars --kiosk http://192.168.10.24/
+        /usr/bin/chromium --noerrdialogs --disable-infobars --kiosk http://192.168.10.9/
 fi
