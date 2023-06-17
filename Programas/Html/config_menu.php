@@ -58,7 +58,7 @@ include("head.php");
 </div>
 
 
-<div class="normal-btn" id="btn-config-upload" onclick="window.location.replace('update_list.php');">
+<div class="normal-btn" id="btn-config-upload" onclick="window.location.replace('update_form.php');">
 	<img id="upload-icon" class="icon-btn" src="images/upload.png">&nbsp;Actualizaci&oacute;n
 </div>
 
