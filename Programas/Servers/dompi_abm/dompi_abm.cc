@@ -429,7 +429,14 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
 
-										if( (!strcmp(json_un_obj->string, "Usuario_Cloud") || !strcmp(json_un_obj->string, "Clave_Cloud") ) && strlen(json_un_obj->valuestring) )
+										if(	strlen(json_un_obj->valuestring) && (
+											!strcmp(json_un_obj->string, "Usuario_Cloud") ||
+											!strcmp(json_un_obj->string, "Clave_Cloud") ||
+											!strcmp(json_un_obj->string, "Amazon_Key") ||
+											!strcmp(json_un_obj->string, "Google_Key") ||
+											!strcmp(json_un_obj->string, "Apple_Key") ||
+											!strcmp(json_un_obj->string, "Other_Key") ||
+											!strcmp(json_un_obj->string, "Estado")    ) )
 										{
 											cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
 										}
@@ -564,7 +571,14 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_values, json_un_obj->valuestring);
 											strcat(query_values, "'");
 
-											if( (!strcmp(json_un_obj->string, "Usuario_Cloud") || !strcmp(json_un_obj->string, "Clave_Cloud") ) && strlen(json_un_obj->valuestring) )
+											if(	strlen(json_un_obj->valuestring) && (
+												!strcmp(json_un_obj->string, "Usuario_Cloud") ||
+												!strcmp(json_un_obj->string, "Clave_Cloud") ||
+												!strcmp(json_un_obj->string, "Amazon_Key") ||
+												!strcmp(json_un_obj->string, "Google_Key") ||
+												!strcmp(json_un_obj->string, "Apple_Key") ||
+												!strcmp(json_un_obj->string, "Other_Key") ||
+												!strcmp(json_un_obj->string, "Estado")    ) )
 											{
 												cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
 											}

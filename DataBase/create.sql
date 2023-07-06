@@ -64,6 +64,10 @@ Telefono_Voz varchar(32),
 Telefono_SMS varchar(32),
 Usuario_Cloud varchar(256),
 Clave_Cloud varchar(256),
+Amazon_Key varchar(256),
+Google_Key varchar(256),
+Apple_Key varchar(256),
+Other_Key varchar(256),
 Tarjeta varchar(256),
 Permisos varchar(128),
 Dias_Semana varchar(128),
@@ -82,6 +86,11 @@ unique index idx_user_user_pass2 (Usuario,Pin_SMS),
 unique index idx_user_user_pass3 (Usuario,Pin_WEB),
 index idx_user_tarj (Tarjeta)
 );
+
+alter table TB_DOM_USER add column Amazon_Key varchar(256);
+alter table TB_DOM_USER add column Google_Key varchar(256);
+alter table TB_DOM_USER add column Apple_Key varchar(256);
+alter table TB_DOM_USER add column Other_Key varchar(256);
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 Id integer primary key,

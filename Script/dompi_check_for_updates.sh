@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHECK_PATH=/var/www/html/dompi-web/upload
+CHECK_PATH=/var/www/html/upload
 FILE_NAME=gmonitor_dompiweb_update.tar.gz
 MOVE_TO=/home/gmonitor
 
