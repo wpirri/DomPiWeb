@@ -87,11 +87,6 @@ unique index idx_user_user_pass3 (Usuario,Pin_WEB),
 index idx_user_tarj (Tarjeta)
 );
 
-alter table TB_DOM_USER add column Amazon_Key varchar(256);
-alter table TB_DOM_USER add column Google_Key varchar(256);
-alter table TB_DOM_USER add column Apple_Key varchar(256);
-alter table TB_DOM_USER add column Other_Key varchar(256);
-
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 Id integer primary key,
 MAC varchar(16) NOT NULL,                       -- MAC Address

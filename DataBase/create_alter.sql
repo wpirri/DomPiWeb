@@ -62,3 +62,9 @@ alter table TB_DOM_ALARM_SALIDA add INDEX idx_as_part (Particion);
 alter table TB_DOM_AUTO add UNIQUE INDEX idx_auto_id (Id);
 alter table TB_DOM_AUTO add INDEX idx_auto_tipo (Tipo);
 alter table TB_DOM_AUTO add INDEX idx_auto_obj_sens (Objeto_Sensor);
+
+## 05/07/2023 - Agregado de claves para asistentes
+alter table TB_DOM_USER add column Amazon_Key varchar(256);
+alter table TB_DOM_USER add column Google_Key varchar(256);
+alter table TB_DOM_USER add column Apple_Key varchar(256);
+alter table TB_DOM_USER add column Other_Key varchar(256);
