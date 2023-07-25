@@ -81,10 +81,10 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
+    cJSON *json_row;
     cJSON *json_user;
     cJSON *json_pass;
     cJSON *json_channel;
-    cJSON *json_query_result;
 	cJSON *json_Planta;
 	cJSON *json_Id;
 	cJSON *json_Nombre;
@@ -232,7 +232,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		if(rc > 0)
 		{
-			json_query_result = NULL;
+			json_Query_Result = NULL;
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 			/* ****************************************************************
@@ -353,6 +353,30 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
+						/* reemplazo las claves por 16* */
+						cJSON_ArrayForEach(json_row, json_Query_Result)
+						{
+							if(cJSON_GetObjectItemCaseSensitive(json_row, "Pin_Teclado"))
+							{
+								cJSON_DeleteItemFromObject(json_row, "Pin_Teclado");
+								cJSON_AddStringToObject(json_row, "Pin_Teclado", "****************");
+							}
+							if(cJSON_GetObjectItemCaseSensitive(json_row, "Pin_SMS"))
+							{
+								cJSON_DeleteItemFromObject(json_row, "Pin_SMS");
+								cJSON_AddStringToObject(json_row, "Pin_SMS", "****************");
+							}
+							if(cJSON_GetObjectItemCaseSensitive(json_row, "Pin_WEB"))
+							{
+								cJSON_DeleteItemFromObject(json_row, "Pin_WEB");
+								cJSON_AddStringToObject(json_row, "Pin_WEB", "****************");
+							}
+							if(cJSON_GetObjectItemCaseSensitive(json_row, "Clave_Cloud"))
+							{
+								cJSON_DeleteItemFromObject(json_row, "Clave_Cloud");
+								cJSON_AddStringToObject(json_row, "Clave_Cloud", "****************");
+							}
+						}
 						cJSON_Delete(json_obj);
 						json_obj = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
@@ -561,16 +585,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										}
 										else
 										{
-											/* Dato = Valor */
-											if(strlen(query_values) > 0)
-											{
-												strcat(query_values, ",");
-											}
-											strcat(query_values, json_un_obj->string);
-											strcat(query_values, "='");
-											strcat(query_values, json_un_obj->valuestring);
-											strcat(query_values, "'");
-
 											if(	strlen(json_un_obj->valuestring) && (
 												!strcmp(json_un_obj->string, "Usuario_Cloud") ||
 												!strcmp(json_un_obj->string, "Clave_Cloud") ||
@@ -581,6 +595,26 @@ int main(/*int argc, char** argv, char** env*/void)
 												!strcmp(json_un_obj->string, "Estado")    ) )
 											{
 												cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
+											}
+
+											if(	(strcmp(json_un_obj->string, "Pin_Teclado") || 
+												 strcmp(json_un_obj->valuestring, "****************")) &&
+												(strcmp(json_un_obj->string, "Pin_SMS") || 
+												 strcmp(json_un_obj->valuestring, "****************")) &&
+												(strcmp(json_un_obj->string, "Pin_WEB") || 
+												 strcmp(json_un_obj->valuestring, "****************")) &&
+												(strcmp(json_un_obj->string, "Clave_Cloud") || 
+												 strcmp(json_un_obj->valuestring, "****************"))  )
+											{
+												/* Dato = Valor */
+												if(strlen(query_values) > 0)
+												{
+													strcat(query_values, ",");
+												}
+												strcat(query_values, json_un_obj->string);
+												strcat(query_values, "='");
+												strcat(query_values, json_un_obj->valuestring);
+												strcat(query_values, "'");
 											}
 										}
 									}
@@ -1004,24 +1038,24 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				message[0] = 0;
 
-				json_query_result = cJSON_CreateArray();
+				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.Tipo "
 								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
 								"WHERE ASS.Dispositivo = HW.Id;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_query_result, query);
+				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_query_result);
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
 				{
-					cJSON_Delete(json_query_result);
+					cJSON_Delete(json_Query_Result);
 				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -2566,7 +2600,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Tipo");
-				json_query_result = cJSON_CreateArray();
+				json_Query_Result = cJSON_CreateArray();
 				if(json_un_obj)
 				{
 					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
@@ -2582,19 +2616,19 @@ int main(/*int argc, char** argv, char** env*/void)
 										"(AU.Objeto_Salida = ASS.Id);");
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_query_result, query);
+				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_query_result);
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
 				{
-					cJSON_Delete(json_query_result);
+					cJSON_Delete(json_Query_Result);
 				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -2916,23 +2950,23 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_query_result = cJSON_CreateArray();
+				json_Query_Result = cJSON_CreateArray();
 				sprintf(query, "SELECT Id, Nombre, Estado_Activacion AS Activada, Estado_Memoria AS Memoria "
 								"FROM TB_DOM_ALARM_PARTICION;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_query_result, query);
+				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_query_result);
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
 				{
-					cJSON_Delete(json_query_result);
+					cJSON_Delete(json_Query_Result);
 				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -2950,23 +2984,23 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_query_result = cJSON_CreateArray();
+				json_Query_Result = cJSON_CreateArray();
 				sprintf(query, "SELECT * "
 								"FROM TB_DOM_ALARM_PARTICION;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_query_result, query);
+				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
 					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_query_result);
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
 				}
 				else
 				{
-					cJSON_Delete(json_query_result);
+					cJSON_Delete(json_Query_Result);
 				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -3303,24 +3337,24 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Particion)
 				{
-					json_query_result = cJSON_CreateArray();
+					json_Query_Result = cJSON_CreateArray();
 					sprintf(query, "SELECT Z.Id AS Id,  A.Objeto AS Nombre, Z.Tipo_Zona AS Tipo, Z.Grupo AS Grupo "
 									"FROM TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
 									"WHERE Z.Objeto_Zona = A.Id AND Z.Particion = \'%s\';", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_query_result, query);
+					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_query_result);
+						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 						cJSON_Delete(json_obj);
 					}
 					else
 					{
-						cJSON_Delete(json_query_result);
+						cJSON_Delete(json_Query_Result);
 					}
 				}
 
@@ -3343,24 +3377,24 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Id)
 				{
-					json_query_result = cJSON_CreateArray();
+					json_Query_Result = cJSON_CreateArray();
 					sprintf(query, "SELECT * "
 									"FROM TB_DOM_ALARM_ZONA "
 									"WHERE Id = \'%s\';", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_query_result, query);
+					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_query_result);
+						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 						cJSON_Delete(json_obj);
 					}
 					else
 					{
-						cJSON_Delete(json_query_result);
+						cJSON_Delete(json_Query_Result);
 					}
 				}
 
@@ -3631,24 +3665,24 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Particion)
 				{
-					json_query_result = cJSON_CreateArray();
+					json_Query_Result = cJSON_CreateArray();
 					sprintf(query, "SELECT S.Id AS Id,  A.Objeto AS Nombre, S.Tipo_Salida AS Tipo "
 									"FROM TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
 									"WHERE S.Objeto_Salida = A.Id AND S.Particion = \'%s\';", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_query_result, query);
+					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_query_result);
+						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 						cJSON_Delete(json_obj);
 					}
 					else
 					{
-						cJSON_Delete(json_query_result);
+						cJSON_Delete(json_Query_Result);
 					}
 				}
 
@@ -3671,24 +3705,24 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Id)
 				{
-					json_query_result = cJSON_CreateArray();
+					json_Query_Result = cJSON_CreateArray();
 					sprintf(query, "SELECT * "
 									"FROM TB_DOM_ALARM_SALIDA "
 									"WHERE Id = \'%s\';", json_Id->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_query_result, query);
+					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
 						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_query_result);
+						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
 						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 						cJSON_Delete(json_obj);
 					}
 					else
 					{
-						cJSON_Delete(json_query_result);
+						cJSON_Delete(json_Query_Result);
 					}
 				}
 
