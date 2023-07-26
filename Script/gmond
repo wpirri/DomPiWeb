@@ -79,8 +79,6 @@ case $1 in
     gmt_pid=`ps -eaf | grep -v grep | grep $SERVER_BIN/gmt | awk '{ print $2; }'`
     $SU "kill ${gmt_pid}" $SU_USER
 
-    #gmd_pid=`ps -eaf | grep -v grep | grep $SERVER_BIN/gmd | awk '{ print $2; }'`
-    #$SU "kill ${gmd_pid}" $SU_USER
     sleep 3
     /usr/local/sbin/drop_ipc.sh $SU_USER
   ;;

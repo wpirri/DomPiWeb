@@ -53,17 +53,6 @@ if [ "X${x}" = "X" ]; then
     exit 1
 fi
 
-echo "Construyendo los links de las librerias..."
-# Reconstruyo los links
-ln -vs /usr/lib/libgmc.so.0.0.0 /usr/lib/libgmc.so
-ln -vs /usr/lib/libgmc.so.0.0.0 /usr/lib/libgmc.so.0 
-ln -vs /usr/lib/libgmq.so.0.0.0 /usr/lib/libgmq.so
-ln -vs /usr/lib/libgmq.so.0.0.0 /usr/lib/libgmq.so.0
-ln -vs /usr/lib/libgmqw.so.0.0.0 /usr/lib/libgmqw.so
-ln -vs /usr/lib/libgmqw.so.0.0.0 /usr/lib/libgmqw.so.0
-ln -vs /usr/lib/libgmshared.so.0.0.0 /usr/lib/libgmshared.so
-ln -vs /usr/lib/libgmshared.so.0.0.0 /usr/lib/libgmshared.so.0
-
 echo "Creando directorios..."
 # Creo los directorios necesarios
 mkdir -v -p $SYTEM_VAR

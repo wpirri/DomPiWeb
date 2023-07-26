@@ -17,36 +17,36 @@ uninstall:
 	make -C Programas uninstall
 
 installer:
-	rm -rf $(SYTEM_HOME)
-	mkdir -p $(SYTEM_HOME)
-	mkdir -p $(SYTEM_HOME)/cgi
-	mkdir -p $(SYTEM_HOME)/html
+	rm -rf $(RUN_HOME)
+	mkdir -p $(RUN_HOME)
+	mkdir -p $(RUN_HOME)/cgi
+	mkdir -p $(RUN_HOME)/html
 
-	cp -av Programas/Html/* $(SYTEM_HOME)/html/
-	rm $(SYTEM_HOME)/html/Makefile
-	cp Programas/Clientes/abmalarma.cgi/abmalarma.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmassign.cgi/abmassign.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmat.cgi/abmat.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmev.cgi/abmev.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmsys.cgi/abmsys.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/abmuser.cgi/abmuser.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/infoio.cgi/infoio.cgi $(SYTEM_HOME)/cgi/
-	cp Programas/Clientes/statusio.cgi/statusio.cgi $(SYTEM_HOME)/cgi/
+	cp -av Programas/Html/* $(RUN_HOME)/html/
+	rm $(RUN_HOME)/html/Makefile
+	cp Programas/Clientes/abmalarma.cgi/abmalarma.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmassign.cgi/abmassign.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmat.cgi/abmat.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmev.cgi/abmev.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmsys.cgi/abmsys.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmuser.cgi/abmuser.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/infoio.cgi/infoio.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/statusio.cgi/statusio.cgi $(RUN_HOME)/cgi/
 	
 	tar cvzf $(UPDATE_FILE) --files-from=update-files.lst
 
-	cp Database/create.sql $(SYTEM_HOME)/
-	cp Database/init.sql $(SYTEM_HOME)/
-	cp Script/gmond $(SYTEM_HOME)/
-	cp Script/install.sh $(SYTEM_HOME)/
-	cp Config/dompiweb.config $(SYTEM_HOME)/
-	cp Config/funcion.tab $(SYTEM_HOME)/
-	cp Config/funcion_parametro.tab $(SYTEM_HOME)/
-	cp Config/server.tab $(SYTEM_HOME)/
-	cp Config/server_parametro.tab $(SYTEM_HOME)/
+	cp Database/create.sql $(RUN_HOME)/
+	cp Database/init.sql $(RUN_HOME)/
+	cp Script/gmond $(RUN_HOME)/
+	cp Script/install.sh $(RUN_HOME)/
+	cp Config/dompiweb.config $(RUN_HOME)/
+	cp Config/funcion.tab $(RUN_HOME)/
+	cp Config/funcion_parametro.tab $(RUN_HOME)/
+	cp Config/server.tab $(RUN_HOME)/
+	cp Config/server_parametro.tab $(RUN_HOME)/
 	
 	tar cvzf $(INSTALL_FILE) --files-from=install-files.lst
 
@@ -59,7 +59,7 @@ installer:
 	# * 
 	# * cd /
 	# * tar xvzf /home/gmonitor/gmonitor_dompiweb_install.tar.gz
-	# * cd $(SYTEM_HOME)
+	# * cd $(RUN_HOME)
 	# * ./install.sh
 	# * 
 	# *******************************************************************************"
