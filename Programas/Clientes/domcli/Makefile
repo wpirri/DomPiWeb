@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
-INCLUDE=-I../../Common/
+include ../../../configure.mk
+
+INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=domcli.o config.o strfunc.o
@@ -27,8 +29,8 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
-	cp $(OUTPUT) /usr/local/bin/
+	$(CP) $(OUTPUT) $(INST_BINDIR)/
 
 uninstall:
-	$(RM) /usr/local/bin/$(OUTPUT)
+	$(RM) $(INST_BINDIR)/$(OUTPUT)
 

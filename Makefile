@@ -1,10 +1,6 @@
  #!/usr/bin/make -f
 
-GMON_USER=gmonitor
-SYTEM_HOME=/home/$(GMON_USER)
-SYTEM_VAR=/var/$(GMON_USER)
-UPDATE_FILE=gmonitor_dompiweb_update.tar.gz
-INSTALL_FILE=gmonitor_dompiweb_install.tar.gz
+include configure.mk
 
 all:
 	make -C Programas

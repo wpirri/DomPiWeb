@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
-INCLUDE=-I../../Common/
+include ../../../configure.mk
+
+INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lsqlite3 -lcjson
 OBJECTS=dbutil.o csqlite.o

@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
-INCLUDE=-I../../Common/ `mysql_config --cflags`
+include ../../../configure.mk
+
+INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
@@ -40,8 +42,8 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
-	chmod +x install_server.sh
-	./install_server.sh $(OUTPUT)
+	$(CHMOD) +x install_server.sh
+	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
 
 uninstall:
-	$(RM) /usr/local/sbin/$(OUTPUT)
+	$(RM) $(INST_SBINDIR)/$(OUTPUT)
