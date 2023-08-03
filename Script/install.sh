@@ -83,7 +83,7 @@ $SQL < $SYTEM_HOME/init.sql
 
 echo "Agregando script de arranque..."
 # Agrego el script de arranque
-cp -v $SYTEM_HOME/gmond /etc/init.d
+ln -s /usr/local/sbin/gmond /etc/init.d/gmond
 
 echo "Generando arbol web..."
 # Copio el arbol web y cgi
