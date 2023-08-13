@@ -1,9 +1,9 @@
 #!/bin/sh
 
-HOST=192.168.10.31
-DB=DB_DOMPIWEB2
-USER=dompi_web2
-PASS=dompi_web2
+HOST=127.0.0.1
+DB=DB_DOMPIWEB
+USER=dompi_web
+PASS=dompi_web
 
 FECHA=`date +%y%m%d%H%M%S`
 
