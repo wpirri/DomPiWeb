@@ -1,10 +1,12 @@
 <?php
     $REQUEST_SCHEME = $_SERVER['REQUEST_SCHEME'];
     $SERVER_NAME = $_SERVER['SERVER_NAME'];
+    $SERVER_PORT = $_SERVER['SERVER_PORT'];
+
     if( !isset($PLANTA)) $PLANTA = 1;
     if( !isset($edit)) $edit = 0;
     //$objects_json = file_get_contents($REQUEST_SCHEME."://".$SERVER_NAME."/cgi-bin/abmassign.cgi?funcion=info&Planta=".$PLANTA);
-    $obj_list = json_decode(file_get_contents($REQUEST_SCHEME."://".$SERVER_NAME."/cgi-bin/abmassign.cgi?funcion=status&Planta=".$PLANTA), true)['response'];
+    $obj_list = json_decode(file_get_contents($REQUEST_SCHEME."://".$SERVER_NAME.":".$SERVER_PORT."/cgi-bin/abmassign.cgi?funcion=status&Planta=".$PLANTA), true)['response'];
     
     $count = count($obj_list);
     for ($i = 0; $i < $count; $i++)
