@@ -77,6 +77,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_password[32];
 	unsigned long message_len;
 	char s[16];
+	int wait;
 
 	cJSON *json_obj;
 	cJSON *json_arr;
@@ -146,8 +147,10 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(1, "Interface con la nube inicializada.");
 
-	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, 250 )) >= 0)
+	wait = 250;
+	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, wait )) >= 0)
 	{
+		wait = 250;
 		if(rc > 0)
 		{
 			message[message_len] = 0;
@@ -321,6 +324,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
 						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+						wait = 25;
 					}
 				}
 			}

@@ -353,8 +353,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *Condicion_Valor;
 //    cJSON *Flags;
 
-    m_pServer->m_pLog->Add(50, "[CheckEvent] HW: %i Port: %s Estado: %s", 
-                                hw_id, port, (estado)?"ON":"OFF");
+    m_pServer->m_pLog->Add(20, "[CheckEvent] HW: %i Port: %s Estado: %s", hw_id, port, (estado)?"ON":"OFF");
 
     /* Busco si hay un evento para este cambio */
     json_QueryArray = cJSON_CreateArray();

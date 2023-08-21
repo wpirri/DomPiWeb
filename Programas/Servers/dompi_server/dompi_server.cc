@@ -173,6 +173,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
+	char sys_backup[32];
 	char query[4096];
 	unsigned long message_len;
 	time_t t;
@@ -238,6 +239,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		internal_timeout = atoi(s) * 1000;
 	}
+
+	sys_backup[0] = 0;
+	pConfig->GetParam("BACKUP", sys_backup);
 
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
@@ -307,6 +311,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ID");
 				if(json_HW_Id)
 				{
+
+					if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
+
 					rc = pEV->ExtIOEvent(message);
 					//message[0] = 0;
 					if(rc == 1)
@@ -1173,7 +1180,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if(json_Objeto && json_Accion)
 						{
-							m_pServer->m_pLog->Add(100, "[dompi_cloud_notification] Objeto: %s - Accion: %s", 
+							m_pServer->m_pLog->Add(20, "[CLOUD] Objeto: %s - Accion: %s", 
 								json_Objeto->valuestring, json_Accion->valuestring);
 
 							if( !strcmp(json_Accion->valuestring, "on"))
@@ -1234,6 +1241,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				LoadSystemConfig();
 			}
+			
 
 
 

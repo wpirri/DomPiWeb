@@ -32,6 +32,8 @@ using namespace std;
 #include <string.h>
 #include <math.h>
 
+#define MAX_BUFFER_LEN 32767
+
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
@@ -39,6 +41,10 @@ using namespace std;
 #include "rbpiio.h"
 #include "config.h"
 #include "defines.h"
+
+#ifndef min
+#define min(a,b) (((a)<(b))?(a):(b))
+#endif
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
@@ -50,24 +56,7 @@ CDB *pDB;
 #define BT_BUF_SIZE 256
 
 void OnClose(int sig);
-
-int power2(int exp)
-{
-	switch(exp)
-	{
-		case 0x00: return 0x01;
-		case 0x01: return 0x02;
-		case 0x02: return 0x04;
-		case 0x03: return 0x08;
-		case 0x04: return 0x10;
-		case 0x05: return 0x20;
-		case 0x06: return 0x40;
-		case 0x07: return 0x80;
-		default:   return 0x00;
-	}
-}
-
-
+int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
 
 
 /*  */
@@ -89,6 +78,13 @@ void Update_Last_Connection(const char* id, const char* data)
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[Update_Last_Connection] Id: %s Data: [%s]", id, data);
+}
+
+int Check_Remote_Synch( void )
+{
+
+
+	return 1;
 }
 
 /* Callback para SetIO */
@@ -174,11 +170,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	char s[16];
 	int timer_count = 0;
+	int timer_synch = 0;
 
 	char db_host[32];
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
+	char sys_backup[32];
 
 	CGMInitData gminit;
 
@@ -215,6 +213,12 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pConfig = new DPConfig("/etc/dompiweb.config");
 
+	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
+	pConfig->GetParam("DBHOST", db_host);
+	pConfig->GetParam("DBNAME", db_name);
+	pConfig->GetParam("DBUSER", db_user);
+	pConfig->GetParam("DBPASSWORD", db_password);
+
 	internal_timeout = 1000;
 	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
 	{
@@ -227,11 +231,10 @@ int main(/*int argc, char** argv, char** env*/void)
 		external_timeout = atoi(s) * 1000;
 	}
 
-	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
-	pConfig->GetParam("DBHOST", db_host);
-	pConfig->GetParam("DBNAME", db_name);
-	pConfig->GetParam("DBUSER", db_user);
-	pConfig->GetParam("DBPASSWORD", db_password);
+	if(	pConfig->GetParam("BACKUP", sys_backup))
+	{
+		sys_backup[0] = 0;
+	}
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data dom32_wifi_data;
@@ -688,6 +691,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				pD32W->Timer();
 				pRBPi->Timer();
 			}
+
+			/* expiracion del timer 10s*/
+			if(++timer_synch >= 10)
+			{
+				if(Check_Remote_Synch()) timer_synch = 0;
+			}
 		}
 
 		pD32W->Task();
@@ -718,4 +727,63 @@ void OnClose(int sig)
 	delete m_pServer;
 	
 	exit(0);
+}
+
+int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max)
+{
+    /*
+    * GET
+    * 1.- %s: URI
+    * 2.- %s: GET
+	* 3.- %s: Host
+    */
+    char http_get[] =     "GET %s%s HTTP/1.1\r\n"
+                        "Host: %s\r\n"
+                        "Connection: close\r\n"
+                        "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
+                        "Accept: text/html,text/xml\r\n\r\n";
+
+    char url_default[] = "/cgi-bin/gmonitor_get_saf.cgi";
+
+	CTcp *pSock;
+	char buffer[MAX_BUFFER_LEN+1];
+	char get[256];
+	char *ps;
+	int rc = 0;
+
+	buffer[0] = 0;
+	sprintf(get, "?saf-name=%s", saf_name);
+	if( proto && !strcmp(proto, "https"))
+	{
+		pSock = new CTcp(1, 3);
+		if(port == 0) port = 443;
+    		sprintf(buffer, http_get, url_default, get, host);
+		rc =pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		delete pSock;
+	}
+	else
+	{
+		pSock = new CTcp();
+		if(port == 0) port = 80;
+    		sprintf(buffer, http_get, url_default, get, host);
+		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		delete pSock;
+	}
+	if(msg)
+	{
+		*msg = 0;
+		if(rc > 0 && strlen(buffer))
+		{
+			ps = strstr(buffer, "\r\n\r\n");
+			if(ps)
+			{
+				ps += 4;
+
+				/* Está viniendo algo raro al princiìo de la parte de datos que no la puedo sacar */
+				while(*ps && *ps != '{') ps++;
+				strncpy(msg, ps, min(msg_max, strlen(ps)));
+			}
+		}
+	}
+	return rc;
 }
