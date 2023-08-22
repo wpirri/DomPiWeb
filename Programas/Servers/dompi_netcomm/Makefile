@@ -5,7 +5,7 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o rbpiio.o cmydb.o
+OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o rbpiio.o cmydb.o gevent.o
 OUTPUT=dompi_netcomm
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -28,6 +28,8 @@ strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 dom32iowifi.o: ../../Common/dom32iowifi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iowifi.cc
+gevent.o: ../../Common/gevent.cc ../../Common/gevent.h
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/gevent.cc
 rbpiio.o: ../../Common/rbpiio.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/rbpiio.cc
 #cpgdb.o: ../../Common/cpgdb.cc ../../Common/cpgdb.h

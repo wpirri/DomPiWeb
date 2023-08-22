@@ -29,9 +29,9 @@ strfunc.o: ../../Common/strfunc.cc
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/csqlite.cc
 cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/cmydb.cc
+gevent.o: ../../Common/gevent.cc ../../Common/gevent.h
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/gevent.cc
 
-gevent.o: gevent.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c gevent.cc
 alarma.o: alarma.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c alarma.cc
 
