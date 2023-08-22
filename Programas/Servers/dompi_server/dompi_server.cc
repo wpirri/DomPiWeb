@@ -115,6 +115,7 @@ CDB *pDB;
 GEvent *pEV;
 CAlarma *pAlarma;
 cJSON *json_System_Config;
+char sys_backup[32];
 
 time_t last_daily;
 
@@ -173,7 +174,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
-	char sys_backup[32];
 	char query[4096];
 	unsigned long message_len;
 	time_t t;
@@ -311,14 +311,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ID");
 				if(json_HW_Id)
 				{
-
-					if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
-
 					rc = pEV->ExtIOEvent(message);
 					//message[0] = 0;
 					if(rc == 1)
 					{
 						pAlarma->ExtIOEvent(message);
+						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
 						/* OK */
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
@@ -1533,6 +1531,9 @@ void AssignTask( void )
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 				/* Se envía a todos */
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));
+
+				/* Encolo la sincronización */
+				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
 			}
 
 			if(rc == 0)

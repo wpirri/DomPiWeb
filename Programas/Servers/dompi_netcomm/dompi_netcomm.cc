@@ -37,125 +37,38 @@ using namespace std;
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
+#include "gevent.h"
 #include "cdb.h"
 #include "rbpiio.h"
 #include "config.h"
 #include "defines.h"
 
-#ifndef min
-#define min(a,b) (((a)<(b))?(a):(b))
-#endif
-
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
+GEvent *pEV;
 CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
 CDB *pDB;
+char sys_backup[32];
 
 #define BT_BUF_SIZE 256
 
 void OnClose(int sig);
 int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
+void Update_Last_Connection(const char* id, const char* data);
+int Check_Remote_Synch( void );
+void SetIO_CallBack(const char* id, const char* data);
+void SwitchIO_CallBack(const char* id, const char* data);
+void PulseIO_CallBack(const char* id, const char* data);
+void GetWifiConfig_CallBack(const char* id, const char* data);
+void SetWifiConfig_CallBack(const char* id, const char* data);
+void Pulse_GetConfig(const char* id, const char* data);
+void GetConfig_CallBack(const char* id, const char* data);
+void SetConfig_CallBack(const char* id, const char* data);
+void GetIO_CallBack(const char* id, const char* data);
+void SetTime_CallBack(const char* id, const char* data);
 
-
-/*  */
-void Update_Last_Connection(const char* id, const char* data)
-{
-	int rc;
-	char query[4096];
-    time_t t;
-
-	t = time(&t);
-	sprintf(query, "UPDATE TB_DOM_PERIF "
-						"SET Ultimo_Ok = %lu, "
-						"Estado = 1 "
-						"WHERE Direccion_IP = \'%s\' ;",
-						t, id);
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(NULL, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[Update_Last_Connection] Id: %s Data: [%s]", id, data);
-}
-
-int Check_Remote_Synch( void )
-{
-
-
-	return 1;
-}
-
-/* Callback para SetIO */
-void SetIO_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para SwitchIO */
-void SwitchIO_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para PulseIO */
-void PulseIO_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para GetWifiConfig */
-void GetWifiConfig_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para SetWifiConfig */
-void SetWifiConfig_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para GetConfig */
-void Pulse_GetConfig(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para GetConfig */
-void GetConfig_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para SetConfig */
-void SetConfig_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para GetIO */
-void GetIO_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para SetTime */
-void SetTime_CallBack(const char* id, const char* data)
-{
-	Update_Last_Connection(id,data);
-
-}
 
 /* ****************************************************************************
  * MAIN
@@ -176,7 +89,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
-	char sys_backup[32];
 
 	CGMInitData gminit;
 
@@ -231,10 +143,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		external_timeout = atoi(s) * 1000;
 	}
 
-	if(	pConfig->GetParam("BACKUP", sys_backup))
-	{
-		sys_backup[0] = 0;
-	}
+	sys_backup[0] = 0;
+	pConfig->GetParam("BACKUP", sys_backup);
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data dom32_wifi_data;
@@ -258,6 +168,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		//m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s", db_filename);
 		m_pServer->m_pLog->Add(10, "Conectado a la base de datos %s en %s.", db_name, db_host);
 	}
+
+	pEV = new GEvent(pDB, m_pServer);
 
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
@@ -693,9 +605,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 
 			/* expiracion del timer 10s*/
-			if(++timer_synch >= 10)
+			if(++timer_synch >= 1000)
 			{
-				if(Check_Remote_Synch()) timer_synch = 0;
+				if(Check_Remote_Synch() != 1) timer_synch = 0;
 			}
 		}
 
@@ -724,6 +636,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
 
+	delete pEV;
 	delete m_pServer;
 	
 	exit(0);
@@ -737,7 +650,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
     * 2.- %s: GET
 	* 3.- %s: Host
     */
-    char http_get[] =     "GET %s%s HTTP/1.1\r\n"
+    char http_get[] =   "GET %s%s HTTP/1.1\r\n"
                         "Host: %s\r\n"
                         "Connection: close\r\n"
                         "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
@@ -752,7 +665,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 	int rc = 0;
 
 	buffer[0] = 0;
-	sprintf(get, "?saf-name=%s", saf_name);
+	sprintf(get, "?saf=%s", saf_name);
 	if( proto && !strcmp(proto, "https"))
 	{
 		pSock = new CTcp(1, 3);
@@ -781,9 +694,133 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 
 				/* Está viniendo algo raro al princiìo de la parte de datos que no la puedo sacar */
 				while(*ps && *ps != '{') ps++;
-				strncpy(msg, ps, min(msg_max, strlen(ps)));
+				strncpy(msg, ps, msg_max);
 			}
+		}
+		rc = strlen(msg);
+	}
+	return rc;
+}
+
+int Check_Remote_Synch( void )
+{
+	int rc;
+	char saf_message[MAX_BUFFER_LEN];
+
+	if(strlen(sys_backup) == 0) return (-1);
+	m_pServer->m_pLog->Add(100, "[Check_Remote_Synch]");
+
+	rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_infoio_synch", saf_message, MAX_BUFFER_LEN);
+	m_pServer->m_pLog->Add(100, "[SYNCH] INFO rc=%i [%s]", rc, saf_message);
+	if(rc > 100)
+	{
+		pEV->SyncIO(saf_message);
+		rc = 1;
+	}
+	else
+	{
+		rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_changeio_synch", saf_message, MAX_BUFFER_LEN);
+		m_pServer->m_pLog->Add(100, "[SYNCH] CHANGE rc=%i [%s]", rc, saf_message);
+		if(rc > 100)
+		{
+			pEV->ChangeIO(saf_message);
+			rc = 1;
+		}
+		else
+		{
+			rc = 0;
 		}
 	}
 	return rc;
+}
+
+/*  */
+void Update_Last_Connection(const char* id, const char* data)
+{
+	int rc;
+	char query[4096];
+    time_t t;
+
+	t = time(&t);
+	sprintf(query, "UPDATE TB_DOM_PERIF "
+						"SET Ultimo_Ok = %lu, "
+						"Estado = 1 "
+						"WHERE Direccion_IP = \'%s\' ;",
+						t, id);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(NULL, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[Update_Last_Connection] Id: %s Data: [%s]", id, data);
+}
+
+/* Callback para SetIO */
+void SetIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SwitchIO */
+void SwitchIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para PulseIO */
+void PulseIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetWifiConfig */
+void GetWifiConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetWifiConfig */
+void SetWifiConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetConfig */
+void Pulse_GetConfig(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetConfig */
+void GetConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetConfig */
+void SetConfig_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para GetIO */
+void GetIO_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SetTime */
+void SetTime_CallBack(const char* id, const char* data)
+{
+	Update_Last_Connection(id,data);
+
 }
