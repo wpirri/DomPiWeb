@@ -13,6 +13,7 @@ all:
 	make -C domcli
 	make -C infoio.cgi
 	make -C statusio.cgi
+	make -C gmonitor_get_saf.cgi
 
 clean:
 	make -C abmassign.cgi clean
@@ -27,6 +28,7 @@ clean:
 	make -C domcli clean
 	make -C infoio.cgi clean
 	make -C statusio.cgi clean
+	make -C gmonitor_get_saf.cgi clean
 
 install:
 	make -C abmassign.cgi install
@@ -41,6 +43,7 @@ install:
 	make -C domcli install
 	make -C infoio.cgi install
 	make -C statusio.cgi install
+	make -C gmonitor_get_saf.cgi install
 
 uninstall:
 	make -C abmassign.cgi uninstall
@@ -55,3 +58,4 @@ uninstall:
 	make -C domcli uninstall
 	make -C infoio.cgi uninstall
 	make -C statusio.cgi uninstall
+	make -C gmonitor_get_saf.cgi uninstall

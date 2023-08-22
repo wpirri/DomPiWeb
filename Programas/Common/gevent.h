@@ -25,6 +25,8 @@ public:
     virtual ~GEvent();
 
     int ExtIOEvent(const char* json_evt);
+    int SyncIO(const char* json_evt);
+    int ChangeIO(const char* json_evt);
 
     void CheckEvent(int hw_id, const char* port, int estado);
     void CheckAuto(int hw_id, const char* port, int estado);

@@ -115,6 +115,7 @@ CDB *pDB;
 GEvent *pEV;
 CAlarma *pAlarma;
 cJSON *json_System_Config;
+char sys_backup[32];
 
 time_t last_daily;
 
@@ -239,6 +240,9 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 
+	sys_backup[0] = 0;
+	pConfig->GetParam("BACKUP", sys_backup);
+
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
 	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s en %s ...", db_name, db_host);
@@ -312,6 +316,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc == 1)
 					{
 						pAlarma->ExtIOEvent(message);
+						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
 						/* OK */
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
@@ -1173,7 +1178,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if(json_Objeto && json_Accion)
 						{
-							m_pServer->m_pLog->Add(100, "[dompi_cloud_notification] Objeto: %s - Accion: %s", 
+							m_pServer->m_pLog->Add(20, "[CLOUD] Objeto: %s - Accion: %s", 
 								json_Objeto->valuestring, json_Accion->valuestring);
 
 							if( !strcmp(json_Accion->valuestring, "on"))
@@ -1234,6 +1239,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				LoadSystemConfig();
 			}
+			
 
 
 
@@ -1525,6 +1531,9 @@ void AssignTask( void )
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 				/* Se envía a todos */
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));
+
+				/* Encolo la sincronización */
+				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
 			}
 
 			if(rc == 0)
