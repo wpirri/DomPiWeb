@@ -121,8 +121,9 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_netcomm");
-	m_pServer->m_pLog->Add(1, "Iniciando interface NETCOMM");
+	m_pServer->m_pLog->Add(1, "Iniciando interface NETCOMM...");
 
+	m_pServer->m_pLog->Add(10, "Leyendo configuración...");
 	pConfig = new DPConfig("/etc/dompiweb.config");
 
 	//pConfig->GetParam("SQLITE_DB_FILENAME", db_filename);
@@ -179,6 +180,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
+
+	m_pServer->m_pLog->Add(1, "Servicios de Comunicación con Interfaces Locales inicializados.");
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
@@ -459,6 +462,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
+					m_pServer->m_pLog->Add(20, "[dompi_hw_set_io] IP: %s Port: %s Estado: %s",
+											json_Direccion_IP->valuestring, json_Port->valuestring, json_Estado->valuestring);
 					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Interface Vía IP mensajeria HTTP */
@@ -498,6 +503,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
+					m_pServer->m_pLog->Add(20, "[dompi_hw_switch_io] IP: %s Port: %s",
+											json_Direccion_IP->valuestring, json_Port->valuestring);
 					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Interface Vía IP mensajeria HTTP */
@@ -545,6 +552,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{
+					m_pServer->m_pLog->Add(20, "[dompi_hw_pulse_io] IP: %s Port: %s",
+											json_Direccion_IP->valuestring, json_Port->valuestring);
 					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
 					{
 						/* Interface Vía IP mensajeria HTTP */
@@ -758,6 +767,8 @@ void Update_Last_Connection(const char* id, const char* data)
 /* Callback para SetIO */
 void SetIO_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[SetIO_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SetIO_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -765,6 +776,8 @@ void SetIO_CallBack(const char* id, const char* data)
 /* Callback para SwitchIO */
 void SwitchIO_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[SwitchIO_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SwitchIO_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -772,6 +785,8 @@ void SwitchIO_CallBack(const char* id, const char* data)
 /* Callback para PulseIO */
 void PulseIO_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[PulseIO_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[PulseIO_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -779,6 +794,8 @@ void PulseIO_CallBack(const char* id, const char* data)
 /* Callback para GetWifiConfig */
 void GetWifiConfig_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[GetWifiConfig_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[GetWifiConfig_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -786,6 +803,8 @@ void GetWifiConfig_CallBack(const char* id, const char* data)
 /* Callback para SetWifiConfig */
 void SetWifiConfig_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[SetWifiConfig_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SetWifiConfig_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -793,6 +812,8 @@ void SetWifiConfig_CallBack(const char* id, const char* data)
 /* Callback para GetConfig */
 void Pulse_GetConfig(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[Pulse_GetConfig] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[Pulse_GetConfig] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -800,6 +821,8 @@ void Pulse_GetConfig(const char* id, const char* data)
 /* Callback para GetConfig */
 void GetConfig_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[GetConfig_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[GetConfig_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -807,6 +830,8 @@ void GetConfig_CallBack(const char* id, const char* data)
 /* Callback para SetConfig */
 void SetConfig_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[SetConfig_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SetConfig_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -814,6 +839,8 @@ void SetConfig_CallBack(const char* id, const char* data)
 /* Callback para GetIO */
 void GetIO_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[GetIO_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[GetIO_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }
@@ -821,6 +848,8 @@ void GetIO_CallBack(const char* id, const char* data)
 /* Callback para SetTime */
 void SetTime_CallBack(const char* id, const char* data)
 {
+	m_pServer->m_pLog->Add(20, "[SetTime_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SetTime_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }

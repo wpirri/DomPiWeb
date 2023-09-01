@@ -165,12 +165,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_add", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_update", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_info", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_ass_on", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_ass_off", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_ass_switch", GM_MSG_TYPE_CR);
-	m_pServer->Suscribe("dompi_ass_pulse", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_add_to_planta", GM_MSG_TYPE_CR);
 	/* Eventos */
 	m_pServer->Suscribe("dompi_ev_list", GM_MSG_TYPE_CR);
@@ -1347,50 +1342,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
 				}
 
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
-				}
-			}
-			/* ****************************************************************
-			*		dompi_ass_status
-			**************************************************************** */
-			else if( !strcmp(fn, "dompi_ass_status"))				
-			{
-				json_obj = cJSON_Parse(message);
-				message[0] = 0;
-				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
-				if(json_Id)
-				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Port,IcoIcono_Apagadono0,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
-				}
-				else
-				{
-					if(json_Planta)
-					{
-						sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Planta = %s;", json_Planta->valuestring);
-					}
-					else
-					{
-						strcpy(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN;");
-					}
-				}
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(json_Query_Result, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc >= 0)
-				{
-					if(json_obj) cJSON_Delete(json_obj);
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				}
-				if(json_obj) cJSON_Delete(json_obj);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -4059,7 +4010,6 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_ass_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_update", GM_MSG_TYPE_CR);
-	m_pServer->UnSuscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_add_to_planta", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ev_list_all", GM_MSG_TYPE_CR);

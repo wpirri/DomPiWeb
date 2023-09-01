@@ -1513,7 +1513,8 @@ void AssignTask( void )
 			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
 			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
-			m_pServer->m_pLog->Add(50, "Actualizar estado de Assign [%s]", json_Objeto->valuestring);
+			m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] Estado: %s",
+									json_Objeto->valuestring, json_Estado->valuestring);
 			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
 			/* Me fijo si es estado o pulso */
 			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )

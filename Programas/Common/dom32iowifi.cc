@@ -185,7 +185,8 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config, void
     }
 
     sprintf(buffer, http_post, url_set_wifi, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion WiFi para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando configuracion WiFi para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
@@ -373,7 +374,8 @@ int Dom32IoWifi::SetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
         }
     }
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion I/O para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando configuracion de I/O para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
@@ -392,7 +394,8 @@ int Dom32IoWifi::SetTime(const char *raddr, void(*fcn)(const char* id, const cha
         tm_time->tm_hour, tm_time->tm_min, tm_time->tm_sec);
 
     sprintf(buffer, http_post, url_set_ioconfig, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando configuracion Fecha y Hora para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando configuracion de fecha y hora para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
@@ -486,7 +489,8 @@ int Dom32IoWifi::SetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char
         }
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando estado de I/O para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando estado de I/O para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
@@ -541,7 +545,8 @@ int Dom32IoWifi::SwitchIO(const char *raddr, cJSON *json_obj, void(*fcn)(const c
         }
     }
     sprintf(buffer, http_post, url_switch_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando switch de I/O para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando switch de I/O para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
@@ -597,7 +602,8 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj, void(*fcn)(const ch
         }
     }
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
-    if(m_pLog) m_pLog->Add(50, "[Dom32IoWifi] Encolando pulso de I/O para %s [%s]", raddr, buffer);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando pulso de I/O para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
