@@ -1,0 +1,9 @@
+Ejecutar con root para cambiar los parametros
+/sbin/sysctl -w net.ipv4.tcp_keepalive_intvl=75
+/sbin/sysctl -w net.ipv4.tcp_keepalive_probes=8
+/sbin/sysctl -w net.ipv4.tcp_keepalive_time=75
+
+Agegar al final de /etc/sysctl.conf
+net.ipv4.tcp_keepalive_intvl=75
+net.ipv4.tcp_keepalive_probes=8
+net.ipv4.tcp_keepalive_time=75
