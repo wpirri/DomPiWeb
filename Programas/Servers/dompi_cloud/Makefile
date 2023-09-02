@@ -3,7 +3,7 @@
 include ../../../configure.mk
 
 INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/local/include/gmonitor
-CXXFLAGS=-g -Wall -Wextra -MMD -O2
+CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
 OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o cmydb.o

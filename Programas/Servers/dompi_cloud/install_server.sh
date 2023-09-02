@@ -5,7 +5,7 @@ if [ -f $1/$2 ]; then
     sleep 1
     cp $2 $1/
     sleep 1
-    $1/gmon_start $2
+    $1/gmon_start $2 || echo "Fallo"
 else
     cp $2 $1/
     sleep 1

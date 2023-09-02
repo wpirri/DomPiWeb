@@ -3,7 +3,7 @@
 include ../../../configure.mk
 
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
-CXXFLAGS=-g -Wall -Wextra -MMD -O2
+CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared
 OBJECTS=hwutil.o qtcp.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=hwutil

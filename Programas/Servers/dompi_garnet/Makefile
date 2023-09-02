@@ -3,7 +3,7 @@
 include ../../../configure.mk
 
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
-CXXFLAGS=-g -Wall -Wextra -MMD -O2
+CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto
 OBJECTS=dompi_garnet.o strfunc.o config.o
 OUTPUT=dompi_garnet
