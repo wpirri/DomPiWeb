@@ -44,11 +44,9 @@ include("head.php");
 <div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">
 	<img id="flags-icon" class="icon-btn" src="images/var.png">&nbsp;Variables
 </div>
-<!--
-<div class="normal-btn" id="btn-config-crono" onclick="window.location.replace('task.php');">
-	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
+<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
+	<!--<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas-->
 </div>
--->
 <div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm_list.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
@@ -70,8 +68,8 @@ include("head.php");
 	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
 </div>
 
-<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
-	<!-- <img id="logs-icon" class="icon-btn" src="images/download.png">&nbsp;xxxxxxxx -->
+<div class="normal-btn" id="btn-config-auto" onclick="window.location.replace('auto_menu.php');">
+	<img id="auto-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatización
 </div>
 
 </body>

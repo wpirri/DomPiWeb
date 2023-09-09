@@ -228,7 +228,7 @@ Estado_Memoria integer DEFAULT 0,
 Estado_Alarma integer DEFAULT 0,
 Tiempo_De_Salida integer DEFAULT 0,
 Tiempo_De_Entrada integer DEFAULT 0,
-Tiempo_De_Alerta integer DEFAULT 0,
+Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos
 Notificar_SMS_Activacion integer DEFAULT 0,
 Notificar_SMS_Alerta integer DEFAULT 0,
 FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
@@ -243,7 +243,7 @@ Id integer primary key,
 Particion integer NOT NULL,
 Objeto_Zona integer NOT NULL,
 Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
-Grupo integer DEFAULT 0,        -- 0= Parcial 1= Total 3= 24Hs
+Grupo integer DEFAULT 0,        -- 0= Solo Total 1= Siempre 3= 24Hs
 Activa integer DEFAULT 0,
 FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
 FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),

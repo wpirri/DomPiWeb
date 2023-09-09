@@ -40,6 +40,7 @@ clean:
 
 install:
 	$(CHMOD) +x install_server.sh
+	$(CHMOD) +x update-tables.sh
 	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
 
 uninstall:

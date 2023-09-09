@@ -18,12 +18,13 @@ using namespace std;
 #include "strfunc.h"
 
 #include "cdb.h"
+#include "gevent.h"
 #include <gmonitor/gmswaited.h>
 
 class CAlarma
 {
 public:
-    CAlarma(CDB *pDB, CGMServerWait *pServer);
+    CAlarma(CDB *pDB, GEvent *pEV, CGMServerWait *pServer);
     virtual ~CAlarma();
 
     int Activar(int particion);
@@ -38,6 +39,7 @@ public:
 
 private:
     CDB *m_pDB;
+    GEvent *m_pEV;
     CGMServerWait *m_pServer;
 
 };

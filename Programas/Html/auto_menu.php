@@ -5,7 +5,7 @@ include("head.php");
 
 <body>
 
-<div class="back-btn" id="back-from-config" onclick="window.location.replace('<?php echo $MAIN?>');">
+<div class="back-btn" id="back-from-config" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 

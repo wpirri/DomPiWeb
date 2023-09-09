@@ -39,9 +39,9 @@ public:
 
     unsigned int m_time_out;
 
-    ModGSM(const char* tempdir);
-    ModGSM(const char* tempdir, CGMServerWait *pServer);
-    ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port_path);
+    ModGSM(const char* out_saf, const char* in_saf);
+    ModGSM(const char* out_saf, const char* in_saf, CGMServerWait *pServer);
+    ModGSM(const char* out_saf, const char* in_saf, CGMServerWait *pServer, const char* port_path);
     virtual ~ModGSM();
 
     int Open();
@@ -53,6 +53,7 @@ public:
     int ReadyUDP( void );
 
     int SendSMS(const char* dest, const char* msg);
+    int GetSMS(char* from, char* msg);
     int SendTCP(const char* host, unsigned port, const char* msg);
     int SendUDP(const char* host, unsigned port, const char* msg);
 
@@ -62,24 +63,27 @@ private:
     CGMServerWait* m_pServer;
     CSerial* m_pSerial;
     MODEM_STATUS m_modem_status;
-    char m_temp_dir[FILENAME_MAX+1];
+    char m_out_saf[FILENAME_MAX+1];
+    char m_in_saf[FILENAME_MAX+1];
     char m_port_path[256];
     int m_last_port;
     char m_imei[32];
     long m_next_task_time;
     long m_get_status_time;
+    long m_get_sms_out;
 
     int QueryModem(const char* wait_for, const char* fmt, ...);
     int QueryModem(const char* wait_for, char* recv, int recv_max, const char* fmt, ...);
     void CheckUnsol(void);
-    void CheckSMS( void );
+    void CheckSMSin( void );
+    void CheckSMSout( void );
     void GetSMS(int id);
     void GetModemStatus(void);
     void SMSDelRead(void);
     void SMSDelSent(void);
 
     void ModemError(void);
-    int SaveRecvSMS(const char* from, const char* msg);
+    void SaveRecvSMS(const char* from, const char* msg);
 
 };
 

@@ -84,40 +84,46 @@ using namespace std;
 #include <cjson/cJSON.h>
 #include <math.h>
 
-ModGSM::ModGSM(const char* tempdir)
+ModGSM::ModGSM(const char* out_saf, const char* in_saf)
 {
     strcpy(m_port_path, "/dev/ttyUSB");
     m_last_port = 0;
-    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
+    strncpy(m_out_saf, out_saf, FILENAME_MAX);
+    strncpy(m_in_saf, in_saf, FILENAME_MAX);
     m_pServer = nullptr;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
     m_next_task_time = 0;
     m_get_status_time = 0;
+    m_get_sms_out = 0;
 }
 
-ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer)
+ModGSM::ModGSM(const char* out_saf, const char* in_saf, CGMServerWait *pServer)
 {
     strcpy(m_port_path, "/dev/ttyUSB");
     m_last_port = 0;
-    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
+    strncpy(m_out_saf, out_saf, FILENAME_MAX);
+    strncpy(m_in_saf, in_saf, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
     m_next_task_time = 0;
     m_get_status_time = 0;
+    m_get_sms_out = 0;
 }
 
-ModGSM::ModGSM(const char* tempdir, CGMServerWait *pServer, const char* port_path)
+ModGSM::ModGSM(const char* out_saf, const char* in_saf, CGMServerWait *pServer, const char* port_path)
 {
     if(port_path) strcpy(m_port_path, port_path);
     m_last_port = 0;
-    strncpy(m_temp_dir, tempdir, FILENAME_MAX);
+    strncpy(m_out_saf, out_saf, FILENAME_MAX);
+    strncpy(m_in_saf, in_saf, FILENAME_MAX);
     m_pServer = pServer;
     m_modem_status = MODEM_STATUS_NOT_INIT;
     m_pSerial = nullptr;
     m_next_task_time = 0;
     m_get_status_time = 0;
+    m_get_sms_out = 0;
 }
 
 ModGSM::~ModGSM()
@@ -264,33 +270,40 @@ void ModGSM::Task( void )
     long t;
 
     t = time(&t);
-    if(t < m_next_task_time) return;
-
-    switch(m_modem_status)
+    if(t > m_next_task_time)
     {
-        case MODEM_STATUS_ERROR:
-        case MODEM_STATUS_NOT_INIT:
-            Close();
-            m_next_task_time = t + 45;
-            break;
-        case MODEM_STATUS_CLOSE:
-            Open();
-            m_next_task_time = t + 10;
-            break;
-        case MODEM_STATUS_OPEN:
-            break;
-        case MODEM_STATUS_SMS_READY:
-        case MODEM_STATUS_GSM_READY:
-            if(t > m_get_status_time)
-            {
-                m_get_status_time = t + 30;
-                GetModemStatus();
-                CheckSMS();
-            }
-            CheckUnsol();
-            break;
+        switch(m_modem_status)
+        {
+            case MODEM_STATUS_ERROR:
+            case MODEM_STATUS_NOT_INIT:
+                Close();
+                m_next_task_time = t + 45;
+                break;
+            case MODEM_STATUS_CLOSE:
+                Open();
+                m_next_task_time = t + 10;
+                break;
+            case MODEM_STATUS_OPEN:
+                break;
+            case MODEM_STATUS_SMS_READY:
+            case MODEM_STATUS_GSM_READY:
+                if(t > m_get_status_time)
+                {
+                    m_get_status_time = t + 30;
+                    GetModemStatus();
+                    CheckSMSin();
+                }
+                if(t > m_get_sms_out)
+                {
+                    m_get_sms_out = t + 5;
+                    CheckSMSout();
+                }
+                CheckUnsol();
+                break;
+            default:
+                break;
+        }
     }
-
 }
 
 void ModGSM::CheckUnsol(void)
@@ -322,7 +335,13 @@ void ModGSM::CheckUnsol(void)
 void ModGSM::GetSMS(int id)
 {
     char buffer[4096];
+    char *p;
+    char from[32];
+    char msg[4096];
+    int i;
+    int borrar_leidos = 0;
     int rc;
+
     if(!m_pSerial) return;
 
     if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] GetSMS Id:[%i]", id);
@@ -336,13 +355,63 @@ void ModGSM::GetSMS(int id)
     else if(rc > 0)
     {
         if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetSMS: Mesaje recibido [%s]", buffer);
+        p = strstr(buffer, "+CMGR:");
+        while(p)
+        {
+            borrar_leidos = 1;
+            /* Salto al número de origen, salto 2 ',' y la " */
+            i = 2;
+            while(i && *p)
+            {
+                if(*p == ',') i--;
+                p++;
+            }
+            if(!(*p)) break;
+            p++;
+            /* Copio la parte numerica */
+            i = 0;
+            while(*p && ( (*p >= '0' && *p <= '9') || *p == '+' ) && i < (int)(sizeof(from)-1))
+            {
+                from[i] = *p;
+                i++;
+                p++;
+            }
+            from[i] = 0;
+            /* Busco el inicio del mensaje, salto 4 comas */
+            i = 4;
+            while(i && *p)
+            {
+                if(*p == ',') i--;
+                p++;
+            }
+            if(!(*p)) break;
+            /* Copio el texto hasta el final */
+            i = 0;
+            while(*p && *p != 0x0A && *p !=0x0D && i < (int)(sizeof(msg)-1))
+            {
+                if(*p == ',')
+                {
+                    if( !memcmp(p, ",+CMGR:", 7)) break;
+                }
+                msg[i] = *p;
+                i++;
+                p++;
+            }
+            msg[i] = 0;
+
+            if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
+            SaveRecvSMS(from, msg);
 
 
 
-
-
+            p = strstr(p, "+CMGL:");
+        }
     }
 
+    if(borrar_leidos)
+    {
+        SMSDelRead();
+    }
 }
 
 /*
@@ -352,7 +421,7 @@ AT+CMG
 
 OK
 */
-void ModGSM::CheckSMS( void )
+void ModGSM::CheckSMSin( void )
 {
     char buffer[4096];
     char *p;
@@ -364,7 +433,7 @@ void ModGSM::CheckSMS( void )
 
     if(!m_pSerial) return;
 
-    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMS");
+    if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMSin");
     /* AT+CMGR=n */
     rc = QueryModem("OK", buffer, 4096, "AT+CMGL");
     if(rc < 0)
@@ -374,7 +443,7 @@ void ModGSM::CheckSMS( void )
     }
     else if(rc > 0)
     {
-        if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMS: Mensaje recibido [%s]", buffer);
+        if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMSin: Mensaje recibido [%s]", buffer);
         p = strstr(buffer, "+CMGL:");
         while(p)
         {
@@ -419,7 +488,7 @@ void ModGSM::CheckSMS( void )
             }
             msg[i] = 0;
 
-            if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] GetSMS: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
+            if(m_pServer) m_pServer->m_pLog->Add(20, "[ModGSM] CheckSMSin: Mesaje recibido De: [%s] Mensaje: [%s]", from, msg);
             SaveRecvSMS(from, msg);
 
 
@@ -432,6 +501,29 @@ void ModGSM::CheckSMS( void )
     {
         SMSDelRead();
     }
+}
+
+void ModGSM::CheckSMSout( void )
+{
+    cJSON *json_Message;
+    cJSON *json_To;
+    cJSON *json_Msg;
+    CGMServerBase::GMIOS resp;
+
+    if(m_pServer == nullptr) return;
+
+    if(m_pServer->Dequeue(m_out_saf, &resp) == 0)
+    {
+        m_pServer->m_pLog->Add(100, "[ModGSM] CheckSMSout: Desencolando mensaje SMS para enviar");
+        json_Message = cJSON_Parse((char*)resp.data);
+        json_To = cJSON_GetObjectItemCaseSensitive(json_Message, "SmsTo");
+        json_Msg = cJSON_GetObjectItemCaseSensitive(json_Message, "SmsTxt");
+        if(json_To && json_Msg)
+        {
+            SendSMS(json_To->valuestring, json_Msg->valuestring);
+        }
+    }
+    m_pServer->Free(resp);
 }
 
 void ModGSM::GetModemStatus( void )
@@ -504,7 +596,7 @@ void ModGSM::GetModemStatus( void )
 
 int ModGSM::SendSMS(const char* dest, const char* msg)
 {
-    if(m_pServer) m_pServer->m_pLog->Add(50, "[ModGSM] SendSMS dest:[%s] msg:[%s]", dest, msg);
+    if(m_pServer) m_pServer->m_pLog->Add(20, "[ModGSM] SendSMS dest:[%s] msg:[%s]", dest, msg);
     SMSDelSent();
     do
     {
@@ -516,6 +608,32 @@ int ModGSM::SendSMS(const char* dest, const char* msg)
     if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] Error en SendSMS dest:[%s] msg:[%s]", dest, msg);
     ModemError();
     return (-1);
+}
+
+int ModGSM::GetSMS(char * from, char * msg)
+{
+    cJSON *json_Message;
+    cJSON *json_From;
+    cJSON *json_Msg;
+    CGMServerBase::GMIOS resp;
+
+    if(m_pServer == nullptr) return 0;
+
+    if(m_pServer->Dequeue(m_in_saf, &resp) == 0)
+    {
+        json_Message = cJSON_Parse((char*)resp.data);
+        json_From = cJSON_GetObjectItemCaseSensitive(json_Message, "SmsFrom");
+        json_Msg = cJSON_GetObjectItemCaseSensitive(json_Message, "SmsTxt");
+        if(json_From && json_Msg && from && msg)
+        {
+            m_pServer->m_pLog->Add(20, "[ModGSM] GetSMS from:[%s] msg:[%s]", json_From->valuestring, json_Msg->valuestring);
+            strcpy(from, json_From->valuestring);
+            strcpy(msg, json_Msg->valuestring);
+            return 1;
+        }
+    }
+    m_pServer->Free(resp);
+    return 0;
 }
 
 int ModGSM::SendTCP(const char* /*host*/, unsigned /*port*/, const char* /*msg*/)
@@ -568,48 +686,30 @@ void ModGSM::ModemError(void)
     m_pSerial = nullptr;
 }
 
-int ModGSM::SaveRecvSMS(const char* from, const char* msg)
+void ModGSM::SaveRecvSMS(const char* from, const char* msg)
 {
-    FILE *f;
-    char filename[FILENAME_MAX+1];
-    char filename_tmp[FILENAME_MAX+1];
     time_t t;
-    char sms_buffer[1024];
+    struct tm *p_stm;
+    char message[1024];
+    cJSON *json_SMS;
 
     t = time(&t);
+    p_stm = localtime(&t);
 
     if(m_pServer) m_pServer->m_pLog->Add(100, "[ModGSM] SaveRecvSMS");
 
-    if( m_temp_dir[strlen(m_temp_dir) - 1] != '/' )
-    {
-        snprintf(filename, FILENAME_MAX, "%s/recv-sms-%10lu", m_temp_dir, t);
-        snprintf(filename_tmp, FILENAME_MAX, "%s/recv-tmp-%10lu", m_temp_dir, t);
-    }
-    else
-    {
-        snprintf(filename, FILENAME_MAX, "%srecv-sms-%10lu", m_temp_dir, t);
-        snprintf(filename_tmp, FILENAME_MAX, "%srecv-tmp-%10lu", m_temp_dir, t);
-    }
-    f = fopen(filename_tmp, "w");
-    if(f)
-    {
-        snprintf(sms_buffer, 1023, "SMS:%s:%s\n", from, msg);
-        if(fwrite(sms_buffer, sizeof(char), strlen(sms_buffer), f) != strlen(sms_buffer))
-        {
-            fclose(f);
-            /* Error */
-            if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] ERROR Al escribir archivo de mensaje entrante [%s]", filename_tmp);
-            return (-1);
-        }
-        /* OK */
-        fclose(f);
-        rename(filename_tmp, filename);
-        return 0;
-    }
-    else
-    {
-        /* Error */
-        if(m_pServer) m_pServer->m_pLog->Add(1, "[ModGSM] ERROR Al crear archivo de mensaje entrante [%s]", filename_tmp);
-        return (-1);
-    }
+    json_SMS = cJSON_CreateObject();
+    cJSON_AddStringToObject(json_SMS, "SmsFrom", from);
+    cJSON_AddStringToObject(json_SMS, "SmsTxt", msg);
+    sprintf(message, "%04i-%02i-%02i %02i:%02i:%02i", 
+            p_stm->tm_year+1900,
+            p_stm->tm_mon+1,
+            p_stm->tm_mday,
+            p_stm->tm_hour,
+            p_stm->tm_min,
+            p_stm->tm_sec);
+    cJSON_AddStringToObject(json_SMS, "DateTime", message);
+    cJSON_PrintPreallocated(json_SMS, message, 1024, 0);
+    if(m_pServer) m_pServer->Enqueue(m_in_saf, message, strlen(message));
+    cJSON_Delete(json_SMS);
 }

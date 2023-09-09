@@ -18,12 +18,12 @@ include("obj_style.php");
 	<img id="config-icon" class="icon-btn" src="images/system.png">&nbsp;Configuración
 </div>
 
-<div class="normal-btn" id="btn-planta-auto" onclick="window.location.replace('auto_menu.php');">
-	<img id="auto-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatización
+<div class="normal-btn" id="btn-planta-alarma" onclick="window.location.replace('panel_alarma.php');">
+	<img id="auto-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
 
-<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('tablero.php');">
-	<img id="config-icon" class="icon-btn" src="images/cron.png">&nbsp;Tablero
+<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('panel_auto.php');">
+	<img id="config-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatizaci&oacute;n
 </div>
 
 <div class="home-group" id="home-div">

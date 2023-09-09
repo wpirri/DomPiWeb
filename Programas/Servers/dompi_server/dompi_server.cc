@@ -262,8 +262,16 @@ int main(/*int argc, char** argv, char** env*/void)
 	LoadSystemConfig();
 
 	pEV = new GEvent(pDB, m_pServer);
-	pAlarma = new CAlarma(pDB, m_pServer);
+	pAlarma = new CAlarma(pDB, pEV, m_pServer);
 
+	/*
+	Se distribuye equitativamente entre las colas menos cargadas
+		GM_MSG_TYPE_CR		- Se espera respuesta (Call)
+		GM_MSG_TYPE_NOT		- Sin respuesta (Notify)
+		GM_MSG_TYPE_INT		- Mensaje particionado con continuación
+	Se envía a todos los suscriptos
+		GM_MSG_TYPE_MSG		- Sin respuesta (Post)
+	*/
 	m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_info", GM_MSG_TYPE_CR);
@@ -315,7 +323,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					//message[0] = 0;
 					if(rc == 1)
 					{
-						pAlarma->ExtIOEvent(message);
+						//pAlarma->ExtIOEvent(message);
 						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
 						/* OK */
@@ -634,15 +642,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
 								cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
 								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
-								m_pServer->m_pLog->Add(90, "Call [dompi_send_sms][%s]", message);
-								rc = m_pServer->Call("dompi_send_sms", message, strlen(message), &call_resp, internal_timeout);
-								if(rc == 0)
-								{
-									m_pServer->m_pLog->Add(90, "Resp [dompi_send_sms][%s]", (const char*)call_resp.data);
-									strcpy(message, (const char*)call_resp.data);
-									m_pServer->Free(call_resp);
-								}
-								else
+								m_pServer->m_pLog->Add(90, "Enqueue [dompi_sms_output][%s]", message);
+								rc = m_pServer->Enqueue("dompi_sms_output", message, strlen(message));
+								if(rc != 0)
 								{
 									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error en envio de SMS\"}}", rc);
 								}
@@ -733,7 +735,6 @@ int main(/*int argc, char** argv, char** env*/void)
 
 										cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
 										m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_comm_config][%s]", message);
-										/* Se envía a todos */
 										m_pServer->Notify("dompi_hw_set_comm_config", message, strlen(message));
 										cJSON_Delete(json_Config);
 									}
@@ -1300,22 +1301,19 @@ int main(/*int argc, char** argv, char** env*/void)
 			m_pServer->m_pLog->Add(100, "[TIMER] Tareas dentro del timer");
 
 			/* Tareas diarias */
-			CheckTask();
-
 			CheckDaily();
 
 			CheckUpdateHWConfig();
-
-			pEV->CheckAuto(0, nullptr, 0);
 
 			CheckHWOffline();
 
 			AutoChangeNotify();
 
 			/* Controles del modulo de alarma */
-
+			//pAlarma->Task();
 			/* Tareas programadas en TB_DOM_AT */
-
+			CheckTask();
+			pEV->CheckAuto(0, nullptr, 0);
 			/*  */
 			delta_t = 1000;
 			next_t = t + 10;
@@ -1520,19 +1518,14 @@ void AssignTask( void )
 			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
 			{
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
-				/* Se envía a todos */
-				rc = m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
 			}
 			else
 			{
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
-				/* Se envía a todos */
-				rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
-
+				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-				/* Se envía a todos */
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));
-
 				/* Encolo la sincronización */
 				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
 			}
@@ -1783,7 +1776,6 @@ void CheckUpdateHWConfig()
 					{
 						cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
 						m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_port_config][%s]", message);
-						/* Se envía a todos */
 						m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
 					}
 				}
@@ -2078,7 +2070,6 @@ void AutoChangeNotify( void )
 
 			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
 			m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-			/* Se envía a todos */
 			m_pServer->Notify("dompi_ass_change", message, strlen(message));
 
 			sprintf(query, "UPDATE TB_DOM_AUTO "

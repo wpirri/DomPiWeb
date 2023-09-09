@@ -103,10 +103,10 @@ body {
 	background: teal;
 	}
 
-#btn-config-crono {
+#btn-config-dummy3 {
 	left: 255px; 
 	top: 265px; 
-	background: silver;
+	background: black;
 	}
 
 #btn-config-alarm {
@@ -139,10 +139,10 @@ body {
 	background: black;
 	}
 
-#btn-config-dummy3 {
+#btn-config-auto {
 	left: 575px; 
 	top: 350px; 
-	background: black;
+	background: olive;
 	}
 				
 /* En plantaN.php */
@@ -152,10 +152,10 @@ body {
 	background: navy;
 	}
 
-#btn-planta-auto {
+#btn-planta-alarma {
 	left: 10px; 
 	top: 265px; 
-	background: brown;
+	background: purple;
 	}
 
 #btn-planta-select {

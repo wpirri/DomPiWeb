@@ -39,13 +39,9 @@ CheckUpdate()
 {
     echo "Verificando actualizaciones..."
     if [ -f ${UPDATE_FILE} ]; then
-        if [ -f ${OLD_UPDATE_FILE} ]; then
-            rm -f ${OLD_UPDATE_FILE}
-        fi
         echo "Actualizando sistema con: ${UPDATE_FILE}..."
         cd /
         tar xvzf ${UPDATE_FILE}
-        mv ${UPDATE_FILE} ${OLD_UPDATE_FILE}
         cp -uvr $SYTEM_HOME/html/* $DOCUMENT_ROOT
         cp -uvr $SYTEM_HOME/cgi/* $CGI_ROOT
         rm -rv $SYTEM_HOME/*

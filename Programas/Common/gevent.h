@@ -31,6 +31,13 @@ public:
     void CheckEvent(int hw_id, const char* port, int estado);
     void CheckAuto(int hw_id, const char* port, int estado);
 
+/*
+    accion  1 = Encender
+            2 = Apagar
+            3 = Switch
+            4 = Pulso   -> param = largo del pulso en seg
+*/
+
     int ChangeAssignByName(const char* name, int accion, int param);
     int ChangeAssignById(int id, int accion, int param);
     int ChangeGroupByName(const char* name, int accion, int param);

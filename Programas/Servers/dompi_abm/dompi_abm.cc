@@ -494,7 +494,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
 					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
-					/* Se envía a todos */
 					m_pServer->Notify("dompi_user_change", message, strlen(message));
 				}
 				cJSON_Delete(json_Cloud_Message);
@@ -650,7 +649,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
 					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
-					/* Se envía a todos */
 					m_pServer->Notify("dompi_user_change", message, strlen(message));
 				}
 				cJSON_Delete(json_Cloud_Message);
