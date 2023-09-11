@@ -116,6 +116,7 @@ GEvent *pEV;
 CAlarma *pAlarma;
 cJSON *json_System_Config;
 char sys_backup[32];
+int check_assign_timer;
 
 time_t last_daily;
 
@@ -208,6 +209,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Config;
 	
 	last_daily = 0;
+	check_assign_timer = 10;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -466,6 +468,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 1, 0);
 					if(rc > 0)
 					{
+						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -497,6 +500,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 2, 0);
 					if(rc > 0)
 					{
+						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -528,6 +532,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 3, 0);
 					if(rc > 0)
 					{
+						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -561,6 +566,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 4, (json_Segundos)?stoi(json_Segundos->valuestring):0);
 					if(rc > 0)
 					{
+						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -660,6 +666,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 1, 0);
+								check_assign_timer = 0;
 							}
 							else
 							{
@@ -671,6 +678,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 2, 0);
+								check_assign_timer = 0;
 							}
 							else
 							{
@@ -682,6 +690,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 3, 0);
+								check_assign_timer = 0;
 							}
 							else
 							{
@@ -693,6 +702,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 4, 0);
+								check_assign_timer = 0;
 							}
 							else
 							{
@@ -1193,6 +1203,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 1, 0);
 									}
 								}
+								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "off"))
 							{
@@ -1205,6 +1216,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 2, 0);
 									}
 								}
+								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "switch"))
 							{
@@ -1217,14 +1229,17 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 3, 0);
 									}
 								}
+								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "pulse"))
 							{
 								pEV->ChangeAssignByName(json_Objeto->valuestring, 4, 0);
+								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "auto"))
 							{
 								pEV->ChangeAutoByName(json_Objeto->valuestring, 5, 0);
+								check_assign_timer = 0;
 							}
 						}
 					}
@@ -1267,7 +1282,12 @@ int main(/*int argc, char** argv, char** env*/void)
 
 		GroupTask();
 
-		AssignTask();
+		if(check_assign_timer > 0) check_assign_timer--;
+		if(check_assign_timer == 0)
+		{
+			check_assign_timer = 10;
+			AssignTask();
+		}
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -1460,6 +1480,7 @@ void GroupTask( void )
 					p++;
 				}
 				pEV->ChangeAssignById(atoi(id), accion, 0);
+				check_assign_timer = 0;
 			}
 			sprintf(query, "UPDATE TB_DOM_GROUP "
 							"SET Actualizar = 0 "
@@ -1530,19 +1551,16 @@ void AssignTask( void )
 				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
 			}
 
-			if(rc == 0)
-			{
-				/* Borro la diferencia */
-				iEstado = atoi(json_Estado->valuestring);
-				if(iEstado != 1) iEstado = 0;
-				sprintf(query, "UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-								"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(NULL, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-			}
+			/* Borro la diferencia */
+			iEstado = atoi(json_Estado->valuestring);
+			if(iEstado != 1) iEstado = 0;
+			sprintf(query, "UPDATE TB_DOM_ASSIGN "
+							"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+							"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
+			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+			rc = pDB->Query(NULL, query);
+			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 		}
 	}
 	cJSON_Delete(json_QueryArray);
@@ -1650,10 +1668,12 @@ void CheckTask()
 				if(atoi(json_Objeto_Destino->valuestring) != 0)
 				{
 					pEV->ChangeAssignById(atoi(json_Objeto_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+					check_assign_timer = 0;
 				}
 				else if(atoi(json_Grupo_Destino->valuestring) != 0)
 				{
 					pEV->ChangeGroupById(atoi(json_Grupo_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
+					check_assign_timer = 0;
 				}
 				else if(atoi(json_Funcion_Destino->valuestring) != 0)
 				{
