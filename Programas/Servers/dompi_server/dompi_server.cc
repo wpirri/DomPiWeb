@@ -1177,7 +1177,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_cloud_notification"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 				/* Un array de acciones sobre objetos */
 				json_Query_Result = cJSON_Parse(message);
 				if(cJSON_IsArray(json_Query_Result))
@@ -1251,7 +1251,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_reload_config"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				LoadSystemConfig();
 			}

@@ -203,7 +203,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, "dompi_hw_set_port_config"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
@@ -278,7 +278,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_comm_config"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
@@ -429,7 +429,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_time_config"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
@@ -458,7 +458,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_set_io"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port && json_Estado )
 				{
@@ -499,7 +499,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_switch_io"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port )
 				{
@@ -548,7 +548,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_hw_pulse_io"))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 				
 				if(json_Direccion_IP && json_Tipo_HW && json_Tipo_ASS && json_Port)
 				{

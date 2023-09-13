@@ -112,7 +112,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, ""))
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 
 			}
