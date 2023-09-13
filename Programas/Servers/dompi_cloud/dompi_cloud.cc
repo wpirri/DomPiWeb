@@ -61,7 +61,9 @@ int m_port_actual;
 char *m_proto_actual;
 
 void OnClose(int sig);
-void UpdateCloud( void );
+int KeepAliveCloud( void );
+int SendToCloud( void );
+void CheckUpdateCloud( void );
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg);
 void LoadSystemConfig(void);
 
@@ -80,7 +82,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	int wait;
 
 	cJSON *json_obj;
-	cJSON *json_arr;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -159,9 +160,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			if( !strcmp(fn, "dompi_ass_change")) /* Tipo NOT, no se responde */
+			if( !strcmp(fn, "dompi_ass_change")) /* Tipo NOT */
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
@@ -171,37 +172,15 @@ int main(/*int argc, char** argv, char** env*/void)
 					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-					rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
-					if(rc < 0)
-					{
-						m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
-						m_cloud_status = 0;
-						break;
-					}
-					if( rc > 0 && strlen(message) )
-					{
-						/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
-						m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-						json_obj = cJSON_Parse(message);
-						//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
-						//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
-						json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
-						if(json_arr && cJSON_IsArray(json_arr))
-						{
-							cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
-							m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
-							m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
-						}
-					}
+					m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
 				}
 			}
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			else if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT, no se responde */
+			else if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT */
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
@@ -212,37 +191,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
-					m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-					rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
-					if(rc < 0)
-					{
-						m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
-						m_cloud_status = 0;
-						break;
-					}
-					if( rc > 0 && strlen(message) )
-					{
-						/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
-						m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-						json_obj = cJSON_Parse(message);
-						//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
-						//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
-						json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
-						if(json_arr && cJSON_IsArray(json_arr))
-						{
-							cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
-							m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
-							m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
-						}
-					}
+					m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
 				}
 			}
 			/* ****************************************************************
 			*		dompi_reload_config
 			**************************************************************** */
-			else if( !strcmp(fn, "dompi_reload_config")) /* Tipo MSG, no se responde */
+			else if( !strcmp(fn, "dompi_reload_config")) /* Tipo MSG */
 			{
-				m_pServer->Resp(NULL, 0, GME_OK);
+				//m_pServer->Resp(NULL, 0, GME_OK);
 				
 				LoadSystemConfig();
 			}
@@ -260,85 +217,23 @@ int main(/*int argc, char** argv, char** env*/void)
 		else
 		{
 			/* al expirar el timer */
-			if(m_host_actual)
-			{
-				json_obj = cJSON_CreateObject();
 
-				cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 
-				/* Si hay que agragar mas objetos */
-
-				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				cJSON_Delete(json_obj);
-				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-
-				if(m_cloud_status == 0)
-				{
-					/* Switch de host */
-					if(m_host_actual == &m_CloudHost1Address[0] && m_CloudHost2Address[0])
-					{
-						m_host_actual = &m_CloudHost2Address[0];
-						m_port_actual = m_CloudHost2Port;
-						m_proto_actual = &m_CloudHost2Proto[0];
-					}
-					else if(m_host_actual == &m_CloudHost2Address[0] && m_CloudHost1Address[0])
-					{
-						m_host_actual = &m_CloudHost1Address[0];
-						m_port_actual = m_CloudHost1Port;
-						m_proto_actual = &m_CloudHost1Proto[0];
-					}
-					else
-					{
-						m_host_actual = nullptr;
-						m_port_actual = 0;
-						m_proto_actual = nullptr;
-					}
-				}
-				rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
-				if(rc < 0)
-				{
-					if(m_cloud_status)
-					{
-						m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
-						m_cloud_status = 0;
-					}
-				}
-				else
-				{
-					if(m_cloud_status == 0)
-					{
-						m_pServer->m_pLog->Add(1, "[CLOUD] Conexión restablecida con %s", m_host_actual);
-						m_cloud_status = 1;
-					}
-				}
-				if( rc > 0 && strlen(message) )
-				{
-					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
-					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-					json_obj = cJSON_Parse(message);
-					//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
-					//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
-					json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
-					if(json_arr && cJSON_IsArray(json_arr))
-					{
-						cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
-						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
-						wait = 25;
-					}
-				}
-			}
-			else
-			{
-				m_pServer->m_pLog->Add(1, "No hay servidores definodos para reporte a la nube");
-			}
 		}
 		/* Después de recibir un mensaje o expirar el timer */
+		CheckUpdateCloud();
 
-
-		UpdateCloud();
-
-
+		if(SendToCloud())
+		{
+			wait = 1;
+		}
+		else
+		{
+			if(KeepAliveCloud())
+			{
+				wait = 25;
+			}
+		}
 
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
@@ -358,21 +253,142 @@ void OnClose(int sig)
 	exit(0);
 }
 
-void UpdateCloud( void )
+int KeepAliveCloud( void )
+{
+	int rc;
+	char message[MAX_BUFFER_LEN+1];
+	cJSON *json_obj;
+	cJSON *json_arr;
+
+	if(m_host_actual)
+	{
+		json_obj = cJSON_CreateObject();
+
+		cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+
+		/* Si hay que agragar mas objetos */
+
+		cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+		cJSON_Delete(json_obj);
+
+		m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
+
+		if(m_cloud_status == 0)
+		{
+			/* Switch de host */
+			if(m_host_actual == &m_CloudHost1Address[0] && m_CloudHost2Address[0])
+			{
+				m_host_actual = &m_CloudHost2Address[0];
+				m_port_actual = m_CloudHost2Port;
+				m_proto_actual = &m_CloudHost2Proto[0];
+			}
+			else if(m_host_actual == &m_CloudHost2Address[0] && m_CloudHost1Address[0])
+			{
+				m_host_actual = &m_CloudHost1Address[0];
+				m_port_actual = m_CloudHost1Port;
+				m_proto_actual = &m_CloudHost1Proto[0];
+			}
+			else
+			{
+				m_host_actual = nullptr;
+				m_port_actual = 0;
+				m_proto_actual = nullptr;
+			}
+		}
+		rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
+		if(rc < 0)
+		{
+			if(m_cloud_status)
+			{
+				m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
+				m_cloud_status = 0;
+			}
+		}
+		else
+		{
+			if(m_cloud_status == 0)
+			{
+				m_pServer->m_pLog->Add(1, "[CLOUD] Conexión restablecida con %s", m_host_actual);
+				m_cloud_status = 1;
+			}
+		}
+		if( rc > 0 && strlen(message) )
+		{
+			/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
+			m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
+			json_obj = cJSON_Parse(message);
+			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+			json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+			if(json_arr && cJSON_IsArray(json_arr))
+			{
+				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		m_pServer->m_pLog->Add(1, "No hay servidores definodos para reporte a la nube");
+	}
+	return 0;
+}
+
+int SendToCloud( void )
+{
+    CGMServerBase::GMIOS resp;
+	char message[MAX_BUFFER_LEN+1];
+	cJSON *json_obj;
+	cJSON *json_arr;
+	int rc = 0;
+
+	if(m_cloud_status == 0) return 0;
+
+    if(m_pServer->Dequeue("dompi_msg_to_cloud", &resp) == 0)
+    {
+		m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", (char*)resp.data);
+		rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, (char*)resp.data, message);
+		if(rc < 0)
+		{
+			m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
+			m_cloud_status = 0;
+		}
+		else if( rc > 0 && strlen(message) )
+		{
+			/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
+			m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
+			json_obj = cJSON_Parse(message);
+			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
+			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
+			json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+			if(json_arr && cJSON_IsArray(json_arr))
+			{
+				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
+				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+			}
+		}
+		rc = 1;
+    }
+    m_pServer->Free(resp);
+	return rc;
+}
+
+void CheckUpdateCloud( void )
 {
 	char query[4096];
 	char message[4096];
 	int rc;
 	cJSON *json_QueryArray;
 	cJSON *json_QueryRow;
-	cJSON *json_Message;
-	cJSON *json_Resp;
 	cJSON *json_Id;
 	cJSON *json_Tipo;
 	cJSON *json_Estado;
 
 	int i_tipo;
-	char s_tipo[10];
+	char s_tipo[12];
 
 	time_t t;
 
@@ -397,30 +413,7 @@ void UpdateCloud( void )
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-
-				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-				rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
-				if(rc < 0)
-				{
-					m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
-					m_cloud_status = 0;
-					break;
-				}
-				if( rc > 0 && strlen(message) )
-				{
-					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
-					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-					json_Message = cJSON_Parse(message);
-					json_Resp = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
-					if(json_Resp && cJSON_IsArray(json_Resp))
-					{
-						cJSON_PrintPreallocated(json_Resp, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
-						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
-					}
-					cJSON_Delete(json_Message);
-				}
-
+				m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
 			}
 		}
 		cJSON_Delete(json_QueryArray);
@@ -458,30 +451,7 @@ void UpdateCloud( void )
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-
-				m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
-				rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
-				if(rc < 0)
-				{
-					m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
-					m_cloud_status = 0;
-					break;
-				}
-				if( rc > 0 && strlen(message) )
-				{
-					/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
-					m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-					json_Message = cJSON_Parse(message);
-					json_Resp = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
-					if(json_Resp && cJSON_IsArray(json_Resp))
-					{
-						cJSON_PrintPreallocated(json_Resp, message, MAX_BUFFER_LEN, 0);
-						m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
-						m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
-					}
-					cJSON_Delete(json_Message);
-				}
-
+				m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
 			}
 		}
 		cJSON_Delete(json_QueryArray);
