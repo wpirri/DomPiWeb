@@ -12,6 +12,8 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ***************************************************************************/
+#ifdef DALARMA_INTEGRADA
+
 #include "alarma.h"
 
 CAlarma::CAlarma(CDB *pDB, GEvent *pEV, CGMServerWait *pServer)
@@ -25,22 +27,35 @@ CAlarma::~CAlarma()
 {
 
 }
+int CAlarma::Habilitar(const char* zona, const char* particion)
+{
 
-int CAlarma::Activar(int particion)
+  return 0;
+}
+
+int CAlarma::Deshabilitar(const char* zona, const char* particion)
+{
+
+  return 0;
+}
+
+int CAlarma::Activar(const char* particion)
 {
   int rc;
   char query[4096];
 
   cJSON *json_Query_Result;
   cJSON *json_Query_Row;
-  cJSON *json_Objeto;
+  cJSON *json_Id;
 
-  int zona_abierta = 0;
+  int zonas_abiertas = 0;
+
+  m_pServer->m_pLog->Add(100, "[ALARMA] Activar: %s", particion);
 
   /* Busco zonas abiertas */
-  sprintf(query, "SELECT A.Objeto "
-                    "FROM TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-                    "WHERE Z.Objeto_Zona = A.Id AND Z.Activa <> 0 AND A.Estado <> 0 AND Z.Particion = %i;", particion);
+  sprintf(query, "SELECT Id "
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Nombre = %s ;", particion);
   m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
   json_Query_Result = cJSON_CreateArray();
   rc = m_pDB->Query(json_Query_Result, query);
@@ -50,45 +65,38 @@ int CAlarma::Activar(int particion)
   {
     cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
     {
-      json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Objeto");
-      m_pServer->m_pLog->Add(10, "[ALARMA] Error al Activar. Zona %s abierta", json_Objeto->valuestring);
-      zona_abierta++;
+      json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
+      zonas_abiertas += Activar(atoi(json_Id->valuestring));
     } /* cJSON_ArrayForEach */
   }
   cJSON_Delete(json_Query_Result);
 
-  if(zona_abierta)
+  if(zonas_abiertas > 0)
   {
-      m_pServer->m_pLog->Add(1, "[ALARMA] Error al Activar, %i zonas abiertas", zona_abierta);
-      return zona_abierta;
+    m_pServer->m_pLog->Add(100, "[ALARMA] Particion %s no se activa, %i zonas abiertas", particion, zonas_abiertas);
+    return zonas_abiertas;
   }
 
-  /* Seteo el estado de alarma en la particion */
-  sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
-                  "SET Estado_Activacion = 2, Estado_Memoria = 0 "
-                  "WHERE Id = %i;",
-                  particion);
-  m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-  rc = m_pDB->Query(nullptr, query);
-  m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-  if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
-  return 0;
+
+
 }
 
-int CAlarma::Desactivar(int particion)
+int CAlarma::Desactivar(const char* particion)
 {
   int rc;
   char query[4096];
 
   cJSON *json_Query_Result;
   cJSON *json_Query_Row;
+  cJSON *json_Id;
   cJSON *json_Objeto_Salida;
   cJSON *json_Tipo_Salida;
 
-  /* Apago la salida de alarma de la particion */
-  sprintf(query, "SELECT * FROM TB_DOM_ALARM_SALIDA "
-                    "WHERE Particion = %i;", particion);
+  /* Busco zonas abiertas */
+  sprintf(query, "SELECT * "
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Nombre = %s ;", particion);
   m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
   json_Query_Result = cJSON_CreateArray();
   rc = m_pDB->Query(json_Query_Result, query);
@@ -109,79 +117,8 @@ int CAlarma::Desactivar(int particion)
   }
   cJSON_Delete(json_Query_Result);
 
-  /* Seteo el estado de alarma en la particion */
-  sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
-                  "SET Estado_Activacion = 0, Estado_Memoria = 0 "
-                  "WHERE Id = %i;",
-                  particion);
-  m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-  rc = m_pDB->Query(nullptr, query);
-  m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-  if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
-  return 0;
-}
 
-int CAlarma::Activar(const char* particion)
-{
-  int rc;
-  char query[4096];
-
-  cJSON *json_Query_Result;
-  cJSON *json_Query_Row;
-  cJSON *json_Id;
-
-  int zonas_abiertas = 0;
-
-  /* Busco zonas abiertas */
-  sprintf(query, "SELECT Id "
-                    "FROM TB_DOM_ALARM_PARTICION "
-                    "WHERE Nombre = %s ;", particion);
-  m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-  json_Query_Result = cJSON_CreateArray();
-  rc = m_pDB->Query(json_Query_Result, query);
-  m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-  if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-  if(rc > 0)
-  {
-    cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
-    {
-      json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Id");
-      zonas_abiertas += Activar(atoi(json_Id->valuestring));
-    } /* cJSON_ArrayForEach */
-  }
-  cJSON_Delete(json_Query_Result);
-
-  return zonas_abiertas;
-}
-
-int CAlarma::Desactivar(const char* particion)
-{
-  int rc;
-  char query[4096];
-
-  cJSON *json_Query_Result;
-  cJSON *json_Query_Row;
-  cJSON *json_Id;
-
-  /* Busco zonas abiertas */
-  sprintf(query, "SELECT Id "
-                    "FROM TB_DOM_ALARM_PARTICION "
-                    "WHERE Nombre = %s ;", particion);
-  m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-  json_Query_Result = cJSON_CreateArray();
-  rc = m_pDB->Query(json_Query_Result, query);
-  m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-  if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-  if(rc > 0)
-  {
-    cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
-    {
-      json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Id");
-      Desactivar(atoi(json_Id->valuestring));
-    } /* cJSON_ArrayForEach */
-  }
-  cJSON_Delete(json_Query_Result);
 
   return 0;
 }
@@ -257,19 +194,19 @@ int CAlarma::ExtIOEvent(const char* json_evt)
                     /* trae un solo resultado, no necesito recorrer el array */
                     cJSON_ArrayForEach(json_Query_Row, json_Query_Result) { break; }
 
-                    json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Part_Id");
-                    json_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Zona");
-                    json_Estado_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Estado_Zona");
-                    json_Tipo_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tipo_Zona");
-                    json_Grupo_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Grupo");
-                    json_Zona_Habilitada = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Zona_Habilitada");
-                    json_Particion = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Particion");
-                    json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Particion_Activada");
-                    json_Estado_Alarma = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Estado_Alarma");
-                    json_Tiempo_De_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Salida");
-                    json_Tiempo_De_Entrada = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Entrada");
-                    json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Alerta");
-                    json_Notificar_SMS_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Notificar_SMS_Alerta");
+                    json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Part_Id");
+                    json_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Zona");
+                    json_Estado_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Zona");
+                    json_Tipo_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_Zona");
+                    json_Grupo_Zona = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Grupo");
+                    json_Zona_Habilitada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Zona_Habilitada");
+                    json_Particion = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Particion");
+                    json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Particion_Activada");
+                    json_Estado_Alarma = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Alarma");
+                    json_Tiempo_De_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Salida");
+                    json_Tiempo_De_Entrada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Entrada");
+                    json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Alerta");
+                    json_Notificar_SMS_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Notificar_SMS_Alerta");
 
                     m_pServer->m_pLog->Add(100, "[ALARMA] Evento: Zona (%s, %s) de Particion (%s, %s) Estado (%s) -> (%i)",
                                           json_Zona->valuestring, (atoi(json_Zona_Habilitada->valuestring))?"Habilitada":"No Habilitada", json_Particion->valuestring, (atoi(json_Particion_Activada->valuestring))?"Activada":"Desactivada", json_Estado_Zona->valuestring, ival);
@@ -309,8 +246,8 @@ int CAlarma::ExtIOEvent(const char* json_evt)
                             {
                               cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
                               {
-                                json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Objeto_Salida");
-                                json_Tipo_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tipo_Salida");
+                                json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto_Salida");
+                                json_Tipo_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_Salida");
                                 if(atoi(json_Tipo_Salida->valuestring) == 0 || atoi(json_Tipo_Salida->valuestring) == 2)
                                 {
                                   /* Enciendo la alarma */
@@ -375,13 +312,13 @@ void CAlarma::Task( void )
   {
     cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
     {
-      json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Id");
-      json_Particion = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Nombre");
-      json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Estado_Activacion");
-      json_Estado_Alarma = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Estado_Alarma");
-      json_Tiempo_De_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Salida");
-      json_Tiempo_De_Entrada = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Entrada");
-      json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tiempo_De_Alerta");
+      json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
+      json_Particion = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Nombre");
+      json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Activacion");
+      json_Estado_Alarma = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Alarma");
+      json_Tiempo_De_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Salida");
+      json_Tiempo_De_Entrada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Entrada");
+      json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Alerta");
 
       /* Tiempo de alarma sonando */
       iEstado_Alarma = atoi(json_Estado_Alarma->valuestring);
@@ -404,8 +341,8 @@ void CAlarma::Task( void )
           {
             cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
             {
-              json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Objeto_Salida");
-              json_Tipo_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row->child, "Tipo_Salida");
+              json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto_Salida");
+              json_Tipo_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_Salida");
               if(atoi(json_Tipo_Salida->valuestring) == 0 || atoi(json_Tipo_Salida->valuestring) == 2)
               {
                 /* Enciendo la alarma */
@@ -436,3 +373,52 @@ void CAlarma::Task( void )
   }
   cJSON_Delete(json_Query_Result);
 }
+
+void CAlarma::Estado(const char* particion, char* json_estado, int max)
+{
+  int rc;
+  char query[4096];
+
+  cJSON *json_Query_Result_Part;
+  cJSON *json_Query_Result_Zonas;
+  cJSON *json_Status_Part;
+  cJSON *json_Response;
+  cJSON *json_Id_Part = nullptr;
+
+  sprintf(query, "SELECT * "
+                  "FROM TB_DOM_ALARM_PARTICION "
+                  "WUERE UPPER(Nombre) = UPPER(\'%s\');", particion);
+  m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+  json_Response = cJSON_CreateArray();
+  json_Query_Result_Part = cJSON_CreateArray();
+  json_Query_Result_Zonas = cJSON_CreateArray();
+  rc = m_pDB->Query(json_Query_Result, query);
+  m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+  if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+  if(rc > 0)
+  {
+    /* tomo solo la primer fila del resultado */
+    cJSON_ArrayForEach(json_Status_Part, json_Query_Result_Part) { break; }
+
+    json_Id_Part = cJSON_GetObjectItemCaseSensitive(json_Status_Part, "Id");
+    if(json_Id_Part)
+    {
+      sprintf(query, "SELECT * "
+                      "FROM TB_DOM_ALARM_ZONA "
+                      "WUERE Particion = %s);", json_Id_Part->valuestring);
+      m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+      rc = m_pDB->Query(json_Query_Result_Zonas, query);
+      m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+      if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+      if(rc > 0)
+      {
+        cJSON_AddArrayToObject(json_Status_Part, "Zonas", json_Query_Result_Zonas);
+      }
+    }
+  }
+  cJSON_AddItemToObject(json_Response, "response", json_Status_Part);
+  cJSON_PrintPreallocated(json_Response, json_estado, max, 0);
+  cJSON_Delete(json_Response);
+  
+}
+#endif /*DALARMA_INTEGRADA*/

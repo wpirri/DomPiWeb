@@ -50,14 +50,18 @@ CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
 CDB *pDB;
+#ifdef ACTIVO_ACTIVO
 char sys_backup[32];
+#endif
 
 #define BT_BUF_SIZE 256
 
 void OnClose(int sig);
 int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
 void Update_Last_Connection(const char* id, const char* data);
+#ifdef ACTIVO_ACTIVO
 int Check_Remote_Synch( void );
+#endif
 void SetIO_CallBack(const char* id, const char* data);
 void SwitchIO_CallBack(const char* id, const char* data);
 void PulseIO_CallBack(const char* id, const char* data);
@@ -83,7 +87,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	char s[16];
 	int timer_count = 0;
+	#ifdef ACTIVO_ACTIVO
 	int timer_synch = 0;
+	#endif
 
 	char db_host[32];
 	char db_name[32];
@@ -144,8 +150,10 @@ int main(/*int argc, char** argv, char** env*/void)
 		external_timeout = atoi(s) * 1000;
 	}
 
+#ifdef ACTIVO_ACTIVO
 	sys_backup[0] = 0;
 	pConfig->GetParam("BACKUP", sys_backup);
+#endif
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data dom32_wifi_data;
@@ -613,11 +621,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				pRBPi->Timer();
 			}
 
+#ifdef ACTIVO_ACTIVO
 			/* expiracion del timer 10s*/
 			if(++timer_synch >= 1000)
 			{
 				if(Check_Remote_Synch() != 1) timer_synch = 0;
 			}
+#endif /* ACTIVO_ACTIVO */
 		}
 
 		pD32W->Task();
@@ -711,6 +721,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 	return rc;
 }
 
+#ifdef ACTIVO_ACTIVO
 int Check_Remote_Synch( void )
 {
 	int rc;
@@ -742,6 +753,7 @@ int Check_Remote_Synch( void )
 	}
 	return rc;
 }
+#endif /* ACTIVO_ACTIVO */
 
 /*  */
 void Update_Last_Connection(const char* id, const char* data)

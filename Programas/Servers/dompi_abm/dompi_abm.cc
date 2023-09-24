@@ -200,6 +200,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_auto_add", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_delete", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_update", GM_MSG_TYPE_CR);
+#ifdef ALARMA_INTEGRADA
 	/* Alarma */
     m_pServer->Suscribe("dompi_alarm_part_list", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_part_list_all", GM_MSG_TYPE_CR);
@@ -219,7 +220,7 @@ int main(/*int argc, char** argv, char** env*/void)
     m_pServer->Suscribe("dompi_alarm_salida_add", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
-
+#endif /* ALARMA_INTEGRADA */
 
 	m_pServer->m_pLog->Add(1, "ABM de domotica inicializado.");
 
@@ -2891,6 +2892,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
+#ifdef ALARMA_INTEGRADA
 			/* ****************************************************************
 			*		dompi_alarm_part_list
 			**************************************************************** */
@@ -3930,7 +3932,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
-
+#endif /* ALARMA_INTEGRADA */
 
 
 
@@ -4037,6 +4039,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_auto_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_update", GM_MSG_TYPE_CR);
+#ifdef ALARMA_INTEGRADA
     m_pServer->UnSuscribe("dompi_alarm_part_list", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_list_all", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_get", GM_MSG_TYPE_CR);
@@ -4055,6 +4058,7 @@ void OnClose(int sig)
     m_pServer->UnSuscribe("dompi_alarm_salida_add", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
+#endif /* ALARMA_INTEGRADA */
 
 	delete pConfig;
 	delete pDB;

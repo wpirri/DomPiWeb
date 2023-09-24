@@ -1,3 +1,5 @@
+#ifdef DALARMA_INTEGRADA
+
 #ifndef _ALARMA_H_
 #define _ALARMA_H_
 
@@ -27,10 +29,11 @@ public:
     CAlarma(CDB *pDB, GEvent *pEV, CGMServerWait *pServer);
     virtual ~CAlarma();
 
-    int Activar(int particion);
-    int Desactivar(int particion);
+    int Habilitar(const char* zona, const char* particion);
+    int Deshabilitar(const char* zona, const char* particion);
     int Activar(const char* particion);
     int Desactivar(const char* particion);
+    int Estado(const char* particion, char* json_estado, int max);
 
     int ExtIOEvent(const char* json_evt);
 
@@ -44,3 +47,5 @@ private:
 
 };
 #endif /* _ALARMA_H_ */
+
+#endif /* DALARMA_INTEGRADA */

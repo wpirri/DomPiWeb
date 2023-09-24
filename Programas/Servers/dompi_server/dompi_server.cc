@@ -100,9 +100,12 @@ using namespace std;
 #include "config.h"
 #include "cdb.h"
 #include "gevent.h"
-#include "alarma.h"
 #include "strfunc.h"
 #include "defines.h"
+
+#ifdef ALARMA_INTEGRADA
+#include "alarma.h"
+#endif
 
 #define MAX_BUFFER_LEN 32767
 #define BT_BUF_SIZE 256
@@ -113,10 +116,15 @@ DPConfig *pConfig;
 int internal_timeout;
 CDB *pDB;
 GEvent *pEV;
-CAlarma *pAlarma;
 cJSON *json_System_Config;
+#ifdef ACTIVO_ACTIVO
 char sys_backup[32];
+#endif
 int check_assign_timer;
+
+#ifdef ALARMA_INTEGRADA
+CAlarma *pAlarma;
+#endif
 
 time_t last_daily;
 
@@ -151,6 +159,11 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  actualizar <dispositivo>, <modulo>\r\n"
 					"  manten\r\n"
 					"  sms <numero>, <mensaje>\r\n"
+					"  habilitar <zona>, <particion>\r\n"
+					"  deshabilitar <zona>, <particion>\r\n"
+					"  activar alarma, <particion>\r\n"
+					"  desactivar alarma, <particion>\r\n"
+					"  estado alarma, <particion>\r\n"
 					"  help\r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
@@ -159,6 +172,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
 					"    numero: Numero de telefono destino del mensaje.\r\n"
 					"    mensaje: Mensaje a enviar.\r\n"
+					"    particion: Nombre de la particion.\r\n"
                     "\r\n"
 					"-------------------------------------------------------------------------------\r\n"
                     "\r\n";
@@ -189,7 +203,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char update_hw_config_mac[16];
 	
 	STRFunc Strf;
-	CGMServerBase::GMIOS call_resp;
+	//CGMServerBase::GMIOS call_resp;
 
     cJSON *json_Message;
     cJSON *json_obj;
@@ -242,8 +256,10 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 
+#ifdef ACTIVO_ACTIVO
 	sys_backup[0] = 0;
 	pConfig->GetParam("BACKUP", sys_backup);
+#endif
 
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
@@ -264,7 +280,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	LoadSystemConfig();
 
 	pEV = new GEvent(pDB, m_pServer);
+#ifdef ALARMA_INTEGRADA
 	pAlarma = new CAlarma(pDB, pEV, m_pServer);
+#endif
 
 	/*
 	Se distribuye equitativamente entre las colas menos cargadas
@@ -325,9 +343,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					//message[0] = 0;
 					if(rc == 1)
 					{
-						//pAlarma->ExtIOEvent(message);
+#ifdef ALARMA_INTEGRADA
+						pAlarma->ExtIOEvent(message);
+#endif
+#ifdef ACTIVO_ACTIVO
 						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
+#endif
 						/* OK */
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						/* Si está todo bien me fijo si pidio enviar configuracion */
@@ -755,6 +777,75 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								/* Actualizar I/O */
 
+							}
+						}
+						else if( !strcmp(comando, "habilitar") )
+						{
+#ifdef ALARMA_INTEGRADA
+							/*                    Zona       Partición */
+							if(pAlarma->Habilitar(parametro, objeto) == 0)
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+							}
+#endif /* ALARMA_INTEGRADA */
+						}
+						else if( !strcmp(comando, "deshabilitar") )
+						{
+#ifdef ALARMA_INTEGRADA
+							/*                       Zona       Partición */
+							if(pAlarma->Deshabilitar(parametro, objeto) == 0)
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+							}
+#endif /* ALARMA_INTEGRADA */
+						}
+						else if( !strcmp(comando, "activar") )
+						{
+							if( !strcmp(parametro, "alarma"))
+							{
+#ifdef ALARMA_INTEGRADA
+								if(pAlarma->Activar(objeto) == 0)
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								}
+								else
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+								}
+#endif /* ALARMA_INTEGRADA */
+							}
+						}
+						else if( !strcmp(comando, "desactivar") )
+						{
+							if( !strcmp(parametro, "alarma"))
+							{
+#ifdef ALARMA_INTEGRADA
+								if(pAlarma->Desactivar(objeto) == 0)
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								}
+								else
+								{
+									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+								}
+#endif /* ALARMA_INTEGRADA */
+							}
+						}
+						else if( !strcmp(comando, "estado") )
+						{
+							if( !strcmp(parametro, "alarma"))
+							{
+#ifdef ALARMA_INTEGRADA
+								pAlarma->Estado(objeto, message, MAX_BUFFER_LEN);
+#endif
 							}
 						}
 					}
@@ -1329,8 +1420,10 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			AutoChangeNotify();
 
+#ifdef ALARMA_INTEGRADA
 			/* Controles del modulo de alarma */
-			//pAlarma->Task();
+			pAlarma->Task();
+#endif
 			/* Tareas programadas en TB_DOM_AT */
 			CheckTask();
 			pEV->CheckAuto(0, nullptr, 0);
@@ -1547,8 +1640,10 @@ void AssignTask( void )
 				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));
+#ifdef ACTIVO_ACTIVO
 				/* Encolo la sincronización */
 				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
+#endif
 			}
 
 			/* Borro la diferencia */

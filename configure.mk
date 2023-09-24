@@ -35,3 +35,8 @@ CHOWN=chown
 # RBPi3 - -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 # RBPi4 - -mcpu=cortex-a72 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 PROCESSOR-PARAMS=-mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4
+
+# Modulos opcionales
+# -DALARMA_INTEGRADA
+# -DACTIVO_ACTIVO
+MODULOS_INCLUIDOS=
