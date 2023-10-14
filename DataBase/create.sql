@@ -1,8 +1,8 @@
 CREATE DATABASE DB_DOMPIWEB;
 USE DB_DOMPIWEB;
 
-DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_SALIDA;
+DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_PARTICION;
 DROP TABLE IF EXISTS TB_DOM_AUTO;
 DROP TABLE IF EXISTS TB_DOM_AT;
@@ -217,52 +217,6 @@ UNIQUE INDEX idx_at_obj_dest (Objeto_Destino),
 UNIQUE INDEX idx_at_fecha (Mes,Dia,Hora,Ultimo_Mes,Ultimo_Dia,Ultima_Hora,Ultimo_Minuto,Dias_Semana)
 );
 
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
-Id integer primary key,
-Nombre varchar(128) NOT NULL,
-Entrada_Act_Total integer NOT NULL,        -- Entrada que arma total o desarma la particion de la alarma
-Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desarma la particion de la alarma
-Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
-Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
-Estado_Memoria integer DEFAULT 0,
-Estado_Alarma integer DEFAULT 0,
-Tiempo_De_Salida integer DEFAULT 0,
-Tiempo_De_Entrada integer DEFAULT 0,
-Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos
-Notificar_SMS_Activacion integer DEFAULT 0,
-Notificar_SMS_Alerta integer DEFAULT 0,
-FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_ap_id (Id),
-UNIQUE INDEX idx_ap_nombre (Nombre)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
-Id integer primary key,
-Particion integer NOT NULL,
-Objeto_Zona integer NOT NULL,
-Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
-Grupo integer DEFAULT 0,        -- 0= Solo Total 1= Siempre 3= 24Hs
-Activa integer DEFAULT 0,
-FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_az_id (Id),
-INDEX idx_az_part (Particion)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
-Id integer primary key,
-Particion integer NOT NULL,
-Objeto_Salida integer NOT NULL,
-Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
-FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_as_id (Id),
-INDEX idx_as_part (Particion)
-);
-
-
 -- Sistema de riego
 -- Calefaccion
 -- Aire acondicionado
@@ -307,6 +261,51 @@ FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
 UNIQUE INDEX idx_auto_id (Id)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+Entrada_Act_Total integer NOT NULL,        -- Entrada que arma total o desarma la particion de la alarma
+Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desarma la particion de la alarma
+Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
+Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
+Estado_Memoria integer DEFAULT 0,
+Estado_Alarma integer DEFAULT 0,
+Tiempo_De_Salida integer DEFAULT 0,
+Tiempo_De_Entrada integer DEFAULT 0,
+Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos
+Notificar_SMS_Activacion integer DEFAULT 0,
+Notificar_SMS_Alerta integer DEFAULT 0,
+FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_ap_id (Id),
+UNIQUE INDEX idx_ap_nombre (Nombre)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto_Zona integer NOT NULL,
+Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
+Grupo integer DEFAULT 0,        -- 0= Solo Total 1= Siempre 3= 24Hs
+Activa integer DEFAULT 0,
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_az_id (Id),
+INDEX idx_az_part (Particion)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto_Salida integer NOT NULL,
+Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_as_id (Id),
+INDEX idx_as_part (Particion)
 );
 
 
