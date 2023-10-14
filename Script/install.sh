@@ -85,6 +85,10 @@ $SQL < $SYTEM_HOME/init.sql
 
 echo "Agregando script de arranque..."
 # Agrego el script de arranque
+systemctl daemon-reload
+systemctl enable gmonitor.service
+#systemctl start gmonitor.service
+if test -e /etc/init.d/gmond ; then rm /etc/init.d/gmond ; fi
 ln -s /usr/local/sbin/gmond /etc/init.d/gmond
 
 echo "Generando arbol web..."
