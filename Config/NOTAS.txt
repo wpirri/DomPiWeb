@@ -10,18 +10,22 @@ hdmi_cvt 800 480 60 6 0 0 0
 hdmi_drive=1
 
 
-
 Instalar en RBPi
 ---------------------------------------
-build-essential
+build-essential (solo para desarrollo)
+xinetd 
 apache2 
-php
-sqlite3
+php 
+libapache2-mod-php 
+default-mysql-server 
+libcjson-dev (solo para desarrollo)
+libcjson1
+GMonitor (solo para desarrollo)
 
-
-Instalación de GMonitor
-------------------------------------------------------------------------------
-./configure --prefix=/usr --sysconfdir=/etc/sysconfig --localstatedir=/var
+Modificar en php.ini:
+---------------------------------------
+upload_max_filesize=10M
+post_max_size=11M
 
 
 SAF
