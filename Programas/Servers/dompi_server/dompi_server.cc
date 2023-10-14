@@ -120,7 +120,6 @@ cJSON *json_System_Config;
 #ifdef ACTIVO_ACTIVO
 char sys_backup[32];
 #endif
-int check_assign_timer;
 
 #ifdef ALARMA_INTEGRADA
 CAlarma *pAlarma;
@@ -223,8 +222,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Config;
 	
 	last_daily = 0;
-	check_assign_timer = 10;
-
+	
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
@@ -490,7 +488,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 1, 0);
 					if(rc > 0)
 					{
-						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -522,7 +519,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 2, 0);
 					if(rc > 0)
 					{
-						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -554,7 +550,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 3, 0);
 					if(rc > 0)
 					{
-						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -588,7 +583,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 4, (json_Segundos)?stoi(json_Segundos->valuestring):0);
 					if(rc > 0)
 					{
-						check_assign_timer = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -688,7 +682,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 1, 0);
-								check_assign_timer = 0;
 							}
 							else
 							{
@@ -700,7 +693,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 2, 0);
-								check_assign_timer = 0;
 							}
 							else
 							{
@@ -712,7 +704,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 3, 0);
-								check_assign_timer = 0;
 							}
 							else
 							{
@@ -724,7 +715,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							if(objeto)
 							{
 								pEV->ChangeAssignByName(objeto, 4, 0);
-								check_assign_timer = 0;
 							}
 							else
 							{
@@ -1294,7 +1284,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 1, 0);
 									}
 								}
-								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "off"))
 							{
@@ -1307,7 +1296,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 2, 0);
 									}
 								}
-								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "switch"))
 							{
@@ -1320,17 +1308,14 @@ int main(/*int argc, char** argv, char** env*/void)
 										pEV->ChangeAutoByName(json_Objeto->valuestring, 3, 0);
 									}
 								}
-								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "pulse"))
 							{
 								pEV->ChangeAssignByName(json_Objeto->valuestring, 4, 0);
-								check_assign_timer = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "auto"))
 							{
 								pEV->ChangeAutoByName(json_Objeto->valuestring, 5, 0);
-								check_assign_timer = 0;
 							}
 						}
 					}
@@ -1370,15 +1355,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		 *
 		 * *******************************************************************/
 		CheckWiegandData();
-
+		AssignTask();
 		GroupTask();
-
-		if(check_assign_timer > 0) check_assign_timer--;
-		if(check_assign_timer == 0)
-		{
-			check_assign_timer = 10;
-			AssignTask();
-		}
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -1573,7 +1551,6 @@ void GroupTask( void )
 					p++;
 				}
 				pEV->ChangeAssignById(atoi(id), accion, 0);
-				check_assign_timer = 0;
 			}
 			sprintf(query, "UPDATE TB_DOM_GROUP "
 							"SET Actualizar = 0 "
@@ -1763,12 +1740,10 @@ void CheckTask()
 				if(atoi(json_Objeto_Destino->valuestring) != 0)
 				{
 					pEV->ChangeAssignById(atoi(json_Objeto_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-					check_assign_timer = 0;
 				}
 				else if(atoi(json_Grupo_Destino->valuestring) != 0)
 				{
 					pEV->ChangeGroupById(atoi(json_Grupo_Destino->valuestring), atoi(json_Evento->valuestring), atoi(json_Parametro_Evento->valuestring));
-					check_assign_timer = 0;
 				}
 				else if(atoi(json_Funcion_Destino->valuestring) != 0)
 				{

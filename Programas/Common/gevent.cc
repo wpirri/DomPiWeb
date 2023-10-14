@@ -911,30 +911,30 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 	{
 		case 1: /* Encender */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = 1 "
+							"SET Estado = 1, Actualizar = 1 "
 							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			break;
 		case 2: /* Apagar */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = 0 "
+							"SET Estado = 0, Actualizar = 1 "
 							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			break;
 		case 3:	/* Switch */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = (1 - Estado) "
+							"SET Estado = (1 - Estado), Actualizar = 1 "
 							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			break;
 		case 4: /* Pulso */
 			if(param > 0)
 			{
 				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i "
+								"SET Estado = %i, Actualizar = 1 "
 								"WHERE UPPER(Objeto) = UPPER(\'%s\');", max(2, param), name);
 			}
 			else
 			{
 				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = Analog_Mult_Div_Valor "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1 "
 								"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			}
 			break;
@@ -958,30 +958,30 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 	{
 		case 1: /* Encender */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = 1 "
+							"SET Estado = 1, Actualizar = 1 "
 							"WHERE Id = %i;", id);
 			break;
 		case 2: /* Apagar */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = 0 "
+							"SET Estado = 0, Actualizar = 1 "
 							"WHERE Id = %i;", id);
 			break;
 		case 3:	/* Switch */
 			sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-							"SET Estado = (1 - Estado) "
+							"SET Estado = (1 - Estado), Actualizar = 1 "
 							"WHERE Id = %i;", id);
 			break;
 		case 4: /* Pulso */
 			if(param > 0)
 			{
 				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i "
+								"SET Estado = %i, Actualizar = 1 "
 							    "WHERE Id = %i;", max(2, param), id);
 			}
 			else
 			{
 				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor) "
+								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1 "
 								"WHERE Id = %i;", id);
 			}
 			break;
