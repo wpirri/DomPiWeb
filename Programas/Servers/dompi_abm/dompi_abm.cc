@@ -87,8 +87,10 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
 	cJSON *json_Planta;
 	cJSON *json_Id;
+#ifdef ALARMA_INTEGRADA
 	cJSON *json_Nombre;
 	cJSON *json_Particion;
+#endif
 	cJSON *json_Cloud_Message;
 
 	load_system_config = 0;
@@ -1136,6 +1138,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_into[0] = 0;
 				query_values[0] = 0;
 
+				json_Cloud_Message = cJSON_CreateObject();
+
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_ASSIGN", "Id");
 				sprintf(temp_s, "%li", temp_l);
@@ -1188,6 +1192,29 @@ int main(/*int argc, char** argv, char** env*/void)
 											/* Mando a actualiza la configuración del HW */
 											update_hw_config_id = atoi(json_un_obj->valuestring);
 										}
+
+										/* Recopilo datos para cactualizar el assign en la nube */
+										if(	strlen(json_un_obj->valuestring) && (
+											!strcmp(json_un_obj->string, "Id") ||
+											!strcmp(json_un_obj->string, "Objeto") ||
+											!strcmp(json_un_obj->string, "Tipo") ||
+											!strcmp(json_un_obj->string, "Estado") ||
+											!strcmp(json_un_obj->string, "Icono_Apagado") ||
+											!strcmp(json_un_obj->string, "Icono_Encendido") ||
+											!strcmp(json_un_obj->string, "Icono_Auto") ||
+											!strcmp(json_un_obj->string, "Grupo_Visual") ||
+											!strcmp(json_un_obj->string, "Planta") ||
+											!strcmp(json_un_obj->string, "Cord_x") ||
+											!strcmp(json_un_obj->string, "Cord_y") ||
+											!strcmp(json_un_obj->string, "Coeficiente") ||
+											!strcmp(json_un_obj->string, "Analog_Mult_Div") ||
+											!strcmp(json_un_obj->string, "Analog_Mult_Div_Valor") ||
+											!strcmp(json_un_obj->string, "Ultimo_Update") ||
+											!strcmp(json_un_obj->string, "Flags")    ) )
+										{
+											cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
+										}
+
 									}
 								}
 							}
@@ -1216,6 +1243,16 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				/* Si tiene los datos necesarios actualizo el assign para la app */
+				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
+				{
+					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+					m_pServer->Notify("dompi_ass_change", message, strlen(message));
+				}
+				cJSON_Delete(json_Cloud_Message);
+
 			}
 			/* ****************************************************************
 			*		dompi_ass_delete
@@ -1267,6 +1304,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
+				json_Cloud_Message = cJSON_CreateObject();
+
 				json_un_obj = json_obj;
 				while( json_un_obj )
 				{
@@ -1312,6 +1351,29 @@ int main(/*int argc, char** argv, char** env*/void)
 											/* Mando a actualiza la configuración del HW */
 											update_hw_config_id = atoi(json_un_obj->valuestring);
 										}
+
+										/* Recopilo datos para cactualizar el assign en la nube */
+										if(	strlen(json_un_obj->valuestring) && (
+											!strcmp(json_un_obj->string, "Id") ||
+											!strcmp(json_un_obj->string, "Objeto") ||
+											!strcmp(json_un_obj->string, "Tipo") ||
+											!strcmp(json_un_obj->string, "Estado") ||
+											!strcmp(json_un_obj->string, "Icono_Apagado") ||
+											!strcmp(json_un_obj->string, "Icono_Encendido") ||
+											!strcmp(json_un_obj->string, "Icono_Auto") ||
+											!strcmp(json_un_obj->string, "Grupo_Visual") ||
+											!strcmp(json_un_obj->string, "Planta") ||
+											!strcmp(json_un_obj->string, "Cord_x") ||
+											!strcmp(json_un_obj->string, "Cord_y") ||
+											!strcmp(json_un_obj->string, "Coeficiente") ||
+											!strcmp(json_un_obj->string, "Analog_Mult_Div") ||
+											!strcmp(json_un_obj->string, "Analog_Mult_Div_Valor") ||
+											!strcmp(json_un_obj->string, "Ultimo_Update") ||
+											!strcmp(json_un_obj->string, "Flags")    ) )
+										{
+											cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
+										}
+
 									}
 								}
 							}
@@ -1347,6 +1409,16 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				/* Si tiene los datos necesarios actualizo el assign para la app */
+				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
+				{
+					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+					m_pServer->Notify("dompi_ass_change", message, strlen(message));
+				}
+				cJSON_Delete(json_Cloud_Message);
+
 			}
 			/* ****************************************************************
 			*		dompi_ass_info

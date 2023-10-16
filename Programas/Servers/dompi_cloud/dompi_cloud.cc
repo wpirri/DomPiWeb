@@ -167,12 +167,20 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
+				m_pServer->m_pLog->Add(20, "[dompi_ass_change] Encolando actualizacion con datos de assign");
 				if(m_cloud_status)
 				{
 					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
-					m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
+					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+					{
+						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_ass_change] OFFLINE: Encolando actualizacion con datos de assign [%s]", message);
 				}
 			}
 			/* ************************************************************* *
@@ -185,13 +193,21 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
+				m_pServer->m_pLog->Add(20, "[dompi_user_change] Encolando actualizacion con datos de usuario");
 				if(m_cloud_status)
 				{
 					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
 
 					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					cJSON_Delete(json_obj);
-					m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
+					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+					{
+						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_ass_change] OFFLINE: Encolando actualizacion con datos de usuario [%s]", message);
 				}
 			}
 			/* ****************************************************************
@@ -413,7 +429,10 @@ void CheckUpdateCloud( void )
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-				m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
+				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+				{
+					m_pServer->m_pLog->Add(1, "[CheckUpdateCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+				}
 			}
 		}
 		cJSON_Delete(json_QueryArray);
@@ -451,7 +470,11 @@ void CheckUpdateCloud( void )
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-				m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message));
+
+				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+				{
+					m_pServer->m_pLog->Add(1, "[CheckUpdateCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+				}
 			}
 		}
 		cJSON_Delete(json_QueryArray);
