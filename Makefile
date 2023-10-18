@@ -36,6 +36,7 @@ installer:
 	cp Programas/Clientes/infoio.cgi/infoio.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/statusio.cgi/statusio.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/gmonitor_get_saf.cgi/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/dompi_mobile.cgi/dompi_mobile.cgi $(RUN_HOME)/cgi/
 	
 	tar cvzf $(UPDATE_FILE) --files-from=update-files.lst
 
