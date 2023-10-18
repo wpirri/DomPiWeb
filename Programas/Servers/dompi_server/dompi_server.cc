@@ -220,6 +220,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Id;
 	cJSON *json_Nombre;
 	cJSON *json_Config;
+	cJSON *json_Grupo;
 	
 	last_daily = 0;
 	
@@ -313,6 +314,10 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
+
+	m_pServer->Suscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
+
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
@@ -1323,6 +1328,73 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_Query_Result);
 			}
 			/* ****************************************************************
+			*		dompi_mobile_list_objects
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_mobile_list_objects"))
+			{
+				json_Message = cJSON_Parse(message);
+				message[0] = 0;
+				json_Grupo = cJSON_GetObjectItemCaseSensitive(json_Message, "Grupo");
+				if(json_Grupo)
+				{
+					json_Query_Result = cJSON_CreateArray();
+					sprintf(query, "SELECT Id,Objeto,Estado,Icono_Apagado,Icono_Encendido "
+								   "FROM TB_DOM_ASSIGN "
+					               "WHERE  Grupo_Visual = %s;",
+								   json_Grupo->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_Query_Result, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc > 0)
+					{
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					}
+				}
+				cJSON_Delete(json_Message);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_mobile_touch_object
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_mobile_touch_object"))
+			{
+				json_Message = cJSON_Parse(message);
+				message[0] = 0;
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				if(json_un_obj)
+				{
+					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 3, 0);
+					if(rc > 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
+				}
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
 			*		dompi_reload_config
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_reload_config"))
@@ -1442,6 +1514,9 @@ void OnClose(int sig)
 
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);
+
+	m_pServer->UnSuscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
 	delete pEV;
 	delete pConfig;

@@ -14,8 +14,52 @@
 <script src="js/weather.js" type="text/javascript"></script>
 <script src="js/ajax.js" type="text/javascript"></script>
 </head>
-<body>
 
+<?php
+// Detectar Mobile
+$mobile_browser = '0';
+
+if( isset($_SERVER['HTTP_ACCEPT']) )
+{
+  if((strpos(strtolower($_SERVER['HTTP_ACCEPT']),'application/vnd.wap.xhtml+xml')>0) or
+    ((isset($_SERVER['HTTP_X_WAP_PROFILE']) or isset($_SERVER['HTTP_PROFILE']))))
+  {
+    $mobile_browser++;
+  }
+}
+
+if( isset($_SERVER['HTTP_USER_AGENT']) )
+{
+  if(preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|mobile)/i',strtolower($_SERVER['HTTP_USER_AGENT'])))
+  {
+    $mobile_browser++;
+  }
+
+  if(strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'windows') > 0)
+  {
+    error_log("MATCH: windows",0);
+    $mobile_browser = 0;
+  }
+
+}
+
+error_log("DOMPIWEB INDEX - HTTP_ACCEPT:".json_encode($_SERVER['HTTP_ACCEPT']).
+          " - HTTP_USER_AGENT:".json_encode($_SERVER['HTTP_USER_AGENT']), 0);
+
+if($mobile_browser > 0)
+{
+// Mostrar contenido para dispositivos móviles
+?>
+<script type="text/javascript">
+  window.location.replace('m/');
+</script>
+<?php
+}
+else
+{
+// Mostrar contenido para general
+?>
+<body>
 <div id="reloj">reloj</div>
 <div id="info_container">
 <table width="100%" border="0"><tr>
@@ -141,4 +185,8 @@ setTimeout("window.location.replace('<?php echo $INDEX?>');", 3600000);
 
 </script>
 </body>
+<?php
+}
+?>
+
 </html>
