@@ -336,7 +336,6 @@ int GEvent::ExtIOEvent(const char* json_evt)
 
 int GEvent::SyncIO(const char* json_evt)
 {
-    int i;
     char s[256];
     time_t t;
     int rc;
@@ -347,7 +346,6 @@ int GEvent::SyncIO(const char* json_evt)
     cJSON *json_hw_id;
     cJSON *json_hw_mac;
     cJSON *json_raddr;
-    cJSON *json_chg;
     cJSON *json_status;
     cJSON *json_un_obj;
     STRFunc str;
@@ -482,11 +480,7 @@ int GEvent::SyncIO(const char* json_evt)
 
 int GEvent::ChangeIO(const char* json_evt)
 {
-    int i;
-    char s[256];
-    time_t t;
     int rc;
-    unsigned int ival;
     char query[4096];
     cJSON *json_obj;
     cJSON *json_ASS_Id;
@@ -925,18 +919,9 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			break;
 		case 4: /* Pulso */
-			if(param > 0)
-			{
-				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i, Actualizar = 1 "
-								"WHERE UPPER(Objeto) = UPPER(\'%s\');", max(2, param), name);
-			}
-			else
-			{
-				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1 "
-								"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
-			}
+            sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                            "SET Estado = %i, Actualizar = 1 "
+                            "WHERE UPPER(Objeto) = UPPER(\'%s\');", param, name);
 			break;
 		default:
 			break;
@@ -972,18 +957,9 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 							"WHERE Id = %i;", id);
 			break;
 		case 4: /* Pulso */
-			if(param > 0)
-			{
-				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = %i, Actualizar = 1 "
-							    "WHERE Id = %i;", max(2, param), id);
-			}
-			else
-			{
-				sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1 "
-								"WHERE Id = %i;", id);
-			}
+            sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                            "SET Estado = %i, Actualizar = 1 "
+                            "WHERE Id = %i;", param, id);
 			break;
 		default:
 			break;
@@ -1020,18 +996,8 @@ int GEvent::ChangeGroupByName(const char* name, int accion, int param)
 							"WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
 			break;
 		case 4: /* Pulso */
-			if(param > 0)
-			{
-				sprintf(query, 	"UPDATE TB_DOM_GROUP "
-								"SET Estado = %i, Actualizar = 1 "
-                                "WHERE UPPER(Grupo) = UPPER(\'%s\');", max(2, param), name);
-			}
-			else
-			{
-				sprintf(query, 	"UPDATE TB_DOM_GROUP "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1" 
-                                "WHERE UPPER(Grupo) = UPPER(\'%s\');", name);
-			}
+            m_pServer->m_pLog->Add(1, "[ChangeGroupByName]  ERROR: Envio de pulso a Grupo [%s]", name);
+            return (-1);
 			break;
 		default:
 			break;
@@ -1068,18 +1034,8 @@ int GEvent::ChangeGroupById(int id, int accion, int param)
 							"WHERE Id = %i;", id);
 			break;
 		case 4: /* Pulso */
-			if(param > 0)
-			{
-				sprintf(query, 	"UPDATE TB_DOM_GROUP "
-								"SET Estado = %i, Actualizar = 1 "
-							    "WHERE Id = %i;", max(2, param), id);
-			}
-			else
-			{
-				sprintf(query, 	"UPDATE TB_DOM_GROUP "
-								"SET Estado = MAX(2, Analog_Mult_Div_Valor), Actualizar = 1" 
-								"WHERE Id = %i;", id);
-			}
+            m_pServer->m_pLog->Add(1, "[ChangeGroupByName]  ERROR: Envio de pulso a Grupo [%i]", id);
+            return (-1);
 			break;
 		default:
 			break;

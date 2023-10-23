@@ -581,9 +581,16 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj, void(*fcn)(const ch
                         {
                             strcpy(port, json_un_obj->valuestring);
                         }
-                        else if( !strcmp(json_un_obj->string, "Estado"))
+                        else if( !strcmp(json_un_obj->string, "Analog_Mult_Div_Valor"))
                         {
-                            strcpy(estado, json_un_obj->valuestring);
+                            if(atoi(json_un_obj->valuestring) > 0)
+                            {
+                                strcpy(estado, json_un_obj->valuestring);
+                            }
+                            else
+                            {
+                                strcpy(estado, "1");
+                            }
                         }
                         if(port[0] && estado[0])
                         {

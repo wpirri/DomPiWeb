@@ -127,7 +127,7 @@ Cord_x integer DEFAULT 0,
 Cord_y integer DEFAULT 0,
 Coeficiente integer DEFAULT 0,              -- 1=Coeficiente Positivo, -1=Coeficiente Negativo  - rc = Coeficiente * ( (Analog_Mult_Div)?Estado/Analog_Mult_Div_Valor:Estado*Analog_Mult_Div_Valor ) 
 Analog_Mult_Div integer DEFAULT 0,          -- 0=Multiplicar por valor, 1=Dividir por valor
-Analog_Mult_Div_Valor integer DEFAULT 1,
+Analog_Mult_Div_Valor integer DEFAULT 1,    -- Parámetro para coeficiente si Tipo=2, Tiempo si Tipo=5
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),

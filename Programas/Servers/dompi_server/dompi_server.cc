@@ -1427,8 +1427,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		 *
 		 * *******************************************************************/
 		CheckWiegandData();
-		AssignTask();
 		GroupTask();
+		AssignTask();
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -1658,7 +1658,7 @@ void AssignTask( void )
 	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
 	json_QueryArray = cJSON_CreateArray();
 	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado "
+							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado, ASS.Analog_Mult_Div_Valor "
 					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
 					"WHERE ASS.Dispositivo = PERIF.Id AND "
 					     "PERIF.Estado = 1 AND "
@@ -1681,13 +1681,14 @@ void AssignTask( void )
 									json_Objeto->valuestring, json_Estado->valuestring);
 			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
 			/* Me fijo si es estado o pulso */
-			if(atoi(json_Estado->valuestring) >= 2 && ( atoi(json_Tipo_ASS->valuestring) == 0 || atoi(json_Tipo_ASS->valuestring) == 5 ) )
-			{
+			if(atoi(json_Tipo_ASS->valuestring) == 5)
+			{	/* Pulso */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
 				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+				iEstado = 0;
 			}
 			else
-			{
+			{	/* El resto de las salidas */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
 				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
@@ -1696,11 +1697,11 @@ void AssignTask( void )
 				/* Encolo la sincronización */
 				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
 #endif
+				iEstado = atoi(json_Estado->valuestring);
+				if(iEstado != 1) iEstado = 0;
 			}
 
 			/* Borro la diferencia */
-			iEstado = atoi(json_Estado->valuestring);
-			if(iEstado != 1) iEstado = 0;
 			sprintf(query, "UPDATE TB_DOM_ASSIGN "
 							"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
 							"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);

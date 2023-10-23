@@ -574,7 +574,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else
 						{
-							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: No es salida");
 						}
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
@@ -588,7 +588,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else
 						{
-							m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: No es salida");
+							m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: No es salida");
 						}
 					}
 					else
@@ -598,7 +598,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 				else
 				{
-					m_pServer->m_pLog->Add(1, "[dompi_hw_switch_io] ERROR: Datos insuficientes");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Datos insuficientes");
 				}
 			}
 
