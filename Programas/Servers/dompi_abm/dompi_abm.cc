@@ -277,7 +277,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT Id, Usuario, Nombre_Completo, Estado, Ultimo_Acceso "
-								"FROM TB_DOM_USER;");
+								"FROM TB_DOM_USER "
+								"ORDER BY Usuario ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -728,7 +729,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				message[0] = 0;
 
 				json_Query_Result = cJSON_CreateArray();
-				strcpy(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF;");
+				strcpy(query, "SELECT Id, Dispositivo, Tipo, Estado FROM TB_DOM_PERIF ORDER BY Dispositivo ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1038,7 +1039,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT ASS.Id, ASS.Objeto, HW.Dispositivo, ASS.Port, ASS.Tipo "
 								"FROM TB_DOM_ASSIGN AS ASS, TB_DOM_PERIF AS HW "
-								"WHERE ASS.Dispositivo = HW.Id;");
+								"WHERE ASS.Dispositivo = HW.Id "
+								"ORDER BY ASS.Objeto ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1513,7 +1515,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT EV.Id, EV.Evento, EV.ON_a_OFF AS \'OFF\', EV.OFF_a_ON AS \'ON\', ASS.Objeto AS Origen "
 				               "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
-							   "WHERE EV.Objeto_Origen = ASS.Id;");
+							   "WHERE EV.Objeto_Origen = ASS.Id "
+							   "ORDER BY EV.Evento ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1821,7 +1824,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT TASK.Id, Agenda, ASS.Objeto "
 				               "FROM TB_DOM_AT AS TASK, TB_DOM_ASSIGN AS ASS "
-							   "WHERE TASK.Objeto_Destino = ASS.Id;");
+							   "WHERE TASK.Objeto_Destino = ASS.Id "
+							   "ORDER BY Agenda, ASS.Objeto ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -2133,7 +2137,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				json_Query_Result = cJSON_CreateArray();
 				strcpy(query, "SELECT Id, Grupo "
-				               "FROM TB_DOM_GROUP;");
+				               "FROM TB_DOM_GROUP "
+							   "ORDER BY Grupo ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -2629,14 +2634,16 @@ int main(/*int argc, char** argv, char** env*/void)
 					sprintf(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
 									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
 									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
-										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s);", json_un_obj->valuestring);
+										"(AU.Objeto_Salida = ASS.Id AND AU.Tipo = %s) "
+										"ORDER BY AU.Objeto ASC;", json_un_obj->valuestring);
 				}
 				else
 				{
 					strcpy(query, "SELECT AU.Id AS Id, AU.Objeto AS Nombre, AU.Habilitado AS Control, AU.Estado AS Estado "
 									"FROM TB_DOM_AUTO AS AU, TB_DOM_ASSIGN AS ASS "
 									"WHERE (AU.Objeto_Salida = ASS.Id AND AU.Id = 0) OR "
-										"(AU.Objeto_Salida = ASS.Id);");
+										"(AU.Objeto_Salida = ASS.Id) "
+										"ORDER BY AU.Objeto ASC;");
 				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
@@ -2976,7 +2983,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				json_Query_Result = cJSON_CreateArray();
 				sprintf(query, "SELECT Id, Nombre, Estado_Activacion AS Activada, Estado_Memoria AS Memoria "
-								"FROM TB_DOM_ALARM_PARTICION;");
+								"FROM TB_DOM_ALARM_PARTICION "
+								"ORDER BY Nombre ASC;");
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -3364,7 +3372,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					json_Query_Result = cJSON_CreateArray();
 					sprintf(query, "SELECT Z.Id AS Id,  A.Objeto AS Nombre, Z.Tipo_Zona AS Tipo, Z.Grupo AS Grupo "
 									"FROM TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-									"WHERE Z.Objeto_Zona = A.Id AND Z.Particion = \'%s\';", json_Particion->valuestring);
+									"WHERE Z.Objeto_Zona = A.Id AND Z.Particion = \'%s\' "
+									"ORDER BY A.Objeto ASC;", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -3690,9 +3699,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(json_Particion)
 				{
 					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT S.Id AS Id,  A.Objeto AS Nombre, S.Tipo_Salida AS Tipo "
+					sprintf(query, "SELECT S.Id AS Id, A.Objeto AS Nombre, S.Tipo_Salida AS Tipo "
 									"FROM TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
-									"WHERE S.Objeto_Salida = A.Id AND S.Particion = \'%s\';", json_Particion->valuestring);
+									"WHERE S.Objeto_Salida = A.Id AND S.Particion = \'%s\' "
+									"ORDER BY A.Objeto ASC;", json_Particion->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
