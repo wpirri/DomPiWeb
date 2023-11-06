@@ -40,4 +40,6 @@
 /etc/xinetd.d/gmonitor
 /etc/cron.daily/clean-gmonitor-logs
 /usr/local/sbin/clean-gmonitor-old-logs.sh
+/etc/cron.monthly/make-db-backup.sh
+/usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/drop_ipc.sh

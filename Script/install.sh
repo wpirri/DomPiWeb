@@ -18,40 +18,44 @@ CGI_ROOT=/usr/lib/cgi-bin/
 
 if [ ! -x $SQL ]; then
     echo "No se encuentra mysql"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/xinetd ]; then
     echo "No se encuentra xinetd"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/apache2 ]; then
     echo "No se encuentra apache2"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
 
 if [ ! -x /usr/bin/php ]; then
     echo "No se encuentra php"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
 
 if [ ! -x /usr/share/doc/libapache2-mod-php ]; then
     echo "No se encuentra libapache2-mod-php"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
 
 x=`find /usr/lib -name libcjson.so`
 if [ "X${x}" = "X" ]; then
     echo "No se encuentra libcjson.so"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson-dev"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
     exit 1
 fi
+
+echo "Agregando usuario ${GMON_USER}"
+useradd -d $SYTEM_LIB $GMON_USER
+passwd -d $GMON_USER
 
 echo "Creando directorios..."
 # Creo los directorios necesarios
@@ -88,7 +92,7 @@ echo "Agregando script de arranque..."
 systemctl daemon-reload
 systemctl enable gmonitor.service
 #systemctl start gmonitor.service
-if test -e /etc/init.d/gmond ; then rm /etc/init.d/gmond ; fi
+rm /etc/init.d/gmond
 ln -s /usr/local/sbin/gmond /etc/init.d/gmond
 
 echo "Generando arbol web..."

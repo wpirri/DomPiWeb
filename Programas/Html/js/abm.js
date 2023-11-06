@@ -384,32 +384,34 @@ function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_l
 		output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
+				} else {
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					output += val;
+					output += '</td>';
+				}
+			} 
+			// Agrego los links de edición y borrado
+			if(edit_link.length > 0) {
+				val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
 				output += val;
-				output += '</td>';
 			}
-		} 
-		// Agrego los links de edición y borrado
-		if(edit_link.length > 0) {
-			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-			output += val;
+			if(edit_link.length > 0) {
+				val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+				output += val;
+			}
+			output += '</tr>\n';
 		}
-		if(edit_link.length > 0) {
-			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-			output += val;
-		}
-		output += '</tr>\n';
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -522,34 +524,36 @@ function fillHWList(json_list, dst_div, title, index_label, edit_link, delete_li
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'Tipo') {
-					output += TipoHW[val].label;
-				} else if(headers[j] == 'Estado') {
-					output += EstadoHW[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'Tipo') {
+						output += TipoHW[val].label;
+					} else if(headers[j] == 'Estado') {
+						output += EstadoHW[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -676,28 +680,30 @@ function fillAddAssignList(json_list, dst_div, title, add_fcn) {
 	output += '<th>Agregar</th>';
 	output += '</tr>\n';
 	// Datos
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			// If there is any key, which is matching 
-			// with the column name 
-			if (val == null) val = "&nbsp;";   
-			if(headers[j] == 'Id') {
-				index_value = val;
-			}
-			else
-			{
-				output += '<td>';
-				output += val;
-				output += '</td>';
-			}
-		} 
-		// Agrego el link de add
-		val = '<td><img src="images/edit.png" OnClick="' + add_fcn + '(' + index_value + ');"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				// If there is any key, which is matching 
+				// with the column name 
+				if (val == null) val = "&nbsp;";   
+				if(headers[j] == 'Id') {
+					index_value = val;
+				}
+				else
+				{
+					output += '<td>';
+					output += val;
+					output += '</td>';
+				}
+			} 
+			// Agrego el link de add
+			val = '<td><img src="images/edit.png" OnClick="' + add_fcn + '(' + index_value + ');"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -725,32 +731,34 @@ function fillAssList(json_list, dst_div, title, index_label, edit_link, delete_l
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'Tipo') {
-					output += TipoAss[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'Tipo') {
+						output += TipoAss[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -922,32 +930,34 @@ function fillEvList(json_list, dst_div, title, index_label, edit_link, delete_li
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'OFF' || headers[j] == 'ON') {
-					output += EstadoHW[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'OFF' || headers[j] == 'ON') {
+						output += EstadoHW[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1062,32 +1072,34 @@ function fillTaskList(json_list, dst_div, title, index_label, edit_link, delete_
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'OFF' || headers[j] == 'ON') {
-					output += EstadoHW[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'OFF' || headers[j] == 'ON') {
+						output += EstadoHW[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1276,32 +1288,34 @@ function fillAnalogList(json_list, dst_div, title, index_label, edit_link, delet
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'Control') {
-					output += ListaOnOffAuto[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'Control') {
+						output += ListaOnOffAuto[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1436,36 +1450,38 @@ function fillAlarmPartList(json_list, dst_div, title, index_label, edit_link, zo
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'OFF' || headers[j] == 'ON') {
-					output += EstadoHW[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'OFF' || headers[j] == 'ON') {
+						output += EstadoHW[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + zone_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + out_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + zone_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + out_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1585,28 +1601,30 @@ function fillAlarmZoneList(json_list, dst_div, title, index_label, edit_link, de
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 0; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				output += val;
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
+				} else {
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					output += val;
+					output += '</td>';
+				}
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1634,28 +1652,30 @@ function fillAlarmOutList(json_list, dst_div, title, index_label, edit_link, del
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 0; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				output += val;
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
+				} else {
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					output += val;
+					output += '</td>';
+				}
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
@@ -1684,32 +1704,34 @@ function fillRiegoList(json_list, dst_div, title, index_label, edit_link, delete
 	output += '<th>Borrar</th>';
 	output += '</tr>\n';
 	// Datos - Salteo el primero de la lista
-	for (i = 1; i < json_list.length; i++) { 
-		output += '<tr>';
-		index_value = '';
-		for (j = 0; j < headers.length; j++) { 
-			var val = json_list[i][headers[j]]; 
-			if(headers[j] == 'Id') {
-				index_value = val;
-			} else {
-				// If there is any key, which is matching 
-				// with the column name 
-				if (val == null) val = "&nbsp;";   
-				output += '<td>';
-				if(headers[j] == 'Control') {
-					output += ListaOnOffAuto[val].label;
+	for (i = 0; i < json_list.length; i++) {
+		if(json_list[i]['Id'] > 0) {
+			output += '<tr>';
+			index_value = '';
+			for (j = 0; j < headers.length; j++) { 
+				var val = json_list[i][headers[j]]; 
+				if(headers[j] == 'Id') {
+					index_value = val;
 				} else {
-					output += val;
+					// If there is any key, which is matching 
+					// with the column name 
+					if (val == null) val = "&nbsp;";   
+					output += '<td>';
+					if(headers[j] == 'Control') {
+						output += ListaOnOffAuto[val].label;
+					} else {
+						output += val;
+					}
+					output += '</td>';
 				}
-				output += '</td>';
-			}
-		} 
-		// Agrego los links de edición y borrado
-		val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
-		output += val;
-		val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
-		output += val;
-		output += '</tr>\n';
+			} 
+			// Agrego los links de edición y borrado
+			val = '<td><a href="' + edit_link + '?' + index_label + '=' + index_value + '"><img src="images/edit.png"></a></td>' 
+			output += val;
+			val = '<td><a href="' + delete_link + '?' + index_label + '=' + index_value + '"><img src="images/delete.png"></a></td>' 
+			output += val;
+			output += '</tr>\n';
+		}
 	}
 	output += '</table>\n';
 	document.getElementById(dst_div).innerHTML = output;
