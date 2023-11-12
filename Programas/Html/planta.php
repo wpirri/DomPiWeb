@@ -14,11 +14,9 @@ include("obj_style.php");
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
-<!--
-<div class="normal-btn" id="btn-planta-alarma" onclick="window.location.replace('panel_alarma.php');">
-	<img id="auto-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
+<div class="normal-btn" id="btn-planta-cameras" onclick="window.location.replace('panel_camara.php');">
+	<img id="auto-icon" class="icon-btn" src="images/camara.png">&nbsp;C&aacute;maras
 </div>
--->
 
 <div class="normal-btn" id="btn-planta-config" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
 	<img id="config-icon" class="icon-btn" src="images/system.png">&nbsp;Configuración

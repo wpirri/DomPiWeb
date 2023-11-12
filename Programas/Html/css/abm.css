@@ -91,3 +91,18 @@
 	background: black;
 	text-align: center;
 	}
+
+.abm-cam-list-div {
+	position: absolute; 
+	left: 50px; 
+	top: 110px; 
+	border: 1px dotted #fff;
+	padding: 2px;
+	color: white;
+	background: black;
+	overflow: auto;
+	overflow-x: hidden;
+	width: 175px;
+	height: 315px;
+	}
+	

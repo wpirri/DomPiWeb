@@ -51,7 +51,7 @@ include("head.php");
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>
 
-<div class="normal-btn" id="btn-config-cameras" onclick="window.location.replace('camera_list.php');">
+<div class="normal-btn" id="btn-config-cameras" onclick="window.location.replace('camara_list.php');">
 	<img id="camera-icon" class="icon-btn" src="images/camara.png">&nbsp;C&aacute;maras
 </div>
 

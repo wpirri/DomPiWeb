@@ -223,6 +223,13 @@ int main(/*int argc, char** argv, char** env*/void)
     m_pServer->Suscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
 #endif /* ALARMA_INTEGRADA */
+	/* Camaras */
+	m_pServer->Suscribe("dompi_camara_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_camara_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_camara_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_camara_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_camara_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_camara_update", GM_MSG_TYPE_CR);
 
 	m_pServer->m_pLog->Add(1, "ABM de domotica inicializado.");
 
@@ -4016,6 +4023,314 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 #endif /* ALARMA_INTEGRADA */
+			/* ****************************************************************
+			*		dompi_camara_list
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_list"))
+			{
+				message[0] = 0;
+
+				json_Query_Result = cJSON_CreateArray();
+				strcpy(query, "SELECT Id, Nombre, Direccion_IP FROM TB_DOM_CAMARA ORDER BY Nombre ASC;");
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_Query_Result, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc >= 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_Query_Result);
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_camara_list_all
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_list_all"))
+			{
+				message[0] = 0;
+
+				json_Query_Result = cJSON_CreateArray();
+				strcpy(query, "SELECT * FROM TB_DOM_CAMARA;");
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_Query_Result, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc >= 0)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+				}
+				else
+				{
+					cJSON_Delete(json_Query_Result);
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_camara_get
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_get"))				
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				if(json_Id)
+				{
+					json_Query_Result = cJSON_CreateArray();
+					sprintf(query, "SELECT * FROM TB_DOM_CAMARA WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_Query_Result, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						cJSON_Delete(json_obj);
+						json_obj = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_camara_add
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_add"))
+			{
+				json_obj = cJSON_Parse(message);
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+
+				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
+				temp_l = pDB->NextId("TB_DOM_CAMARA", "Id");
+				sprintf(temp_s, "%li", temp_l);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
+				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+
+				json_un_obj = json_obj;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									if(ExcluirDeABM(json_un_obj->string) == 0)
+									{
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+
+				strcat(query_into, ")");
+				strcat(query_values, ")");
+
+				sprintf(query, "INSERT INTO TB_DOM_CAMARA %s VALUES %s;", query_into, query_values);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc <= 0)
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_camara_delete
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_delete"))
+			{
+				json_obj = cJSON_Parse(message);
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				if(json_Id)
+				{
+					if( memcmp(json_Id->valuestring, "00", 2) )
+					{
+						sprintf(query, "DELETE FROM TB_DOM_CAMARA WHERE Id = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc <= 0)
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+						}
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalis User\"}}");
+					}
+				}
+
+				cJSON_Delete(json_obj);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_camara_update
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_camara_update"))
+			{
+				json_obj = cJSON_Parse(message);
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+				query_where[0] = 0;
+				hw_id[0] = 0;
+
+				json_un_obj = json_obj;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									if(ExcluirDeABM(json_un_obj->string) == 0)
+									{
+										if( !strcmp(json_un_obj->string, "Id") )
+										{
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
+										}
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_obj);
+				if(strlen(query_where) && strlen(hw_id))
+				{
+					strcat(query_values, ",Actualizar = 1");
+					sprintf(query, "UPDATE TB_DOM_CAMARA SET %s WHERE %s;", query_values, query_where);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc <= 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+
+			}
 
 
 
@@ -4142,6 +4457,13 @@ void OnClose(int sig)
     m_pServer->UnSuscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
 #endif /* ALARMA_INTEGRADA */
+	/* Camaras */
+	m_pServer->UnSuscribe("dompi_camara_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_camara_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_camara_get", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_camara_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_camara_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_camara_update", GM_MSG_TYPE_CR);
 
 	delete pConfig;
 	delete pDB;
