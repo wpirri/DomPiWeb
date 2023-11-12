@@ -61,8 +61,8 @@ echo "Creando directorios..."
 # Creo los directorios necesarios
 mkdir -v -p $SYTEM_VAR
 chown -v $GMON_USER: $SYTEM_VAR
-mkdir -v -p $SYTEM_VAR/saf
-chown -v $GMON_USER: $SYTEM_VAR/saf
+mkdir -v -p $SYTEM_LIB/saf
+chown -v $GMON_USER: $SYTEM_LIB/saf
 mkdir -v -p $SYTEM_LIB
 chown -v $GMON_USER: $SYTEM_LIB
 mkdir -v -p $SYTEM_LOG

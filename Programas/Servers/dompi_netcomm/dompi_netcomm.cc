@@ -188,6 +188,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_camera_get_image", GM_MSG_TYPE_CR);
 
 	m_pServer->m_pLog->Add(1, "Servicios de Comunicación con Interfaces Locales inicializados.");
 
@@ -601,6 +602,23 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Datos insuficientes");
 				}
 			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_camera_get_image"))
+			{
+
+
+
+
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
+				}
+			}
 
 
 
@@ -645,6 +663,7 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
+	m_pServer->UnSuscribe("dompi_camera_get_image", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);

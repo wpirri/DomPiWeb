@@ -1,6 +1,7 @@
 CREATE DATABASE DB_DOMPIWEB;
 USE DB_DOMPIWEB;
 
+DROP TABLE IF EXISTS TB_DOM_CAMARA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_SALIDA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_PARTICION;
@@ -310,3 +311,15 @@ INDEX idx_as_part (Particion)
 
 
 -- sudo mysqlcheck --all-databases --optimize
+
+CREATE TABLE IF NOT EXISTS TB_DOM_CAMARA (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+Direccion_IP varchar(16) DEFAULT "0.0.0.0",
+Usuario varchar(16),
+Clave varchar(16),
+Protocolo varchar(16) DEFAULT "http",
+Requerimiento varchar(256) DEFAULT "/",
+Flags integer DEFAULT 0,
+UNIQUE INDEX idx_cam_id (Id)
+);

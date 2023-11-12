@@ -23,6 +23,7 @@ INSERT INTO TB_DOM_CONFIG (id, Creacion, System_Key, Cloud_Host_1_Address, Cloud
 INSERT INTO TB_DOM_AUTO (Id, Objeto, Tipo, Objeto_Salida, Grupo_Salida, Funcion_Salida, Variable_Salida, Objeto_Sensor)
   VALUES(0,'Ninguno',1,0,0,0,0,0);
 INSERT INTO TB_DOM_AT (Id, Agenda, Objeto_Destino, Grupo_Destino, Funcion_Destino, Variable_Destino) VALUES (0,'Ninguna', 0, 0, 0, 0);
+INSERT INTO TB_DOM_CAMARA (Id, Nombre) VALUES (0, 'Ninguna');
 
 CREATE USER 'dompi_web'@'%' IDENTIFIED BY 'dompi_web'; 
 GRANT SELECT, INSERT, UPDATE, DELETE ON DB_DOMPIWEB.* TO 'dompi_web'@'%' WITH GRANT OPTION;

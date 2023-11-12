@@ -146,16 +146,16 @@ body {
 	}
 				
 /* En plantaN.php */
+#btn-planta-cameras {
+	left: 10px; 
+	top: 180px; 
+	background: orange;
+	}
+
 #btn-planta-config {
 	left: 10px; 
 	top: 265px; 
 	background: navy;
-	}
-
-#btn-planta-alarma {
-	left: 10px; 
-	top: 180px; 
-	background: purple;
 	}
 
 #btn-planta-select {
