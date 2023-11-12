@@ -1,0 +1,53 @@
+<html>
+<head>
+	<title>EZVIZ</title>
+</head>
+<body onload='runvlc();'>
+
+<script type="text/javascript" language="javascript">
+
+function runvlc() {
+  var target=$('body');
+  var error=$('#dialog_error');
+  var support=true;
+  var addr='rtsp://admin:AUXGCQ@192.168.10.134:554/h264_stream';
+  if (navigator.userAgent.toLowerCase().indexOf("msie")!=-1) {
+    target.append('<object type = "application/x-vlc-plugin"' +
+      'version = "VideoLAN.VLCPlugin.2"' + 
+      'classid = "clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921"' + 
+      'events = "true"' + 'id = "vlc"></object>');
+  }
+  else if (navigator.userAgent.toLowerCase().indexOf("msie")==-1){
+    target.append('<embed type = "application/x-vlc-plugin"' + 'class="vlc_plugin"' + 
+    'pluginspage="http://www.videolan.org"' + 'version="VideoLAN.VLCPlugin.2" ' + 
+    'width="660" height="372"' + 
+    'id="vlc"' + 'autoplay="true"' + 'allowfullscreen="false"' + 'windowless="true"' + 
+    'mute="false"' + 'loop="true"' + '<toolbar="false"' + 'bgcolor="#111111"' + 
+    'branding="false"' + 
+    'controls="false"' + 'aspectRatio="16:9"' + 'target="whatever.mp4"></embed>');
+  }
+  else {
+  support=false
+  error.empty().html('Error: browser not supported!')
+  error.show()
+  if (support){
+  var vlc=document.getElementById('vlc')
+  if (vlc){
+  var options=new Array(':network-caching=300') /* set additional vlc--options */
+  try{ /* error handling */
+  var id = vlc.playlist.add(addr,'',options)
+  vlc.playlist.playItem(id)
+  }
+  catch (e){
+  error.empty().html('Error: ' + e + '<br>URL: ' + addr + '')
+  error.show()
+  }
+  }
+  }
+  }
+}
+
+</script>
+
+<body>
+</html>
