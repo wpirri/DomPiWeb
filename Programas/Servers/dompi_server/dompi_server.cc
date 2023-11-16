@@ -84,6 +84,7 @@ cJSON_Delete(obj);
 #include <gmonitor/gmontdb.h>
 /*#include <gmonitor/gmstring.h>*/
 #include <gmonitor/gmswaited.h>
+#include <gmonitor/svcstru.h>
 
 #include <string>
 #include <iostream>
@@ -139,6 +140,7 @@ void LoadSystemConfig(void);
 int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
 void AutoChangeNotify(void);
+void AddSaf( void );
 
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
@@ -318,6 +320,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
+	AddSaf();
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
@@ -2254,4 +2257,15 @@ void AutoChangeNotify( void )
 		}
 	}
 	cJSON_Delete(json_QueryArray);
+}
+
+void AddSaf( void )
+{
+	ST_SQUEUE sq;
+
+	sq.len = 0;
+	strcpy(sq.saf_name, "dompi_infoio_synch");
+	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
+	strcpy(sq.saf_name, "dompi_changeio_synch");
+	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
 }

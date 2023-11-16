@@ -2,50 +2,31 @@
 <head>
 	<title>EZVIZ</title>
 </head>
-<body onload='runvlc();'>
+<body>
+
+<!--
+  https://stackoverflow.com/questions/32708716/embed-rtsp-video-stream-on-html-website 
+
+  The only way at present to have it stream in Chrome or IE is to have VLC transcode the RSTP stream for you to a HTML5 supported stream.
+  Here is a sample VLC command to do just that:
+    vlc rtsp://my.camera.com/axis-media/media.amp :network-caching=1000 :sout=#transcode{vcodec=theo,vb=1600,scale=1,acodec=none}:http{mux=ogg,dst=:8181/stream} :no-sout-rtp-sap :no-sout-standard-sap :sout-keep
+
+  You can obviously change the port or encoding type as you see fit e.g.
+    :http{mux=flv,dst=:1234/stream}
+-->
+
+<div id="cctv-container">
+  <object classid="clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921" codebase="http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab" id="vlc" events="True" width="640" height="480">
+    <param name="Src" value="rtsp://admin:AUXGCQ@192.168.10.134:554/h264_stream"/>
+    <param name="ShowDisplay" value="True"/>
+    <param name="AutoLoop" value="False"/>
+    <param name="AutoPlay" value="True"/>
+    <embed id="vlcEmb" type="application/x-google-vlc-plugin" version="VideoLAN.VLCPlugin.2" autoplay="yes" loop="no" target="rtsp://my.camera.com/axis-media/media.amp" width="640" height="480"/>
+  </object>
+</div>
 
 <script type="text/javascript" language="javascript">
 
-function runvlc() {
-  var target=$('body');
-  var error=$('#dialog_error');
-  var support=true;
-  var addr='rtsp://admin:AUXGCQ@192.168.10.134:554/h264_stream';
-  if (navigator.userAgent.toLowerCase().indexOf("msie")!=-1) {
-    target.append('<object type = "application/x-vlc-plugin"' +
-      'version = "VideoLAN.VLCPlugin.2"' + 
-      'classid = "clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921"' + 
-      'events = "true"' + 'id = "vlc"></object>');
-  }
-  else if (navigator.userAgent.toLowerCase().indexOf("msie")==-1){
-    target.append('<embed type = "application/x-vlc-plugin"' + 'class="vlc_plugin"' + 
-    'pluginspage="http://www.videolan.org"' + 'version="VideoLAN.VLCPlugin.2" ' + 
-    'width="660" height="372"' + 
-    'id="vlc"' + 'autoplay="true"' + 'allowfullscreen="false"' + 'windowless="true"' + 
-    'mute="false"' + 'loop="true"' + '<toolbar="false"' + 'bgcolor="#111111"' + 
-    'branding="false"' + 
-    'controls="false"' + 'aspectRatio="16:9"' + 'target="whatever.mp4"></embed>');
-  }
-  else {
-  support=false
-  error.empty().html('Error: browser not supported!')
-  error.show()
-  if (support){
-  var vlc=document.getElementById('vlc')
-  if (vlc){
-  var options=new Array(':network-caching=300') /* set additional vlc--options */
-  try{ /* error handling */
-  var id = vlc.playlist.add(addr,'',options)
-  vlc.playlist.playItem(id)
-  }
-  catch (e){
-  error.empty().html('Error: ' + e + '<br>URL: ' + addr + '')
-  error.show()
-  }
-  }
-  }
-  }
-}
 
 </script>
 

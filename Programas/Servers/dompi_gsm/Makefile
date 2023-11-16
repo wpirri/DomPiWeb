@@ -37,11 +37,6 @@ install:
 	$(CHMOD) +x install_server.sh
 	$(CHMOD) +x update-tables.sh
 	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
-	# SAF
-	#	dompi_infoio_synch
-	#	dompi_changeio_synch
-	gm_safcfg -c dompi_sms_input
-	gm_safcfg -c dompi_sms_output
 
 uninstall:
 	$(RM) $(INST_SBINDIR)/$(OUTPUT)

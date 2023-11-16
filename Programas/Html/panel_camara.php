@@ -31,8 +31,16 @@ include('head-abm.php');
     function getCameraImage() {
       if(cam_nombre.length > 0)
       {
-        //newAJAXCommand('get_camera_data.php?src=http://192.168.10.13/tmpfs/auto.jpg&auth=syshome:syshome', refreshImage, false);      
-        newAJAXCommand('get_camera_data.php?src=' + cam_proto + '://' + cam_ip + cam_req + '&auth=' + cam_auth, refreshImage, false);      
+        if(cam_proto == 'http' || cam_proto == 'https')
+        {
+          //http://192.168.10.13/tmpfs/auto.jpg&auth=syshome:syshome      
+          newAJAXCommand('get_camera_http.php?src=' + cam_proto + '://' + cam_ip + cam_req + '&auth=' + cam_auth, refreshImage, false);
+        }
+        else if(cam_proto == 'rtsp')
+        {
+          // rtsp://admin:AUXGCQ@192.168.10.134:554/h264_stream
+          newAJAXCommand('get_camera_rtsp.php?src=' + cam_proto + '://' + cam_auth + '@' + cam_ip + cam_req, refreshImage, false);
+        }
       }
     }
 

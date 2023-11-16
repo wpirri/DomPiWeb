@@ -21,6 +21,7 @@
 /*#include <gmonitor/gmstring.h>*/
 #include <gmonitor/gmswaited.h>
 #include <gmonitor/gmc.h>
+#include <gmonitor/svcstru.h>
 
 #include <string>
 #include <iostream>
@@ -56,6 +57,7 @@ char gsm_port[256];
 char sms_buffer[1024];
 
 void OnClose(int sig);
+void AddSaf( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -118,6 +120,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Call(".set_timer", &st_timer, sizeof(ST_STIMER), &resp, 1000);
 	memcpy(&st_timer, resp.data, sizeof(ST_STIMER));
 
+	AddSaf();
+
 	m_pServer->m_pLog->Add(1, "Soporte SMS / GSM Inicializado.");
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
@@ -177,4 +181,15 @@ void OnClose(int sig)
 	delete pModem;
 	delete m_pServer;
 	exit(0);
+}
+
+void AddSaf( void )
+{
+	ST_SQUEUE sq;
+
+	sq.len = 0;
+	strcpy(sq.saf_name, "dompi_sms_output");
+	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
+	strcpy(sq.saf_name, "dompi_sms_input");
+	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
 }

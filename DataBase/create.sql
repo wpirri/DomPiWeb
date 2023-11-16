@@ -315,7 +315,7 @@ INDEX idx_as_part (Particion)
 CREATE TABLE IF NOT EXISTS TB_DOM_CAMARA (
 Id integer primary key,
 Nombre varchar(128) NOT NULL,
-Direccion_IP varchar(16) DEFAULT "0.0.0.0",
+Direccion_IP varchar(32) DEFAULT "0.0.0.0",
 Usuario varchar(16),
 Clave varchar(16),
 Protocolo varchar(16) DEFAULT "http",

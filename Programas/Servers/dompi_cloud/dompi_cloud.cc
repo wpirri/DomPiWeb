@@ -19,6 +19,7 @@
 #include <gmonitor/gmontdb.h>
 /*#include <gmonitor/gmstring.h>*/
 #include <gmonitor/gmswaited.h>
+#include <gmonitor/svcstru.h>
 
 #include <string>
 #include <iostream>
@@ -66,6 +67,7 @@ int SendToCloud( void );
 void CheckUpdateCloud( void );
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg);
 void LoadSystemConfig(void);
+void AddSaf( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -145,6 +147,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
+
+	AddSaf();
 
 	m_pServer->m_pLog->Add(1, "Interface con la nube inicializada.");
 
@@ -628,4 +632,13 @@ void LoadSystemConfig(void)
 
 
 	if(rc >= 0) m_pServer->m_pLog->Add(1, "[LoadSystemConfig] Lectura de configuracion OK.");
+}
+
+void AddSaf( void )
+{
+	ST_SQUEUE sq;
+
+	strcpy(sq.saf_name, "dompi_msg_to_cloud");
+	sq.len = 0;
+	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
 }
