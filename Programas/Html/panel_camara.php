@@ -42,6 +42,7 @@ include('head-abm.php');
           newAJAXCommand('get_camera_rtsp.php?src=' + cam_proto + '://' + cam_auth + '@' + cam_ip + cam_req, refreshImage, false);
         }
       }
+      setTimeout(getCameraImage, 1000);
     }
 
     function refreshImage (img_base64) {
@@ -50,7 +51,7 @@ include('head-abm.php');
 
     function loadCameraList (msg) {
       fillCameraShortList(JSON.parse(msg).response, 'camera_list', 'Camaras', 'Id');
-      setInterval(getCameraImage, 250);
+      setTimeout(getCameraImage, 1000);
     }
 
     function OnLoad() {
