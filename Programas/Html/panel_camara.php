@@ -14,11 +14,29 @@ include('head-abm.php');
 <div id='camera_image' class='abm-div'></div>
 
 <script type="text/javascript" >
-    cam_nombre = '';
-    cam_ip = '';
-    cam_auth = '';
-    cam_proto = '';
-    cam_req = '';
+  <?php
+    if( isset( $_GET['cam_nombre'] ) && isset( $_GET['cam_ip'] ) && 
+        isset( $_GET['cam_auth'] ) && isset( $_GET['cam_proto'] ) && isset( $_GET['cam_req'] ) )
+    {
+      ?>
+      cam_nombre = '<?php echo $_GET['cam_nombre']; ?>';
+      cam_ip = '<?php echo $_GET['cam_ip']; ?>';
+      cam_auth = '<?php echo $_GET['cam_auth']; ?>';
+      cam_proto = '<?php echo $_GET['cam_proto']; ?>';
+      cam_req = '<?php echo $_GET['cam_req']; ?>';
+      <?php
+    }
+    else
+    {
+      ?>
+      cam_nombre = '';
+      cam_ip = '';
+      cam_auth = '';
+      cam_proto = '';
+      cam_req = '';
+      <?php
+    }
+  ?>
 
     function SelectCamera(nombre, ip, usuario, clave, proto, req) {
       cam_nombre = nombre;

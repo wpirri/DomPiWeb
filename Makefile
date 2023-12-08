@@ -28,6 +28,7 @@ installer:
 	cp Programas/Clientes/abmassign.cgi/abmassign.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmat.cgi/abmat.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmcamara.cgi/abmcamara.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmev.cgi/abmev.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(RUN_HOME)/cgi/

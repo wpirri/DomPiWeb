@@ -4307,7 +4307,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_obj);
 				if(strlen(query_where) && strlen(hw_id))
 				{
-					strcat(query_values, ",Actualizar = 1");
 					sprintf(query, "UPDATE TB_DOM_CAMARA SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);

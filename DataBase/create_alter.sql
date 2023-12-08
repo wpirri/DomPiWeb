@@ -68,3 +68,8 @@ alter table TB_DOM_USER add column Amazon_Key varchar(256);
 alter table TB_DOM_USER add column Google_Key varchar(256);
 alter table TB_DOM_USER add column Apple_Key varchar(256);
 alter table TB_DOM_USER add column Other_Key varchar(256);
+
+
+alter table TB_DOM_EVENT drop foreign key Funcion_Destino;
+
+
