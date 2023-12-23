@@ -146,7 +146,7 @@ body {
 	}
 				
 /* En plantaN.php */
-#btn-planta-cameras {
+#btn-planta-seguridad {
 	left: 10px; 
 	top: 180px; 
 	background: orange;
@@ -239,5 +239,36 @@ body {
 	left: 255px; 
 	top: 180px; 
 	background: maroon;
+	}
+	
+/* en seguridad_menu.php */
+#btn-seguridad-camara {
+	left: 255px; 
+	top: 95px; 
+	background: olive;
+}
+
+#btn-seguridad-alarma {
+	left: 415px; 
+	top: 95px; 
+	background: red;
+	}
+
+#btn-seguridad-panico {
+	left: 255px; 
+	top: 265px; 
+	background: maroon;
+	}
+
+#btn-seguridad-incendio {
+	left: 415px; 
+	top: 265px; 
+	background: green;
+	}
+
+#btn-seguridad-emer-med {
+	left: 575px; 
+	top: 265px; 
+	background: fuchsia;
 	}
 	

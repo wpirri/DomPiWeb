@@ -5,11 +5,11 @@ include('head-abm.php');
 
 <body onload='OnLoad();'>
 
-<div id='tablero_list_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $MAIN?>');" >
+<div id='tablero_list_back_btn' class='back-btn' onclick="window.location.replace('seguridad_menu.php');" >
 	<img id='tablero_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
-<div id='camera_list' class='abm-cam-list-div'></div>
+<div id='camera_list' class='abm-lateral-list-div'></div>
 
 <div id='camera_image' class='abm-div'></div>
 
@@ -37,6 +37,47 @@ include('head-abm.php');
       <?php
     }
   ?>
+
+    function fillCameraShortList(json_list, dst_div) { 
+      // Getting the all column names 
+      var output = '<table class=abm-list-table>\n';
+      var i = 0;
+      var j = 0;
+
+      for (i = 0; i < json_list.length; i++) {
+        if(json_list[i]['Id'] > 0) {
+          output += '<tr><td onclick="SelectCamera(';
+          output += '\'';
+          output += json_list[i]['Nombre'];
+          output += '\'';
+          output += ',';
+          output += '\'';
+          output += json_list[i]['Direccion_IP'];
+          output += '\'';
+          output += ',';
+          output += '\'';
+          output += json_list[i]['Usuario'];
+          output += '\'';
+          output += ',';
+          output += '\'';
+          output += json_list[i]['Clave'];
+          output += '\'';
+          output += ',';
+          output += '\'';
+          output += json_list[i]['Protocolo'];
+          output += '\'';
+          output += ',';
+          output += '\'';
+          output += json_list[i]['Requerimiento'];
+          output += '\'';
+          output += ')">';
+          output += json_list[i]['Nombre'];
+          output += '</td></tr>';
+        }
+      }
+      output += '</table>\n';
+      document.getElementById(dst_div).innerHTML = output;
+    } 
 
     function SelectCamera(nombre, ip, usuario, clave, proto, req) {
       cam_nombre = nombre;

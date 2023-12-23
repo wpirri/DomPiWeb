@@ -8,7 +8,6 @@ DROP TABLE IF EXISTS TB_DOM_ALARM_PARTICION;
 DROP TABLE IF EXISTS TB_DOM_AUTO;
 DROP TABLE IF EXISTS TB_DOM_AT;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
---DROP TABLE IF EXISTS TB_DOM_FUNCTION;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
@@ -156,19 +155,12 @@ Valor integer DEFAULT 0,
 UNIQUE INDEX idx_flag_id (Id)
 );
 
---CREATE TABLE IF NOT EXISTS TB_DOM_FUNCTION (
---Id integer primary key,
---Funcion varchar(128) NOT NULL,
---UNIQUE INDEX idx_funcion_id (Id)
---);
-
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
 Id integer primary key,
 Evento varchar(128) NOT NULL,
 Objeto_Origen integer NOT NULL,
 Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 ON_a_OFF integer DEFAULT 0,
 OFF_a_ON integer DEFAULT 0,
@@ -181,7 +173,6 @@ Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
---FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
 UNIQUE INDEX idx_event_id (Id),
 UNIQUE INDEX idx_event_obj_origen (Objeto_Origen)
@@ -197,7 +188,6 @@ Minuto integer DEFAULT 0,
 Dias_Semana varchar(128),
 Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Funcion_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Evento integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Switch 4=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
@@ -211,7 +201,6 @@ Ultimo_Minuto integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
-FOREIGN KEY(Funcion_Destino) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
 UNIQUE INDEX idx_at_id (Id),
 UNIQUE INDEX idx_at_obj_dest (Objeto_Destino),
@@ -229,7 +218,6 @@ Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Air
 Objeto_Sensor integer NOT NULL,             -- Discpositivo - Id de input de TB_DOM_ASSIGN
 Objeto_Salida integer NOT NULL,             -- Discpositivo - Id de TB_DOM_ASSIGN
 Grupo_Salida integer NOT NULL,              -- Grupo - Id de TB_DOM_GROUP
-Funcion_Salida integer NOT NULL,            -- Función - Id de TB_DOM_FUNCTION
 Variable_Salida integer NOT NULL,           -- Variable - Id de TB_DOM_FLAG
 Parametro_Evento integer DEFAULT 0,         -- Se pasa si es Variable o Funcion
 Min_Sensor integer DEFAULT 0,
@@ -257,7 +245,6 @@ Actualizar integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Salida) REFERENCES TB_DOM_GROUP(Id),
-FOREIGN KEY(Funcion_Salida) REFERENCES TB_DOM_FUNCTION(Id),
 FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),

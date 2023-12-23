@@ -87,10 +87,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_channel;
 	cJSON *json_Planta;
 	cJSON *json_Id;
-#ifdef ALARMA_INTEGRADA
-	cJSON *json_Nombre;
 	cJSON *json_Particion;
-#endif
 	cJSON *json_Cloud_Message;
 
 	load_system_config = 0;
@@ -202,7 +199,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_auto_add", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_delete", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_auto_update", GM_MSG_TYPE_CR);
-#ifdef ALARMA_INTEGRADA
 	/* Alarma */
     m_pServer->Suscribe("dompi_alarm_part_list", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_part_list_all", GM_MSG_TYPE_CR);
@@ -222,7 +218,6 @@ int main(/*int argc, char** argv, char** env*/void)
     m_pServer->Suscribe("dompi_alarm_salida_add", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
-#endif /* ALARMA_INTEGRADA */
 	/* Camaras */
 	m_pServer->Suscribe("dompi_camara_list", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_camara_list_all", GM_MSG_TYPE_CR);
@@ -2979,7 +2974,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
-#ifdef ALARMA_INTEGRADA
 			/* ****************************************************************
 			*		dompi_alarm_part_list
 			**************************************************************** */
@@ -3297,61 +3291,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					else
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid User\"}}");
-					}
-				}
-
-				cJSON_Delete(json_obj);
-
-				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
-				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
-				{
-					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
-				}
-			}
-			/* ****************************************************************
-			*		dompi_alarm_part_status
-			**************************************************************** */
-			else if( !strcmp(fn, "dompi_alarm_part_status"))
-			{
-				json_obj = cJSON_Parse(message);
-				message[0] = 0;
-
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
-
-				if(json_Id)
-				{
-					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT  Id, Nombre, ActStatus, MemStatus "
-							"FROM TB_DOM_ALARM_PARTICION WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_Query_Result, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					}
-				}
-				else if(json_Nombre)
-				{
-					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT  Id, Nombre, ActStatus, MemStatus "
-							"FROM TB_DOM_ALARM_PARTICION WHERE Nombre = %s;", json_Nombre->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_Query_Result, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
 					}
 				}
 
@@ -4022,7 +3961,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
-#endif /* ALARMA_INTEGRADA */
 			/* ****************************************************************
 			*		dompi_camara_list
 			**************************************************************** */
@@ -4436,7 +4374,6 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_auto_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_auto_update", GM_MSG_TYPE_CR);
-#ifdef ALARMA_INTEGRADA
     m_pServer->UnSuscribe("dompi_alarm_part_list", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_list_all", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_get", GM_MSG_TYPE_CR);
@@ -4455,7 +4392,6 @@ void OnClose(int sig)
     m_pServer->UnSuscribe("dompi_alarm_salida_add", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
-#endif /* ALARMA_INTEGRADA */
 	/* Camaras */
 	m_pServer->UnSuscribe("dompi_camara_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_list_all", GM_MSG_TYPE_CR);

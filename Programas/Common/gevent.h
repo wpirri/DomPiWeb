@@ -49,9 +49,21 @@ public:
     int ChangeAutoByName(const char* name, int accion, int param);
     int ChangeAutoById(int id, int accion, int param);
 
+
+    int Habilitar_Alarma(const char* zona, const char* particion);
+    int Deshabilitar_Alarma(const char* zona, const char* particion);
+    int Activar_Alarma(const char* particion, int total);
+    int Desactivar_Alarma(const char* particion);
+    void Estado_Alarma(const char* particion, char* json_estado, int max);
+
+    int ExtIOEvent_Alarma(int assign, int status);
+
+    void Task_Alarma( void );
+
 private:
     CDB *m_pDB;
     CGMServerWait *m_pServer;
+    unsigned long m_last_time_task;
 
 };
 #endif /* _GEVENT_H_ */

@@ -104,10 +104,6 @@ using namespace std;
 #include "strfunc.h"
 #include "defines.h"
 
-#ifdef ALARMA_INTEGRADA
-#include "alarma.h"
-#endif
-
 #define MAX_BUFFER_LEN 32767
 #define BT_BUF_SIZE 256
 
@@ -120,10 +116,6 @@ GEvent *pEV;
 cJSON *json_System_Config;
 #ifdef ACTIVO_ACTIVO
 char sys_backup[32];
-#endif
-
-#ifdef ALARMA_INTEGRADA
-CAlarma *pAlarma;
 #endif
 
 time_t last_daily;
@@ -223,6 +215,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Nombre;
 	cJSON *json_Config;
 	cJSON *json_Grupo;
+	cJSON *json_EstadoPart;
+	cJSON *json_EstadoZona;
+	cJSON *json_EstadoSalida;
 	
 	last_daily = 0;
 	
@@ -281,9 +276,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	LoadSystemConfig();
 
 	pEV = new GEvent(pDB, m_pServer);
-#ifdef ALARMA_INTEGRADA
-	pAlarma = new CAlarma(pDB, pEV, m_pServer);
-#endif
 
 	/*
 	Se distribuye equitativamente entre las colas menos cargadas
@@ -349,9 +341,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					//message[0] = 0;
 					if(rc == 1)
 					{
-#ifdef ALARMA_INTEGRADA
-						pAlarma->ExtIOEvent(message);
-#endif
 #ifdef ACTIVO_ACTIVO
 						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
@@ -779,9 +768,8 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "habilitar") )
 						{
-#ifdef ALARMA_INTEGRADA
 							/*                    Zona       Partición */
-							if(pAlarma->Habilitar(parametro, objeto) == 0)
+							if(pEV->Habilitar_Alarma(objeto, parametro) == 0)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
@@ -789,13 +777,11 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
-#endif /* ALARMA_INTEGRADA */
 						}
 						else if( !strcmp(comando, "deshabilitar") )
 						{
-#ifdef ALARMA_INTEGRADA
 							/*                       Zona       Partición */
-							if(pAlarma->Deshabilitar(parametro, objeto) == 0)
+							if(pEV->Deshabilitar_Alarma(objeto, parametro) == 0)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
@@ -803,14 +789,12 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
-#endif /* ALARMA_INTEGRADA */
 						}
 						else if( !strcmp(comando, "activar") )
 						{
-							if( !strcmp(parametro, "alarma"))
+							if( !strcmp(objeto, "alarma"))
 							{
-#ifdef ALARMA_INTEGRADA
-								if(pAlarma->Activar(objeto) == 0)
+								if(pEV->Activar_Alarma(parametro, 1) == 0)
 								{
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
@@ -818,15 +802,13 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 								}
-#endif /* ALARMA_INTEGRADA */
 							}
 						}
 						else if( !strcmp(comando, "desactivar") )
 						{
-							if( !strcmp(parametro, "alarma"))
+							if( !strcmp(objeto, "alarma"))
 							{
-#ifdef ALARMA_INTEGRADA
-								if(pAlarma->Desactivar(objeto) == 0)
+								if(pEV->Desactivar_Alarma(parametro) == 0)
 								{
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
@@ -834,16 +816,13 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 								}
-#endif /* ALARMA_INTEGRADA */
 							}
 						}
 						else if( !strcmp(comando, "estado") )
 						{
-							if( !strcmp(parametro, "alarma"))
+							if( !strcmp(objeto, "alarma"))
 							{
-#ifdef ALARMA_INTEGRADA
-								pAlarma->Estado(objeto, message, MAX_BUFFER_LEN);
-#endif
+								pEV->Estado_Alarma(parametro, message, MAX_BUFFER_LEN);
 							}
 						}
 					}
@@ -1035,6 +1014,137 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_alarm_part_info"))
 			{
 
+			}
+			/* ****************************************************************
+			*		dompi_alarm_part_status
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_status"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+				rc = 0;
+				json_EstadoPart = nullptr;
+
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+
+				/* Información de Partición */
+				if(json_Id)
+				{
+					json_Query_Result = cJSON_CreateArray();
+					sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
+									"FROM TB_DOM_ALARM_PARTICION WHERE Id = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_Query_Result, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						/* Paso el primero y único */
+						cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
+					}
+				}
+				else if(json_Nombre)
+				{
+					json_Query_Result = cJSON_CreateArray();
+					sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
+									"FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", json_Nombre->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_Query_Result, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						/* Paso el primero y único */
+						cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
+					}
+				}
+
+				if(rc > 0)
+				{
+					/* Información de Zonas */
+					if(json_Id)
+					{
+						json_EstadoZona = cJSON_CreateArray();
+						sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
+										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+										"WHERE P.Id = Z.Particion AND A.Id = Z.Objeto_Zona AND "
+										"P.Id = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_EstadoZona, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							cJSON_AddItemToObject(json_EstadoPart, "Zonas", json_EstadoZona);
+						}
+					}
+					else if(json_Nombre)
+					{
+						json_EstadoZona = cJSON_CreateArray();
+						sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
+										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+										"WHERE P.Id = Z.Particion AND A.Id = Z.Objeto_Zona AND "
+										"P.Nombre = \'%s\';", json_Nombre->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_EstadoZona, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							cJSON_AddItemToObject(json_EstadoPart, "Zonas", json_EstadoZona);
+						}
+					}
+
+					/* Información de Salidas */
+					if(json_Id)
+					{
+						json_EstadoSalida = cJSON_CreateArray();
+						sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
+										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
+										"WHERE P.Id = S.Particion AND A.Id = S.Objeto_Salida AND "
+										"P.Id = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_EstadoSalida, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							cJSON_AddItemToObject(json_EstadoPart, "Salidas", json_EstadoSalida);
+						}
+					}
+					else if(json_Nombre)
+					{
+						json_EstadoSalida = cJSON_CreateArray();
+						sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
+										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
+										"WHERE P.Id = S.Particion AND A.Id = S.Objeto_Salida AND "
+										"P.Nombre = \'%s\';", json_Nombre->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_EstadoSalida, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							cJSON_AddItemToObject(json_EstadoPart, "Salidas", json_EstadoSalida);
+						}
+					}
+				}
+
+				cJSON_Delete(json_obj);
+				if(json_EstadoPart)
+				{
+					json_obj = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_obj, "response", json_EstadoPart);
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+				}
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
 			}
 			/* ****************************************************************
 			*		dompi_alarm_part_on_total
@@ -1474,10 +1584,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			AutoChangeNotify();
 
-#ifdef ALARMA_INTEGRADA
 			/* Controles del modulo de alarma */
-			pAlarma->Task();
-#endif
+			pEV->Task_Alarma();
 			/* Tareas programadas en TB_DOM_AT */
 			CheckTask();
 			pEV->CheckAuto(0, nullptr, 0);

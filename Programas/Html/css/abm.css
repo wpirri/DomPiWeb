@@ -92,7 +92,7 @@
 	text-align: center;
 	}
 
-.abm-cam-list-div {
+.abm-lateral-list-div {
 	position: absolute; 
 	left: 50px; 
 	top: 110px; 
@@ -106,3 +106,18 @@
 	height: 315px;
 	}
 	
+.abm-panel-table {
+	background: rgb(50, 50, 50);
+	color: rgb(255, 255, 255);
+	font-family: Arial, Helvetica, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+	left: 255px; 
+	top: 10px; 
+	}
+	
+.abm-panel-table td {
+	border: 3px solid rgb(0, 0, 0);
+	text-align: left;
+	padding: 3px;
+	}

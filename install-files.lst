@@ -43,7 +43,7 @@
 /usr/local/sbin/dompi_netcomm
 /usr/local/sbin/dompi_cloud
 /usr/local/sbin/dompi_gsm
-/usr/local/sbin/dompi_check_for_updates.sh
+/usr/local/sbin/check_for_updates.sh
 
 /etc/gmonitor/gmonitor
 /etc/xinetd.d/gmonitor
@@ -52,3 +52,4 @@
 /etc/cron.monthly/make-db-backup.sh
 /usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/drop_ipc.sh
+/lib/systemd/system/gmonitor.service

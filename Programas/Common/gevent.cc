@@ -106,6 +106,7 @@ GEvent::GEvent(CDB *pDB, CGMServerWait *pServer)
 {
     m_pDB = pDB;
     m_pServer = pServer;
+    m_last_time_task = time((time_t*)&m_last_time_task);
 }
 
 GEvent::~GEvent()
@@ -514,10 +515,15 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
 {
 	char query[4096];
     int rc;
-    cJSON *json_QueryArray;
-    cJSON *json_QueryRow;
+    cJSON *json_AssignArray;
+    cJSON *json_AssignRow;
+    cJSON *json_EventArray;
+    cJSON *json_EventRow;
 
     //cJSON *Evento;
+    cJSON *Assign_Id;
+    cJSON *Assign_Nombre;
+    cJSON *Assign_Tipo;
     cJSON *Objeto_Destino;
     cJSON *Grupo_Destino;
     cJSON *Funcion_Destino;
@@ -529,78 +535,119 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *Condicion_Valor;
 //    cJSON *Flags;
 
-    m_pServer->m_pLog->Add(20, "[CheckEvent] HW: %i Port: %s Estado: %s", hw_id, port, (estado)?"ON":"OFF");
+    m_pServer->m_pLog->Add(20, "[CheckEvent] Evento: HW: %i Port: %s Estado: %s", hw_id, port, (estado)?"ON":"OFF");
 
-    /* Busco si hay un evento para este cambio */
-    json_QueryArray = cJSON_CreateArray();
-    sprintf(query, "SELECT EV.Evento, EV.Objeto_Destino, EV.Grupo_Destino, EV.Funcion_Destino, EV.Variable_Destino, "
-                    "EV.Enviar, EV.Parametro_Evento, EV.Condicion_Variable, EV.Condicion_Igualdad, EV.Condicion_Valor, EV.Flags "
-                    "FROM TB_DOM_EVENT AS EV, TB_DOM_ASSIGN AS ASS "
-                    "WHERE EV.Objeto_Origen = ASS.Id AND "
-                    "ASS.Dispositivo = %i AND ASS.Port = \'%s\' AND %s",
-                    hw_id, port, (estado)?"OFF_a_ON = 1;":"ON_a_OFF = 1;");
+    sprintf(query, "SELECT Id, Objeto, Tipo "
+                    "FROM TB_DOM_ASSIGN "
+                    "WHERE Dispositivo = %i AND Port = \'%s\'; ", hw_id, port);
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-    rc = m_pDB->Query(json_QueryArray, query);
+    json_AssignArray = cJSON_CreateArray();
+    rc = m_pDB->Query(json_AssignArray, query);
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-    if(rc >= 0)
+    if(rc == 0)
     {
-        /* Recorro el array */
-        cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+        /* No hay assign para este HW/Port */
+        cJSON_Delete(json_AssignArray);
+        return;
+    }
+
+    cJSON_ArrayForEach(json_AssignRow, json_AssignArray)
+    {
+        Assign_Id = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Id");
+        Assign_Nombre = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Objeto");
+        Assign_Tipo = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Tipo");
+
+        if(!Assign_Id || !Assign_Nombre || !Assign_Tipo)
         {
-            cJSON_PrintPreallocated(json_QueryRow, query, 4095, 0);
-            m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
+            m_pServer->m_pLog->Add(1, "[CheckEvent] Error obteniendo datos de: HW: %i Port: %s", hw_id, port);
+            cJSON_Delete(json_AssignArray);
+            return;
+        }
+        m_pServer->m_pLog->Add(20, "[CheckEvent] Assign: Ass: %s Typ: %s", Assign_Nombre->valuestring, Assign_Tipo->valuestring);
 
-            Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto_Destino");
-            Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo_Destino");
-            Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Funcion_Destino");
-            Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Variable_Destino");
-            Enviar = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Enviar");
-            Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Parametro_Evento");
-            Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Variable");
-            Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Igualdad");
-            Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Valor");
-            //Flags = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Flags");
-
-            /* TODO: Evaluar condiciones */
-            if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+        if( atoi(Assign_Tipo->valuestring) == 3 || atoi(Assign_Tipo->valuestring) == 4 )
+        {
+            /* Evento de alarma */
+            m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Alarma");
+            ExtIOEvent_Alarma(atoi(Assign_Id->valuestring), estado);
+        }
+        else
+        {
+            /* Evento de dommotica */
+            m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Domotica");
+            /* Busco si hay un evento para este cambio */
+            sprintf(query, "SELECT Evento, Objeto_Destino, Grupo_Destino, Funcion_Destino, Variable_Destino, "
+                            "Enviar, Parametro_Evento, Condicion_Variable, Condicion_Igualdad, Condicion_Valor, Flags "
+                            "FROM TB_DOM_EVENT "
+                            "WHERE Objeto_Origen = %s AND %s;",
+                            Assign_Id->valuestring, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+            json_EventArray = cJSON_CreateArray();
+            rc = m_pDB->Query(json_EventArray, query);
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+            if(rc >= 0)
             {
+                /* Recorro el array */
+                cJSON_ArrayForEach(json_EventRow, json_EventArray)
+                {
+                    cJSON_PrintPreallocated(json_EventRow, query, 4095, 0);
+                    m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
+
+                    Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Objeto_Destino");
+                    Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Grupo_Destino");
+                    Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Funcion_Destino");
+                    Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Variable_Destino");
+                    Enviar = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Enviar");
+                    Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Parametro_Evento");
+                    Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Variable");
+                    Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Igualdad");
+                    Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Valor");
+                    //Flags = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Flags");
+
+                    /* TODO: Evaluar condiciones */
+                    if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+                    {
 
 
 
+                    }
+
+                    /* Si la condicion lo permite ejecuto según corresponda */
+                    if( rc >= 0 && Enviar )
+                    {
+                        if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
+                        {
+                            ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
+                                            atoi(Enviar->valuestring),
+                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                        }
+                        else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
+                        {
+                            ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
+                                            atoi(Enviar->valuestring),
+                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                        }
+                        else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
+                        {
+                            ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
+                                            atoi(Enviar->valuestring),
+                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                        }
+                        else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
+                        {
+                            ChangeVarById(   atoi(Variable_Destino->valuestring), 
+                                            atoi(Enviar->valuestring),
+                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                        }
+                    }
+                }
             }
-
-            /* Si la condicion lo permite ejecuto según corresponda */
-            if( rc >= 0 && Enviar )
-            {
-                if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
-                {
-                    ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
-                                    atoi(Enviar->valuestring),
-                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                }
-                else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
-                {
-                    ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
-                                    atoi(Enviar->valuestring),
-                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                }
-                else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
-                {
-                    ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
-                                    atoi(Enviar->valuestring),
-                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                }
-                else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
-                {
-                    ChangeVarById(   atoi(Variable_Destino->valuestring), 
-                                    atoi(Enviar->valuestring),
-                                    (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                }
-            }
+            cJSON_Delete(json_EventArray);
         }
     }
-    cJSON_Delete(json_QueryArray);
+    cJSON_Delete(json_AssignArray);
 }
 
 void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
@@ -648,7 +695,6 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
     m_pServer->m_pLog->Add(100, "[CheckAuto] HW: %i Port: %s Estado: %i", hw_id, (port)?port:"NULL", estado_sensor);
 
     /* Busco si hay un evento para este cambio */
-    json_QueryArray = cJSON_CreateArray();
 	t = time(&t);
 	lt = localtime(&t);
 
@@ -696,6 +742,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                         "WHERE AU.Objeto_Sensor = ASS.Id AND AU.Id > 0;");
     }
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_QueryArray = cJSON_CreateArray();
     rc = m_pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
@@ -1141,4 +1188,449 @@ int GEvent::ChangeAutoById(int id, int accion, int param)
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 	return rc;
+}
+
+int GEvent::Habilitar_Alarma(const char* zona, const char* particion)
+{
+
+  return 0;
+}
+
+int GEvent::Deshabilitar_Alarma(const char* zona, const char* particion)
+{
+
+  return 0;
+}
+
+int GEvent::Activar_Alarma(const char* particion, int total)
+{
+    int rc;
+    char query[4096];
+
+    cJSON *json_Query_Result;
+    cJSON *json_Query_Row;
+    cJSON *json_Zona_Nombre;
+    //cJSON *json_Zona_Tipo;
+    cJSON *json_Zona_Activa;
+    cJSON *json_Zona_Estado;
+
+    int zonas_abiertas = 0;
+
+    m_pServer->m_pLog->Add(20, "[ALARMA] Activar: %s", particion);
+
+    /* Busco zonas abiertas */
+    sprintf(query, "SELECT A.Objeto, Z.Tipo_Zona, Z.Activa, A.Estado "
+                    "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+                    "WHERE P.Id = Z.Particion AND Z.Objeto_Zona = A.Id AND "
+                        "UPPER(P.Nombre) = UPPER(\'%s\');", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_Query_Result = cJSON_CreateArray();
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+        {
+            json_Zona_Nombre = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
+            //json_Zona_Tipo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_Zona");
+            json_Zona_Activa = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Activa");
+            json_Zona_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+            m_pServer->m_pLog->Add(20, "[ALARMA] Particion %s zona %s %s %s", 
+                particion, json_Zona_Nombre->valuestring, 
+                (atoi(json_Zona_Activa->valuestring)>0)?"HABILITADA":"INHABILITADA",
+                (atoi(json_Zona_Estado->valuestring)>0)?"ABIERTA":"CERRADA");
+
+            if( atoi(json_Zona_Activa->valuestring) > 0 && atoi(json_Zona_Estado->valuestring) > 0)
+            {
+                zonas_abiertas++;
+            }
+        }
+    }
+    cJSON_Delete(json_Query_Result);
+
+    if(zonas_abiertas > 0)
+    {
+        m_pServer->m_pLog->Add(20, "[ALARMA] Particion %s no se activa, %i zonas abiertas", particion, zonas_abiertas);
+        return zonas_abiertas;
+    }
+
+    sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
+                    "SET Estado_Activacion = %i, Estado_Memoria = 0 "
+                    "WHERE UPPER(Nombre) = UPPER(\'%s\');", (total)?2:1, particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(nullptr, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        m_pServer->m_pLog->Add(1, "[ALARMA] Particion %s activada en forma %s", particion, (total)?"Total":"Parcial");
+    }
+    else
+    {
+        m_pServer->m_pLog->Add(1, "[ALARMA] Error: No se encontro la particion %s", particion);
+    }
+    return 0;
+}
+
+int GEvent::Desactivar_Alarma(const char* particion)
+{
+    int rc;
+    char query[4096];
+
+    cJSON *json_Query_Result;
+    cJSON *json_Query_Row;
+    cJSON *json_Objeto_Salida;
+    //cJSON *json_Tipo_Salida;
+
+    /* Desactivo la particion */
+    sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
+                    "SET Estado_Activacion = 0, Estado_Alarma = 0 "
+                    "WHERE UPPER(Nombre) = UPPER(\'%s\');", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(nullptr, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        m_pServer->m_pLog->Add(1, "[ALARMA] Particion %s desactivada", particion);
+    }
+    else
+    {
+        m_pServer->m_pLog->Add(1, "[ALARMA] Error: No se encontro la particion %s", particion);
+        return (-1);
+    }
+
+    /* Busco salida para apagar */
+    sprintf(query, "SELECT S.Objeto_Salida "
+                    "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S "
+                    "WHERE P.Id = S.Particion AND "
+                        "UPPER(P.Nombre) = UPPER(\'%s\');", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_Query_Result = cJSON_CreateArray();
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+        {
+            json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto_Salida");
+            if(json_Objeto_Salida)
+            {
+                /* Apago la salida de alarma */
+                ChangeAssignById(atoi(json_Objeto_Salida->valuestring), 2, 0);
+            }
+        } /* cJSON_ArrayForEach */
+    }
+    cJSON_Delete(json_Query_Result);
+
+    return 0;
+}
+
+int GEvent::ExtIOEvent_Alarma(int assign, int status)
+{
+    int rc;
+    char query[4096];
+
+    cJSON *json_Part_Result;
+    cJSON *json_Part_Row;
+
+    cJSON *json_Join_Result;
+    cJSON *json_Join_Row;
+
+    cJSON *json_Query_Result;
+    cJSON *json_Query_Row;
+
+    //cJSON *json_Part_Id;
+    cJSON *json_Particion;
+    cJSON *json_Particion_Activada;
+    cJSON *json_Entrada_Act_Total;
+    cJSON *json_Entrada_Act_Parcial;
+
+    cJSON *json_Ass_Id;
+    cJSON *json_Ass_Nombre;
+    //cJSON *json_Tipo_Zona;
+    cJSON *json_Grupo_Zona;
+    cJSON *json_Zona_Activa;
+    cJSON *json_Part_Nombre;
+    cJSON *json_Tiempo_De_Alerta;
+
+    cJSON *json_Objeto_Salida;
+
+    /* Me fijo si corresponde con una entrada de Activación / Desactivación */
+    sprintf(query, "SELECT Id, Nombre, Estado_Activacion, Entrada_Act_Total, Entrada_Act_Parcial "
+                    "FROM TB_DOM_ALARM_PARTICION;");
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_Part_Result = cJSON_CreateArray();
+    rc = m_pDB->Query(json_Part_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Part_Row, json_Part_Result)
+        {
+            //json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Id");
+            json_Particion = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Nombre");
+            json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Estado_Activacion");
+            json_Entrada_Act_Total = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Entrada_Act_Total");
+            json_Entrada_Act_Parcial = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Entrada_Act_Parcial");
+
+            /* Si es Activación / Desactivación Total*/
+            if(assign == atoi(json_Entrada_Act_Total->valuestring) && status == 0)
+            {
+                /* Entrada de Act o Des */
+                if(atoi(json_Particion_Activada->valuestring) == 0)
+                {
+                    Activar_Alarma(json_Particion->valuestring, 1);
+                }
+                else
+                {
+                    Desactivar_Alarma(json_Particion->valuestring);
+                }
+            }
+            /* Si es Activación / Desactivación Parcial */
+            else if(assign == atoi(json_Entrada_Act_Parcial->valuestring) && status == 0)
+            {
+                /* Entrada de Act o Des */
+                if(atoi(json_Particion_Activada->valuestring) == 0)
+                {
+                    Activar_Alarma(json_Particion->valuestring, 0);
+                }
+                else
+                {
+                    Desactivar_Alarma(json_Particion->valuestring);
+                }
+            }
+        }
+    }
+    cJSON_Delete(json_Part_Result);
+
+    /* Me fijo si corresponde con una Zona */
+    sprintf(query, "SELECT A.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, P.Nombre, P.Estado_Activacion, P.Tiempo_De_Alerta "
+                    "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+                    "WHERE P.Id = Z.Particion AND Z.Objeto_Zona = A.Id;");
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_Join_Result = cJSON_CreateArray();
+    rc = m_pDB->Query(json_Join_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Join_Row, json_Join_Result)
+        {
+
+            json_Ass_Id = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Id");
+            json_Ass_Nombre = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Objeto");
+            //json_Tipo_Zona = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Tipo_Zona");
+            json_Grupo_Zona = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Grupo");
+            json_Zona_Activa = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Activa");
+            json_Part_Nombre = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Nombre");
+            json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Estado_Activacion");
+            json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Join_Row, "Tiempo_De_Alerta");
+
+            /* Cuando la zona se abre y está activa */
+            if( atoi(json_Ass_Id->valuestring) == assign && atoi(json_Zona_Activa->valuestring) && status)
+            {
+                if( atoi(json_Particion_Activada->valuestring) == 2 || 
+                    (atoi(json_Particion_Activada->valuestring) == 1 && atoi(json_Grupo_Zona->valuestring) == 1) )
+                {
+                    m_pServer->m_pLog->Add(20, "[ALARMA] Particion: %s Zona: %s", json_Part_Nombre->valuestring, json_Ass_Nombre->valuestring);
+
+                    /* Actualizo el estado de alarma de la particion */
+                    sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
+                                    "SET Estado_Alarma = %s , Estado_Memoria = (Estado_Memoria+1) "
+                                    "WHERE UPPER(Nombre) = UPPER(\'%s\');", json_Tiempo_De_Alerta->valuestring, json_Part_Nombre->valuestring);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                    rc = m_pDB->Query(nullptr, query);
+                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+
+                    /* Enciendo la salida de alarma */
+                    sprintf(query, "SELECT S.Objeto_Salida "
+                                    "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S "
+                                    "WHERE P.Id = S.Particion AND "
+                                        "UPPER(P.Nombre) = UPPER(\'%s\');", json_Part_Nombre->valuestring);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                    json_Query_Result = cJSON_CreateArray();
+                    rc = m_pDB->Query(json_Query_Result, query);
+                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                    if(rc > 0)
+                    {
+                        cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+                        {
+                            json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto_Salida");
+                            if(json_Objeto_Salida)
+                            {
+                                /* Apago la salida de alarma */
+                                ChangeAssignById(atoi(json_Objeto_Salida->valuestring), 1, 0);
+                            }
+                        } /* cJSON_ArrayForEach */
+                    }
+                    cJSON_Delete(json_Query_Result);
+
+                }
+            }
+        }
+    }
+    cJSON_Delete(json_Join_Result);
+
+
+    return 0;
+}
+
+void GEvent::Task_Alarma( void )
+{
+    int rc;
+    char query[4096];
+    int delta_time;
+    int iTemp;
+    unsigned long now;
+
+    cJSON *json_Query_Result;
+    cJSON *json_Query_Row;
+
+    cJSON *json_Out_Result;
+    cJSON *json_Out_Row;
+
+    cJSON *json_Part_Id;
+    cJSON *json_Particion;
+    cJSON *json_Particion_Activada;
+    cJSON *json_Estado_Alarma;
+    cJSON *json_Tiempo_De_Salida;
+    cJSON *json_Tiempo_De_Entrada;
+    cJSON *json_Tiempo_De_Alerta;
+    cJSON *json_Objeto_Salida;
+    //cJSON *json_Tipo_Salida;
+
+    now = time((time_t*)&now);
+    delta_time = (int)(now - m_last_time_task);
+
+    sprintf(query, "SELECT * "
+                    "FROM TB_DOM_ALARM_PARTICION;");
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    json_Query_Result = cJSON_CreateArray();
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+        {
+            json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
+            json_Particion = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Nombre");
+            json_Particion_Activada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Activacion");
+            json_Estado_Alarma = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Alarma");
+            json_Tiempo_De_Salida = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Salida");
+            json_Tiempo_De_Entrada = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Entrada");
+            json_Tiempo_De_Alerta = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tiempo_De_Alerta");
+
+            m_pServer->m_pLog->Add(100, "[GEvent::Task_Alarma] Id: %s Nom: %s Act: %s Alarm: %s Sal: %s Ent: %s Alert: %s", 
+            json_Part_Id->valuestring,json_Particion->valuestring,json_Particion_Activada->valuestring,json_Estado_Alarma->valuestring,
+            json_Tiempo_De_Salida->valuestring,json_Tiempo_De_Entrada->valuestring,json_Tiempo_De_Alerta->valuestring);
+
+            /* Control de Tiempo de alerta */
+            iTemp = atoi(json_Estado_Alarma->valuestring);
+            if( iTemp > 0 && delta_time > 0 )
+            {
+                iTemp -= delta_time;
+                if(iTemp < 0) iTemp = 0;
+                sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
+                                    "SET Estado_Alarma = %i "
+                                    "WHERE UPPER(Nombre) = UPPER(\'%s\');", iTemp, json_Particion->valuestring);
+                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                rc = m_pDB->Query(nullptr, query);
+                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+
+                if(iTemp == 0)
+                {
+                    /* Hay que apagar la salida */
+                    sprintf(query, "SELECT S.Objeto_Salida "
+                                    "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S "
+                                    "WHERE P.Id = S.Particion AND "
+                                        "UPPER(P.Nombre) = UPPER(\'%s\');", json_Particion->valuestring);
+                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                    json_Out_Result = cJSON_CreateArray();
+                    rc = m_pDB->Query(json_Out_Result, query);
+                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                    if(rc > 0)
+                    {
+                        cJSON_ArrayForEach(json_Out_Row, json_Out_Result)
+                        {
+                            json_Objeto_Salida = cJSON_GetObjectItemCaseSensitive(json_Out_Row, "Objeto_Salida");
+                            if(json_Objeto_Salida)
+                            {
+                                /* Apago la salida de alarma */
+                                ChangeAssignById(atoi(json_Objeto_Salida->valuestring), 2, 0);
+                            }
+                        } /* cJSON_ArrayForEach */
+                    }
+                    cJSON_Delete(json_Out_Result);
+                }
+            }
+        }
+
+    }
+    cJSON_Delete(json_Query_Result);
+}
+
+void GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_max)
+{
+    int rc;
+    char query[4096];
+
+    cJSON *json_Query_Result_Part = nullptr;
+    cJSON *json_Query_Result_Zonas;
+    cJSON *json_Status_Part = nullptr;
+    cJSON *json_Response;
+    cJSON *json_Id_Part;
+
+    json_Query_Result_Part = cJSON_CreateArray();
+    json_Query_Result_Zonas = cJSON_CreateArray();
+    json_Response = cJSON_CreateArray();
+
+    json_estado[0] = 0;
+
+    sprintf(query, "SELECT * "
+    "FROM TB_DOM_ALARM_PARTICION "
+    "WUERE UPPER(Nombre) = UPPER(\'%s\');", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_Query_Result_Part, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        /* tomo solo la primer fila del resultado */
+        cJSON_ArrayForEach(json_Status_Part, json_Query_Result_Part) { break; }
+
+        json_Id_Part = cJSON_GetObjectItemCaseSensitive(json_Status_Part, "Id");
+        if(json_Id_Part)
+        {
+            sprintf(query, "SELECT * "
+            "FROM TB_DOM_ALARM_ZONA "
+            "WUERE Particion = %s);", json_Id_Part->valuestring);
+            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+            rc = m_pDB->Query(json_Query_Result_Zonas, query);
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+            if(rc > 0)
+            {
+                json_Status_Part = cJSON_AddArrayToObject(json_Query_Result_Zonas, "Zonas");
+            }
+        }
+    }
+
+    if(json_Status_Part)
+    {
+        cJSON_AddItemToObject(json_Response, "response", json_Status_Part);
+        cJSON_PrintPreallocated(json_Response, json_estado, json_max, 0);
+    }
+
+    cJSON_Delete(json_Response);
+    cJSON_Delete(json_Query_Result_Zonas);
+    cJSON_Delete(json_Query_Result_Part);
+  
 }

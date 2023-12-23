@@ -56,6 +56,7 @@ fi
 echo "Agregando usuario ${GMON_USER}"
 useradd -d $SYTEM_LIB $GMON_USER
 passwd -d $GMON_USER
+chown -R $GMON_USER $SYTEM_HOME
 
 echo "Creando directorios..."
 # Creo los directorios necesarios
@@ -100,9 +101,6 @@ echo "Generando arbol web..."
 cp -rv $SYTEM_HOME/html/* $DOCUMENT_ROOT
 cp -rv $SYTEM_HOME/cgi/* $CGI_ROOT
 
-#echo "Creando usuario ${GMON_USER}"
-#useradd -m -c "GNU Monitor" $GMON_USER
-
 echo "Configurando y reiniciando xinetd..."
 # Agregando servicio a /etc/services
 x=`grep gmonitor /etc/services`
@@ -116,5 +114,29 @@ echo "Configurando y reiniciando httpd..."
 a2enmod cgi
 service apache2 restart
 
-# Limpiesa final
-rm -rv $SYTEM_HOME/* &
+# Parametros TCP
+echo "Configurando TCP..."
+/sbin/sysctl -w net.ipv4.tcp_keepalive_intvl=75
+/sbin/sysctl -w net.ipv4.tcp_keepalive_probes=8
+/sbin/sysctl -w net.ipv4.tcp_keepalive_time=75
+
+echo "# Agregado por DomPiWeb" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_intvl=75" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_probes=8" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_time=75" >> /etc/sysctl.conf
+echo "=================================================================="
+echo
+# Mensajes finales
+echo "Ejecutar:"
+echo "  rm -rv ${SYTEM_HOME}/*" para limpiar el home fr gmonitor
+echo
+echo "Modificar en php.ini y luego reiniciar Apache:"
+echo "   upload_max_filesize=10M"
+echo "   post_max_size=11M"
+echo
+echo "Ejecutar una vez levantado el sistema"
+echo "   gm_safcfg -c dompi_infoio_synch"
+echo "   gm_safcfg -c dompi_changeio_synch"
+echo "   gm_safcfg -c dompi_sms_input"
+echo "   gm_safcfg -c dompi_sms_output"
+echo "   gm_safcfg -c dompi_msg_to_cloud"
