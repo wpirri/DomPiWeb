@@ -259,7 +259,9 @@ Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desar
 Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
 Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
 Estado_Memoria integer DEFAULT 0,
-Estado_Alarma integer DEFAULT 0,
+Estado_Alarma integer DEFAULT 0,            -- Se carga con Tiempo_De_Alerta al dispararse la alarma y se decrementa cada segundo
+Delay_Activacion integer DEFAULT 0,         -- Se carga con Tiempo_De_Salida al activarse la alarma  y se decrementa cada segundo
+Delay_Alarma integer DEFAULT 0,             -- Se carga con Tiempo_De_Entrada al alertarse una zona demorada
 Tiempo_De_Salida integer DEFAULT 0,
 Tiempo_De_Entrada integer DEFAULT 0,
 Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos

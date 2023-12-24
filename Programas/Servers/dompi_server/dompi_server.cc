@@ -170,6 +170,16 @@ char cli_help[] = 	"------------------------------------------------------------
 					"-------------------------------------------------------------------------------\r\n"
                     "\r\n";
 
+char *tipo_assign[] = {
+	"Salida",
+	"Entrada",
+	"Ent. Analog.",
+	"Sal. Alarma",
+	"Ent. Alarma",
+	"Sal. Pulso",
+	"Periferico",
+	0
+};
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -183,6 +193,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char db_user[32];
 	char db_password[32];
 	char query[4096];
+	char listado[4096];
 	unsigned long message_len;
 	time_t t;
 	time_t next_t;
@@ -208,6 +219,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
     cJSON *json_HW_Id;
 	cJSON *json_Objeto;
+	cJSON *json_Tipo;
+	cJSON *json_Estado;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
 	cJSON *json_Planta;
@@ -634,7 +647,37 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( !memcmp(objeto, "obj", 3))
 							{
-								
+								listado[0] = 0;
+								sprintf(query, "SELECT Objeto, Tipo, Estado "
+												"FROM TB_DOM_ASSIGN "
+												"ORDER BY Objeto ASC;");
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								json_Query_Result = cJSON_CreateArray();
+								rc = pDB->Query(json_Query_Result, query);
+								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								if(rc >= 0)
+								{	/*                         11111111112222222222333333333344444444445555555555 */
+									/*               012345678901234567890123456789012345678901234567890123456789  */
+									strcpy(listado, "             Nombre                     Tipo Estado\n"); 
+									/* Obtengo el primero del array del resultado del query */
+									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+									{
+										if(json_Query_Row)
+										{
+											json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
+											json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo");
+											json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+											if(json_Objeto && json_Tipo && json_Estado)
+											{
+												sprintf(&listado[strlen(listado)], "%-40.40s %3s %5s\n", 
+													json_Objeto->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
+											}
+												
+										}
+									}
+								}
+								cJSON_Delete(json_Query_Result);
 							}
 							else if( !memcmp(objeto, "gru", 3))
 							{
@@ -644,7 +687,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								
 							}
-							
+							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", listado);
 						}
 						else if( !strcmp(comando, "manten") )
 						{
@@ -1022,123 +1065,18 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
-				rc = 0;
-				json_EstadoPart = nullptr;
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
 				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				/* Información de Partición */
-				if(json_Id)
+				if(json_Nombre)
 				{
-					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
-									"FROM TB_DOM_ALARM_PARTICION WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_Query_Result, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						/* Paso el primero y único */
-						cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
-					}
+					pEV->Estado_Alarma(json_Nombre->valuestring, message, MAX_BUFFER_LEN);
 				}
-				else if(json_Nombre)
+				else
 				{
-					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
-									"FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", json_Nombre->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(json_Query_Result, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
-					{
-						/* Paso el primero y único */
-						cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
-					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
 				}
 
-				if(rc > 0)
-				{
-					/* Información de Zonas */
-					if(json_Id)
-					{
-						json_EstadoZona = cJSON_CreateArray();
-						sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
-										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-										"WHERE P.Id = Z.Particion AND A.Id = Z.Objeto_Zona AND "
-										"P.Id = %s;", json_Id->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(json_EstadoZona, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc >= 0)
-						{
-							cJSON_AddItemToObject(json_EstadoPart, "Zonas", json_EstadoZona);
-						}
-					}
-					else if(json_Nombre)
-					{
-						json_EstadoZona = cJSON_CreateArray();
-						sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
-										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-										"WHERE P.Id = Z.Particion AND A.Id = Z.Objeto_Zona AND "
-										"P.Nombre = \'%s\';", json_Nombre->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(json_EstadoZona, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc >= 0)
-						{
-							cJSON_AddItemToObject(json_EstadoPart, "Zonas", json_EstadoZona);
-						}
-					}
-
-					/* Información de Salidas */
-					if(json_Id)
-					{
-						json_EstadoSalida = cJSON_CreateArray();
-						sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
-										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
-										"WHERE P.Id = S.Particion AND A.Id = S.Objeto_Salida AND "
-										"P.Id = %s;", json_Id->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(json_EstadoSalida, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc >= 0)
-						{
-							cJSON_AddItemToObject(json_EstadoPart, "Salidas", json_EstadoSalida);
-						}
-					}
-					else if(json_Nombre)
-					{
-						json_EstadoSalida = cJSON_CreateArray();
-						sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
-										"FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
-										"WHERE P.Id = S.Particion AND A.Id = S.Objeto_Salida AND "
-										"P.Nombre = \'%s\';", json_Nombre->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(json_EstadoSalida, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc >= 0)
-						{
-							cJSON_AddItemToObject(json_EstadoPart, "Salidas", json_EstadoSalida);
-						}
-					}
-				}
-
-				cJSON_Delete(json_obj);
-				if(json_EstadoPart)
-				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_EstadoPart);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-				}
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1151,44 +1089,20 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_on_total"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_Message, "Nombre");
-
-				if(json_Id)
+				if(json_Nombre)
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 2 "
-									"WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					pEV->Activar_Alarma(json_Nombre->valuestring, 1);
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
-				else if(json_Nombre)
+				else
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 2 "
-									"WHERE Id = %s;", json_Nombre->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
 				}
-
-				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1202,44 +1116,20 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_on_parcial"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_Message, "Nombre");
-
-				if(json_Id)
+				if(json_Nombre)
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 1 "
-									"WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					pEV->Activar_Alarma(json_Nombre->valuestring, 0);
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
-				else if(json_Nombre)
+				else
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 1 "
-									"WHERE Id = %s;", json_Nombre->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
 				}
-
-				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1253,44 +1143,20 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_off"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_Message, "Nombre");
-
-				if(json_Id)
+				if(json_Nombre)
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 0 "
-									"WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					pEV->Desactivar_Alarma(json_Nombre->valuestring);
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
-				else if(json_Nombre)
+				else
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_PARTICION "
-									"SET ActStatus = 0 "
-									"WHERE Id = %s;", json_Nombre->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
 				}
-
-				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1304,29 +1170,22 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_enable"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-
-				if(json_Id)
+				if(json_Nombre)
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_ZONA "
-									"SET Activa = 1 "
-									"WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
-				}
 
-				cJSON_Delete(json_Message);
+
+
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
+				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1340,29 +1199,22 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_disable"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-
-				if(json_Id)
+				if(json_Nombre)
 				{
-					sprintf(query,  "UPDATE TB_DOM_ALARM_ZONA "
-									"SET Activa = 0 "
-									"WHERE Id = %s;", json_Id->valuestring);
-					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-					rc = pDB->Query(NULL, query);
-					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-					if(rc <= 0)
-					{
-						m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
-					}
-				}
 
-				cJSON_Delete(json_Message);
+
+
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
+				}
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1590,8 +1442,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			CheckTask();
 			pEV->CheckAuto(0, nullptr, 0);
 			/*  */
-			delta_t = 1000;
-			next_t = t + 10;
+			delta_t = 100;
+			next_t = t + 1;
 		}
 	}
 	m_pServer->m_pLog->Add(1, "ERROR en la espera de mensajes");

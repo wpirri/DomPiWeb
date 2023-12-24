@@ -1506,6 +1506,7 @@ void GEvent::Task_Alarma( void )
 
     now = time((time_t*)&now);
     delta_time = (int)(now - m_last_time_task);
+    m_last_time_task = now;
 
     sprintf(query, "SELECT * "
                     "FROM TB_DOM_ALARM_PARTICION;");
@@ -1582,55 +1583,62 @@ void GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_ma
     int rc;
     char query[4096];
 
-    cJSON *json_Query_Result_Part = nullptr;
-    cJSON *json_Query_Result_Zonas;
-    cJSON *json_Status_Part = nullptr;
-    cJSON *json_Response;
-    cJSON *json_Id_Part;
+    cJSON *json_Query_Result;
+    cJSON *json_EstadoPart = nullptr;
+    cJSON *json_EstadoZona;
+    cJSON *json_EstadoSalida;
+    cJSON *json_obj;
 
-    json_Query_Result_Part = cJSON_CreateArray();
-    json_Query_Result_Zonas = cJSON_CreateArray();
-    json_Response = cJSON_CreateArray();
-
-    json_estado[0] = 0;
-
-    sprintf(query, "SELECT * "
-    "FROM TB_DOM_ALARM_PARTICION "
-    "WUERE UPPER(Nombre) = UPPER(\'%s\');", particion);
+    json_Query_Result = cJSON_CreateArray();
+    sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
+                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-    rc = m_pDB->Query(json_Query_Result_Part, query);
+    rc = m_pDB->Query(json_Query_Result, query);
     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc >= 0)
+    {
+        /* Paso el primero y único */
+        cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
+    }
+
     if(rc > 0)
     {
-        /* tomo solo la primer fila del resultado */
-        cJSON_ArrayForEach(json_Status_Part, json_Query_Result_Part) { break; }
-
-        json_Id_Part = cJSON_GetObjectItemCaseSensitive(json_Status_Part, "Id");
-        if(json_Id_Part)
+        /* Información de Zonas */
+        json_EstadoZona = cJSON_CreateArray();
+        sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
+                        "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+                        "WHERE P.Id = Z.Particion AND A.Id = Z.Objeto_Zona AND "
+                        "P.Nombre = \'%s\';", particion);
+        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+        rc = m_pDB->Query(json_EstadoZona, query);
+        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+        if(rc >= 0)
         {
-            sprintf(query, "SELECT * "
-            "FROM TB_DOM_ALARM_ZONA "
-            "WUERE Particion = %s);", json_Id_Part->valuestring);
-            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-            rc = m_pDB->Query(json_Query_Result_Zonas, query);
-            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-            if(rc > 0)
-            {
-                json_Status_Part = cJSON_AddArrayToObject(json_Query_Result_Zonas, "Zonas");
-            }
+            cJSON_AddItemToObject(json_EstadoPart, "Zonas", json_EstadoZona);
+        }
+
+        json_EstadoSalida = cJSON_CreateArray();
+        sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
+                        "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
+                        "WHERE P.Id = S.Particion AND A.Id = S.Objeto_Salida AND "
+                        "P.Nombre = \'%s\';", particion);
+        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+        rc = m_pDB->Query(json_EstadoSalida, query);
+        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+        if(rc >= 0)
+        {
+            cJSON_AddItemToObject(json_EstadoPart, "Salidas", json_EstadoSalida);
         }
     }
 
-    if(json_Status_Part)
+    if(json_EstadoPart)
     {
-        cJSON_AddItemToObject(json_Response, "response", json_Status_Part);
-        cJSON_PrintPreallocated(json_Response, json_estado, json_max, 0);
+        json_obj = cJSON_CreateObject();
+        cJSON_AddItemToObject(json_obj, "response", json_EstadoPart);
+        cJSON_PrintPreallocated(json_obj, json_estado, json_max, 0);
+        cJSON_Delete(json_obj);
     }
-
-    cJSON_Delete(json_Response);
-    cJSON_Delete(json_Query_Result_Zonas);
-    cJSON_Delete(json_Query_Result_Part);
-  
 }

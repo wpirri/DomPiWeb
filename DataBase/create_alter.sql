@@ -1,3 +1,5 @@
+USE DB_DOMPIWEB;
+
 ## Previos
 
 ALTER TABLE TB_DOM_CONFIG ADD COLUMN Wifi_AP1 varchar(33);
@@ -18,6 +20,10 @@ ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_1_Address varchar(64);
 ALTER TABLE TB_DOM_CONFIG ADD COLUMN Home_Host_2_Address varchar(64);
 ALTER TABLE TB_DOM_CONFIG ADD COLUMN Usuario_Cloud varchar(256);
 ALTER TABLE TB_DOM_CONFIG ADD COLUMN Clave_Cloud varchar(256);
+
+ALTER TABLE TB_DOM_ALARM_PARTICION ADD COLUMN Delay_Activacion integer DEFAULT 0;
+ALTER TABLE TB_DOM_ALARM_PARTICION ADD COLUMN Delay_Alarma integer DEFAULT 0;
+
 
 #### Migración de Perif ####
 INSERT INTO TB_DOM_PERIF_NEW (Id, MAC, Dispositivo, Tipo, Estado, Direccion_IP, Ultimo_Ok, Actualizar, Flags)

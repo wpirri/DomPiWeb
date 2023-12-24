@@ -27,6 +27,12 @@ body {
 	height: 32px;
 	}
 
+.touch-icon {
+	border: 0px;
+	cursor: pointer;
+	}
+	
+
 .back-btn {
 	z-index: 10;
 	position: absolute; 
