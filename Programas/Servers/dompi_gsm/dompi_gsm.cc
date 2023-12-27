@@ -136,7 +136,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			if( !strcmp(fn, "timer_check_sms_input"))
 			{
-				m_pServer->Resp(nullptr, 0, GME_OK);
+				/*m_pServer->Resp(nullptr, 0, GME_OK);*/
 
 				if(pModem->GetSMS(from, msg))
 				{
