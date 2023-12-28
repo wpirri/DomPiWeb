@@ -38,7 +38,12 @@ installer:
 	cp Programas/Clientes/statusio.cgi/statusio.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/gmonitor_get_saf.cgi/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/dompi_mobile.cgi/dompi_mobile.cgi $(RUN_HOME)/cgi/
-	
+
+	cp Programas/Clientes/ioconfig.cgi/ioconfig.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/iostatus.cgi/iostatus.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/ioswitch.cgi/ioswitch.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/wifi.cgi/wifi.cgi $(RUN_HOME)/cgi/
+
 	tar cvzf $(UPDATE_FILE) --files-from=update-files.lst
 
 	cp Database/create.sql $(RUN_HOME)/

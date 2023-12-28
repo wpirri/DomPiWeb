@@ -7,6 +7,8 @@ all:
 	make -C dompi_gsm
 	make -C dompi_netcomm
 	make -C dompi_server
+# Pi IO
+	make -C dompi_gpio
 
 clean:
 	make -C dompi_abm clean
@@ -15,6 +17,8 @@ clean:
 	make -C dompi_gsm clean
 	make -C dompi_netcomm clean
 	make -C dompi_server clean
+# Pi IO
+	make -C dompi_gpio clean
 
 install:
 	make -C dompi_abm install
@@ -23,6 +27,8 @@ install:
 	make -C dompi_gsm install
 	make -C dompi_netcomm install
 	make -C dompi_server install
+# Pi IO
+	make -C dompi_gpio install
 
 uninstall:
 	make -C dompi_abm uninstall
@@ -31,3 +37,5 @@ uninstall:
 	make -C dompi_gsm uninstall
 	make -C dompi_netcomm uninstall
 	make -C dompi_server uninstall
+# Pi IO
+	make -C dompi_gpio uninstall

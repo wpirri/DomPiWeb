@@ -17,6 +17,11 @@ all:
 	make -C statusio.cgi
 	make -C gmonitor_get_saf.cgi
 	make -C dompi_mobile.cgi
+# Pi IO
+	make -C wifi.cgi
+	make -C iostatus.cgi
+	make -C ioswitch.cgi
+	make -C ioconfig.cgi
 
 clean:
 	make -C abmassign.cgi clean
@@ -35,6 +40,11 @@ clean:
 	make -C statusio.cgi clean
 	make -C gmonitor_get_saf.cgi clean
 	make -C dompi_mobile.cgi clean
+# Pi IO
+	make -C wifi.cgi clean
+	make -C iostatus.cgi clean
+	make -C ioswitch.cgi clean
+	make -C ioconfig.cgi clean
 
 install:
 	make -C abmassign.cgi install
@@ -53,6 +63,11 @@ install:
 	make -C statusio.cgi install
 	make -C gmonitor_get_saf.cgi install
 	make -C dompi_mobile.cgi install
+# Pi IO
+	make -C wifi.cgi install
+	make -C iostatus.cgi install
+	make -C ioswitch.cgi install
+	make -C ioconfig.cgi install
 
 uninstall:
 	make -C abmassign.cgi uninstall
@@ -71,3 +86,8 @@ uninstall:
 	make -C statusio.cgi uninstall
 	make -C gmonitor_get_saf.cgi uninstall
 	make -C dompi_mobile.cgi uninstall
+# Pi IO
+	make -C wifi.cgi uninstall
+	make -C iostatus.cgi uninstall
+	make -C ioswitch.cgi uninstall
+	make -C ioconfig.cgi uninstall

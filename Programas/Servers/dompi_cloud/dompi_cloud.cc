@@ -270,6 +270,9 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;
+	delete pConfig;
+	delete pDB;
+
 	exit(0);
 }
 

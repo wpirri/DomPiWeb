@@ -13,3 +13,4 @@ dompi_netcomm|Interface con RED|2|/usr/local/sbin/dompi_netcomm
 dompi_cloud|Interface con la nube|2|/usr/local/sbin/dompi_cloud
 dompi_gsm|Interface de mensajeria SMS|2|/usr/local/sbin/dompi_gsm
 dompi_abm|Server de Administracion|2|/usr/local/sbin/dompi_abm
+dompi_gpio|Interface con GPIO|2|/usr/local/sbin/dompi_gpio

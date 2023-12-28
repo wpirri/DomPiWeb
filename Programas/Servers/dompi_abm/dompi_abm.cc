@@ -4400,6 +4400,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_camara_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_update", GM_MSG_TYPE_CR);
 
+	delete m_pServer;
 	delete pConfig;
 	delete pDB;
 

@@ -170,17 +170,6 @@ char cli_help[] = 	"------------------------------------------------------------
 					"-------------------------------------------------------------------------------\r\n"
                     "\r\n";
 
-char *tipo_assign[] = {
-	"Salida",
-	"Entrada",
-	"Ent. Analog.",
-	"Sal. Alarma",
-	"Ent. Alarma",
-	"Sal. Pulso",
-	"Periferico",
-	0
-};
-
 int main(/*int argc, char** argv, char** env*/void)
 {
 	int rc;
@@ -228,9 +217,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Nombre;
 	cJSON *json_Config;
 	cJSON *json_Grupo;
-	cJSON *json_EstadoPart;
-	cJSON *json_EstadoZona;
-	cJSON *json_EstadoSalida;
 	
 	last_daily = 0;
 	
@@ -1482,6 +1468,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
+	delete m_pServer;
 	delete pEV;
 	delete pConfig;
 	delete pDB;

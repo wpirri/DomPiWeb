@@ -46,7 +46,6 @@ using namespace std;
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 GEvent *pEV;
-CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
 CDB *pDB;
@@ -674,8 +673,10 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
 
-	delete pEV;
 	delete m_pServer;
+	delete pEV;
+	delete pConfig;
+	delete pDB;
 	
 	exit(0);
 }

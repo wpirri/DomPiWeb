@@ -178,8 +178,10 @@ void OnClose(int sig)
 	st_timer.kill_timer.id = st_timer.set_timer.id;
 	m_pServer->Notify(".kill_timer", &st_timer, sizeof(ST_STIMER));
 
-	delete pModem;
 	delete m_pServer;
+	delete pModem;
+	delete pConfig;
+
 	exit(0);
 }
 

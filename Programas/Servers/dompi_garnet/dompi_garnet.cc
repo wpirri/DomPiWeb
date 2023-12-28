@@ -38,7 +38,6 @@ using namespace std;
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
-CGMClient     *m_pClient;
 int internal_timeout;
 int external_timeout;
 
@@ -171,6 +170,7 @@ void OnClose(int sig)
 	//m_pServer->UnSuscribe("", GM_MSG_TYPE_NOT CR MSG);
 
 	delete m_pServer;
+	delete pConfig;
 	
 	exit(0);
 }
