@@ -1,16 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>Estados</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="author" content="Walter Pirri" >
-<meta name="keywords" content="SMART HOME, SYSHOME, DOMOTIC, SECURITY SYSTEM, IOT">
-<meta name="description" content="Sistema integrado de monitoreo, alarma y domotica">
-<meta name="system-build" content="2023">
-<link href="../css/movil.css" rel="stylesheet" type="text/css" />
-<script src="../js/ajax.js" type="text/javascript"></script>
-</head>
+<?php
+$TITLE='Estados'; 
+include("m_head.php");
+?>
 
 <?php
     $grupo = $_GET['grupo'];
@@ -43,11 +34,7 @@ function LoadData(msg) {
     if(!json_list) return;
 
     // Cabecera
-    <?php if($grupo == 1) { ?>
-    output += '<div class="list-head" id="list-head1"  >\n';
-	output += '<img id="icon-image1" class="icon-image" src="../images/lock.png" >&nbsp;Alarma\n';
-    output += '</div>\n';
-    <?php } else if($grupo == 2) { ?>
+    <?php if($grupo == 2) { ?>
     output += '<div class="list-head" id="list-head2" >\n';
 	output += '<img id="icon-image2" class="icon-image" src="../images/lamp1.png" >&nbsp;Luces\n';
     output += '</div>\n';
@@ -134,4 +121,6 @@ function ChangeStatus(objeto) {
 </script>
 
 </body>
-</html>
+<?php
+include("m_foot.php");
+?>

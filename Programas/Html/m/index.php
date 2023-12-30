@@ -1,24 +1,14 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>Grupos</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="author" content="Walter Pirri" >
-<meta name="keywords" content="SMART HOME, SYSHOME, DOMOTIC, SECURITY SYSTEM, IOT">
-<meta name="description" content="Sistema integrado de monitoreo, alarma y domotica">
-<meta name="system-build" content="2023">
-<link href="../css/movil.css" rel="stylesheet" type="text/css" />
-</head>
+<?php
+$TITLE='Grupos'; 
+include("m_head.php");
+?>
 
 <body>
 <div class="desktop-group" id="desktop">
 
 <!-- Grupos -->
-<div class="menu-btn" id="menu1" onclick="window.location.replace('objetos_m.php?grupo=1');">
-	<img id="alarm1-icon" class="icon-image" src="../images/lock.png" >&nbsp;Alarma
-	<div class="status-text" id="alarm1_status_arm">&nbsp;* ????</div>
-	<div class="status-text" id="alarm1_status_rdy">&nbsp;* ????</div>
+<div class="menu-btn" id="menu1" onclick="window.location.replace('particiones_m.php');">
+	<img id="alarm1-icon" class="icon-image" src="../images/lock0.png" >&nbsp;Alarma
 </div>
 
 <div class="menu-btn" id="menu2" onclick="window.location.replace('objetos_m.php?grupo=2');">
@@ -45,4 +35,6 @@
 </div>
 
 </body>
-</html>
+<?php
+include("m_foot.php");
+?>
