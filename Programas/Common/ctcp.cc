@@ -760,6 +760,7 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
   int recvlen;
   int rc;
   struct pollfd pfd[1];
+  int to;
 
 #ifdef DEBUG_TCP
     syslog(LOG_INFO, "[CTcp::Receive()]");
@@ -782,20 +783,23 @@ int CTcp::Receive(void *msg, unsigned int msglen, int to_ms)
   {
     recvlen = 0;
     rc = 0;
+    to = to_ms;
 
     do
     {
       rc = SSL_read(m_p_ssl, (char*)((char*)msg+recvlen), (msglen-recvlen) );
+      if(rc < 0) break;
       if(rc == 0)
       {
         usleep(1000);
-        to_ms--;
+        to--;
       }
       else if(rc > 0)
       {
         recvlen += rc;
+        to = to_ms;
       }
-    } while(recvlen < (int)msglen && (rc > 0 || recvlen == 0) && to_ms);
+    } while(recvlen < (int)msglen && to);
   }
   else
   {

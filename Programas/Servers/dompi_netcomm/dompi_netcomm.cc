@@ -278,7 +278,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_port_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
 			/* ************************************************************* *
@@ -429,7 +429,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
 			/* ************************************************************* *
@@ -615,7 +615,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
-					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [dompi_hw_get_comm_config]");
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 			}
 

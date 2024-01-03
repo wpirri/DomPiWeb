@@ -12,24 +12,25 @@ include('head-abm.php');
 <div id='tablero_list_table_div' class='abm-div'></div>
 
 <script type="text/javascript" >
-    function ChangeControlSelect(id) {
-        var val = document.getElementById('id-' + id + '-control').value;
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=update', null, false, 'Id=' + id + '&Habilitado=' + val + '&Actualizar=1');
+function ChangeControlSelect(id) {
+    var val = document.getElementById('id-' + id + '-control').value;
+    newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=update', null, false, 'Id=' + id + '&Habilitado=' + val + '&Actualizar=1');
+}
+
+function UpdateData(msg) {
+    var i;
+    var json_list = JSON.parse(msg).response;
+
+    for (i = 1; i < json_list.length; i++) { 
+        if(json_list[i].Estado == 0)
+            document.getElementById('id-' + json_list[i].Id + '-estado').src = 'images/no.png';
+        else
+            document.getElementById('id-' + json_list[i].Id + '-estado').src = 'images/ok.png';
     }
+}
 
-    function UpdateData(msg) {
-        var i;
-        var json_list = JSON.parse(msg).response;
-
-        for (i = 1; i < json_list.length; i++) { 
-            if(json_list[i].Estado == 0)
-                document.getElementById('id-' + json_list[i].Id + '-estado').src = 'images/no.png';
-            else
-                document.getElementById('id-' + json_list[i].Id + '-estado').src = 'images/ok.png';
-        }
-    }
-
-    function LoadData(msg) {
+function LoadData(msg) {
+    try {
         var i;
         var json_list = JSON.parse(msg).response;
         var output = '<p class=abm-table-title>&nbsp;<?php echo $TITLE; ?></p>\n';
@@ -51,14 +52,14 @@ include('head-abm.php');
         }
         output += '</table>\n';
         document.getElementById('tablero_list_table_div').innerHTML = output;
+    } catch (e) { }
 
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list', UpdateData, true);
+    newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list', UpdateData, true);
+}
 
-    }
-
-    function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list', LoadData, false);
-    }
+function OnLoad() {
+    newAJAXCommand('/cgi-bin/abmauto.cgi?funcion=list', LoadData, false);
+}
 </script>
 
 </body>

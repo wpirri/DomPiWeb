@@ -52,6 +52,7 @@ Dom32IoPi *pPI;
 void OnClose(int sig);
 
 int internal_timeout;
+int external_timeout;
 unsigned char blink_count;
 int timer_count_keep_alive;
 int count_notificar_retry;
@@ -221,7 +222,7 @@ void HTTPNotificarStatus( void )
 
     if(tcp.Query((usando_central == 1)?pPI->m_pi_data.config.comm.host1:pPI->m_pi_data.config.comm.host2, 
 				 (usando_central == 1)?pPI->m_pi_data.config.comm.host1_port:pPI->m_pi_data.config.comm.host2_port, 
-				 http_rqst, http_resp, 4095, 1000) > 0)
+				 http_rqst, http_resp, 4095, external_timeout) > 0)
     {
         m_pServer->m_pLog->Add(100, "[HTTPNotificarStatus]  Resp [%d][%s]", strlen(http_resp), http_resp);
         rc = pPI->HttpRespCode(http_resp);
@@ -308,6 +309,11 @@ int main(/*int argc, char** argv, char** env*/void)
 	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
 	{
 		internal_timeout = atoi(s) * 1000;
+	}
+	external_timeout = 1000;
+	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	{
+		external_timeout = atoi(s) * 1000;
 	}
 
 	if( pConfig->GetParam("RBPI-IO-CONFIG", filename))
