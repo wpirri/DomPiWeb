@@ -1,6 +1,6 @@
 <?php
 $TITLE='Estados'; 
-include("m_head.php");
+include("head_m.php");
 ?>
 
 <?php
@@ -122,5 +122,5 @@ function ChangeStatus(objeto) {
 
 </body>
 <?php
-include("m_foot.php");
+include("foot_m.php");
 ?>

@@ -33,17 +33,17 @@ include('head-abm.php');
 
     function Click_Candado() {
       if(part_status > 0) {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=off_part&Nombre=' + part_nombre, false, false);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=off_part&Part=' + part_nombre, false, false);
       }
       else {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=on_total_part&Nombre=' + part_nombre, false, false);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=on_total_part&Part=' + part_nombre, false, false);
       }
     }
 
     function LoadPart() {
         if(part_nombre.length > 0)
         {
-            newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=status_part&Nombre=' + part_nombre, fillPartLongList, false);
+            newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=status_part&Part=' + part_nombre, fillPartLongList, false);
         }
         else
         {

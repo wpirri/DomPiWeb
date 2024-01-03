@@ -1,6 +1,6 @@
 <?php
 $TITLE='Grupos'; 
-include("m_head.php");
+include("head_m.php");
 ?>
 
 <body>
@@ -36,5 +36,5 @@ include("m_head.php");
 
 </body>
 <?php
-include("m_foot.php");
+include("foot_m.php");
 ?>

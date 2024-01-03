@@ -1,10 +1,10 @@
 <?php
 $TITLE='Alarma'; 
-include("m_head.php");
+include("head_m.php");
 ?>
 
 <?php
-    $part = $_GET['part'];
+    $Part = $_GET['Part'];
 ?>
 
 <body onload="OnLoad()">
@@ -23,9 +23,6 @@ include("m_head.php");
 
 <script type="text/javascript">
 
-    var particion_nombre = '';
-    var part_status = 0;
-
 // Parses the xmlResponse from status.xml and updates the status box
 function LoadData(msg) {
     // Armo el listado de objetos
@@ -41,10 +38,8 @@ function LoadData(msg) {
     {
         if(part.Estado_Activacion > 0) {
             document.getElementById('icon-alarma').src = '../images/lock1.png';
-            part_status = 1;
         } else {
             document.getElementById('icon-alarma').src = '../images/lock0.png';
-            part_status = 0;
         }
          
         for (i = 0; i < zonas.length; i++) {
@@ -70,43 +65,43 @@ function LoadData(msg) {
     }
     else
     {
-        output += '<div class="list-head" onClick="ChangeParticion();" >\n';
-        output += '<img id="icon-alarma" class="icon-image" src="../images/';
+        output += '<div class="list-head" onClick="ChangeParticion(\'' + part.Nombre + '\');" >\n';
+        output += '<img id="icon-alarma" class="icon-image" ';
         if(part.Estado_Activacion > 0) {
-            output += 'lock1.png';
-            part_status = 1;
+            output += 'src="../images/lock1.png"';
         } else {
-            output += 'lock0.png';
-            part_status = 0;
+            output += 'src="../images/lock0.png"';
         }
-        output += '" />&nbsp;' + part.Nombre + '\n';
+        output += ' />&nbsp;' + part.Nombre + '\n';
         output += '</div>\n';
 
         for (i = 0; i < zonas.length; i++) {
-            output += '<div class="list-btn-group1" onClick="ChangeZona(\'' + zonas[i].Objeto + '\');">\n';
-            output += '<img id="icon-zona' + i + '" src="../images/'
+            output += '<div class="list-btn-group1" ';
+            output += 'onClick="ChangeZona(\'' + part.Nombre + '\',\'' + zonas[i].Objeto + '\');">\n';
+            output += '<img id="icon-zona' + i + '" ';
             if(zonas[i].Activa > 0) {
                 if (zonas[i].Estado > 0) {
-                    output += 'led_rojo1.png';
+                    output += 'src="../images/led_rojo1.png"';
                 } else {
-                    output += 'led_rojo0.png';
+                    output += 'src="../images/led_rojo0.png"';
                 }
             } else {
-                output += 'images/no.png';
+                output += 'src="../images/no.png"';
             }
-            output += '" >&nbsp;' + zonas[i].Objeto + '\n';
+            output += ' >&nbsp;' + zonas[i].Objeto + '\n';
             output += '</div>\n';
         }    
 
         for (i = 0; i < salidas.length; i++) {
-            output += '<div class="list-btn-group1" onClick="ChangeSalida(\'' + salidas[i].Objeto + '\');">\n';
-            output += '<img id="icon-salida' + i + '" src="../images/'
+            output += '<div class="list-btn-group1" ';
+            output += 'onClick="ChangeSalida(\'' + part.Nombre + '\',\'' + salidas[i].Objeto + '\');">\n';
+            output += '<img id="icon-salida' + i + '"'; 
             if (salidas[i].Estado > 0) {
-                output += 'sirena_mini1.png';
+                output += 'src="../images/sirena_mini1.png"';
             } else {
-                output += 'sirena_mini0.png';
+                output += 'src="../images/sirena_mini0.png"';
             }
-            output += '">&nbsp;' + salidas[i].Objeto + '\n';
+            output += ' >&nbsp;' + salidas[i].Objeto + '\n';
             output += '</div>\n';
         }    
 
@@ -115,30 +110,24 @@ function LoadData(msg) {
 }
 
 function OnLoad() {
-    particion_nombre = '<?php echo $part; ?>';
-    newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=status_part&Nombre=<?php echo $part; ?>', LoadData, true);
+    newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=status_part&Part=<?php echo $Part; ?>', LoadData, true);
 }
 
-function ChangeParticion() {
-    if(part_status > 0) {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=off_part&Nombre=' + particion_nombre, false, false);
-    }
-    else {
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=on_total_part&Nombre=' + particion_nombre, false, false);
-    }
+function ChangeParticion(part) {
+    newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=switch_part&Part=' + part, false, false);
 }
 
-function ChangeZona() {
-
+function ChangeZona(part, zona) {
+    newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=switch_zona&Part=' + part + '&Zona=' + zona, false, false);
 }
 
-function ChangeSalida() {
-
+function ChangeSalida(part, salida) {
+    newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=pulse_salida&Part=' + part + '&Salida=' + salida, false, false);
 }
 
 </script>
 
 </body>
 <?php
-include("m_foot.php");
+include("foot_m.php");
 ?>

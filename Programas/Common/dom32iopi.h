@@ -18,7 +18,7 @@
 #include <cstdio>
 
 #define IO_ARRAY_LEN 24
-#define IO_FILTER_STEPS 20
+#define IO_FILTER_STEPS 10
 
 class Dom32IoPi
 {

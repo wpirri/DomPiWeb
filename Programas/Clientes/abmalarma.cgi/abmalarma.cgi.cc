@@ -217,6 +217,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_alarm_part_off");
   }
+  else if( !strcmp(funcion, "switch_part"))
+  {
+    strcpy(funcion_call, "dompi_alarm_part_switch");
+  }
   /* Zona */
   else if( !strcmp(funcion, "list_zona"))
   {
@@ -250,6 +254,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_alarm_zona_disable");
   }
+  else if( !strcmp(funcion, "switch_zona"))
+  {
+    strcpy(funcion_call, "dompi_alarm_zona_switch");
+  }
   /* Salida */
   else if( !strcmp(funcion, "list_salida"))
   {
@@ -274,6 +282,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   else if( !strcmp(funcion, "delete_salida"))
   {
     strcpy(funcion_call, "dompi_alarm_salida_delete");
+  }
+  else if( !strcmp(funcion, "pulse_salida"))
+  {
+    strcpy(funcion_call, "dompi_alarm_salida_pulse");
   }
   else
   {

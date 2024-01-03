@@ -1,6 +1,6 @@
 <?php
 $TITLE='Particiones'; 
-include("m_head.php");
+include("head_m.php");
 ?>
 
 <body onload="OnLoad()">
@@ -70,7 +70,7 @@ function LoadData(msg) {
 }
 
 function LoadAlarma(part) {
-    window.location.replace('alarma_m.php?part=' + part);
+    window.location.replace('alarma_m.php?Part=' + part);
 }
 
 function OnLoad() {
@@ -81,5 +81,5 @@ function OnLoad() {
 
 </body>
 <?php
-include("m_foot.php");
+include("foot_m.php");
 ?>

@@ -217,6 +217,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Nombre;
 	cJSON *json_Config;
 	cJSON *json_Grupo;
+	cJSON *json_Part;
+	cJSON *json_Zona;
+	cJSON *json_Salida;
 	
 	last_daily = 0;
 	
@@ -302,8 +305,11 @@ int main(/*int argc, char** argv, char** env*/void)
     m_pServer->Suscribe("dompi_alarm_part_on_total", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_part_on_parcial", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_part_off", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_part_switch", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_zona_enable", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_zona_disable", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_zona_switch", GM_MSG_TYPE_CR);
+    m_pServer->Suscribe("dompi_alarm_salida_pulse", GM_MSG_TYPE_CR);
 
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
@@ -1052,11 +1058,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
-					pEV->Estado_Alarma(json_Nombre->valuestring, message, MAX_BUFFER_LEN);
+					pEV->Estado_Alarma(json_Part->valuestring, message, MAX_BUFFER_LEN);
 				}
 				else
 				{
@@ -1078,11 +1084,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
-					pEV->Activar_Alarma(json_Nombre->valuestring, 1);
+					pEV->Activar_Alarma(json_Part->valuestring, 1);
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1105,11 +1111,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
-					pEV->Activar_Alarma(json_Nombre->valuestring, 0);
+					pEV->Activar_Alarma(json_Part->valuestring, 0);
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1132,11 +1138,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
-					pEV->Desactivar_Alarma(json_Nombre->valuestring);
+					pEV->Desactivar_Alarma(json_Part->valuestring);
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1159,9 +1165,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
 
 
@@ -1188,13 +1194,96 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_obj = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Nombre = cJSON_GetObjectItemCaseSensitive(json_obj, "Nombre");
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
 
-				if(json_Nombre)
+				if(json_Part)
 				{
 
 
 
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_part_switch
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_part_switch"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
+
+				if(json_Part)
+				{
+					pEV->Switch_Alarma(json_Part->valuestring);
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_zona_switch
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_zona_switch"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
+				json_Zona = cJSON_GetObjectItemCaseSensitive(json_obj, "Zona");
+
+				if(json_Part && json_Zona)
+				{
+					pEV->Switch_Zona_Alarma(json_Part->valuestring, json_Zona->valuestring);
+					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");					
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_alarm_salida_pulse
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_alarm_salida_pulse"))
+			{
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				json_Part = cJSON_GetObjectItemCaseSensitive(json_obj, "Part");
+				json_Salida = cJSON_GetObjectItemCaseSensitive(json_obj, "Salida");
+
+				if(json_Part && json_Salida)
+				{
+					pEV->Pulse_Salida_Alarma(json_Part->valuestring, json_Salida->valuestring);
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1459,8 +1548,11 @@ void OnClose(int sig)
     m_pServer->UnSuscribe("dompi_alarm_part_on_total", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_on_parcial", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_part_off", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_part_switch", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_zona_enable", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_zona_disable", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_zona_switch", GM_MSG_TYPE_CR);
+    m_pServer->UnSuscribe("dompi_alarm_salida_pulse", GM_MSG_TYPE_CR);
 
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);

@@ -54,7 +54,11 @@ public:
     int Deshabilitar_Alarma(const char* zona, const char* particion);
     int Activar_Alarma(const char* particion, int total);
     int Desactivar_Alarma(const char* particion);
-    void Estado_Alarma(const char* particion, char* json_estado, int max);
+    int Estado_Alarma(const char* particion, char* json_estado, int max);
+
+    int Switch_Alarma(const char* particion);
+    int Switch_Zona_Alarma(const char* particion, const char* zona);
+    int Pulse_Salida_Alarma(const char* particion, const char* salida);
 
     int ExtIOEvent_Alarma(int assign, int status);
 

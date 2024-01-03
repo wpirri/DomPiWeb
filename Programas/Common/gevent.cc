@@ -519,8 +519,6 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *json_AssignRow;
     cJSON *json_EventArray;
     cJSON *json_EventRow;
-
-    //cJSON *Evento;
     cJSON *Assign_Id;
     cJSON *Assign_Nombre;
     cJSON *Assign_Tipo;
@@ -533,9 +531,8 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *Condicion_Variable;
     cJSON *Condicion_Igualdad;
     cJSON *Condicion_Valor;
-//    cJSON *Flags;
 
-    m_pServer->m_pLog->Add(20, "[CheckEvent] Evento: HW: %i Port: %s Estado: %s", hw_id, port, (estado)?"ON":"OFF");
+    m_pServer->m_pLog->Add(100, "[GEvent::CheckEvent] hw_id: %i port %s estado %i", hw_id, port, estado);
 
     sprintf(query, "SELECT Id, Objeto, Tipo "
                     "FROM TB_DOM_ASSIGN "
@@ -692,7 +689,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
         "enviando pulso"
     };
 
-    m_pServer->m_pLog->Add(100, "[CheckAuto] HW: %i Port: %s Estado: %i", hw_id, (port)?port:"NULL", estado_sensor);
+    m_pServer->m_pLog->Add(100, "[GEvent::CheckAuto] HW: %i Port: %s Estado: %i", hw_id, (port)?port:"NULL", estado_sensor);
 
     /* Busco si hay un evento para este cambio */
 	t = time(&t);
@@ -947,7 +944,7 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeAssignByName] name= %s, accion= %i param= %i", name, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeAssignByName] name= %s, accion= %i param= %i", name, accion, param);
 	switch(accion)
 	{
 		case 1: /* Encender */
@@ -985,7 +982,7 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeAssignById] id= %i, accion= %i param= %i", id, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeAssignById] id= %i, accion= %i param= %i", id, accion, param);
 	switch(accion)
 	{
 		case 1: /* Encender */
@@ -1023,7 +1020,7 @@ int GEvent::ChangeGroupByName(const char* name, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeGroupByName] name= %s, accion= %i param= %i", name, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeGroupByName] name= %s, accion= %i param= %i", name, accion, param);
 
 	switch(accion)
 	{
@@ -1061,7 +1058,7 @@ int GEvent::ChangeGroupById(int id, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeGroupById] id= %i, accion= %i param= %i", id, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeGroupById] id= %i, accion= %i param= %i", id, accion, param);
 
 	switch(accion)
 	{
@@ -1119,7 +1116,7 @@ int GEvent::ChangeAutoByName(const char* name, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeAutoByName] name= %s, accion= %i param= %i", name, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeAutoByName] name= %s, accion= %i param= %i", name, accion, param);
 	switch(accion)
 	{
 		case 1: /* Encender */
@@ -1157,7 +1154,7 @@ int GEvent::ChangeAutoById(int id, int accion, int param)
 	int rc = 0;
 	char query[4096];
 
-	m_pServer->m_pLog->Add(20, "[ChangeAutoById] id= %i, accion= %i param= %i", id, accion, param);
+	m_pServer->m_pLog->Add(20, "[GEvent::ChangeAutoById] id= %i, accion= %i param= %i", id, accion, param);
 	switch(accion)
 	{
 		case 1: /* Encender */
@@ -1216,7 +1213,7 @@ int GEvent::Activar_Alarma(const char* particion, int total)
 
     int zonas_abiertas = 0;
 
-    m_pServer->m_pLog->Add(20, "[ALARMA] Activar: %s", particion);
+    m_pServer->m_pLog->Add(20, "[GEvent::Activar_Alarma] Part: %s tot: %i", particion, total);
 
     /* Busco zonas abiertas */
     sprintf(query, "SELECT A.Objeto, Z.Tipo_Zona, Z.Activa, A.Estado "
@@ -1281,7 +1278,8 @@ int GEvent::Desactivar_Alarma(const char* particion)
     cJSON *json_Query_Result;
     cJSON *json_Query_Row;
     cJSON *json_Objeto_Salida;
-    //cJSON *json_Tipo_Salida;
+
+    m_pServer->m_pLog->Add(20, "[GEvent::Desactivar_Alarma] Part: %s", particion);
 
     /* Desactivo la particion */
     sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION "
@@ -1357,6 +1355,8 @@ int GEvent::ExtIOEvent_Alarma(int assign, int status)
     cJSON *json_Tiempo_De_Alerta;
 
     cJSON *json_Objeto_Salida;
+
+    m_pServer->m_pLog->Add(20, "[GEvent::ExtIOEvent_Alarma] Ass: %i Status: %i", assign, status);
 
     /* Me fijo si corresponde con una entrada de Activación / Desactivación */
     sprintf(query, "SELECT Id, Nombre, Estado_Activacion, Entrada_Act_Total, Entrada_Act_Parcial "
@@ -1578,16 +1578,20 @@ void GEvent::Task_Alarma( void )
     cJSON_Delete(json_Query_Result);
 }
 
-void GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_max)
+int GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_max)
 {
     int rc;
     char query[4096];
+    int estado_act;
 
     cJSON *json_Query_Result;
     cJSON *json_EstadoPart = nullptr;
     cJSON *json_EstadoZona;
     cJSON *json_EstadoSalida;
     cJSON *json_obj;
+    cJSON *json_EstadoAct;
+
+    m_pServer->m_pLog->Add(100, "[GEvent::Estado_Alarma] Part: %s", particion);
 
     json_Query_Result = cJSON_CreateArray();
     sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
@@ -1602,7 +1606,7 @@ void GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_ma
         cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
     }
 
-    if(rc > 0)
+    if(rc > 0 && json_estado)
     {
         /* Información de Zonas */
         json_EstadoZona = cJSON_CreateArray();
@@ -1636,9 +1640,150 @@ void GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_ma
 
     if(json_EstadoPart)
     {
-        json_obj = cJSON_CreateObject();
-        cJSON_AddItemToObject(json_obj, "response", json_EstadoPart);
-        cJSON_PrintPreallocated(json_obj, json_estado, json_max, 0);
-        cJSON_Delete(json_obj);
+        json_EstadoAct = cJSON_GetObjectItemCaseSensitive(json_EstadoPart, "Estado_Activacion");
+        estado_act = atoi(json_EstadoAct->valuestring);
+        if(json_estado)
+        {
+            json_obj = cJSON_CreateObject();
+            cJSON_AddItemToObject(json_obj, "response", json_EstadoPart);
+            cJSON_PrintPreallocated(json_obj, json_estado, json_max, 0);
+            cJSON_Delete(json_obj);
+        }
+        return estado_act;
     }
+
+    return (-1);
+}
+
+int GEvent::Switch_Alarma(const char* particion)
+{
+    int estado = Estado_Alarma(particion, nullptr, 0);
+
+    m_pServer->m_pLog->Add(20, "[GEvent::Switch_Alarma] Part: %s", particion);
+
+    if(estado < 0) return (-1);
+
+    if(estado == 0)
+    {
+        if(Activar_Alarma(particion, 1) != 0)
+        {
+            return (-1);
+        }
+        else
+        {
+            return 2;
+        }
+    }
+    else
+    {
+        if(Desactivar_Alarma(particion) != 0)
+        {
+            return (-1);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+
+int GEvent::Switch_Zona_Alarma(const char* particion, const char* zona)
+{
+    int rc;
+    char query[4096];
+    int estado_act;
+    int id_part;
+    int id_ass;
+
+    cJSON *json_Query_Result;
+    cJSON *json_Query_Row = nullptr;
+    cJSON *json_EstadoAct;
+    cJSON *json_PartId;
+    cJSON *json_AssId;
+
+    m_pServer->m_pLog->Add(20, "[GEvent::Switch_Zona_Alarma] Part: %s Zona: %s", particion, zona);
+
+    json_Query_Result = cJSON_CreateArray();
+    sprintf(query, "SELECT  Id, Estado_Activacion, Estado_Alarma "
+                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc >= 0)
+    {
+        /* Paso el primero y único */
+        cJSON_ArrayForEach(json_Query_Row, json_Query_Result) { break; }
+    }
+    if( !json_Query_Row) return (-1);
+    json_EstadoAct = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado_Activacion");
+    json_PartId = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
+    /* Esto no se puede hacer con la alarma activada */
+    estado_act = atoi(json_EstadoAct->valuestring);
+    id_part = atoi(json_PartId->valuestring);
+    cJSON_Delete(json_Query_Result);
+    if(estado_act != 0) return (-1);
+
+    /* Busco el Id del assign de la zona */
+    json_Query_Result = cJSON_CreateArray();
+    sprintf(query, "SELECT Id "
+                    "FROM TB_DOM_ASSIGN "
+                    "WHERE UPPER(Objeto) = UPPER(\'%s\');", zona);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc >= 0)
+    {
+        /* Paso el primero y único */
+        cJSON_ArrayForEach(json_Query_Row, json_Query_Result) { break; }
+    }
+    if( !json_Query_Row) return (-1);
+    json_AssId = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
+    id_ass = atoi(json_AssId->valuestring);
+    cJSON_Delete(json_Query_Result);
+
+    /* Habilito / Desabilito la zona */
+    sprintf(query, "UPDATE TB_DOM_ALARM_ZONA "
+                    "SET Activa = (1 - Activa) "
+                    "WHERE Particion = %i AND Objeto_Zona = %i;", id_part, id_ass);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(nullptr, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    return rc;
+}
+
+int GEvent::Pulse_Salida_Alarma(const char* particion, const char* salida)
+{
+    int rc;
+    char query[4096];
+    int estado_act;
+
+    cJSON *json_Query_Result;
+    cJSON *json_EstadoPart = nullptr;
+    cJSON *json_EstadoAct;
+
+    m_pServer->m_pLog->Add(20, "[GEvent::Pulse_Salida_Alarma] Part: %s Zona: %s", particion, salida);
+
+    json_Query_Result = cJSON_CreateArray();
+    sprintf(query, "SELECT  Id, Estado_Activacion, Estado_Alarma "
+                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_Query_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc >= 0)
+    {
+        /* Paso el primero y único */
+        cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
+    }
+    if( !json_EstadoPart) return (-1);
+    json_EstadoAct = cJSON_GetObjectItemCaseSensitive(json_EstadoPart, "Estado_Activacion");
+    /* Esto no se puede hacer con la alarma activada */
+    if(atoi(json_EstadoAct->valuestring) != 0) return (-1);
+
+    ChangeAssignByName(salida, 4, 30);
+
+    return 0;
 }
