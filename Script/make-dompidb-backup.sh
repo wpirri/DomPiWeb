@@ -12,6 +12,8 @@ UPLOAD_FORM="upload_client_config.php"
 
 mkdir -p $BACKUP_PATH
 
+mysqloptimize $DATABASE
+
 mysqldump --add-drop-database --databases $DATABASE > $FILENAME
 
 curl --insecure -F "file=@${FILENAME};filename=${FILE}" "${HOSTNAME}/${UPLOAD_FORM}"

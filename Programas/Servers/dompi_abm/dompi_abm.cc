@@ -78,7 +78,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	STRFunc Strf;
 
-    cJSON *json_obj;
+    cJSON *json_Message;
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
     cJSON *json_row;
@@ -96,14 +96,15 @@ int main(/*int argc, char** argv, char** env*/void)
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
-	signal(SIGSTOP, OnClose);
-	signal(SIGABRT, OnClose);
-	signal(SIGQUIT, OnClose);
-	signal(SIGINT,  OnClose);
-	signal(SIGILL,  OnClose);
-	signal(SIGFPE,  OnClose);
-	signal(SIGSEGV, OnClose);
-	signal(SIGBUS,  OnClose);
+	/* Dejo de capturar interrupciones para permitir Core Dumps */
+	//signal(SIGSTOP, OnClose);
+	//signal(SIGABRT, OnClose);
+	//signal(SIGQUIT, OnClose);
+	//signal(SIGINT,  OnClose);
+	//signal(SIGILL,  OnClose);
+	//signal(SIGFPE,  OnClose);
+	//signal(SIGSEGV, OnClose);
+	//signal(SIGBUS,  OnClose);
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_abm");
@@ -240,10 +241,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			if( !strcmp(fn, "dompi_db_struct"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "table");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "table");
 				if(json_un_obj)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -254,13 +255,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -287,10 +288,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -319,10 +320,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -341,9 +342,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_user_get"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -378,13 +379,13 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_row, "Clave_Cloud", "****************");
 							}
 						}
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -398,7 +399,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_user_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -408,12 +409,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_USER", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
 
 				json_Cloud_Message = cJSON_CreateObject();
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -472,7 +473,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -510,11 +511,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_user_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_un_obj)
 				{
 					if( strcmp(json_un_obj->valuestring, "admin") )
@@ -534,7 +535,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Usuario Invalido\"}}");
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -548,7 +549,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_user_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -558,7 +559,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				json_Cloud_Message = cJSON_CreateObject();
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -625,7 +626,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_USER SET %s WHERE %s;", query_values, query_where);
@@ -666,12 +667,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_user_check"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"99\", \"resp_msg\":\"General Error\"}}");
 				checked = 0;
-				json_user = cJSON_GetObjectItemCaseSensitive(json_obj, "user_id");
-				json_pass = cJSON_GetObjectItemCaseSensitive(json_obj, "password");
-				json_channel = cJSON_GetObjectItemCaseSensitive(json_obj, "channel");
+				json_user = cJSON_GetObjectItemCaseSensitive(json_Message, "user_id");
+				json_pass = cJSON_GetObjectItemCaseSensitive(json_Message, "password");
+				json_channel = cJSON_GetObjectItemCaseSensitive(json_Message, "channel");
 
 				if(json_user && json_pass && json_channel)
 				{
@@ -715,7 +716,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -738,10 +739,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -770,10 +771,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -792,9 +793,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_hw_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -805,13 +806,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -825,7 +826,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_hw_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -835,10 +836,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_PERIF", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -885,7 +886,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -912,9 +913,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_hw_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( memcmp(json_Id->valuestring, "00", 2) )
@@ -935,7 +936,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -949,7 +950,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_hw_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -958,7 +959,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_where[0] = 0;
 				hw_id[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1004,7 +1005,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where) && strlen(hw_id))
 				{
 					strcat(query_values, ",Actualizar = 1");
@@ -1049,10 +1050,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1081,10 +1082,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1103,9 +1104,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -1116,13 +1117,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1136,7 +1137,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -1148,10 +1149,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_ASSIGN", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1227,7 +1228,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -1264,9 +1265,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -1287,7 +1288,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1301,7 +1302,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
 				query[0] = 0;
@@ -1311,7 +1312,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				json_Cloud_Message = cJSON_CreateObject();
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1386,7 +1387,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN SET %s WHERE %s;", query_values, query_where);
@@ -1430,11 +1431,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_info"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_obj, "Planta");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
@@ -1456,12 +1457,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_obj) cJSON_Delete(json_obj);
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					if(json_Message) cJSON_Delete(json_Message);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 				}
-				if(json_obj) cJSON_Delete(json_obj);
+				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1474,9 +1475,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_add_to_planta"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					sprintf(query, "UPDATE TB_DOM_ASSIGN "
@@ -1525,10 +1526,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1557,10 +1558,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1579,9 +1580,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ev_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -1592,13 +1593,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1612,7 +1613,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ev_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -1622,10 +1623,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_EVENT", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1672,7 +1673,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				/* Cierro la sentencia */
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -1699,9 +1700,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ev_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -1722,7 +1723,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1736,7 +1737,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ev_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -1744,7 +1745,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1791,7 +1792,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_EVENT SET %s WHERE %s;", query_values, query_where);
@@ -1834,10 +1835,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1866,10 +1867,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -1888,10 +1889,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_task_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -1902,13 +1903,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1922,7 +1923,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_task_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -1932,10 +1933,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_AT", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -1982,7 +1983,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 
 				/* Cierro la sentencia */
@@ -2011,11 +2012,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_task_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -2036,7 +2037,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2050,7 +2051,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_task_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -2058,7 +2059,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2105,7 +2106,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_AT SET %s WHERE %s;", query_values, query_where);
@@ -2147,10 +2148,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -2179,10 +2180,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -2201,9 +2202,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_group_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -2214,13 +2215,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2234,7 +2235,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_group_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -2244,10 +2245,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_GROUP", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2294,7 +2295,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 
 				/* Cierro la sentencia */
@@ -2323,9 +2324,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_group_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -2346,7 +2347,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2360,7 +2361,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_group_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -2368,7 +2369,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2415,7 +2416,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_GROUP SET %s WHERE %s;", query_values, query_where);
@@ -2455,10 +2456,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -2477,9 +2478,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_sysconf_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -2490,13 +2491,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2510,10 +2511,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_sysconf_get_current"))				
 			{
-				json_obj = cJSON_CreateObject();
-				cJSON_AddItemReferenceToObject(json_obj, "response", json_System_Config);
-				cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-				cJSON_Delete(json_obj);
+				json_Message = cJSON_CreateObject();
+				cJSON_AddItemReferenceToObject(json_Message, "response", json_System_Config);
+				cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+				cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -2526,7 +2527,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_sysconf_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -2536,13 +2537,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_CONFIG", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
 				t = time(&t);
 				lt = localtime(&t);
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2598,7 +2599,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -2626,10 +2627,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_list"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Tipo");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Tipo");
 				json_Query_Result = cJSON_CreateArray();
 				if(json_un_obj)
 				{
@@ -2653,10 +2654,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -2675,10 +2676,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_list_all"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_obj, "Tipo");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Tipo");
 				if(json_un_obj)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -2691,10 +2692,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
 					}
 					else
 					{
@@ -2717,9 +2718,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -2730,13 +2731,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2750,7 +2751,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -2760,10 +2761,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_AUTO", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2817,7 +2818,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -2844,11 +2845,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -2869,7 +2870,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2883,7 +2884,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
@@ -2892,7 +2893,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -2945,7 +2946,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_AUTO SET %s WHERE %s;", query_values, query_where);
@@ -2979,7 +2980,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_list"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
 				json_Query_Result = cJSON_CreateArray();
@@ -2992,10 +2993,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -3014,7 +3015,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_list_all"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
 				json_Query_Result = cJSON_CreateArray();
@@ -3026,10 +3027,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -3048,9 +3049,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_get"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -3061,13 +3062,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3081,7 +3082,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -3091,10 +3092,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_ALARM_PARTICION", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3141,7 +3142,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -3167,7 +3168,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
@@ -3176,7 +3177,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3222,7 +3223,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_ALARM_PARTICION SET %s WHERE %s;", query_values, query_where);
@@ -3256,11 +3257,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_part_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -3294,7 +3295,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3308,10 +3309,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_list"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Particion = cJSON_GetObjectItemCaseSensitive(json_obj, "Particion");
+				json_Particion = cJSON_GetObjectItemCaseSensitive(json_Message, "Particion");
 
 				if(json_Particion)
 				{
@@ -3326,10 +3327,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
 					}
 					else
 					{
@@ -3349,10 +3350,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_list_all"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 
 				if(json_Id)
 				{
@@ -3366,10 +3367,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
 					}
 					else
 					{
@@ -3389,9 +3390,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_get"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -3402,13 +3403,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3422,7 +3423,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -3432,10 +3433,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_ALARM_ZONA", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3482,7 +3483,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -3509,7 +3510,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
@@ -3518,7 +3519,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3564,7 +3565,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_ALARM_ZONA SET %s WHERE %s;", query_values, query_where);
@@ -3598,11 +3599,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_zona_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -3623,7 +3624,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3637,10 +3638,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_list"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Particion = cJSON_GetObjectItemCaseSensitive(json_obj, "Particion");
+				json_Particion = cJSON_GetObjectItemCaseSensitive(json_Message, "Particion");
 
 				if(json_Particion)
 				{
@@ -3655,10 +3656,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
 					}
 					else
 					{
@@ -3678,10 +3679,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_list_all"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 
 				if(json_Id)
 				{
@@ -3695,10 +3696,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-						cJSON_Delete(json_obj);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
 					}
 					else
 					{
@@ -3718,9 +3719,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_get"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -3731,13 +3732,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3751,7 +3752,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -3761,10 +3762,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_ALARM_SALIDA", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
   
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3811,7 +3812,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -3838,7 +3839,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
@@ -3847,7 +3848,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -3893,7 +3894,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where))
 				{
 					sprintf(query, "UPDATE TB_DOM_ALARM_SALIDA SET %s WHERE %s;", query_values, query_where);
@@ -3927,11 +3928,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_alarm_salida_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( atoi(json_Id->valuestring) != 0 )
@@ -3952,7 +3953,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3976,10 +3977,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -4008,10 +4009,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_obj = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_Message);
 				}
 				else
 				{
@@ -4030,9 +4031,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_camara_get"))				
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -4043,13 +4044,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_obj);
-						json_obj = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_obj, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4063,7 +4064,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_camara_add"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -4073,10 +4074,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Obtengo un ID para el elemento nuevo y lo cambio en el dato recibido */
 				temp_l = pDB->NextId("TB_DOM_CAMARA", "Id");
 				sprintf(temp_s, "%li", temp_l);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_obj, "Id");
-				cJSON_AddStringToObject(json_obj, "Id", temp_s);
+				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+				cJSON_AddStringToObject(json_Message, "Id", temp_s);
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -4123,7 +4124,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				strcat(query_into, ")");
 				strcat(query_values, ")");
@@ -4150,9 +4151,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_camara_delete"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_obj, "Id");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(json_Id)
 				{
 					if( memcmp(json_Id->valuestring, "00", 2) )
@@ -4173,7 +4174,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4187,7 +4188,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_camara_update"))
 			{
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 
 				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				query[0] = 0;
@@ -4196,7 +4197,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_where[0] = 0;
 				hw_id[0] = 0;
 
-				json_un_obj = json_obj;
+				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
 					/* Voy hasta el elemento con datos */
@@ -4242,7 +4243,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_un_obj = json_un_obj->next;
 					}
 				}
-				cJSON_Delete(json_obj);
+				cJSON_Delete(json_Message);
 				if(strlen(query_where) && strlen(hw_id))
 				{
 					sprintf(query, "UPDATE TB_DOM_CAMARA SET %s WHERE %s;", query_values, query_where);

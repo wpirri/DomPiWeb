@@ -1,0 +1,16 @@
+apt install systemd-coredump
+
+mkdir /core-dump
+chmod 0777 /core-dump/
+sysctl -w kernel.core_pattern="/core-dump/%t-%e-%p.core-dump-%s"
+
+ulimit -c
+
+/etc/security/limits.conf
+gmonitor hard core 256000000
+gmonitor soft core 256000000
+
+/etc/sysctl.conf
+kernel.core_pattern="/core-dump/%t-%e-%p.core-dump-%s"
+
+gdb path/to/the/binary path/to/the/core/dump/file to debug it

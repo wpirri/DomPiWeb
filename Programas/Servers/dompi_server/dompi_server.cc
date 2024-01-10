@@ -107,6 +107,8 @@ using namespace std;
 #define MAX_BUFFER_LEN 32767
 #define BT_BUF_SIZE 256
 
+#define INTERVALO_REFRESH_ALARMA 3600
+
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
@@ -117,6 +119,7 @@ cJSON *json_System_Config;
 #ifdef ACTIVO_ACTIVO
 char sys_backup[32];
 #endif
+int update_cloud_alarm_status;
 
 time_t last_daily;
 
@@ -133,6 +136,7 @@ int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
 void AutoChangeNotify(void);
 void AddSaf( void );
+void CheckCloudAlarmStatus( void );
 
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
@@ -214,7 +218,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Segundos;
 	cJSON *json_Planta;
 	cJSON *json_Id;
-	cJSON *json_Nombre;
 	cJSON *json_Config;
 	cJSON *json_Grupo;
 	cJSON *json_Part;
@@ -226,14 +229,15 @@ int main(/*int argc, char** argv, char** env*/void)
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
-	signal(SIGSTOP, OnClose);
-	signal(SIGABRT, OnClose);
-	signal(SIGQUIT, OnClose);
-	signal(SIGINT,  OnClose);
-	signal(SIGILL,  OnClose);
-	signal(SIGFPE,  OnClose);
-	signal(SIGSEGV, OnClose);
-	signal(SIGBUS,  OnClose);
+	/* Dejo de capturar interrupciones para permitir Core Dumps */
+	//signal(SIGSTOP, OnClose);
+	//signal(SIGABRT, OnClose);
+	//signal(SIGQUIT, OnClose);
+	//signal(SIGINT,  OnClose);
+	//signal(SIGILL,  OnClose);
+	//signal(SIGFPE,  OnClose);
+	//signal(SIGSEGV, OnClose);
+	//signal(SIGBUS,  OnClose);
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_server");
@@ -318,6 +322,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
 	AddSaf();
+
+	update_cloud_alarm_status = 30;
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
@@ -806,6 +812,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							/*                    Zona       Partición */
 							if(pEV->Habilitar_Alarma(objeto, parametro) == 0)
 							{
+								update_cloud_alarm_status = 0;
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
 							else
@@ -818,6 +825,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							/*                       Zona       Partición */
 							if(pEV->Deshabilitar_Alarma(objeto, parametro) == 0)
 							{
+								update_cloud_alarm_status = 0;
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
 							else
@@ -831,6 +839,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(pEV->Activar_Alarma(parametro, 1) == 0)
 								{
+									update_cloud_alarm_status = 0;
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
 								else
@@ -845,6 +854,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(pEV->Desactivar_Alarma(parametro) == 0)
 								{
+									update_cloud_alarm_status = 0;
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
 								else
@@ -1088,8 +1098,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part)
 				{
-					pEV->Activar_Alarma(json_Part->valuestring, 1);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					if(pEV->Activar_Alarma(json_Part->valuestring, 1) == 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				else
 				{
@@ -1115,8 +1132,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part)
 				{
-					pEV->Activar_Alarma(json_Part->valuestring, 0);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					if(pEV->Activar_Alarma(json_Part->valuestring, 0) == 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				else
 				{
@@ -1142,8 +1166,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part)
 				{
-					pEV->Desactivar_Alarma(json_Part->valuestring);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					if(pEV->Desactivar_Alarma(json_Part->valuestring) == 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				else
 				{
@@ -1171,7 +1202,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 
 
-
+					update_cloud_alarm_status = 0;
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1200,7 +1231,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 
 
-
+					update_cloud_alarm_status = 0;
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1227,8 +1258,26 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part)
 				{
-					pEV->Switch_Alarma(json_Part->valuestring);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					rc = pEV->Switch_Alarma(json_Part->valuestring);
+					if(rc < 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
+					else if(rc == 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma desactivada\"}}");
+					}
+					else if(rc == 1)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma activada parcial\"}}");
+					}
+					else if(rc == 2)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma activada total\"}}");
+					}
 				}
 				else
 				{
@@ -1255,8 +1304,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part && json_Zona)
 				{
-					pEV->Switch_Zona_Alarma(json_Part->valuestring, json_Zona->valuestring);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					if(pEV->Switch_Zona_Alarma(json_Part->valuestring, json_Zona->valuestring) >= 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				else
 				{
@@ -1283,8 +1339,15 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part && json_Salida)
 				{
-					pEV->Pulse_Salida_Alarma(json_Part->valuestring, json_Salida->valuestring);
-					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					if(pEV->Pulse_Salida_Alarma(json_Part->valuestring, json_Salida->valuestring) >= 0)
+					{
+						update_cloud_alarm_status = 0;
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				else
 				{
@@ -1315,7 +1378,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if(json_Objeto && json_Accion)
 						{
-							m_pServer->m_pLog->Add(20, "[CLOUD] Objeto: %s - Accion: %s", 
+							m_pServer->m_pLog->Add(20, "[CLOUD COMMAND] Objeto: %s - Accion: %s", 
 								json_Objeto->valuestring, json_Accion->valuestring);
 
 							if( !strcmp(json_Accion->valuestring, "on"))
@@ -1361,6 +1424,31 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( !strcmp(json_Accion->valuestring, "auto"))
 							{
 								pEV->ChangeAutoByName(json_Objeto->valuestring, 5, 0);
+							}
+							else if( !strcmp(json_Accion->valuestring, "parcial"))
+							{
+								pEV->Activar_Alarma(json_Objeto->valuestring, 0);
+								update_cloud_alarm_status = 0;
+							}
+							else if( !strcmp(json_Accion->valuestring, "total"))
+							{
+								pEV->Activar_Alarma(json_Objeto->valuestring, 1);
+								update_cloud_alarm_status = 0;
+							}
+							else if( !strcmp(json_Accion->valuestring, "desactivar"))
+							{
+								pEV->Desactivar_Alarma(json_Objeto->valuestring);
+								update_cloud_alarm_status = 0;
+							}
+							else if( !strcmp(json_Accion->valuestring, "habilitar"))
+							{
+
+								update_cloud_alarm_status = 0;
+							}
+							else if( !strcmp(json_Accion->valuestring, "inhabilitar"))
+							{
+								
+								update_cloud_alarm_status = 0;
 							}
 						}
 					}
@@ -1470,6 +1558,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckWiegandData();
 		GroupTask();
 		AssignTask();
+		CheckCloudAlarmStatus();
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -1501,21 +1590,20 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			/* El timer ya está vencido */
 			m_pServer->m_pLog->Add(100, "[TIMER] Tareas dentro del timer");
-
+			if(update_cloud_alarm_status) update_cloud_alarm_status--;
 			/* Tareas diarias */
 			CheckDaily();
-
-			CheckUpdateHWConfig();
-
-			CheckHWOffline();
-
-			AutoChangeNotify();
-
 			/* Controles del modulo de alarma */
 			pEV->Task_Alarma();
 			/* Tareas programadas en TB_DOM_AT */
 			CheckTask();
 			pEV->CheckAuto(0, nullptr, 0);
+			/*  */
+			CheckUpdateHWConfig();
+			/*  */
+			CheckHWOffline();
+			/*  */
+			AutoChangeNotify();
 			/*  */
 			delta_t = 100;
 			next_t = t + 1;
@@ -2308,3 +2396,16 @@ void AddSaf( void )
 	strcpy(sq.saf_name, "dompi_changeio_synch");
 	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
 }
+
+void CheckCloudAlarmStatus( void )
+{
+	char message[MAX_BUFFER_LEN+1];
+
+	if(update_cloud_alarm_status > 0) return;
+	update_cloud_alarm_status = INTERVALO_REFRESH_ALARMA;
+	
+	pEV->Estado_Alarma_General(message, MAX_BUFFER_LEN);
+	m_pServer->m_pLog->Add(90, "Notify [dompi_alarm_change][%s]", message);
+	m_pServer->Notify("dompi_alarm_change", message, strlen(message));
+}
+

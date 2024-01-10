@@ -88,14 +88,15 @@ int main(/*int argc, char** argv, char** env*/void)
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
-	signal(SIGSTOP, OnClose);
-	signal(SIGABRT, OnClose);
-	signal(SIGQUIT, OnClose);
-	signal(SIGINT,  OnClose);
-	signal(SIGILL,  OnClose);
-	signal(SIGFPE,  OnClose);
-	signal(SIGSEGV, OnClose);
-	signal(SIGBUS,  OnClose);
+	/* Dejo de capturar interrupciones para permitir Core Dumps */
+	//signal(SIGSTOP, OnClose);
+	//signal(SIGABRT, OnClose);
+	//signal(SIGQUIT, OnClose);
+	//signal(SIGINT,  OnClose);
+	//signal(SIGILL,  OnClose);
+	//signal(SIGFPE,  OnClose);
+	//signal(SIGSEGV, OnClose);
+	//signal(SIGBUS,  OnClose);
 
 	m_CloudHost1Address[0] = 0;
 	m_CloudHost2Address[0] = 0;
@@ -146,6 +147,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 
 	AddSaf();
@@ -214,6 +216,33 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "[dompi_ass_change] OFFLINE: Encolando actualizacion con datos de usuario [%s]", message);
 				}
 			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_alarm_change")) /* Tipo NOT */
+			{
+				//m_pServer->Resp(NULL, 0, GME_OK);
+
+				json_obj = cJSON_Parse(message);
+				message[0] = 0;
+
+				m_pServer->m_pLog->Add(20, "[dompi_alarm_change] Encolando actualizacion con datos de alarma");
+				if(m_cloud_status)
+				{
+					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+
+					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+					cJSON_Delete(json_obj);
+					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+					{
+						m_pServer->m_pLog->Add(1, "[dompi_alarm_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_alarm_change] OFFLINE: Encolando actualizacion con datos de alarma [%s]", message);
+				}
+			}
 			/* ****************************************************************
 			*		dompi_reload_config
 			**************************************************************** */
@@ -267,6 +296,7 @@ void OnClose(int sig)
 
 	m_pServer->UnSuscribe("dompi_ass_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_user_change", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;

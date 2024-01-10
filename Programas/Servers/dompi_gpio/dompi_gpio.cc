@@ -289,16 +289,17 @@ int main(/*int argc, char** argv, char** env*/void)
 	char filename[FILENAME_MAX+1];
 
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGKILL,         OnClose);
-	signal(SIGTERM,         OnClose);
-	signal(SIGSTOP,         OnClose);
-	signal(SIGABRT,         OnClose);
-	signal(SIGQUIT,         OnClose);
-	signal(SIGINT,          OnClose);
-	signal(SIGILL,          OnClose);
-	signal(SIGFPE,          OnClose);
-	signal(SIGSEGV,         OnClose);
-	signal(SIGBUS,          OnClose);
+	signal(SIGKILL, OnClose);
+	signal(SIGTERM, OnClose);
+	/* Dejo de capturar interrupciones para permitir Core Dumps */
+	//signal(SIGSTOP, OnClose);
+	//signal(SIGABRT, OnClose);
+	//signal(SIGQUIT, OnClose);
+	//signal(SIGINT,  OnClose);
+	//signal(SIGILL,  OnClose);
+	//signal(SIGFPE,  OnClose);
+	//signal(SIGSEGV, OnClose);
+	//signal(SIGBUS,  OnClose);
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_gpio");

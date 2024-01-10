@@ -963,9 +963,18 @@ int GEvent::ChangeAssignByName(const char* name, int accion, int param)
 							"WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
 			break;
 		case 4: /* Pulso */
-            sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                            "SET Estado = %i, Actualizar = 1 "
-                            "WHERE UPPER(Objeto) = UPPER(\'%s\');", param, name);
+            if(param > 0)
+            {
+                sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                                "SET Estado = %i, Actualizar = 1 "
+                                "WHERE UPPER(Objeto) = UPPER(\'%s\');", param, name);
+            }
+            else
+            {
+                sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                                "SET Estado = Analog_Mult_Div_Valor, Actualizar = 1 "
+                                "WHERE UPPER(Objeto) = UPPER(\'%s\');", name);
+            }
 			break;
 		default:
 			break;
@@ -1001,9 +1010,18 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 							"WHERE Id = %i;", id);
 			break;
 		case 4: /* Pulso */
-            sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
-                            "SET Estado = %i, Actualizar = 1 "
-                            "WHERE Id = %i;", param, id);
+            if(param > 0)
+            {
+                sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                                "SET Estado = %i, Actualizar = 1 "
+                                "WHERE Id = %i;", param, id);
+            }
+            else
+            {
+                sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
+                                "SET Estado = Analog_Mult_Div_Valor, Actualizar = 1 "
+                                "WHERE Id = %i;", id);
+            }
 			break;
 		default:
 			break;
@@ -1389,7 +1407,8 @@ int GEvent::ExtIOEvent_Alarma(int assign, int status)
 
     /* Me fijo si corresponde con una entrada de Activación / Desactivación */
     sprintf(query, "SELECT Id, Nombre, Estado_Activacion, Entrada_Act_Total, Entrada_Act_Parcial "
-                    "FROM TB_DOM_ALARM_PARTICION;");
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Id > 0;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     json_Part_Result = cJSON_CreateArray();
     rc = m_pDB->Query(json_Part_Result, query);
@@ -1438,7 +1457,7 @@ int GEvent::ExtIOEvent_Alarma(int assign, int status)
     /* Me fijo si corresponde con una Zona */
     sprintf(query, "SELECT A.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, P.Nombre, P.Estado_Activacion, P.Tiempo_De_Alerta "
                     "FROM TB_DOM_ALARM_PARTICION AS P, TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
-                    "WHERE P.Id = Z.Particion AND Z.Objeto_Zona = A.Id;");
+                    "WHERE P.Id > 0 AND P.Id = Z.Particion AND Z.Objeto_Zona = A.Id;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     json_Join_Result = cJSON_CreateArray();
     rc = m_pDB->Query(json_Join_Result, query);
@@ -1538,7 +1557,8 @@ void GEvent::Task_Alarma( void )
     m_last_time_task = now;
 
     sprintf(query, "SELECT * "
-                    "FROM TB_DOM_ALARM_PARTICION;");
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Id > 0;");
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     json_Query_Result = cJSON_CreateArray();
     rc = m_pDB->Query(json_Query_Result, query);
@@ -1624,12 +1644,13 @@ int GEvent::Estado_Alarma(const char* particion, char* json_estado, int json_max
 
     json_Query_Result = cJSON_CreateArray();
     sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
-                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Nombre = \'%s\';", particion);
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_Query_Result, query);
     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-    if(rc >= 0)
+    if(rc > 0)
     {
         /* Paso el primero y único */
         cJSON_ArrayForEach(json_EstadoPart, json_Query_Result) { break; }
@@ -1734,7 +1755,8 @@ int GEvent::Switch_Zona_Alarma(const char* particion, const char* zona)
 
     json_Query_Result = cJSON_CreateArray();
     sprintf(query, "SELECT  Id, Estado_Activacion, Estado_Alarma "
-                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Nombre = \'%s\';", particion);
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_Query_Result, query);
     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
@@ -1797,7 +1819,8 @@ int GEvent::Pulse_Salida_Alarma(const char* particion, const char* salida)
 
     json_Query_Result = cJSON_CreateArray();
     sprintf(query, "SELECT  Id, Estado_Activacion, Estado_Alarma "
-                    "FROM TB_DOM_ALARM_PARTICION WHERE Nombre = \'%s\';", particion);
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Nombre = \'%s\';", particion);
     m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
     rc = m_pDB->Query(json_Query_Result, query);
     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
@@ -1815,4 +1838,78 @@ int GEvent::Pulse_Salida_Alarma(const char* particion, const char* salida)
     ChangeAssignByName(salida, 4, 30);
 
     return 0;
+}
+
+int GEvent::Estado_Alarma_General(char* json, int max_len)
+{
+    int rc;
+    char query[4096];
+    int part = 0;
+ 
+    cJSON *json_Result;
+    cJSON *json_Result_Item;
+    cJSON *json_Result_Array;
+    cJSON *json_Part_Result;
+    cJSON *json_Part_Row;
+    cJSON *json_Zona_Result;
+    cJSON *json_Salida_Result;
+    cJSON *json_Part_Id;
+    
+    m_pServer->m_pLog->Add(100, "[GEvent::Estado_Alarma_General]");
+    json_Result_Array = cJSON_CreateArray();
+
+    json_Part_Result = cJSON_CreateArray();
+    sprintf(query, "SELECT  Id, Nombre, Estado_Activacion, Estado_Memoria, Estado_Alarma "
+                    "FROM TB_DOM_ALARM_PARTICION "
+                    "WHERE Id > 0;");
+    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+    rc = m_pDB->Query(json_Part_Result, query);
+    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0)
+    {
+        cJSON_ArrayForEach(json_Part_Row, json_Part_Result)
+        {
+            part++;
+            json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Id");
+            json_Result_Item =  cJSON_Duplicate(json_Part_Row, true);
+            /* Información de Zonas */
+            json_Zona_Result = cJSON_CreateArray();
+            sprintf(query, "SELECT Z.Id, A.Objeto, Z.Tipo_Zona, Z.Grupo, Z.Activa, A.Estado "
+                            "FROM TB_DOM_ALARM_ZONA AS Z, TB_DOM_ASSIGN AS A "
+                            "WHERE A.Id = Z.Objeto_Zona AND "
+                            "Z.Particion = %s;", json_Part_Id->valuestring);
+            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+            rc = m_pDB->Query(json_Zona_Result, query);
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+            if(rc > 0)
+            {
+                cJSON_AddItemToObject(json_Result_Item, "Zonas", json_Zona_Result);
+            }
+
+            /* Información de Salidas */
+            json_Salida_Result = cJSON_CreateArray();
+            sprintf(query, "SELECT S.Id, A.Objeto, S.Tipo_Salida, A.Estado "
+                            "FROM TB_DOM_ALARM_SALIDA AS S, TB_DOM_ASSIGN AS A "
+                            "WHERE A.Id = S.Objeto_Salida AND "
+                            "S.Particion = %s;", json_Part_Id->valuestring);
+            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+            rc = m_pDB->Query(json_Salida_Result, query);
+            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+            if(rc > 0)
+            {
+                cJSON_AddItemToObject(json_Result_Item, "Salidas", json_Salida_Result);
+            }
+
+            /* Agrego todo al array de salida */
+            cJSON_AddItemToArray(json_Result_Array, json_Result_Item);
+        }
+    }
+    json_Result = cJSON_CreateObject();
+    cJSON_AddItemToObject(json_Result, "Alarma", json_Result_Array);
+    cJSON_PrintPreallocated(json_Result, json, max_len, 0);
+    cJSON_Delete(json_Result);
+    return part;
 }
