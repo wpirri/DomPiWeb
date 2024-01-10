@@ -119,7 +119,6 @@ cJSON *json_System_Config;
 #ifdef ACTIVO_ACTIVO
 char sys_backup[32];
 #endif
-int update_cloud_alarm_status;
 
 time_t last_daily;
 
@@ -136,8 +135,6 @@ int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
 void AutoChangeNotify(void);
 void AddSaf( void );
-void CheckCloudAlarmStatus( void );
-
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -322,8 +319,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
 	AddSaf();
-
-	update_cloud_alarm_status = 30;
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
@@ -812,7 +807,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							/*                    Zona       Partición */
 							if(pEV->Habilitar_Alarma(objeto, parametro) == 0)
 							{
-								update_cloud_alarm_status = 0;
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
 							else
@@ -825,7 +819,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							/*                       Zona       Partición */
 							if(pEV->Deshabilitar_Alarma(objeto, parametro) == 0)
 							{
-								update_cloud_alarm_status = 0;
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
 							else
@@ -839,7 +832,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(pEV->Activar_Alarma(parametro, 1) == 0)
 								{
-									update_cloud_alarm_status = 0;
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
 								else
@@ -854,7 +846,6 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								if(pEV->Desactivar_Alarma(parametro) == 0)
 								{
-									update_cloud_alarm_status = 0;
 									strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 								}
 								else
@@ -1100,7 +1091,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(pEV->Activar_Alarma(json_Part->valuestring, 1) == 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -1134,7 +1124,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(pEV->Activar_Alarma(json_Part->valuestring, 0) == 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -1168,7 +1157,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(pEV->Desactivar_Alarma(json_Part->valuestring) == 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -1202,7 +1190,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 
 
-					update_cloud_alarm_status = 0;
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1231,7 +1218,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 
 
-					update_cloud_alarm_status = 0;
 					strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 				}
 				else
@@ -1265,17 +1251,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(rc == 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma desactivada\"}}");
 					}
 					else if(rc == 1)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma activada parcial\"}}");
 					}
 					else if(rc == 2)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Alarma activada total\"}}");
 					}
 				}
@@ -1306,7 +1289,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(pEV->Switch_Zona_Alarma(json_Part->valuestring, json_Zona->valuestring) >= 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -1341,7 +1323,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					if(pEV->Pulse_Salida_Alarma(json_Part->valuestring, json_Salida->valuestring) >= 0)
 					{
-						update_cloud_alarm_status = 0;
 						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
 					else
@@ -1428,27 +1409,22 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( !strcmp(json_Accion->valuestring, "parcial"))
 							{
 								pEV->Activar_Alarma(json_Objeto->valuestring, 0);
-								update_cloud_alarm_status = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "total"))
 							{
 								pEV->Activar_Alarma(json_Objeto->valuestring, 1);
-								update_cloud_alarm_status = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "desactivar"))
 							{
 								pEV->Desactivar_Alarma(json_Objeto->valuestring);
-								update_cloud_alarm_status = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "habilitar"))
 							{
 
-								update_cloud_alarm_status = 0;
 							}
 							else if( !strcmp(json_Accion->valuestring, "inhabilitar"))
 							{
 								
-								update_cloud_alarm_status = 0;
 							}
 						}
 					}
@@ -1558,7 +1534,13 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckWiegandData();
 		GroupTask();
 		AssignTask();
-		CheckCloudAlarmStatus();
+
+		/* Hay que actualizar estado de alarma */
+		if(pEV->AlarmNeedUpdate())
+		{
+			m_pServer->m_pLog->Add(20, "Actualizar estados de alarmas");
+			m_pServer->Notify("dompi_alarm_change", nullptr, 0);
+		}
 
 		/* Marcar para actualizar configuracion todos los assign de un periferico por MAC */
 		if(update_hw_config_mac[0])
@@ -1590,7 +1572,6 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			/* El timer ya está vencido */
 			m_pServer->m_pLog->Add(100, "[TIMER] Tareas dentro del timer");
-			if(update_cloud_alarm_status) update_cloud_alarm_status--;
 			/* Tareas diarias */
 			CheckDaily();
 			/* Controles del modulo de alarma */
@@ -2396,16 +2377,3 @@ void AddSaf( void )
 	strcpy(sq.saf_name, "dompi_changeio_synch");
 	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
 }
-
-void CheckCloudAlarmStatus( void )
-{
-	char message[MAX_BUFFER_LEN+1];
-
-	if(update_cloud_alarm_status > 0) return;
-	update_cloud_alarm_status = INTERVALO_REFRESH_ALARMA;
-	
-	pEV->Estado_Alarma_General(message, MAX_BUFFER_LEN);
-	m_pServer->m_pLog->Add(90, "Notify [dompi_alarm_change][%s]", message);
-	m_pServer->Notify("dompi_alarm_change", message, strlen(message));
-}
-

@@ -37,15 +37,17 @@ using namespace std;
 #include "ctcp.h"
 #include "config.h"
 #include "cdb.h"
+#include "gevent.h"
 
 #define MAX_BUFFER_LEN 32767
 
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
-CDB *pDB;
-cJSON *json_System_Config;
 int internal_timeout;
 int external_timeout;
+CDB *pDB;
+GEvent *pEV;
+cJSON *json_System_Config;
 
 char m_SystemKey[256];
 char m_CloudHost1Address[64];
@@ -55,6 +57,7 @@ char m_CloudHost2Address[64];
 int  m_CloudHost2Port;
 char m_CloudHost2Proto[8];
 time_t update_ass_t;
+time_t update_alarm_t;
 
 int m_cloud_status;
 char *m_host_actual;
@@ -64,10 +67,12 @@ char *m_proto_actual;
 void OnClose(int sig);
 int KeepAliveCloud( void );
 int SendToCloud( void );
-void CheckUpdateCloud( void );
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg);
 void LoadSystemConfig(void);
 void AddSaf( void );
+
+void CheckUpdateAssignCloud( void );
+void CheckUpdateAlarmCloud( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -101,6 +106,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_CloudHost1Address[0] = 0;
 	m_CloudHost2Address[0] = 0;
 	update_ass_t = 0;
+	update_alarm_t = 0;
 	m_cloud_status = 0;
 
 	m_pServer = new CGMServerWait;
@@ -144,6 +150,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	json_System_Config = NULL;
 	LoadSystemConfig();
+
+	pEV = new GEvent(pDB, m_pServer);
 
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
@@ -222,26 +230,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_alarm_change")) /* Tipo NOT */
 			{
 				//m_pServer->Resp(NULL, 0, GME_OK);
+				update_alarm_t = 0;
 
-				json_obj = cJSON_Parse(message);
-				message[0] = 0;
-
-				m_pServer->m_pLog->Add(20, "[dompi_alarm_change] Encolando actualizacion con datos de alarma");
-				if(m_cloud_status)
-				{
-					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
-
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
-					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-					{
-						m_pServer->m_pLog->Add(1, "[dompi_alarm_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-					}
-				}
-				else
-				{
-					m_pServer->m_pLog->Add(1, "[dompi_alarm_change] OFFLINE: Encolando actualizacion con datos de alarma [%s]", message);
-				}
 			}
 			/* ****************************************************************
 			*		dompi_reload_config
@@ -270,7 +260,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 		}
 		/* Después de recibir un mensaje o expirar el timer */
-		CheckUpdateCloud();
+		CheckUpdateAssignCloud();
+		CheckUpdateAlarmCloud();
 
 		if(SendToCloud())
 		{
@@ -300,6 +291,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;
+	delete pEV;
 	delete pConfig;
 	delete pDB;
 
@@ -429,7 +421,7 @@ int SendToCloud( void )
 	return rc;
 }
 
-void CheckUpdateCloud( void )
+void CheckUpdateAssignCloud( void )
 {
 	char query[4096];
 	char message[4096];
@@ -452,6 +444,7 @@ void CheckUpdateCloud( void )
 		/* Actualizacion de objetos en la nube cada 10 min */
 		update_ass_t = t + 600;
 
+		m_pServer->m_pLog->Add(10, "[CheckUpdateAssignCloud] Actualizando estado general de objetos en la nube.");
 		/* Genero un listado de los objetos con su estado para subir a la nube */
 		json_QueryArray = cJSON_CreateArray();
 		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
@@ -468,7 +461,7 @@ void CheckUpdateCloud( void )
 				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
 				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 				{
-					m_pServer->m_pLog->Add(1, "[CheckUpdateCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+					m_pServer->m_pLog->Add(1, "[CheckUpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 				}
 			}
 		}
@@ -510,12 +503,38 @@ void CheckUpdateCloud( void )
 
 				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 				{
-					m_pServer->m_pLog->Add(1, "[CheckUpdateCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+					m_pServer->m_pLog->Add(1, "[CheckUpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 				}
 			}
 		}
 		cJSON_Delete(json_QueryArray);
 
+	}
+}
+
+void CheckUpdateAlarmCloud( void )
+{
+	char message[MAX_BUFFER_LEN+1];
+	time_t t;
+	cJSON *json_obj;
+
+	t = time(&t);
+
+	if(t >= update_alarm_t && m_cloud_status && m_host_actual)
+	{
+		/* Actualizacion de objetos en la nube cada 10 min */
+		update_alarm_t = t + 600;
+
+		m_pServer->m_pLog->Add(10, "[CheckUpdateAlarmCloud] Actualizando estado general de alarma en la nube.");
+		pEV->Estado_Alarma_General(message, MAX_BUFFER_LEN);
+		json_obj = cJSON_Parse(message);
+		cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+		cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+		cJSON_Delete(json_obj);
+		if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+		{
+			m_pServer->m_pLog->Add(1, "[CheckUpdateAlarmCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+		}
 	}
 }
 

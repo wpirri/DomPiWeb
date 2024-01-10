@@ -107,6 +107,7 @@ GEvent::GEvent(CDB *pDB, CGMServerWait *pServer)
     m_pDB = pDB;
     m_pServer = pServer;
     m_last_time_task = time((time_t*)&m_last_time_task);
+    m_alarm_need_update = 0;
 }
 
 GEvent::~GEvent()
@@ -1208,13 +1209,15 @@ int GEvent::ChangeAutoById(int id, int accion, int param)
 int GEvent::Habilitar_Alarma(const char* zona, const char* particion)
 {
 
-  return 0;
+    m_alarm_need_update = 1;
+    return 0;
 }
 
 int GEvent::Deshabilitar_Alarma(const char* zona, const char* particion)
 {
 
-  return 0;
+    m_alarm_need_update = 1;
+    return 0;
 }
 
 int GEvent::Activar_Alarma(const char* particion, int total)
@@ -1280,8 +1283,6 @@ int GEvent::Activar_Alarma(const char* particion, int total)
     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
     if(rc > 0)
     {
-        m_pServer->m_pLog->Add(1, "[ALARMA] Particion %s activada en forma %s", particion, (total)?"Total":"Parcial");
-
         /* Actualizo los indicadores */
         sprintf(query, "SELECT Testigo_Activacion "
                         "FROM TB_DOM_ALARM_PARTICION "
@@ -1301,6 +1302,9 @@ int GEvent::Activar_Alarma(const char* particion, int total)
             }
         }
         cJSON_Delete(json_Query_Result);
+
+        m_pServer->m_pLog->Add(1, "[ALARMA] Particion %s activada en forma %s", particion, (total)?"Total":"Parcial");
+        m_alarm_need_update = 1;
     }
     else
     {
@@ -1361,8 +1365,7 @@ int GEvent::Desactivar_Alarma(const char* particion)
         cJSON_Delete(json_Query_Result);
 
         m_pServer->m_pLog->Add(1, "[ALARMA] Particion %s desactivada", particion);
-
-
+        m_alarm_need_update = 1;
     }
     else
     {
@@ -1404,7 +1407,7 @@ int GEvent::ExtIOEvent_Alarma(int assign, int status)
     cJSON *json_Objeto_Salida;
 
     m_pServer->m_pLog->Add(20, "[GEvent::ExtIOEvent_Alarma] Ass: %i Status: %i", assign, status);
-
+    
     /* Me fijo si corresponde con una entrada de Activación / Desactivación */
     sprintf(query, "SELECT Id, Nombre, Estado_Activacion, Entrada_Act_Total, Entrada_Act_Parcial "
                     "FROM TB_DOM_ALARM_PARTICION "
@@ -1416,6 +1419,7 @@ int GEvent::ExtIOEvent_Alarma(int assign, int status)
     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
     if(rc > 0)
     {
+        m_alarm_need_update = 1;
         cJSON_ArrayForEach(json_Part_Row, json_Part_Result)
         {
             //json_Part_Id = cJSON_GetObjectItemCaseSensitive(json_Part_Row, "Id");
@@ -1615,6 +1619,7 @@ void GEvent::Task_Alarma( void )
                             {
                                 /* Apago la salida de alarma */
                                 ChangeAssignById(atoi(json_Objeto_Salida->valuestring), 2, 0);
+                                m_alarm_need_update = 1;
                             }
                         } /* cJSON_ArrayForEach */
                     }
@@ -1802,6 +1807,7 @@ int GEvent::Switch_Zona_Alarma(const char* particion, const char* zona)
     rc = m_pDB->Query(nullptr, query);
     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+    if(rc > 0) m_alarm_need_update = 1;
     return rc;
 }
 
@@ -1912,4 +1918,14 @@ int GEvent::Estado_Alarma_General(char* json, int max_len)
     cJSON_PrintPreallocated(json_Result, json, max_len, 0);
     cJSON_Delete(json_Result);
     return part;
+}
+
+int GEvent::AlarmNeedUpdate( void )
+{
+    if(m_alarm_need_update)
+    {
+        m_alarm_need_update = 0;
+        return 1;
+    }
+    else return 0;
 }

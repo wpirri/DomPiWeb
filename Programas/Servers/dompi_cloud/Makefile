@@ -6,7 +6,7 @@ INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/loca
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o cmydb.o
+OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o cmydb.o gevent.o
 OUTPUT=dompi_cloud
 DEFINE=-D __NO__DEBUG__ -D __NO_DEBUG_TCP
 CC=g++
@@ -31,6 +31,8 @@ strfunc.o: ../../Common/strfunc.cc
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/csqlite.cc
 cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/cmydb.cc
+gevent.o: ../../Common/gevent.cc
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/gevent.cc
 
 dompi_cloud: $(OBJECTS)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 

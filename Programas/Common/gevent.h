@@ -62,12 +62,15 @@ public:
 
     int ExtIOEvent_Alarma(int assign, int status);
 
+    int AlarmNeedUpdate( void );
+
     void Task_Alarma( void );
 
 private:
     CDB *m_pDB;
     CGMServerWait *m_pServer;
     unsigned long m_last_time_task;
+    int m_alarm_need_update;
 
 };
 #endif /* _GEVENT_H_ */
