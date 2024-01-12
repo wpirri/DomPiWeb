@@ -11,7 +11,6 @@
 /usr/local/sbin/gm_timer
 /usr/local/sbin/gm_transac
 
-/usr/local/sbin/gmond
 /usr/local/sbin/gmon_config
 /usr/local/sbin/gmon_start
 /usr/local/sbin/gmon_status
@@ -41,7 +40,7 @@
 /etc/xinetd.d/gmonitor
 /etc/cron.daily/clean-gmonitor-logs
 /usr/local/sbin/clean-gmonitor-old-logs.sh
-/etc/cron.monthly/make-db-backup.sh
-/usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/drop_ipc.sh
+/etc/cron.monthly/make-db-backup.sh
 /lib/systemd/system/gmonitor.service
+/usr/local/sbin/make-dompidb-backup.sh
