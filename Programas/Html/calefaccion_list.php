@@ -9,7 +9,7 @@ include('head-abm.php');
 	<img id='calefaccion_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
-<div id='calefaccion_list_add_btn' class='abm-add-btn' onclick="window.location.replace('');" >
+<div id='calefaccion_list_add_btn' class='add-btn' onclick="window.location.replace('');" >
 	<img id='calefaccion_list_add__icon' class='icon-btn' src='images/add.png'>&nbsp;Nuevo
 </div>
 

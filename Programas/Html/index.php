@@ -10,9 +10,9 @@
 <meta name="keywords" content="SMART HOME, SYSHOME, DOMOTIC, SECURITY SYSTEM">
 <meta name="description" content="Sistema integrado de monitoreo, alarma y domotica">
 <meta name="system-build" content="2021">
-<link href="css/index.css" rel="stylesheet" type="text/css" />
-<script src="js/weather.js" type="text/javascript"></script>
-<script src="js/ajax.js" type="text/javascript"></script>
+<?php head_link("css/index.css"); ?>
+<?php head_script("js/ajax.js"); ?>
+<?php head_script("js/weather.js"); ?>
 </head>
 
 <?php

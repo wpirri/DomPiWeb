@@ -14,15 +14,15 @@ include("obj_style.php");
 	<img id="back-icon" class="icon-btn" src="images/back.png">&nbsp;Volver
 </div>
 
-<div class="normal-btn" id="btn-planta-seguridad" onclick="window.location.replace('seguridad_menu.php');">
+<div class="normal-btn" id="btn-planta-select1" onclick="window.location.replace('seguridad_menu.php');">
 	<img id="seg-icon" class="icon-btn" src="images/lock1.png">&nbsp;Seguridad
 </div>
 
-<div class="normal-btn" id="btn-planta-config" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
+<div class="normal-btn" id="btn-planta-select2" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
 	<img id="config-icon" class="icon-btn" src="images/system.png">&nbsp;Configuración
 </div>
 
-<div class="normal-btn" id="btn-planta-select" onclick="window.location.replace('panel_auto.php');">
+<div class="normal-btn" id="btn-planta-select3" onclick="window.location.replace('panel_auto.php');">
 	<img id="config-icon" class="icon-btn" src="images/gear.png">&nbsp;Automatizaci&oacute;n
 </div>
 

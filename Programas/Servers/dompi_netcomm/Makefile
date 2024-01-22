@@ -5,7 +5,7 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_netcomm.o dom32iowifi.o ctcp.o strfunc.o config.o queue.o rbpiio.o cmydb.o gevent.o
+OBJECTS=dompi_netcomm.o dom32iowifi.o strfunc.o config.o queue.o rbpiio.o cmydb.o gevent.o
 OUTPUT=dompi_netcomm
 DEFINE=-D __NO__DEBUG__
 CC=g++
@@ -20,8 +20,6 @@ dompi_netcomm.o: dompi_netcomm.cc
 
 queue.o: ../../Common/queue.c
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/queue.c
-ctcp.o: ../../Common/ctcp.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/ctcp.cc
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
@@ -46,6 +44,7 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
+	sed -i 's/\r//g' conf/*
 	$(CHMOD) +x install_server.sh
 	$(CHMOD) +x update-tables.sh
 	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)

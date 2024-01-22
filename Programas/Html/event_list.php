@@ -9,7 +9,7 @@ include('head-abm.php');
 	<img id='event_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
-<div id='event_list_add_btn' class='abm-add-btn' onclick="window.location.replace('event_add.php');" >
+<div id='event_list_add_btn' class='add-btn' onclick="window.location.replace('event_add.php');" >
 	<img id='event_list_add__icon' class='icon-btn' src='images/add.png'>&nbsp;Nuevo
 </div>
 

@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <?php 
-    include('config.php'); 
-    include('session.php');
-
     function head_link(string $filename)
     {
         if( ($fm = filemtime($filename)) == false )

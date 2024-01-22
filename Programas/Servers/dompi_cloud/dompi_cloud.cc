@@ -58,6 +58,7 @@ int  m_CloudHost2Port;
 char m_CloudHost2Proto[8];
 time_t update_ass_t;
 time_t update_alarm_t;
+time_t update_user_t;
 
 int m_cloud_status;
 char *m_host_actual;
@@ -73,6 +74,7 @@ void AddSaf( void );
 
 void CheckUpdateAssignCloud( void );
 void CheckUpdateAlarmCloud( void );
+void CheckUpdateUserCloud( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -107,6 +109,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_CloudHost2Address[0] = 0;
 	update_ass_t = 0;
 	update_alarm_t = 0;
+	update_user_t = 0;
 	m_cloud_status = 0;
 
 	m_pServer = new CGMServerWait;
@@ -218,6 +221,10 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 					}
+					else
+					{
+						update_user_t += 600;
+					}
 				}
 				else
 				{
@@ -262,6 +269,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		/* Después de recibir un mensaje o expirar el timer */
 		CheckUpdateAssignCloud();
 		CheckUpdateAlarmCloud();
+		CheckUpdateUserCloud();
 
 		if(SendToCloud())
 		{
@@ -343,6 +351,14 @@ int KeepAliveCloud( void )
 		rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, message, message);
 		if(rc < 0)
 		{
+			if(rc == (-10))
+			{
+				m_pServer->m_pLog->Add(100, "[CLOUD] ERROR en send a %s", m_host_actual);
+			}
+			else
+			{
+				m_pServer->m_pLog->Add(100, "[CLOUD] ERROR en recv de %s", m_host_actual);
+			}
 			if(m_cloud_status)
 			{
 				m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
@@ -373,6 +389,10 @@ int KeepAliveCloud( void )
 				return 1;
 			}
 		}
+		else
+		{
+			m_pServer->m_pLog->Add(100, "[CLOUD] >> Respuesta vacia");
+		}
 	}
 	else
 	{
@@ -397,6 +417,14 @@ int SendToCloud( void )
 		rc = DompiCloud_Notificar(m_host_actual, m_port_actual, m_proto_actual, (char*)resp.data, message);
 		if(rc < 0)
 		{
+			if(rc == (-10))
+			{
+				m_pServer->m_pLog->Add(100, "[CLOUD] ERROR en send a %s", m_host_actual);
+			}
+			else
+			{
+				m_pServer->m_pLog->Add(100, "[CLOUD] ERROR en recv de %s", m_host_actual);
+			}
 			m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
 			m_cloud_status = 0;
 		}
@@ -414,6 +442,10 @@ int SendToCloud( void )
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
 			}
+		}
+		else
+		{
+			m_pServer->m_pLog->Add(100, "[CLOUD] >> Respuesta vacia");
 		}
 		rc = 1;
     }
@@ -538,6 +570,23 @@ void CheckUpdateAlarmCloud( void )
 	}
 }
 
+void CheckUpdateAlarmCloud( void )
+{
+	char message[MAX_BUFFER_LEN+1];
+	time_t t;
+	cJSON *json_obj;
+
+	t = time(&t);
+
+	if(t >= update_user_t && m_cloud_status && m_host_actual)
+	{
+		/* TODO: Actualizacion de usuarios en la nube cada 10 min */
+		update_user_t = t + 600;
+
+
+
+	}
+}
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg)
 {
     /* POST
@@ -589,7 +638,8 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
 		delete pSock;
 	}
-	if(receive_msg)
+
+	if(receive_msg && rc > 0)
 	{
 		*receive_msg = 0;
 		if(rc > 0 && strlen(buffer))

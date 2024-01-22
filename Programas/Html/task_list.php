@@ -9,7 +9,7 @@ include('head-abm.php');
 	<img id='task_list_back_icon' class='icon-btn' src='images/back.png'>&nbsp;Volver
 </div>
 
-<div id='task_list_add_btn' class='abm-add-btn' onclick="window.location.replace('task_add.php');" >
+<div id='task_list_add_btn' class='add-btn' onclick="window.location.replace('task_add.php');" >
 	<img id='task_list_add__icon' class='icon-btn' src='images/add.png'>&nbsp;Nuevo
 </div>
 

@@ -3,25 +3,6 @@
 <?php 
     include('config.php'); 
     include('session.php');
-
-    function head_link(string $filename)
-    {
-        if( ($fm = filemtime($filename)) == false )
-        {
-            $fm = 0;
-        }
-        echo "<link href=\"".$filename."?time=".$fm."\" rel=\"stylesheet\" type=\"text/css\" />\n";
-    }
-
-    function head_script(string $filename)
-    {
-        if( ($fm = filemtime($filename)) == false )
-        {
-            $fm = 0;
-        }
-        echo "<script src=\"".$filename."?time=".$fm."\" type=\"text/javascript\"></script>\n";
-    }
-
 ?>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">

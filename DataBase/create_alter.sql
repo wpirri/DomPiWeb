@@ -75,7 +75,11 @@ alter table TB_DOM_USER add column Google_Key varchar(256);
 alter table TB_DOM_USER add column Apple_Key varchar(256);
 alter table TB_DOM_USER add column Other_Key varchar(256);
 
-
 alter table TB_DOM_EVENT drop foreign key Funcion_Destino;
 
+## 14/01/2024
+alter table TB_DOM_USER drop Permisos;
+alter table TB_DOM_USER add column Acceso_Fisico varchar(256);
+alter table TB_DOM_USER add column Acceso_Web varchar(256);
+alter table TB_DOM_USER add column Acceso_Clowd varchar(256);
 

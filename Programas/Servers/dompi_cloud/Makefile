@@ -6,7 +6,7 @@ INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/loca
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_cloud.o ctcp.o strfunc.o config.o cmydb.o gevent.o
+OBJECTS=dompi_cloud.o strfunc.o config.o cmydb.o gevent.o
 OUTPUT=dompi_cloud
 DEFINE=-D __NO__DEBUG__ -D __NO_DEBUG_TCP
 CC=g++
@@ -19,8 +19,6 @@ all: dompi_cloud
 dompi_cloud.o: dompi_cloud.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c dompi_cloud.cc
 
-ctcp.o: ../../Common/ctcp.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/ctcp.cc
 config.o: ../../Common/config.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc
 strfunc.o: ../../Common/strfunc.cc
@@ -41,6 +39,7 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
+	sed -i 's/\r//g' conf/*
 	$(CHMOD) +x install_server.sh
 	$(CHMOD) +x update-tables.sh
 	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)

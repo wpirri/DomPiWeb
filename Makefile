@@ -3,6 +3,7 @@
 include configure.mk
 
 all:
+	find . -name "*.sh" -exec sed -i 's/\r//g' {} \;
 	make -C Programas
 
 clean:

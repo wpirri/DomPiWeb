@@ -5,7 +5,7 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lwiringPi -lssl -lcrypto
-OBJECTS=dompi_gpio.o dom32iopi.o config.o ctcp.o strfunc.o serial.o
+OBJECTS=dompi_gpio.o dom32iopi.o config.o strfunc.o serial.o
 OUTPUT=dompi_gpio
 DEFINE=-D __NO__DEBUG__
 HWNAME=uname -m
@@ -25,9 +25,6 @@ config.o: ../../Common/config.cc
 dom32iopi.o: ../../Common/dom32iopi.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iopi.cc
 
-ctcp.o: ../../Common/ctcp.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/ctcp.cc
-
 strfunc.o: ../../Common/strfunc.cc
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
 
@@ -42,7 +39,9 @@ clean:
 	$(RM) $(OBJECTS) $(OUTPUT) *.d
 
 install:
+	sed -i 's/\r//g' conf/*
 	$(CHMOD) +x install_server.sh
+	$(CHMOD) +x update-tables.sh
 	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
 
 uninstall:

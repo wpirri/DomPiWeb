@@ -38,136 +38,78 @@ body {
 	position: absolute; 
 	left: 10px; 
 	top: 10px; 
-	width: 150px;
-	height: 75px;
-	padding: 2px;
-	border: 1px dotted #fff;
-	background: green;
-	color: white;
+	width: 140px;
+	height: 65px;
+	padding: 5px;
 	cursor: pointer;
+	color: white;
+	border-radius: 10px 10px 10px 10px;
+	background: darkred;
+	border: 3px solid red;
 	}
 
+.add-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 95px; 
+	top: 350px; 
+	width: 140px;
+	height: 65px;
+	padding: 5px;
+	cursor: pointer;
+	color: white;
+	border-radius: 10px 10px 10px 10px;
+	background: darkgreen;
+	border: 3px solid green;
+	}
+
+.submit-btn {
+	z-index: 10;
+	position: absolute; 
+	left: 95px; 
+	top: 350px; 
+	width: 140px;
+	height: 65px;
+	padding: 5px;
+	cursor: pointer;
+	color: white;
+	border-radius: 10px 10px 10px 10px;
+	background: blue;
+	border: 3px solid lightblue;
+	}
+		
 .normal-btn {
 	z-index: 10;
 	position: absolute; 
-	width: 150px;
-	height: 75px;
-	padding: 2px;
-	border: 1px dotted #fff;
+	width: 140px;
+	height: 65px;
+	padding: 5px;
 	cursor: pointer;
 	color: white;
+	border-radius: 10px 10px 10px 10px;
 	}
+
 	
-/* En config.php */
-
-#btn-config-usuarios {
-	left: 255px; 
-	top: 95px; 
-	background: olive;
-}
-
-#btn-config-sistema {
-	left: 415px; 
-	top: 95px; 
-	background: red;
-	}
-
-#btn-config-planta {
-	left: 575px; 
-	top: 95px; 
-	background: black;
-	}
-
-
-#btn-config-hard {
-	left: 95px; 
-	top: 180px; 
-	background: navy;
-	}
-
-#btn-config-assign {
-	left: 255px; 
-	top: 180px; 
-	background: maroon;
-	}
-
-#btn-config-groups {
-	left: 415px; 
-	top: 180px; 
-	background: green;
-	}
-
-#btn-config-events {
-	left: 575px; 
-	top: 180px; 
-	background: fuchsia;
-	}
-
-#btn-config-flags {
-	left: 95px; 
-	top: 265px; 
-	background: teal;
-	}
-
-#btn-config-dummy3 {
-	left: 255px; 
-	top: 265px; 
-	background: black;
-	}
-
-#btn-config-alarm {
-	left: 415px; 
-	top: 265px; 
-	background: purple;
-	}
-
-#btn-config-cameras {
-	left: 575px; 
-	top: 265px; 
-	background: orange;
-	}
-
-#btn-config-upload {
-	left: 95px; 
-	top: 350px; 
-	background: maroon;
-}
-
-#btn-config-download {
-	left: 255px; 
-	top: 350px; 
-	background: fuchsia;
-	}
-
-#btn-config-dummy2 {
-	left: 415px; 
-	top: 350px; 
-	background: black;
-	}
-
-#btn-config-auto {
-	left: 575px; 
-	top: 350px; 
-	background: olive;
-	}
-				
 /* En plantaN.php */
-#btn-planta-seguridad {
+#btn-planta-select1 {
 	left: 10px; 
 	top: 180px; 
-	background: orange;
+	background: orangered;
+	border: 3px solid orange;
 	}
 
-#btn-planta-config {
+#btn-planta-select2 {
 	left: 10px; 
 	top: 265px; 
-	background: navy;
+	background: green;
+	border: 3px solid greenyellow;
 	}
 
-#btn-planta-select {
+#btn-planta-select3 {
 	left: 10px; 
 	top: 350px; 
-	background: olive;
+	background: blue;
+	border: 3px solid lightblue;
 	}
 
 .home-group {
@@ -175,7 +117,8 @@ body {
 	z-index: 10;
 	padding: 2px;
 	height: 75px;
-	border: 1px dotted #fff;
+	border: 3px solid grey;
+	border-radius: 10px 0px 0px 0px;
 	}
 
 .home-image {
@@ -207,44 +150,155 @@ body {
 	left: 0px; 
 	top: 0px; 
 	}
-	
+
+/* En config.php */
+
+#btn-config-usuarios {
+	left: 255px; 
+	top: 95px; 
+	background: olive;
+	border: 3px solid lightseagreen;
+}
+
+#btn-config-sistema {
+	left: 415px; 
+	top: 95px; 
+	background: red;
+	border: 3px solid orangered;
+	}
+
+#btn-config-planta {
+	left: 575px; 
+	top: 95px; 
+	background: black;
+	border: 3px solid gray;
+	}
+
+
+#btn-config-hard {
+	left: 95px; 
+	top: 180px; 
+	background: navy;
+	border: 3px solid blue;
+	}
+
+#btn-config-assign {
+	left: 255px; 
+	top: 180px; 
+	background: maroon;
+	border: 3px solid purple;
+	}
+
+#btn-config-groups {
+	left: 415px; 
+	top: 180px; 
+	background: green;
+	border: 3px solid lightgreen;
+	}
+
+#btn-config-events {
+	left: 575px; 
+	top: 180px; 
+	background: fuchsia;
+	border: 3px solid pink;
+	}
+
+#btn-config-flags {
+	left: 95px; 
+	top: 265px; 
+	background: teal;
+	border: 3px solid lightseagreen;
+	}
+
+#btn-config-dummy3 {
+	left: 255px; 
+	top: 265px; 
+	background: black;
+	}
+
+#btn-config-alarm {
+	left: 415px; 
+	top: 265px; 
+	background: purple;
+	border: 3px solid lightpink;
+	}
+
+#btn-config-cameras {
+	left: 575px; 
+	top: 265px; 
+	background: orange;
+	border: 3px solid lightpink;
+	}
+
+#btn-config-upload {
+	left: 95px; 
+	top: 350px; 
+	background: maroon;
+	border: 3px solid purple;
+	}
+
+#btn-config-download {
+	left: 255px; 
+	top: 350px; 
+	background: fuchsia;
+	border: 3px solid pink;
+	}
+
+#btn-config-dummy2 {
+	left: 415px; 
+	top: 350px; 
+	background: black;
+	}
+
+#btn-config-auto {
+	left: 575px; 
+	top: 350px; 
+	background: olive;
+	border: 3px solid lightseagreen;
+	}
+					
 /*  en planta_edit */
 #btn-planta-add {
 	left: 10px; 
-	top: 180px; 
+	top: 350px; 
 	background: navy;
+	border: 3px solid blue;
 	}
 
 /* En auto_menu.php */
-
 #btn-config-riego {
 	left: 255px; 
 	top: 95px; 
 	background: olive;
+	border: 3px solid greenyellow;
 }
 
 #btn-config-calefaccion {
 	left: 415px; 
 	top: 95px; 
 	background: red;
+	border: 3px solid pink;
 	}
 
 #btn-config-aire {
 	left: 575px; 
 	top: 95px; 
 	background: black;
+	border: 3px solid gray;
 	}
 
 #btn-config-task {
 	left: 95px; 
 	top: 180px; 
 	background: navy;
+	border: 3px solid blue;
 	}
 	
 #btn-config-analog {
 	left: 255px; 
 	top: 180px; 
 	background: maroon;
+	border: 3px solid purple;
 	}
 	
 /* en seguridad_menu.php */
@@ -252,29 +306,34 @@ body {
 	left: 255px; 
 	top: 95px; 
 	background: olive;
+	border: 3px solid greenyellow;
 }
 
 #btn-seguridad-alarma {
 	left: 415px; 
 	top: 95px; 
 	background: red;
+	border: 3px solid pink;
 	}
 
 #btn-seguridad-panico {
 	left: 255px; 
 	top: 265px; 
 	background: maroon;
+	border: 3px solid purple;
 	}
 
 #btn-seguridad-incendio {
 	left: 415px; 
 	top: 265px; 
 	background: green;
+	border: 3px solid lightgreen;
 	}
 
 #btn-seguridad-emer-med {
 	left: 575px; 
 	top: 265px; 
 	background: fuchsia;
+	border: 3px solid lightpink;
 	}
 	

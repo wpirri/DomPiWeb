@@ -363,7 +363,7 @@ function collectFormData(form_name) {
 function fillAbmList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -447,7 +447,7 @@ function fillAbmForm(json_list, dst_div, title) {
 function fillAbmEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -478,7 +478,7 @@ function fillAbmEdit(json_list, dst_div, title) {
 function fillAbmDelete(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_delete_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_delete_table>\n';
 	var i = 0;
 
 	// Header
@@ -505,7 +505,7 @@ function fillAbmDelete(json_list, dst_div, title) {
 function fillHWList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -590,7 +590,7 @@ function fillHWForm(json_list, dst_div, title) {
 function fillHWEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -620,7 +620,7 @@ function fillHWEdit(json_list, dst_div, title) {
 function fillHWDelete(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_delete_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_delete_table>\n';
 	var i = 0;
 
 	// Header
@@ -662,7 +662,7 @@ function loadHWTable(json_list) {
 function fillAddAssignList(json_list, dst_div, title, add_fcn) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -712,7 +712,7 @@ function fillAddAssignList(json_list, dst_div, title, add_fcn) {
 function fillAssList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -801,7 +801,7 @@ function fillAssForm(json_list, dst_div, title) {
 function fillAssEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -837,7 +837,7 @@ function fillAssEdit(json_list, dst_div, title) {
 function fillAssDelete(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_delete_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_delete_table>\n';
 	var i = 0;
 
 	// Header
@@ -911,7 +911,7 @@ function loadAssTable(json_list) {
 function fillEvList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1008,7 +1008,7 @@ function fillEvForm(json_list, dst_div, title) {
 function fillEvEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1053,7 +1053,7 @@ function fillEvEdit(json_list, dst_div, title) {
 function fillTaskList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1154,7 +1154,7 @@ function fillTaskForm(json_list, dst_div, title) {
 function fillTaskEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1229,7 +1229,7 @@ function fillGroupForm(json_list, dst_div, title) {
 function fillGroupEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1269,7 +1269,7 @@ function loadGrpTable(json_list) {
 function fillAnalogList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1376,7 +1376,7 @@ function fillAnalogForm(json_list, dst_div, title) {
 function fillAnalogEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1429,7 +1429,7 @@ function fillAnalogEdit(json_list, dst_div, title) {
 function fillAlarmPartList(json_list, dst_div, title, index_label, edit_link, zone_link, out_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1535,7 +1535,7 @@ function fillAlarmForm(json_list, dst_div, title) {
 function fillAlarmEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header
@@ -1582,7 +1582,7 @@ function fillAlarmEdit(json_list, dst_div, title) {
 function fillAlarmZoneList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1633,7 +1633,7 @@ function fillAlarmZoneList(json_list, dst_div, title, index_label, edit_link, de
 function fillAlarmOutList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1685,7 +1685,7 @@ function fillAlarmOutList(json_list, dst_div, title, index_label, edit_link, del
 function fillRiegoList(json_list, dst_div, title, index_label, edit_link, delete_link) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-list-table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-list-table>\n';
 	var i = 0;
 	var j = 0;
 	var index_value = '';
@@ -1792,7 +1792,7 @@ function fillRiegoForm(json_list, dst_div, title) {
 function fillRiegoEdit(json_list, dst_div, title) { 
 	// Getting the all column names 
 	var headers = getAbmTableHedaer(json_list);
-	var output = '<p class=abm-table-title>&nbsp;' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+	var output = '<div class=abm-table-title>&nbsp;' + title + '</div>\n<table class=abm-table id=abm_edit_table>\n';
 	var i = 0;
 
 	// Header

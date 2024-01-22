@@ -68,7 +68,9 @@ Google_Key varchar(256),
 Apple_Key varchar(256),
 Other_Key varchar(256),
 Tarjeta varchar(256),
-Permisos varchar(128),
+Acceso_Fisico varchar(256),     -- Id de Puertas de acceso separadas por , (comas)
+Acceso_Web varchar(256),
+Acceso_Clowd varchar(256),
 Dias_Semana varchar(128),
 Hora_Desde integer DEFAULT 0,
 Minuto_Desde integer DEFAULT 0,
@@ -142,7 +144,7 @@ INDEX idx_assign_grupo_vis (Grupo_Visual)
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
 Id integer primary key,
 Grupo varchar(128) NOT NULL,
-Listado_Objetos varchar(256),
+Listado_Objetos varchar(256),       -- Id de assign separados por , (comas)
 Estado integer DEFAULT 0,            -- Define el estado que deben tener los objetos del grupo
 Actualizar integer DEFAULT 0,
 UNIQUE INDEX idx_group_id (Id)
