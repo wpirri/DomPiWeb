@@ -14,6 +14,7 @@ MOVE_TO=$SYTEM_HOME
 check_for_updates_daemon()
 {
 	if [ -f $CHECK_PATH/$FILE_NAME ]; then
+		sleep 10
 		mv $CHECK_PATH/$FILE_NAME $MOVE_TO/
 		logger "[DOMPIWEB] Aplicando actualizacion y reiniciando"
 		/etc/init.d/gmond stop
