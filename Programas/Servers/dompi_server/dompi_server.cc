@@ -151,7 +151,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  pulso <objeto>, [segundos]\r\n"
 					"  estado <objeto>\r\n"
 					"  actualizar <dispositivo>, <modulo>\r\n"
-					"  manten\r\n"
+					"  manten *-*\r\n"
 					"  sms <numero>, <mensaje>\r\n"
 					"  habilitar <zona>, <particion>\r\n"
 					"  deshabilitar <zona>, <particion>\r\n"
@@ -210,6 +210,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_HW_Id;
 	cJSON *json_Objeto;
 	cJSON *json_Tipo;
+	cJSON *json_Tipo_HW;
 	cJSON *json_Estado;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
@@ -343,6 +344,20 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ID");
 				if(json_HW_Id)
 				{
+					/* Identifico las distintas placas que entran por este servicio */
+					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+					/* Si son placas viejas de Dom32-IO-WiFi no informan el TYP en la mensajería
+						así que se la agrego para mantener compatibilidad 
+						IO = Dom32-IO-WiFi 			- Typ: 1
+						IR = Dom32-IR-WiFi 			- Typ: 10
+						PI = RBPi COn Server GPIO 	- Typ: 2
+					*/
+					if( !json_Tipo_HW )
+					{
+						cJSON_AddStringToObject(json_Message, "TYP", "IO");
+						json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+					}
+
 					rc = pEV->ExtIOEvent(message);
 					//message[0] = 0;
 					if(rc == 1)
@@ -684,9 +699,12 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "manten") )
 						{
-							/* TODO: Hacer algún mantenimiento si es necesario */
-							m_pServer->m_pLog->Add(100, "[manten] Mantenimiento de la base de datos.");
-							if(pDB) pDB->Manten();
+							m_pServer->m_pLog->Add(100, "[manten]");
+
+							sprintf(message, "{\"Direccion_IP\":\"192.168.10.149\", \"Tipo_HW\":\"10\"}");
+
+							m_pServer->m_pLog->Add(90, "Notify [dompi_hw_send_ir][%s]", message);
+							m_pServer->Notify("dompi_hw_send_ir", message, strlen(message));
 
 						}
 						else if( !strcmp(comando, "sms") )

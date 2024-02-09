@@ -71,6 +71,7 @@ void GetConfig_CallBack(const char* id, const char* data);
 void SetConfig_CallBack(const char* id, const char* data);
 void GetIO_CallBack(const char* id, const char* data);
 void SetTime_CallBack(const char* id, const char* data);
+void SendIR_CallBack(const char* id, const char* data);
 
 
 /* ****************************************************************************
@@ -188,6 +189,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_hw_send_ir", GM_MSG_TYPE_NOT);			/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_camera_get_image", GM_MSG_TYPE_CR);
 
 	m_pServer->m_pLog->Add(1, "Servicios de Comunicación con Interfaces Locales inicializados.");
@@ -602,6 +604,32 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Datos insuficientes");
 				}
 			}
+
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_hw_send_ir"))
+			{
+				if(json_Direccion_IP && json_Tipo_HW)
+				{
+					m_pServer->m_pLog->Add(20, "[dompi_hw_send_ir] IP: %s Puerto Ifrarrojo", json_Direccion_IP->valuestring);
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_IR_WIFI) /* Dom32IRWiFi */
+					{
+						/* Interface Vía IP mensajeria HTTP con emisor Infrarrojo*/
+						pD32W->SendIR(json_Direccion_IP->valuestring, json_req, SendIR_CallBack);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_hw_pulse_io] ERROR: Datos insuficientes");
+				}
+			}
+
+
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
@@ -673,6 +701,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_send_ir", GM_MSG_TYPE_NOT);
 
 	delete m_pServer;
 	delete pEV;
@@ -883,6 +912,15 @@ void SetTime_CallBack(const char* id, const char* data)
 {
 	m_pServer->m_pLog->Add(20, "[SetTime_CallBack] ID: %s", id);
 	m_pServer->m_pLog->Add(100, "[SetTime_CallBack] Data: [%s]", data);
+	Update_Last_Connection(id,data);
+
+}
+
+/* Callback para SendIR */
+void SendIR_CallBack(const char* id, const char* data)
+{
+	m_pServer->m_pLog->Add(20, "[SendIR_CallBack] ID: %s", id);
+	m_pServer->m_pLog->Add(100, "[SendIR_CallBack] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }

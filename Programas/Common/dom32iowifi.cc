@@ -69,6 +69,8 @@ Dom32IoWifi::Dom32IoWifi(CGMServerWait *pServer)
 
     url_set_ioconfig = "/ioconfig.cgi";
 
+    url_send_ir = "/irsend.cgi";
+
     /*
     * GET
     * 1.- %s: URI
@@ -248,6 +250,16 @@ int Dom32IoWifi::PulseIO(const char *raddr, char* msg, void(*fcn)(const char* id
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
     rc = PulseIO(raddr, json_obj, fcn);
+    cJSON_Delete(json_obj);
+    return rc;
+}
+
+int Dom32IoWifi::SendIR(const char *raddr, char* msg, void(*fcn)(const char* id, const char* data))
+{
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(msg);
+    rc = SendIR(raddr, json_obj, fcn);
     cJSON_Delete(json_obj);
     return rc;
 }
@@ -611,6 +623,46 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj, void(*fcn)(const ch
     sprintf(buffer, http_post, url_set_iostatus, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando pulso de I/O para %s", raddr);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
+    return RequestEnqueue(raddr, buffer, fcn);
+}
+
+int Dom32IoWifi::SendIR(const char *raddr, cJSON *json_obj, void(*fcn)(const char* id, const char* data))
+{
+    char buffer[BUFFER_LEN+1];
+    char data[1024];
+    cJSON *json_un_obj;
+
+    json_un_obj = json_obj;
+    data[0] = 0;
+    while( json_un_obj )
+    {
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if(data[0] != 0) strcat(data, "&");
+                        strcat(data, json_un_obj->string);
+                        strcat(data, "=");
+                        strcat(data, json_un_obj->valuestring);
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
+    }
+
+    sprintf(buffer, http_post, url_send_ir, raddr, strlen(data), data);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IrWifi] Encolando estado de I/O para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IrWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
