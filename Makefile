@@ -33,6 +33,7 @@ installer:
 	cp Programas/Clientes/abmev.cgi/abmev.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmmsgir.cgi/abmmsgir.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmsys.cgi/abmsys.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/abmuser.cgi/abmuser.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/infoio.cgi/infoio.cgi $(RUN_HOME)/cgi/

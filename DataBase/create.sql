@@ -10,12 +10,12 @@ DROP TABLE IF EXISTS TB_DOM_AT;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
+DROP TABLE IF EXISTS TB_DOM_MSG_IR;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
 DROP TABLE IF EXISTS TB_DOM_GRUPO_VISUAL;
 DROP TABLE IF EXISTS TB_DOM_PERIF;
 DROP TABLE IF EXISTS TB_DOM_USER;
 DROP TABLE IF EXISTS TB_DOM_CONFIG;
-
 
 CREATE TABLE IF NOT EXISTS TB_DOM_CONFIG (
 Id integer primary key,
@@ -112,12 +112,54 @@ Icono varchar(32),
 UNIQUE INDEX idx_grp_vis_id (Id)
 );
 
+CREATE TABLE IF NOT EXISTS TB_DOM_MSG_IR (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+Protocolo varchar(16) NOT NULL,         -- ITT, JVC, NEC, NOKIA, SHARP, PHILIPS_RC5, PHILIPS_RC6, PHILIPS_RC_MM, PROTO_PHILIPS_RECS80, RCA, XSAT
+Tipo_Dispositivo varchar(16) NOT NULL,  -- TV, AC, AUDIO, GAME
+Portadora integer DEFAULT 0,            -- En KHz 30 a 40 o 56 - Normal 38
+Start_Len integer DEFAULT 0,            -- En microsegundos
+Start_Pause_Len integer DEFAULT 0,
+Data_Len integer DEFAULT 0,             -- En Bits
+Logical_0_On_Len integer DEFAULT 0,     -- En microsegundos
+Logical_0_Off_Len integer DEFAULT 0,    -- En microsegundos
+Logical_1_On_Len integer DEFAULT 0,     -- En microsegundos
+Logical_1_Off_Len integer DEFAULT 0,    -- En microsegundos
+Stop_Pause_Len integer DEFAULT 0,       -- En microsegundos
+Repeticiones integer DEFAULT 0,         -- 0 es enviar una sola vez
+Temp_Min_Val integer DEFAULT 0,         -- el valor mìnimo de temperatura (normalmente 18)
+Temp_Min_Data varchar(256),             -- un string representando en binario el còdigo para la temperatura mìnima
+Temp_Max_Val integer DEFAULT 0,         -- el valor màximo de temperatura (normalmente 28 o 30)
+Temp_Def_Frio integer DEFAULT 0,        -- Valor de temperatura por defecto para verano
+Temp_Def_Calor integer DEFAULT 0,       -- Valor de temperatura por defecto para invierno
+Temp_Incremento integer DEFAULT 0,      -- Paso de incremento de Min_Data por cada grado
+On_Data varchar(256),                   -- Código binario del comando de encendido excepto AC
+On_Data_Frio varchar(256),              -- Código binario del comando de encendido en modo frío
+On_Data_Calor varchar(256),             -- Código binario del comando de encendido en modo calor
+On_Data_Humi varchar(256),              -- Código binario del comando de encendido en modo desumificador
+On_Data_Vent varchar(256),              -- Código binario del comando de encendido en modo ventilador
+Off_Data varchar(256),                  -- Código binario del comando de apagado
+Vol_Up_Data varchar(256),               -- Código binario del comando de subir volumen
+Vol_Down_Data varchar(256),             -- Código binario del comando de bajar volumen
+Channel_Up_Data varchar(256),           -- Código binario del comando de subir canal
+Channel_Down_Data varchar(256),         -- Código binario del comando de bajar canal
+UNIQUE INDEX idx_ir_id (Id)
+);
+
 CREATE TABLE IF NOT EXISTS TB_DOM_ASSIGN (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
 Dispositivo integer NOT NULL,               -- Discpositivo - Id de TB_DOM_PERIF
 Port varchar(128) NOT NULL,                 -- Nombre con el que se identifica en el dispositivo
-Tipo integer NOT NULL,                      -- 0=Output, 1=Input, 2=Analog, 3=Output Alarma, 4=Input Alarma, 5=Output Pulse/Analog_Mult_Div_Valor=Pulse Param, 6=Periferico
+Tipo integer NOT NULL,                      --  0 = Output, 
+                                            --  1 = Input, 
+                                            --  2 = Analog, 
+                                            --  3 = Output Alarma, 
+                                            --  4 = Input Alarma, 
+                                            --  5 = Output Pulse/Analog_Mult_Div_Valor=Pulse Param, 
+                                            --  6 = Periferico (TEMP/HUM/PRES/POSIC), 
+                                            --  7 = IR Output
+                                            --  8 = IR Input
 Estado integer DEFAULT 0,                   -- 1 / 0 para digitales 0 a n para analogicos
 Estado_HW integer DEFAULT 0,                -- Estado reportado por el HW
 Perif_Data varchar(128),
@@ -130,10 +172,12 @@ Cord_y integer DEFAULT 0,
 Coeficiente integer DEFAULT 0,              -- 1=Coeficiente Positivo, -1=Coeficiente Negativo  - rc = Coeficiente * ( (Analog_Mult_Div)?Estado/Analog_Mult_Div_Valor:Estado*Analog_Mult_Div_Valor ) 
 Analog_Mult_Div integer DEFAULT 0,          -- 0=Multiplicar por valor, 1=Dividir por valor
 Analog_Mult_Div_Valor integer DEFAULT 1,    -- Parámetro para coeficiente si Tipo=2, Tiempo si Tipo=5
+Protocolo_IR integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW por este PORT
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
+FOREIGN KEY(Protocolo_IR) REFERENCES TB_DOM_MSG_IR(Id),
 UNIQUE INDEX idx_assign_id (Id),
 UNIQUE INDEX idx_assign_disp_port (Dispositivo, Port),
 UNIQUE INDEX idx_assign_disp_port_tipo (Dispositivo, Port, Tipo),
