@@ -44,8 +44,8 @@ include("head.php");
 <div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">
 	<img id="flags-icon" class="icon-btn" src="images/var.png">&nbsp;Variables
 </div>
-<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
-	<!--<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas-->
+<div class="normal-btn" id="btn-config-infrarrojo" onclick="window.location.replace('msgir_list.php');">
+	<img id="crono-icon" class="icon-btn" src="images/memory.png">&nbsp;Infrarrojo
 </div>
 <div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm_list.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma

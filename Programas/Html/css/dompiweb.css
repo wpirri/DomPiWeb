@@ -210,10 +210,11 @@ body {
 	border: 3px solid lightseagreen;
 	}
 
-#btn-config-dummy3 {
+#btn-config-infrarrojo {
 	left: 255px; 
 	top: 265px; 
 	background: black;
+	border: 3px solid gray;
 	}
 
 #btn-config-alarm {
