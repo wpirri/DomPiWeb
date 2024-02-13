@@ -2199,7 +2199,7 @@ int CheckWirelessCard( const char* card )
 	if(strlen(card) == 0) return 0;
 
 	QueryResult = cJSON_CreateArray();
-	sprintf(query, "SELECT Nombre_Completo, Permisos, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
+	sprintf(query, "SELECT Nombre_Completo, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
 					"FROM TB_DOM_USER "
 					"WHERE UPPER(Tarjeta) = UPPER(\'%s\');", card);
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
