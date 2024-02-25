@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
 Id integer primary key,
 MAC varchar(16) NOT NULL,                       -- MAC Address
 Dispositivo varchar(128) NOT NULL,
-Tipo integer DEFAULT 0,                         -- 0=Ninguno, 1=Wifi IO 2=RBPi 3=DSC 4=Garnet 10=WiFi IR
+Tipo integer DEFAULT 0,                         -- 0=Ninguno, 1=Wifi 2=RBPi 3=DSC 4=Garnet
 Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,

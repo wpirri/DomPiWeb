@@ -102,7 +102,7 @@ void HTTPNotificarStatus( void )
 	timer_count_keep_alive = 0;
 
     snprintf(http_rqst_data, 1024,
-        "ID=%s&TYP=PI&IO1=%i&IO2=%i&IO3=%i&IO4=%i&IO5=%i&IO6=%i&IO7=%i&IO8=%i&OUT1=%i&OUT2=%i",
+        "ID=%s&IO1=%i&IO2=%i&IO3=%i&IO4=%i&IO5=%i&IO6=%i&IO7=%i&IO8=%i&OUT1=%i&OUT2=%i",
         pPI->m_pi_data.config.comm.hw_mac,
 		pPI->m_pi_data.status.port[0].status,
 		pPI->m_pi_data.status.port[1].status,
