@@ -55,7 +55,7 @@ alter table TB_DOM_GROUP add unique index idx_group_id (Id);
 alter table TB_DOM_FLAG add unique index idx_flag_id (Id);
 alter table TB_DOM_FUNCTION add unique index idx_function_id (Id);
 alter table TB_DOM_EVENT add UNIQUE INDEX idx_event_id (Id);
-== alter table TB_DOM_EVENT add UNIQUE INDEX idx_event_obj_origen (Objeto_Origen);
+alter table TB_DOM_EVENT add UNIQUE INDEX idx_event_obj_origen (Objeto_Origen);
 alter table TB_DOM_AT add UNIQUE INDEX idx_at_id (Id);
 alter table TB_DOM_AT add UNIQUE INDEX idx_at_obj_dest (Objeto_Destino);
 alter table TB_DOM_AT add UNIQUE INDEX idx_at_fecha (Mes,Dia,Hora,Ultimo_Mes,Ultimo_Dia,Ultima_Hora,Ultimo_Minuto,Dias_Semana);
@@ -85,12 +85,3 @@ alter table TB_DOM_USER add column Acceso_Clowd varchar(256);
 
 ## 9/02/2024
 alter table TB_DOM_ASSIGN add column Protocolo_IR integer DEFAULT 0;
-
-## 17/02/2024
-alter table TB_DOM_PERIF drop Flags;
-alter table TB_DOM_PERIF add column Usar_Https integer DEFAULT 0;
-alter table TB_DOM_PERIF add column Habilitar_Wiegand integer DEFAULT 0;
-alter table TB_DOM_PERIF add column Informacion varchar(1024);
-
-## 22/02/2024
-alter table TB_DOM_EVENT drop index idx_event_obj_origen;

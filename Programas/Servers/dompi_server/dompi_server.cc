@@ -1991,8 +1991,8 @@ void CheckUpdateHWConfig()
     cJSON *json_MAC;
     cJSON *json_Tipo;
     cJSON *json_Direccion_IP;
-	cJSON *json_Usar_Https;
-	cJSON *json_Habilitar_Wiegand;
+    cJSON *json_Flags;
+
 
 	m_pServer->m_pLog->Add(100, "[CheckUpdateHWConfig]");
 
@@ -2006,7 +2006,7 @@ void CheckUpdateHWConfig()
 	rc = pDB->Query(json_arr_Perif, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc > 0)
+	if(rc >= 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
@@ -2014,11 +2014,10 @@ void CheckUpdateHWConfig()
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
+			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
 			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
-			json_Usar_Https = cJSON_GetObjectItemCaseSensitive(json_Perif, "Usar_Https");
-			json_Habilitar_Wiegand = cJSON_GetObjectItemCaseSensitive(json_Perif, "Habilitar_Wiegand");
 
-			if(json_MAC && json_Tipo && json_HW_Id && json_Direccion_IP && json_Usar_Https && json_Habilitar_Wiegand)
+			if(json_MAC && json_Tipo && json_HW_Id && json_Flags && json_Direccion_IP)
 			{
 				m_pServer->m_pLog->Add(10, "[CheckUpdateHWConfig] Actualizar HW [%s]", json_MAC->valuestring);
 
@@ -2029,8 +2028,34 @@ void CheckUpdateHWConfig()
 				cJSON_AddStringToObject(json_Config, "MAC", json_MAC->valuestring);
 				cJSON_AddStringToObject(json_Config, "Direccion_IP", json_Direccion_IP->valuestring);
 				cJSON_AddStringToObject(json_Config, "Tipo_HW", json_Tipo->valuestring);
-				cJSON_AddStringToObject(json_Config, "HTTPS", (atoi(json_Usar_Https->valuestring))?"yes":"no");
-				cJSON_AddStringToObject(json_Config, "WIEGAND", (atoi(json_Habilitar_Wiegand->valuestring))?"yes":"no");
+
+				if(json_Flags)
+				{
+					if(atoi(json_Flags->valuestring) & 0x01)
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "HTTPS", "no");
+					}
+					if(atoi(json_Flags->valuestring) & 0x02)
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
+					}
+					else
+					{
+						cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
+					}
+					//if(atoi(json_Flags->valuestring) & 0x04)
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
+					//}
+					//else
+					//{
+					//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
+					//}
+				}
 
 				if(atoi(json_Tipo->valuestring) == TIPO_HW_WIFI || atoi(json_Tipo->valuestring) == TIPO_HW_RBPI)
 				{

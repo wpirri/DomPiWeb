@@ -129,18 +129,10 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config, void
             Str.ParseData(p, "ap2p", config->wifi_ap2_pass);
             Str.ParseData(p, "ce1", config->wifi_host1);
             Str.ParseData(p, "ce2", config->wifi_host2);
-            if(Str.ParseData(p, "ce1p", tmp))
-            {
-                config->wifi_host1_port = atoi(tmp);
-            }
-            if(Str.ParseData(p, "ce2p", tmp))
-            {
-                config->wifi_host2_port = atoi(tmp);
-            }
-            if(Str.ParseData(p, "report", tmp))
-            {
-                config->report = atoi(tmp);
-            }
+            Str.ParseData(p, "ce1p", tmp);
+            config->wifi_host1_port = atoi(tmp);
+            Str.ParseData(p, "ce2p", tmp);
+            config->wifi_host2_port = atoi(tmp);
             Str.ParseData(p, "rqst", config->rqst_path);
 
             if(fcn)
@@ -183,17 +175,11 @@ int Dom32IoWifi::SetWifiConfig(const char *raddr, wifi_config_data *config, void
     {
         strcat(data, config->wifi_host1);
     }
-    strcat(data, "&ce1p=");
-    sprintf(&data[strlen(data)], "%u", config->wifi_host1_port);
     strcat(data, "&ce2=");
     if(config->wifi_host2[0] && strcmp(config->wifi_host2, "NULL") ) 
     {
         strcat(data, config->wifi_host2);
     }
-    strcat(data, "&ce2p=");
-    sprintf(&data[strlen(data)], "%u", config->wifi_host2_port);
-    strcat(data, "&report=");
-    sprintf(&data[strlen(data)], "%u", config->report);
     strcat(data, "&path=");
     if(config->rqst_path[0] && strcmp(config->rqst_path, "NULL") ) 
     {

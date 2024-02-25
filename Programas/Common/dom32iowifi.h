@@ -18,6 +18,14 @@
 #include <gmonitor/gmswaited.h>
 #include <cjson/cJSON.h>
 
+/* Definiciones para los bits de flag */
+#define FLAG_HTTPS_ENABLE    0x01
+#define FLAG_WIEGAND_ENABLE  0x02
+//#define FLAG_DHT2x_ENABLE    0x04
+#define FLAG_HTTPS_DISABLE    0x01^0xFF
+#define FLAG_WIEGAND_DISABLE  0x02^0xFF
+//#define FLAG_DHT2x_DISABLE    0x04^0xFF
+
 #define WIFI_MSG_MAX_LEN    4096
 #define WIFI_MSG_MAX_QUEUE  8
 
@@ -34,7 +42,6 @@ public:
         char wifi_host2[33];
         unsigned int wifi_host1_port;
         unsigned int wifi_host2_port;
-        unsigned int report;
         char rqst_path[33];
     } wifi_config_data;
 

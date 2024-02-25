@@ -38,8 +38,6 @@ include('head-abm.php');
                 output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
             } else if(headers[i] == 'Tipo') {
                 output += fillSimpleList(headers[i], TipoHW, val);
-            } else if(headers[i] == 'Informacion') {
-                output += '<textarea readonly class="abm-edit-input-text" rows=6>' + val + '</textarea>';
             } else {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
             }

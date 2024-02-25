@@ -400,16 +400,6 @@ function loadGrpTable(json_list) {
 	}	
 }
 
-var TablaParticiones = [];
-function loadPartTable(json_list) {
-	for (var i = 0; i < json_list.length; i++) { 
-		var item = [];
-		item['value'] = json_list[i].Id;
-		item['label'] = json_list[i].Nombre;
-		TablaParticiones[i] = item;
-	}	
-}
-
 var TablaIR = [];
 function loadIRTable(json_list) {
 	for (var i = 0; i < json_list.length; i++) { 
