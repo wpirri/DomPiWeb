@@ -83,5 +83,3 @@ alter table TB_DOM_USER add column Acceso_Fisico varchar(256);
 alter table TB_DOM_USER add column Acceso_Web varchar(256);
 alter table TB_DOM_USER add column Acceso_Clowd varchar(256);
 
-## 9/02/2024
-alter table TB_DOM_ASSIGN add column Protocolo_IR integer DEFAULT 0;
