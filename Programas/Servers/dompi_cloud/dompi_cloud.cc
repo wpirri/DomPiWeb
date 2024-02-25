@@ -554,8 +554,6 @@ void CheckUpdateUserCloud( void )
 	char message[4096];
 	cJSON *json_QueryArray;
 	cJSON *json_QueryRow;
-	cJSON *json_Usuario_Cloud;
-	cJSON *json_Clave_Cloud;
 
 	t = time(&t);
 
@@ -576,22 +574,12 @@ void CheckUpdateUserCloud( void )
 		{
 			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 			{
-				json_Usuario_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Usuario_Cloud");
-				json_Clave_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Clave_Cloud");
-				/* Lo envío a la nube solo si tiene usuario y clave definidos */
-				if(json_Usuario_Cloud && json_Clave_Cloud)
+				/* Agrego datos del sistema */
+				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 				{
-					if(strlen(json_Usuario_Cloud->valuestring) > 0 && strcmp(json_Usuario_Cloud->valuestring, "NULL") &&
-						strlen(json_Clave_Cloud->valuestring) > 0 && strcmp(json_Clave_Cloud->valuestring, "NULL"))
-					{
-						/* Agrego datos del sistema */
-						cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-						cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
-						if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-						{
-							m_pServer->m_pLog->Add(1, "[CheckUpdateUserCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-						}
-					}
+					m_pServer->m_pLog->Add(1, "[CheckUpdateUserCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 				}
 			}
 		}
