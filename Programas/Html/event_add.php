@@ -40,6 +40,8 @@ include('head-abm.php');
 				output += fillSimpleList(headers[i], TablaAssOut,0);
 			} else if(headers[i] == 'Grupo_Destino') {
 				output += fillSimpleList(headers[i], TablaGrupos,0);
+			} else if(headers[i] == 'Particion_Destino') {
+				output += fillSimpleList(headers[i], TablaParticiones,0);
 			} else if(headers[i] == 'Funcion_Destino') {
 				output += fillSimpleList(headers[i], ListaVacia);
 			} else if(headers[i] == 'Variable_Destino') {
@@ -71,6 +73,11 @@ include('head-abm.php');
 
     function LoadGrpData(msg) {
         loadGrpTable(JSON.parse(msg).response);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=list_part', LoadPartData, false);
+    }
+
+    function LoadPartData(msg) {
+        loadPartTable(JSON.parse(msg).response);
         newAJAXCommand('/cgi-bin/abmev.cgi?funcion=get&Id=0', LoadData, false);
     }
 

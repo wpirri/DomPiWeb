@@ -345,8 +345,8 @@ int main(int argc, char** argv/*, char** env*/)
                 printf("    pass: %s\n", wifi_data.wifi_ap1_pass);
                 printf("Wifi ap2: %s\n", wifi_data.wifi_ap2);
                 printf("    pass: %s\n", wifi_data.wifi_ap2_pass);
-                printf("Central1: %s:%ui\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
-                printf("Central2: %s:%ui\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
+                printf("Central1: %s:%u\n", wifi_data.wifi_host1, wifi_data.wifi_host1_port);
+                printf("Central2: %s:%u\n", wifi_data.wifi_host2, wifi_data.wifi_host2_port);
                 printf("URI:      %s\n", wifi_data.rqst_path);
             }
             else printf("Error %i.\n", rc);

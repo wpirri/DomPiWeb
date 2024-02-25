@@ -42,6 +42,7 @@ public:
     int ChangeAssignById(int id, int accion, int param);
     int ChangeGroupByName(const char* name, int accion, int param);
     int ChangeGroupById(int id, int accion, int param);
+    int ChangeParticionById(int id, int accion, int param);
     int ChangeFcnByName(const char* name, int accion, int param);
     int ChangeFcnById(int id, int accion, int param);
     int ChangeVarByName(const char* name, int accion, int param);
@@ -53,10 +54,14 @@ public:
     int Habilitar_Alarma(const char* zona, const char* particion);
     int Deshabilitar_Alarma(const char* zona, const char* particion);
     int Activar_Alarma(const char* particion, int total);
+    int Activar_Alarma(int particion, int total);
     int Desactivar_Alarma(const char* particion);
+    int Desactivar_Alarma(int particion);
     int Estado_Alarma(const char* particion, char* json_estado, int max);
+    int Estado_Alarma(int particion, char* json_estado, int max);
     int Estado_Alarma_General(char* json, int max_len);
     int Switch_Alarma(const char* particion);
+    int Switch_Alarma(int particion);
     int Switch_Zona_Alarma(const char* particion, const char* zona);
     int Pulse_Salida_Alarma(const char* particion, const char* salida);
 
