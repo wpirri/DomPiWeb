@@ -15,13 +15,13 @@ include("head.php");
 	<img id="riego-icon" class="icon-btn" src="images/gota.png">&nbsp;Riego
 </div>
 
-<div class="normal-btn" id="btn-config-calefaccion" onclick="window.location.replace('calefaccion_list.php');">
+<!--<div class="normal-btn" id="btn-config-calefaccion" onclick="window.location.replace('calefaccion_list.php');">
 	<img id="calefaccion-icon" class="icon-btn" src="images/calef1.png">&nbsp;Calefacci&oacute;n
-</div>
+</div>-->
 
-<div class="normal-btn" id="btn-config-aire" onclick="window.location.replace('aire_list.php');">
+<!--<div class="normal-btn" id="btn-config-aire" onclick="window.location.replace('aire_list.php');">
 	<img id="aire-icon" class="icon-btn" src="images/termost.png">&nbsp;Aire
-</div>
+</div>-->
 
 
 <div class="normal-btn" id="btn-config-task" onclick="window.location.replace('task_list.php');">

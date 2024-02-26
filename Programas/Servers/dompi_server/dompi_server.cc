@@ -210,6 +210,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_HW_Id;
 	cJSON *json_Objeto;
 	cJSON *json_Tipo;
+	cJSON *json_Tipo_HW;
 	cJSON *json_Estado;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
@@ -343,6 +344,19 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ID");
 				if(json_HW_Id)
 				{
+					/* Identifico las distintas placas que entran por este servicio */
+					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+					/* Si son placas viejas de Dom32-IO-WiFi no informan el TYP en la mensajería
+						así que se la agrego para mantener compatibilidad 
+						IO = Dom32-IO-WiFi 			- Typ: 1
+						PI = RBPi COn Server GPIO 	- Typ: 2
+					*/
+					if( !json_Tipo_HW )
+					{
+						cJSON_AddStringToObject(json_Message, "TYP", "IO");
+						json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+					}
+
 					rc = pEV->ExtIOEvent(message);
 					//message[0] = 0;
 					if(rc == 1)
@@ -1973,8 +1987,8 @@ void CheckUpdateHWConfig()
     cJSON *json_MAC;
     cJSON *json_Tipo;
     cJSON *json_Direccion_IP;
-    cJSON *json_Flags;
-
+	cJSON *json_Usar_Https;
+	cJSON *json_Habilitar_Wiegand;
 
 	m_pServer->m_pLog->Add(100, "[CheckUpdateHWConfig]");
 
@@ -1988,7 +2002,7 @@ void CheckUpdateHWConfig()
 	rc = pDB->Query(json_arr_Perif, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_Perif, json_arr_Perif)
@@ -1996,10 +2010,11 @@ void CheckUpdateHWConfig()
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
 			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
-			json_Flags = cJSON_GetObjectItemCaseSensitive(json_Perif, "Flags");
 			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
+			json_Usar_Https = cJSON_GetObjectItemCaseSensitive(json_Perif, "Usar_Https");
+			json_Habilitar_Wiegand = cJSON_GetObjectItemCaseSensitive(json_Perif, "Habilitar_Wiegand");
 
-			if(json_MAC && json_Tipo && json_HW_Id && json_Flags && json_Direccion_IP)
+			if(json_MAC && json_Tipo && json_HW_Id && json_Direccion_IP && json_Usar_Https && json_Habilitar_Wiegand)
 			{
 				m_pServer->m_pLog->Add(10, "[CheckUpdateHWConfig] Actualizar HW [%s]", json_MAC->valuestring);
 
@@ -2010,34 +2025,8 @@ void CheckUpdateHWConfig()
 				cJSON_AddStringToObject(json_Config, "MAC", json_MAC->valuestring);
 				cJSON_AddStringToObject(json_Config, "Direccion_IP", json_Direccion_IP->valuestring);
 				cJSON_AddStringToObject(json_Config, "Tipo_HW", json_Tipo->valuestring);
-
-				if(json_Flags)
-				{
-					if(atoi(json_Flags->valuestring) & 0x01)
-					{
-						cJSON_AddStringToObject(json_Config, "HTTPS", "yes");
-					}
-					else
-					{
-						cJSON_AddStringToObject(json_Config, "HTTPS", "no");
-					}
-					if(atoi(json_Flags->valuestring) & 0x02)
-					{
-						cJSON_AddStringToObject(json_Config, "WIEGAND", "yes");
-					}
-					else
-					{
-						cJSON_AddStringToObject(json_Config, "WIEGAND", "no");
-					}
-					//if(atoi(json_Flags->valuestring) & 0x04)
-					//{
-					//	cJSON_AddStringToObject(json_Config, "DHT2x", "yes");
-					//}
-					//else
-					//{
-					//	cJSON_AddStringToObject(json_Config, "DHT2x", "no");
-					//}
-				}
+				cJSON_AddStringToObject(json_Config, "HTTPS", (atoi(json_Usar_Https->valuestring))?"yes":"no");
+				cJSON_AddStringToObject(json_Config, "WIEGAND", (atoi(json_Habilitar_Wiegand->valuestring))?"yes":"no");
 
 				if(atoi(json_Tipo->valuestring) == TIPO_HW_WIFI || atoi(json_Tipo->valuestring) == TIPO_HW_RBPI)
 				{
@@ -2181,7 +2170,7 @@ int CheckWirelessCard( const char* card )
 	if(strlen(card) == 0) return 0;
 
 	QueryResult = cJSON_CreateArray();
-	sprintf(query, "SELECT Nombre_Completo, Permisos, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
+	sprintf(query, "SELECT Nombre_Completo, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
 					"FROM TB_DOM_USER "
 					"WHERE UPPER(Tarjeta) = UPPER(\'%s\');", card);
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);

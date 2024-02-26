@@ -83,3 +83,12 @@ alter table TB_DOM_USER add column Acceso_Fisico varchar(256);
 alter table TB_DOM_USER add column Acceso_Web varchar(256);
 alter table TB_DOM_USER add column Acceso_Clowd varchar(256);
 
+
+## 17/02/2024
+alter table TB_DOM_PERIF drop Flags;
+alter table TB_DOM_PERIF add column Usar_Https integer DEFAULT 0;
+alter table TB_DOM_PERIF add column Habilitar_Wiegand integer DEFAULT 0;
+alter table TB_DOM_PERIF add column Informacion varchar(1024);
+
+## 22/02/2024
+alter table TB_DOM_EVENT drop index idx_event_obj_origen;

@@ -412,8 +412,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
 				cJSON_AddStringToObject(json_Message, "Id", temp_s);
 
-				json_Cloud_Message = cJSON_CreateObject();
-
 				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
@@ -454,18 +452,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										strcat(query_values, "'");
 										strcat(query_values, json_un_obj->valuestring);
 										strcat(query_values, "'");
-
-										if(	strlen(json_un_obj->valuestring) && (
-											!strcmp(json_un_obj->string, "Usuario_Cloud") ||
-											!strcmp(json_un_obj->string, "Clave_Cloud") ||
-											!strcmp(json_un_obj->string, "Amazon_Key") ||
-											!strcmp(json_un_obj->string, "Google_Key") ||
-											!strcmp(json_un_obj->string, "Apple_Key") ||
-											!strcmp(json_un_obj->string, "Other_Key") ||
-											!strcmp(json_un_obj->string, "Estado")    ) )
-										{
-											cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
-										}
 									}
 								}
 							}
@@ -495,16 +481,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				/* Si tiene los datos necesarios actualizo el usuario para la app */
-				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Usuario_Cloud") && 
-				    cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Clave_Cloud")    )
-				{
-					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
-					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
-					m_pServer->Notify("dompi_user_change", message, strlen(message));
-				}
-				cJSON_Delete(json_Cloud_Message);
-
+				m_pServer->m_pLog->Add(90, "Notify [dompi_user_change]");
+				m_pServer->Notify("dompi_user_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_user_delete
@@ -557,8 +535,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_Cloud_Message = cJSON_CreateObject();
-
 				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
@@ -604,19 +580,6 @@ int main(/*int argc, char** argv, char** env*/void)
 												strcat(query_values, "='");
 												strcat(query_values, json_un_obj->valuestring);
 												strcat(query_values, "'");
-
-												if(	strlen(json_un_obj->valuestring) && (
-													!strcmp(json_un_obj->string, "Usuario_Cloud") ||
-													!strcmp(json_un_obj->string, "Clave_Cloud") ||
-													!strcmp(json_un_obj->string, "Amazon_Key") ||
-													!strcmp(json_un_obj->string, "Google_Key") ||
-													!strcmp(json_un_obj->string, "Apple_Key") ||
-													!strcmp(json_un_obj->string, "Other_Key") ||
-													!strcmp(json_un_obj->string, "Estado")    ) )
-												{
-													cJSON_AddStringToObject(json_Cloud_Message, json_un_obj->string, json_un_obj->valuestring);
-												}
-
 											}
 										}
 									}
@@ -651,16 +614,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				/* Si tiene los datos necesarios actualizo el usuario para la app */
-				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Usuario_Cloud") && 
-				    cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Clave_Cloud")    )
-				{
-					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
-					m_pServer->m_pLog->Add(90, "Notify [dompi_user_change][%s]", message);
-					m_pServer->Notify("dompi_user_change", message, strlen(message));
-				}
-				cJSON_Delete(json_Cloud_Message);
-
+				m_pServer->m_pLog->Add(90, "Notify [dompi_user_change]");
+				m_pServer->Notify("dompi_user_change", message, strlen(message));
 			}
 			/* ****************************************************************
 			*		dompi_user_check

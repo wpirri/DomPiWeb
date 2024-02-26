@@ -29,17 +29,16 @@ include("head.php");
 	<img id="disp-icon" class="icon-btn" src="images/hard.png">&nbsp;Dispositivos
 </div>
 -->
-<div class="normal-btn" id="btn-seguridad-panico" onclick="window.location.replace('');">
+
+<!--<div class="normal-btn" id="btn-seguridad-panico" onclick="window.location.replace('');">
 	<img id="net-icon" class="icon-btn" src="images/panic.png">&nbsp;P&aacute;nico
-</div>
-
-<div class="normal-btn" id="btn-seguridad-incendio" onclick="window.location.replace('');">
+</div>-->
+<!--<div class="normal-btn" id="btn-seguridad-incendio" onclick="window.location.replace('');">
 	<img id="group-icon" class="icon-btn" src="images/reset.png">&nbsp;Incendio
-</div>
-
-<div class="normal-btn" id="btn-seguridad-emer-med" onclick="window.location.replace('');">
+</div>-->
+<!--<div class="normal-btn" id="btn-seguridad-emer-med" onclick="window.location.replace('');">
 	<img id="event-icon" class="icon-btn" src="images/people.png">&nbsp;Emergencia M&eacute;dica
-</div>
+</div>-->
 
 <!--
 <div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">

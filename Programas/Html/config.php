@@ -4,6 +4,7 @@ $MAIN='planta.php';
 $CONFIG_MENU='config_menu.php';
 $AUTO_MENU='auto_menu.php';
 $UPLOAD_FOLDER='upload';
+$DOWNLOAD_FOLDER='download';
 
 $TIMEOUT=900000;
 

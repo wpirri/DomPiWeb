@@ -111,6 +111,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_host1;
 	cJSON *json_host2;
 	cJSON *json_rqst_path;
+	cJSON *json_report;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -303,9 +304,10 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_host1 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_1_Address");
 						json_host2 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_2_Address");
 						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_req, "Rqst_Path");
+						json_report = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_Report");
 
 						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
-							json_host1 && json_host2 && json_rqst_path)
+							json_host1 && json_host2 && json_rqst_path && json_report)
 						{
 							strcpy(dom32_wifi_data.wifi_ap1, json_ap1->valuestring);
 							strcpy(dom32_wifi_data.wifi_ap1_pass, json_ap1_pass->valuestring);
@@ -314,6 +316,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							strcpy(dom32_wifi_data.wifi_host1, json_host1->valuestring);
 							strcpy(dom32_wifi_data.wifi_host2, json_host2->valuestring);
 							strcpy(dom32_wifi_data.rqst_path, json_rqst_path->valuestring);
+							dom32_wifi_data.wifi_host1_port = 0;
+							dom32_wifi_data.wifi_host2_port = 0;
+							dom32_wifi_data.report = atoi(json_report->valuestring);
 
 							pD32W->SetWifiConfig(json_Direccion_IP->valuestring, &dom32_wifi_data, SetWifiConfig_CallBack);
 						}

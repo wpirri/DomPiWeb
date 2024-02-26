@@ -97,9 +97,9 @@ Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
 Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
-Flags integer DEFAULT 0,                        -- bit 0: HTTPS
-                                                -- bit 1: WIEGAND
-                                                -- bit 2: DHT-22
+Usar_Https integer DEFAULT 0,
+Habilitar_Wiegand integer DEFAULT 0,
+Informacion varchar(1024),
 UNIQUE INDEX idx_perif_id (Id),
 UNIQUE INDEX idx_perif_mac (MAC)
 );
@@ -160,13 +160,19 @@ UNIQUE INDEX idx_flag_id (Id)
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
 Id integer primary key,
 Evento varchar(128) NOT NULL,
-Objeto_Origen integer NOT NULL,
-Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Objeto_Origen integer DEFAULT 0,
+Objeto_Destino integer  DEFAULT 0,      -- Solo uno de los cinco assign, grupo, Funcion, Particion, Variable
+Grupo_Destino integer  DEFAULT 0,       -- Solo uno de los cinco assign, grupo, Funcion, Particion, Variable
+Particion_Destino integer  DEFAULT 0,   -- Solo uno de los cinco assign, grupo, Funcion, Particion, Variable
+Variable_Destino integer  DEFAULT 0,    -- Solo uno de los cinco assign, grupo, Funcion, Particion, Variable
 ON_a_OFF integer DEFAULT 0,
 OFF_a_ON integer DEFAULT 0,
-Enviar integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Switch 4=Pulso a Objeto o Grupo. Si no Variable = Enviar
+Enviar integer DEFAULT 0,               -- Evento a enviar 
+                                        --      0=Nada 
+                                        --      1=On 
+                                        --      2=Off 
+                                        --      3=Switch 
+                                        --      4=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- 0 ==, 1 >, 2 <
@@ -175,9 +181,9 @@ Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Particion_Destino) REFERENCES TB_DOM_ALARM_PARTICION(Id),
 FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
-UNIQUE INDEX idx_event_id (Id),
-UNIQUE INDEX idx_event_obj_origen (Objeto_Origen)
+UNIQUE INDEX idx_event_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_AT (
@@ -217,11 +223,12 @@ CREATE TABLE IF NOT EXISTS TB_DOM_AUTO (
 Id integer primary key,
 Objeto varchar(128) NOT NULL,               -- Nombre para identificarlo en el sistema
 Tipo integer default 0,                     -- 0 = Riego 1 = Calefaccion 2 = Aire acondicionado 3 = Fotocelula
-Objeto_Sensor integer NOT NULL,             -- Discpositivo - Id de input de TB_DOM_ASSIGN
-Objeto_Salida integer NOT NULL,             -- Discpositivo - Id de TB_DOM_ASSIGN
-Grupo_Salida integer NOT NULL,              -- Grupo - Id de TB_DOM_GROUP
-Variable_Salida integer NOT NULL,           -- Variable - Id de TB_DOM_FLAG
-Parametro_Evento integer DEFAULT 0,         -- Se pasa si es Variable o Funcion
+Objeto_Sensor integer default 0,             -- Discpositivo - Id de input de TB_DOM_ASSIGN
+Objeto_Salida integer default 0,             -- Discpositivo - Id de TB_DOM_ASSIGN
+Grupo_Salida integer default 0,              -- Grupo - Id de TB_DOM_GROUP
+Particion_Salida integer default 0,          -- Particion - Id de TB_DOM_ALARM_PARTICION
+Variable_Salida integer default 0,           -- Variable - Id de TB_DOM_FLAG
+Parametro_Evento integer default 0,         -- Se pasa si es Variable o Funcion
 Min_Sensor integer DEFAULT 0,
 Enviar_Min integer default 0,               -- Accion a enviar al pasar el minimo
 Max_Sensor integer DEFAULT 0,
@@ -247,6 +254,7 @@ Actualizar integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Salida) REFERENCES TB_DOM_GROUP(Id),
+FOREIGN KEY(Particion_Salida) REFERENCES TB_DOM_ALARM_PARTICION(Id),
 FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
