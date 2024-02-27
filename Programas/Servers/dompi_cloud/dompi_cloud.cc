@@ -90,7 +90,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char s[16];
 	int wait;
 
-	cJSON *json_obj;
+	cJSON *json_Message;
 
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
@@ -181,15 +181,14 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				//m_pServer->Resp(NULL, 0, GME_OK);
 
-				json_obj = cJSON_Parse(message);
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 
 				m_pServer->m_pLog->Add(20, "[dompi_ass_change] Encolando actualizacion con datos de assign");
 				if(m_cloud_status)
 				{
-					cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
-					cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-					cJSON_Delete(json_obj);
+					cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
+					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
 					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 					{
 						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
@@ -199,6 +198,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					m_pServer->m_pLog->Add(1, "[dompi_ass_change] OFFLINE: Encolando actualizacion con datos de assign [%s]", message);
 				}
+				cJSON_Delete(json_Message);
 			}
 			/* ************************************************************* *
 			 *
@@ -287,19 +287,19 @@ int KeepAliveCloud( void )
 {
 	int rc;
 	char message[MAX_BUFFER_LEN+1];
-	cJSON *json_obj;
+	cJSON *json_Message;
 	cJSON *json_arr;
 
 	if(m_host_actual)
 	{
-		json_obj = cJSON_CreateObject();
+		json_Message = cJSON_CreateObject();
 
-		cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
+		cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
 
 		/* Si hay que agragar mas objetos */
 
-		cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-		cJSON_Delete(json_obj);
+		cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+		cJSON_Delete(json_Message);
 
 		m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
 
@@ -354,10 +354,10 @@ int KeepAliveCloud( void )
 		{
 			/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
 			m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-			json_obj = cJSON_Parse(message);
-			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
-			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
-			json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+			json_Message = cJSON_Parse(message);
+			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_Message, "resp_code");
+			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_Message, "resp_msg");
+			json_arr = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
 			if(json_arr && cJSON_IsArray(json_arr))
 			{
 				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
@@ -365,6 +365,7 @@ int KeepAliveCloud( void )
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
 				return 1;
 			}
+			cJSON_Delete(json_Message);
 		}
 		else
 		{
@@ -382,7 +383,7 @@ int SendToCloud( void )
 {
     CGMServerBase::GMIOS resp;
 	char message[MAX_BUFFER_LEN+1];
-	cJSON *json_obj;
+	cJSON *json_Message;
 	cJSON *json_arr;
 	int rc = 0;
 
@@ -409,16 +410,17 @@ int SendToCloud( void )
 		{
 			/* La respuesta de la nube puede venir con un array de acciones luego de la cabecera HTTP*/
 			m_pServer->m_pLog->Add(100, "[CLOUD] >> [%s]", message);
-			json_obj = cJSON_Parse(message);
-			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_code");
-			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_obj, "resp_msg");
-			json_arr = cJSON_GetObjectItemCaseSensitive(json_obj, "response");
+			json_Message = cJSON_Parse(message);
+			//json_resp_code = cJSON_GetObjectItemCaseSensitive(json_Message, "resp_code");
+			//json_resp_msg = cJSON_GetObjectItemCaseSensitive(json_Message, "resp_msg");
+			json_arr = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
 			if(json_arr && cJSON_IsArray(json_arr))
 			{
 				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
 			}
+			cJSON_Delete(json_Message);
 		}
 		else
 		{
@@ -525,7 +527,7 @@ void CheckUpdateAlarmCloud( void )
 {
 	char message[MAX_BUFFER_LEN+1];
 	time_t t;
-	cJSON *json_obj;
+	cJSON *json_Message;
 
 	t = time(&t);
 
@@ -536,10 +538,10 @@ void CheckUpdateAlarmCloud( void )
 
 		m_pServer->m_pLog->Add(10, "[CheckUpdateAlarmCloud] Actualizando estado general de alarma en la nube.");
 		pEV->Estado_Alarma_General(message, MAX_BUFFER_LEN);
-		json_obj = cJSON_Parse(message);
-		cJSON_AddStringToObject(json_obj, "System_Key", m_SystemKey);
-		cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
-		cJSON_Delete(json_obj);
+		json_Message = cJSON_Parse(message);
+		cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
+		cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+		cJSON_Delete(json_Message);
 		if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 		{
 			m_pServer->m_pLog->Add(1, "[CheckUpdateAlarmCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);

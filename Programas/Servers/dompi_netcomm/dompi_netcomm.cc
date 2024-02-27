@@ -97,8 +97,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	CGMInitData gminit;
 
-    cJSON *json_req;
-    cJSON *json_resp;
+    cJSON *json_Message;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Tipo_HW;
 	cJSON *json_Tipo_ASS;
@@ -195,19 +194,18 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1 )) >= 0)
 	{
-		json_req = NULL;
-		json_resp = NULL;
+		json_Message = NULL;
 		if(rc > 0)
 		{
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 
-			json_req = cJSON_Parse(message);
-			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_req, "Direccion_IP");
-			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_req, "Tipo_HW");
-			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_req, "Tipo_ASS");
-			json_Port = cJSON_GetObjectItemCaseSensitive(json_req, "Port");
-			json_Estado = cJSON_GetObjectItemCaseSensitive(json_req, "Estado");
+			json_Message = cJSON_Parse(message);
+			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Message, "Direccion_IP");
+			json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "Tipo_HW");
+			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_Message, "Tipo_ASS");
+			json_Port = cJSON_GetObjectItemCaseSensitive(json_Message, "Port");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_Message, "Estado");
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
@@ -297,14 +295,14 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* Envío de configuración a WiFi */
 						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
-						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1");
-						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1_Pass");
-						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2");
-						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2_Pass");
-						json_host1 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_1_Address");
-						json_host2 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_2_Address");
-						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_req, "Rqst_Path");
-						json_report = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_Report");
+						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP1");
+						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP1_Pass");
+						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP2");
+						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP2_Pass");
+						json_host1 = cJSON_GetObjectItemCaseSensitive(json_Message, "Home_Host_1_Address");
+						json_host2 = cJSON_GetObjectItemCaseSensitive(json_Message, "Home_Host_2_Address");
+						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_Message, "Rqst_Path");
+						json_report = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_Report");
 
 						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
 							json_host1 && json_host2 && json_rqst_path && json_report)
@@ -331,13 +329,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						memset(&rbpi_wifi_data, 0, sizeof(RBPiIO::rbpi_config_data));
 
-						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1");
-						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP1_Pass");
-						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2");
-						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_req, "Wifi_AP2_Pass");
-						json_host1 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_1_Address");
-						json_host2 = cJSON_GetObjectItemCaseSensitive(json_req, "Home_Host_2_Address");
-						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_req, "Rqst_Path");
+						json_ap1 = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP1");
+						json_ap1_pass = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP1_Pass");
+						json_ap2 = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP2");
+						json_ap2_pass = cJSON_GetObjectItemCaseSensitive(json_Message, "Wifi_AP2_Pass");
+						json_host1 = cJSON_GetObjectItemCaseSensitive(json_Message, "Home_Host_1_Address");
+						json_host2 = cJSON_GetObjectItemCaseSensitive(json_Message, "Home_Host_2_Address");
+						json_rqst_path = cJSON_GetObjectItemCaseSensitive(json_Message, "Rqst_Path");
 
 						if(json_ap1 && json_ap1_pass && json_ap2 && json_ap2_pass &&
 							json_host1 && json_host2 && json_rqst_path)
@@ -486,7 +484,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{	
 							/* Enviar mensaje al WiFi */
-							pD32W->SetIO(json_Direccion_IP->valuestring, json_req, SetIO_CallBack);
+							pD32W->SetIO(json_Direccion_IP->valuestring, json_Message, SetIO_CallBack);
 						}
 					}
 					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
@@ -495,7 +493,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{	
-							pRBPi->SetIO(json_Direccion_IP->valuestring, json_req, SetIO_CallBack);
+							pRBPi->SetIO(json_Direccion_IP->valuestring, json_Message, SetIO_CallBack);
 						}
 					}
 					else
@@ -527,7 +525,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_req, SwitchIO_CallBack);
+							pD32W->SwitchIO(json_Direccion_IP->valuestring, json_Message, SwitchIO_CallBack);
 						}
 						else
 						{
@@ -540,7 +538,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 3 ||	/* Salida Alarma */
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
-							pRBPi->SwitchIO(json_Direccion_IP->valuestring, json_req, SwitchIO_CallBack);
+							pRBPi->SwitchIO(json_Direccion_IP->valuestring, json_Message, SwitchIO_CallBack);
 						}
 						else
 						{
@@ -576,7 +574,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pD32W->PulseIO(json_Direccion_IP->valuestring, json_req, PulseIO_CallBack);
+							pD32W->PulseIO(json_Direccion_IP->valuestring, json_Message, PulseIO_CallBack);
 						}
 						else
 						{
@@ -590,7 +588,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							atoi(json_Tipo_ASS->valuestring) == 5  )	/* Salida pulso */
 						{
 							/* Enviar mensaje al WiFi */
-							pRBPi->PulseIO(json_Direccion_IP->valuestring, json_req, PulseIO_CallBack);
+							pRBPi->PulseIO(json_Direccion_IP->valuestring, json_Message, PulseIO_CallBack);
 						}
 						else
 						{
@@ -656,8 +654,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		pD32W->Task();
 		pRBPi->Task();
 
-		if(json_req) cJSON_Delete(json_req);
-		if(json_resp) cJSON_Delete(json_resp);
+		if(json_Message) cJSON_Delete(json_Message);
 	}
 	m_pServer->m_pLog->Add(50, "ERROR en la espera de mensajes");
 	OnClose(0);

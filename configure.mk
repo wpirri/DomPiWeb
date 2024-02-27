@@ -16,9 +16,8 @@ INST_LOGDIR=/var/log/gmonitor
 INST_CGIDIR=/usr/lib/cgi-bin
 INST_HTMLDIR=/var/www/html
 
-DBPATH=/var/lib/DomPiWeb
-DATABASE=.DomPiWebDB.sqll3
-SQL=/usr/bin/sqlite3
+DATABASE=DB_DOMPIWEB
+SQL=/usr/bin/mysql
 
 UPDATE_FILE=gmonitor_dompiweb_update.tar.gz
 INSTALL_FILE=gmonitor_dompiweb_install.tar.gz

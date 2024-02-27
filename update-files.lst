@@ -40,6 +40,6 @@
 /usr/local/sbin/clean-gmonitor-old-logs.sh
 /usr/local/sbin/drop_ipc.sh
 /etc/cron.monthly/make-db-backup.sh
-/lib/systemd/system/gmonitor.service
+/etc/systemd/system/gmonitor.service
 /usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/gmond

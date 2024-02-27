@@ -592,112 +592,108 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     rc = m_pDB->Query(json_AssignArray, query);
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-    if(rc == 0)
+    if(rc > 0)
     {
-        /* No hay assign para este HW/Port */
-        cJSON_Delete(json_AssignArray);
-        return;
-    }
-
-    cJSON_ArrayForEach(json_AssignRow, json_AssignArray)
-    {
-        Assign_Id = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Id");
-        Assign_Nombre = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Objeto");
-        Assign_Tipo = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Tipo");
-
-        if(!Assign_Id || !Assign_Nombre || !Assign_Tipo)
+        cJSON_ArrayForEach(json_AssignRow, json_AssignArray)
         {
-            m_pServer->m_pLog->Add(1, "[CheckEvent] Error obteniendo datos de: HW: %i Port: %s", hw_id, port);
-            cJSON_Delete(json_AssignArray);
-            return;
-        }
-        m_pServer->m_pLog->Add(20, "[CheckEvent] Assign: Ass: %s Typ: %s", Assign_Nombre->valuestring, Assign_Tipo->valuestring);
+            Assign_Id = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Id");
+            Assign_Nombre = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Objeto");
+            Assign_Tipo = cJSON_GetObjectItemCaseSensitive(json_AssignRow, "Tipo");
 
-        if( atoi(Assign_Tipo->valuestring) == 3 || atoi(Assign_Tipo->valuestring) == 4 )
-        {
-            /* Evento de alarma */
-            m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Alarma");
-            ExtIOEvent_Alarma(atoi(Assign_Id->valuestring), estado);
-        }
-        else
-        {
-            /* Evento de dommotica */
-            m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Domotica");
-            /* Busco si hay un evento para este cambio */
-            sprintf(query, "SELECT * "
-                            "FROM TB_DOM_EVENT "
-                            "WHERE Objeto_Origen = %s AND %s;",
-                            Assign_Id->valuestring, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
-            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-            json_EventArray = cJSON_CreateArray();
-            rc = m_pDB->Query(json_EventArray, query);
-            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-            if(rc >= 0)
+            if(!Assign_Id || !Assign_Nombre || !Assign_Tipo)
             {
-                /* Recorro el array */
-                cJSON_ArrayForEach(json_EventRow, json_EventArray)
+                m_pServer->m_pLog->Add(1, "[CheckEvent] Error obteniendo datos de: HW: %i Port: %s", hw_id, port);
+                cJSON_Delete(json_AssignArray);
+                return;
+            }
+            m_pServer->m_pLog->Add(20, "[CheckEvent] Assign: Ass: %s Typ: %s", Assign_Nombre->valuestring, Assign_Tipo->valuestring);
+
+            if( atoi(Assign_Tipo->valuestring) == 3 || atoi(Assign_Tipo->valuestring) == 4 )
+            {
+                /* Evento de alarma */
+                m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Alarma");
+                ExtIOEvent_Alarma(atoi(Assign_Id->valuestring), estado);
+            }
+            else
+            {
+                /* Evento de dommotica */
+                m_pServer->m_pLog->Add(20, "[CheckEvent] Evento de Domotica");
+                /* Busco si hay un evento para este cambio */
+                sprintf(query, "SELECT * "
+                                "FROM TB_DOM_EVENT "
+                                "WHERE Objeto_Origen = %s AND %s;",
+                                Assign_Id->valuestring, (estado)?"OFF_a_ON = 1":"ON_a_OFF = 1");
+                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                json_EventArray = cJSON_CreateArray();
+                rc = m_pDB->Query(json_EventArray, query);
+                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                if(rc > 0)
                 {
-                    cJSON_PrintPreallocated(json_EventRow, query, 4095, 0);
-                    m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
-
-                    Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Objeto_Destino");
-                    Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Grupo_Destino");
-                    Particion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Particion_Destino");
-                    Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Funcion_Destino");
-                    Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Variable_Destino");
-                    Enviar = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Enviar");
-                    Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Parametro_Evento");
-                    Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Variable");
-                    Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Igualdad");
-                    Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Valor");
-                    //Flags = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Flags");
-
-                    /* TODO: Evaluar condiciones */
-                    if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+                    /* Recorro el array */
+                    cJSON_ArrayForEach(json_EventRow, json_EventArray)
                     {
+                        cJSON_PrintPreallocated(json_EventRow, query, 4095, 0);
+                        m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
+
+                        Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Objeto_Destino");
+                        Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Grupo_Destino");
+                        Particion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Particion_Destino");
+                        Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Funcion_Destino");
+                        Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Variable_Destino");
+                        Enviar = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Enviar");
+                        Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Parametro_Evento");
+                        Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Variable");
+                        Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Igualdad");
+                        Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Valor");
+                        //Flags = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Flags");
+
+                        /* TODO: Evaluar condiciones */
+                        if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
+                        {
 
 
 
-                    }
+                        }
 
-                    /* Si la condicion lo permite ejecuto según corresponda */
-                    if( rc >= 0 && Enviar )
-                    {
-                        if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
+                        /* Si la condicion lo permite ejecuto según corresponda */
+                        if( rc >= 0 && Enviar )
                         {
-                            ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
-                                            atoi(Enviar->valuestring),
-                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                        }
-                        else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
-                        {
-                            ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
-                                            atoi(Enviar->valuestring),
-                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                        }
-                        else if(Particion_Destino &&  atoi(Particion_Destino->valuestring) > 0 )
-                        {
-                            ChangeParticionById(   atoi(Particion_Destino->valuestring), 
-                                            atoi(Enviar->valuestring),
-                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                        }
-                        else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
-                        {
-                            ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
-                                            atoi(Enviar->valuestring),
-                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
-                        }
-                        else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
-                        {
-                            ChangeVarById(   atoi(Variable_Destino->valuestring), 
-                                            atoi(Enviar->valuestring),
-                                            (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
+                            {
+                                ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
+                                                atoi(Enviar->valuestring),
+                                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            }
+                            else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
+                            {
+                                ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
+                                                atoi(Enviar->valuestring),
+                                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            }
+                            else if(Particion_Destino &&  atoi(Particion_Destino->valuestring) > 0 )
+                            {
+                                ChangeParticionById(   atoi(Particion_Destino->valuestring), 
+                                                atoi(Enviar->valuestring),
+                                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            }
+                            else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
+                            {
+                                ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
+                                                atoi(Enviar->valuestring),
+                                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            }
+                            else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
+                            {
+                                ChangeVarById(   atoi(Variable_Destino->valuestring), 
+                                                atoi(Enviar->valuestring),
+                                                (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
+                            }
                         }
                     }
                 }
+                cJSON_Delete(json_EventArray);
             }
-            cJSON_Delete(json_EventArray);
         }
     }
     cJSON_Delete(json_AssignArray);
@@ -800,7 +796,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
     rc = m_pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-    if(rc >= 0)
+    if(rc > 0)
     {
         /* Recorro el array */
         cJSON_ArrayForEach(json_QueryRow, json_QueryArray)

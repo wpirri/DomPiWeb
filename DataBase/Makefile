@@ -2,16 +2,15 @@
 
 include ../configure.mk
 
-all: install
-
-install:
-	mkdir -p $(DBPATH)
-	$(SQL) < create.sql $(DBPATH)/$(DATABASE)
-	$(SQL) < init.sql $(DBPATH)/$(DATABASE)
-	chown gmonitor: $(DBPATH)/$(DATABASE)
-	chmod 0666 $(DBPATH)/$(DATABASE)
 	
-uninstall:
-	$(RM) $(DBPATH)/$(DATABASE)
+install:
+#	$(SQL) < create.sql
+#	$(SQL) < init.sql
+	$(CP) make_dump.sh  $(INST_BINDIR)/
+	$(CHMOD) 0755 $(INST_BINDIR)/make_dump.sh
+	$(CP) make_dump.sql $(INST_BINDIR)/
+	$(CHMOD) 0644 $(INST_BINDIR)/make_dump.sql
 
-reinstall: uninstall install
+uninstall:
+	$(RM) $(INST_BINDIR)/make_dump.sh
+	$(RM) $(INST_BINDIR)/make_dump.sql
