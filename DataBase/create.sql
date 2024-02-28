@@ -1,13 +1,13 @@
 CREATE DATABASE DB_DOMPIWEB;
 USE DB_DOMPIWEB;
 
+DROP TABLE IF EXISTS TB_DOM_AUTO;
+DROP TABLE IF EXISTS TB_DOM_AT;
+DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_CAMARA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_SALIDA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_ZONA;
 DROP TABLE IF EXISTS TB_DOM_ALARM_PARTICION;
-DROP TABLE IF EXISTS TB_DOM_AUTO;
-DROP TABLE IF EXISTS TB_DOM_AT;
-DROP TABLE IF EXISTS TB_DOM_EVENT;
 DROP TABLE IF EXISTS TB_DOM_FLAG;
 DROP TABLE IF EXISTS TB_DOM_GROUP;
 DROP TABLE IF EXISTS TB_DOM_ASSIGN;
@@ -81,11 +81,7 @@ Contador_Error integer DEFAULT 0,
 Ultimo_Acceso varchar(32),
 Ultimo_Error varchar(32),
 Flags integer DEFAULT 0,
-UNIQUE INDEX idx_user_id (Id),
-unique index idx_user_user_pass1 (Usuario,Pin_Teclado),
-unique index idx_user_user_pass2 (Usuario,Pin_SMS),
-unique index idx_user_user_pass3 (Usuario,Pin_WEB),
-index idx_user_tarj (Tarjeta)
+UNIQUE INDEX idx_user_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_PERIF (
@@ -134,11 +130,7 @@ Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
 Flags integer DEFAULT 0,
 FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
-UNIQUE INDEX idx_assign_id (Id),
-UNIQUE INDEX idx_assign_disp_port (Dispositivo, Port),
-UNIQUE INDEX idx_assign_disp_port_tipo (Dispositivo, Port, Tipo),
-INDEX idx_assign_disp (Dispositivo),
-INDEX idx_assign_grupo_vis (Grupo_Visual)
+UNIQUE INDEX idx_assign_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_GROUP (
@@ -155,6 +147,63 @@ Id integer primary key,
 Variable varchar(128) NOT NULL,
 Valor integer DEFAULT 0,
 UNIQUE INDEX idx_flag_id (Id)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+Entrada_Act_Total integer NOT NULL,        -- Entrada que arma total o desarma la particion de la alarma
+Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desarma la particion de la alarma
+Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
+Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
+Estado_Memoria integer DEFAULT 0,
+Estado_Alarma integer DEFAULT 0,            -- Se carga con Tiempo_De_Alerta al dispararse la alarma y se decrementa cada segundo
+Delay_Activacion integer DEFAULT 0,         -- Se carga con Tiempo_De_Salida al activarse la alarma  y se decrementa cada segundo
+Delay_Alarma integer DEFAULT 0,             -- Se carga con Tiempo_De_Entrada al alertarse una zona demorada
+Tiempo_De_Salida integer DEFAULT 0,
+Tiempo_De_Entrada integer DEFAULT 0,
+Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos
+Notificar_SMS_Activacion integer DEFAULT 0,
+Notificar_SMS_Alerta integer DEFAULT 0,
+FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
+FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_ap_id (Id),
+UNIQUE INDEX idx_ap_nombre (Nombre)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto_Zona integer NOT NULL,
+Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
+Grupo integer DEFAULT 0,        -- 0= Solo Total 1= Siempre 3= 24Hs
+Activa integer DEFAULT 0,
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_az_id (Id)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
+Id integer primary key,
+Particion integer NOT NULL,
+Objeto_Salida integer NOT NULL,
+Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
+FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
+FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
+UNIQUE INDEX idx_as_id (Id)
+);
+
+CREATE TABLE IF NOT EXISTS TB_DOM_CAMARA (
+Id integer primary key,
+Nombre varchar(128) NOT NULL,
+Direccion_IP varchar(32) DEFAULT "0.0.0.0",
+Usuario varchar(16),
+Clave varchar(16),
+Protocolo varchar(16) DEFAULT "http",
+Requerimiento varchar(256) DEFAULT "/",
+Flags integer DEFAULT 0,
+UNIQUE INDEX idx_cam_id (Id)
 );
 
 CREATE TABLE IF NOT EXISTS TB_DOM_EVENT (
@@ -194,9 +243,9 @@ Dia integer DEFAULT 0,
 Hora integer DEFAULT 0,
 Minuto integer DEFAULT 0,
 Dias_Semana varchar(128),
-Objeto_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Grupo_Destino integer NOT NULL,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
-Variable_Destino integer NOT NULL,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Objeto_Destino integer  DEFAULT 0,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Grupo_Destino integer  DEFAULT 0,         -- Solo uno de los cuatro assign, grupo, Funcion, Variable
+Variable_Destino integer  DEFAULT 0,        -- Solo uno de los cuatro assign, grupo, Funcion, Variable
 Evento integer DEFAULT 0,               -- Evento a enviar 0=Nada 1=On 2=Off 3=Switch 4=Pulso a Objeto o Grupo. Si no Variable = Enviar
 Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
@@ -210,9 +259,7 @@ Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Destino) REFERENCES TB_DOM_GROUP(Id),
 FOREIGN KEY(Variable_Destino) REFERENCES TB_DOM_FLAG(Id),
-UNIQUE INDEX idx_at_id (Id),
-UNIQUE INDEX idx_at_obj_dest (Objeto_Destino),
-UNIQUE INDEX idx_at_fecha (Mes,Dia,Hora,Ultimo_Mes,Ultimo_Dia,Ultima_Hora,Ultimo_Minuto,Dias_Semana)
+UNIQUE INDEX idx_at_id (Id)
 );
 
 -- Sistema de riego
@@ -259,66 +306,4 @@ FOREIGN KEY(Variable_Salida) REFERENCES TB_DOM_FLAG(Id),
 FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
 UNIQUE INDEX idx_auto_id (Id)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_PARTICION (
-Id integer primary key,
-Nombre varchar(128) NOT NULL,
-Entrada_Act_Total integer NOT NULL,        -- Entrada que arma total o desarma la particion de la alarma
-Entrada_Act_Parcial integer NOT NULL,        -- Entrada que arma parcial o desarma la particion de la alarma
-Testigo_Activacion integer NOT NULL,        -- Salida que muestra el estado de la particion de la alarma
-Estado_Activacion integer DEFAULT 0,        -- 0= Desactivada 1= Activacion Parcial 2= Activacion Total
-Estado_Memoria integer DEFAULT 0,
-Estado_Alarma integer DEFAULT 0,            -- Se carga con Tiempo_De_Alerta al dispararse la alarma y se decrementa cada segundo
-Delay_Activacion integer DEFAULT 0,         -- Se carga con Tiempo_De_Salida al activarse la alarma  y se decrementa cada segundo
-Delay_Alarma integer DEFAULT 0,             -- Se carga con Tiempo_De_Entrada al alertarse una zona demorada
-Tiempo_De_Salida integer DEFAULT 0,
-Tiempo_De_Entrada integer DEFAULT 0,
-Tiempo_De_Alerta integer DEFAULT 0,          -- En segundos
-Notificar_SMS_Activacion integer DEFAULT 0,
-Notificar_SMS_Alerta integer DEFAULT 0,
-FOREIGN KEY(Entrada_Act_Total) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Entrada_Act_Parcial) REFERENCES TB_DOM_ASSIGN(Id),
-FOREIGN KEY(Testigo_Activacion) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_ap_id (Id),
-UNIQUE INDEX idx_ap_nombre (Nombre)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_ZONA (
-Id integer primary key,
-Particion integer NOT NULL,
-Objeto_Zona integer NOT NULL,
-Tipo_Zona integer DEFAULT 0,    -- 0= Normal 1= Demora 2= Incendio 3= Panico 4= Emergencia médica
-Grupo integer DEFAULT 0,        -- 0= Solo Total 1= Siempre 3= 24Hs
-Activa integer DEFAULT 0,
-FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Zona) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_az_id (Id),
-INDEX idx_az_part (Particion)
-);
-
-CREATE TABLE IF NOT EXISTS TB_DOM_ALARM_SALIDA (
-Id integer primary key,
-Particion integer NOT NULL,
-Objeto_Salida integer NOT NULL,
-Tipo_Salida integer DEFAULT 0,                   -- 0= Sirena 1=Buzer 2=Testigo
-FOREIGN KEY(Particion) REFERENCES TB_DOM_ALARM_PARTICION(Id),
-FOREIGN KEY(Objeto_Salida) REFERENCES TB_DOM_ASSIGN(Id),
-UNIQUE INDEX idx_as_id (Id),
-INDEX idx_as_part (Particion)
-);
-
-
--- sudo mysqlcheck --all-databases --optimize
-
-CREATE TABLE IF NOT EXISTS TB_DOM_CAMARA (
-Id integer primary key,
-Nombre varchar(128) NOT NULL,
-Direccion_IP varchar(32) DEFAULT "0.0.0.0",
-Usuario varchar(16),
-Clave varchar(16),
-Protocolo varchar(16) DEFAULT "http",
-Requerimiento varchar(256) DEFAULT "/",
-Flags integer DEFAULT 0,
-UNIQUE INDEX idx_cam_id (Id)
 );

@@ -15,6 +15,11 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ***************************************************************************/
+ /*
+  Este server requiere WiringPi
+  Obtener:		wget https://project-downloads.drogon.net/wiringpi-latest.deb
+  Instalar:		sudo dpkg -i wiringpi-latest.deb
+ */
 #include <gmonitor/gmerror.h>
 #include <gmonitor/gmontdb.h>
 /*#include <gmonitor/gmstring.h>*/
