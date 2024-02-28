@@ -717,6 +717,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									sprintf(message, "{\"response\":{\"resp_code\":\"%i\", \"resp_msg\":\"Error en envio de SMS\"}}", rc);
 								}
+								cJSON_Delete(json_un_obj);
 							}
 							else
 							{
