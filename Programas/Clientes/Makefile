@@ -11,7 +11,6 @@ all:
 	make -C abmsys.cgi
 	make -C abmuser.cgi
 	make -C abmcamara.cgi
-	make -C ctrlalarma.cgi
 	make -C domcli
 	make -C infoio.cgi
 	make -C statusio.cgi
@@ -34,7 +33,6 @@ clean:
 	make -C abmsys.cgi clean
 	make -C abmuser.cgi clean
 	make -C abmcamara.cgi clean
-	make -C ctrlalarma.cgi clean
 	make -C domcli clean
 	make -C infoio.cgi clean
 	make -C statusio.cgi clean
@@ -57,7 +55,6 @@ install:
 	make -C abmsys.cgi install
 	make -C abmuser.cgi install
 	make -C abmcamara.cgi install
-	make -C ctrlalarma.cgi install
 	make -C domcli install
 	make -C infoio.cgi install
 	make -C statusio.cgi install
@@ -80,7 +77,6 @@ uninstall:
 	make -C abmsys.cgi uninstall
 	make -C abmuser.cgi uninstall
 	make -C abmcamara.cgi uninstall
-	make -C ctrlalarma.cgi uninstall
 	make -C domcli uninstall
 	make -C infoio.cgi uninstall
 	make -C statusio.cgi uninstall
