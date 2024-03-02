@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto `mysql_config --libs`
 OBJECTS=dompi_netcomm.o dom32iowifi.o strfunc.o config.o queue.o rbpiio.o cmydb.o gevent.o
 OUTPUT=dompi_netcomm
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

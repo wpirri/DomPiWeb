@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lsqlite3 -lcjson
 OBJECTS=dbutil.o csqlite.o
 OUTPUT=dbutil
-DEFINE=-D __DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

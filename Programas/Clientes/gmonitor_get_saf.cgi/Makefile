@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=gmonitor_get_saf.cgi.o config.o strfunc.o
 OUTPUT=gmonitor_get_saf.cgi
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lwiringPi -lssl -lcrypto
 OBJECTS=dompi_gpio.o dom32iopi.o config.o strfunc.o serial.o
 OUTPUT=dompi_gpio
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 HWNAME=uname -m
 CC=g++
 

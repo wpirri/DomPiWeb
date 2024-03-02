@@ -523,7 +523,7 @@ void ModGSM::CheckSMSout( void )
             SendSMS(json_To->valuestring, json_Msg->valuestring);
         }
     }
-    m_pServer->Free(resp);
+    //m_pServer->Free(resp);
 }
 
 void ModGSM::GetModemStatus( void )
@@ -632,7 +632,7 @@ int ModGSM::GetSMS(char * from, char * msg)
             return 1;
         }
     }
-    m_pServer->Free(resp);
+    //m_pServer->Free(resp);
     return 0;
 }
 

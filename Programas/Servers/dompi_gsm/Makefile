@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lgmc -lssl -lcrypto
 OBJECTS=dompi_gsm.o config.o modulo_gsm.o serial.o
 OUTPUT=dompi_gsm
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

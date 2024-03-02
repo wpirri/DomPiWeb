@@ -1291,14 +1291,14 @@ int GEvent::ChangeAutoById(int id, int accion, int param)
 	return rc;
 }
 
-int GEvent::Habilitar_Alarma(const char* zona, const char* particion)
+int GEvent::Habilitar_Alarma(const char* /*zona*/, const char* /*particion*/)
 {
 
     m_alarm_need_update = 1;
     return 0;
 }
 
-int GEvent::Deshabilitar_Alarma(const char* zona, const char* particion)
+int GEvent::Deshabilitar_Alarma(const char* /*zona*/, const char* /*particion*/)
 {
 
     m_alarm_need_update = 1;
@@ -2166,7 +2166,7 @@ int GEvent::Pulse_Salida_Alarma(const char* particion, const char* salida)
 {
     int rc;
     char query[4096];
-    int estado_act;
+    //int estado_act;
 
     cJSON *json_Query_Result;
     cJSON *json_EstadoPart = nullptr;

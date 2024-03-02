@@ -104,12 +104,6 @@ using namespace std;
 #include "strfunc.h"
 #include "defines.h"
 
-#define MAX_BUFFER_LEN 32767
-#define BT_BUF_SIZE 256
-
-#define INTERVALO_REFRESH_ALARMA 3600
-
-
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 int internal_timeout;
@@ -176,7 +170,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	char cmdline[1024];
 	char db_host[32];
 	char db_name[32];
@@ -438,7 +432,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Message) cJSON_Delete(json_Message);
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				}
 				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -482,7 +476,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Message) cJSON_Delete(json_Message);
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				}
 				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -710,7 +704,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_un_obj = cJSON_CreateObject();
 								cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
 								cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
-								cJSON_PrintPreallocated(json_un_obj, message, MAX_BUFFER_LEN, 0);
+								cJSON_PrintPreallocated(json_un_obj, message, GM_COMM_MSG_LEN, 0);
 								m_pServer->m_pLog->Add(90, "Enqueue [dompi_sms_output][%s]", message);
 								rc = m_pServer->Enqueue("dompi_sms_output", message, strlen(message));
 								if(rc != 0)
@@ -794,7 +788,7 @@ int main(/*int argc, char** argv, char** env*/void)
 									{
 										/* Obtengo una copia del primer item del array de configuracion del sistema */
 										cJSON_ArrayForEach(json_obj, json_System_Config) { break; }
-										cJSON_PrintPreallocated(json_obj, message, MAX_BUFFER_LEN, 0);
+										cJSON_PrintPreallocated(json_obj, message, GM_COMM_MSG_LEN, 0);
 										json_obj = nullptr;
 										json_Config = cJSON_Parse(message);
 										/* Le agrego los datos de la placa */
@@ -803,7 +797,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										cJSON_AddStringToObject(json_Config, "Direccion_IP", cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Direccion_IP")->valuestring);
 										cJSON_AddStringToObject(json_Config, "Tipo_HW", cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_HW")->valuestring);
 
-										cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+										cJSON_PrintPreallocated(json_Config, message, GM_COMM_MSG_LEN, 0);
 										m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_comm_config][%s]", message);
 										m_pServer->Notify("dompi_hw_set_comm_config", message, strlen(message));
 										cJSON_Delete(json_Config);
@@ -873,7 +867,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if( !strcmp(objeto, "alarma"))
 							{
-								pEV->Estado_Alarma(parametro, message, MAX_BUFFER_LEN);
+								pEV->Estado_Alarma(parametro, message, GM_COMM_MSG_LEN);
 							}
 						}
 					}
@@ -926,7 +920,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Message) cJSON_Delete(json_Message);
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				}
 				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -973,7 +967,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Message) cJSON_Delete(json_Message);
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				}
 				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -1078,7 +1072,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Part)
 				{
-					pEV->Estado_Alarma(json_Part->valuestring, message, MAX_BUFFER_LEN);
+					pEV->Estado_Alarma(json_Part->valuestring, message, GM_COMM_MSG_LEN);
 				}
 				else
 				{
@@ -1471,7 +1465,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1549,7 +1543,6 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckWiegandData();
 		GroupTask();
 		AssignTask();
-
 		/* Hay que actualizar estado de alarma */
 		if(pEV->AlarmNeedUpdate())
 		{
@@ -1806,7 +1799,7 @@ void AssignTask( void )
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
 			m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] Estado: %s",
 									json_Objeto->valuestring, json_Estado->valuestring);
-			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 			/* Me fijo si es estado o pulso */
 			if(atoi(json_Tipo_ASS->valuestring) == 5)
 			{	/* Pulso */
@@ -2042,7 +2035,7 @@ void CheckUpdateHWConfig()
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_PrintPreallocated(json_Config, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Config, message, GM_COMM_MSG_LEN, 0);
 						m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_port_config][%s]", message);
 						m_pServer->Notify("dompi_hw_set_port_config", message, strlen(message));
 					}
@@ -2341,7 +2334,7 @@ void AutoChangeNotify( void )
 			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Estado");
 			cJSON_AddStringToObject(json_QueryRow, "Estado", json_Estado->valuestring);
 
-			cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 			m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 			m_pServer->Notify("dompi_ass_change", message, strlen(message));
 
@@ -2359,11 +2352,6 @@ void AutoChangeNotify( void )
 
 void AddSaf( void )
 {
-	ST_SQUEUE sq;
-
-	sq.len = 0;
-	strcpy(sq.saf_name, "dompi_infoio_synch");
-	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
-	strcpy(sq.saf_name, "dompi_changeio_synch");
-	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
+	m_pServer->Notify(".create-queue", "dompi_infoio_synch", 19);	
+	m_pServer->Notify(".create-queue", "dompi_changeio_synch", 21);	
 }

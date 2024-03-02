@@ -188,11 +188,6 @@ void OnClose(int sig)
 
 void AddSaf( void )
 {
-	ST_SQUEUE sq;
-
-	sq.len = 0;
-	strcpy(sq.saf_name, "dompi_sms_output");
-	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
-	strcpy(sq.saf_name, "dompi_sms_input");
-	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
+	m_pServer->Notify(".create-queue", "dompi_sms_output", 17);	
+	m_pServer->Notify(".create-queue", "dompi_sms_input", 16);	
 }

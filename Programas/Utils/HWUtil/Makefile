@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared
 OBJECTS=hwutil.o qtcp.o dom32iowifi.o ctcp.o strfunc.o
 OUTPUT=hwutil
-DEFINE=-D __DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

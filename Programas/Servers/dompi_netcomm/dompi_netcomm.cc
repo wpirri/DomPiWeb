@@ -32,8 +32,6 @@ using namespace std;
 #include <string.h>
 #include <math.h>
 
-#define MAX_BUFFER_LEN 32767
-
 #include <cjson/cJSON.h>
 
 #include "dom32iowifi.h"
@@ -701,7 +699,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
     char url_default[] = "/cgi-bin/gmonitor_get_saf.cgi";
 
 	CTcp *pSock;
-	char buffer[MAX_BUFFER_LEN+1];
+	char buffer[GM_COMM_MSG_LEN+1];
 	char get[256];
 	char *ps;
 	int rc = 0;
@@ -713,7 +711,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 		pSock = new CTcp(1, 3);
 		if(port == 0) port = 443;
     		sprintf(buffer, http_get, url_default, get, host);
-		rc =pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		rc =pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
 		delete pSock;
 	}
 	else
@@ -721,7 +719,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 		pSock = new CTcp();
 		if(port == 0) port = 80;
     		sprintf(buffer, http_get, url_default, get, host);
-		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		rc = pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
 		delete pSock;
 	}
 	if(msg)
@@ -748,12 +746,12 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 int Check_Remote_Synch( void )
 {
 	int rc;
-	char saf_message[MAX_BUFFER_LEN];
+	char saf_message[GM_COMM_MSG_LEN];
 
 	if(strlen(sys_backup) == 0) return (-1);
 	m_pServer->m_pLog->Add(100, "[Check_Remote_Synch]");
 
-	rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_infoio_synch", saf_message, MAX_BUFFER_LEN);
+	rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_infoio_synch", saf_message, GM_COMM_MSG_LEN);
 	m_pServer->m_pLog->Add(100, "[SYNCH] INFO rc=%i [%s]", rc, saf_message);
 	if(rc > 100)
 	{
@@ -762,7 +760,7 @@ int Check_Remote_Synch( void )
 	}
 	else
 	{
-		rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_changeio_synch", saf_message, MAX_BUFFER_LEN);
+		rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_changeio_synch", saf_message, GM_COMM_MSG_LEN);
 		m_pServer->m_pLog->Add(100, "[SYNCH] CHANGE rc=%i [%s]", rc, saf_message);
 		if(rc > 100)
 		{

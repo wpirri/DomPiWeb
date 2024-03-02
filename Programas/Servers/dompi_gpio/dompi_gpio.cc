@@ -44,7 +44,6 @@ using namespace std;
 #include "strfunc.h"
 #include "config.h"
 
-#define MAX_BUFFER_LEN 		32767
 #define KEEP_ALIVE			60
 #define SEND_RETRY			10
 #define SEND_RETRY_DELAY	1
@@ -286,7 +285,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	unsigned long message_len;
 	//unsigned long exclude_modem = 0;
 

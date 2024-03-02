@@ -38,9 +38,6 @@ using namespace std;
 #include "cdb.h"
 #include "strfunc.h"
 
-#define MAX_BUFFER_LEN 32767
-#define BT_BUF_SIZE 256
-
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 int internal_timeout;
@@ -56,7 +53,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	char db_host[32];
 	char db_name[32];
 	char db_user[32];
@@ -258,7 +255,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -290,7 +287,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -322,7 +319,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -382,7 +379,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -696,7 +693,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -728,7 +725,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -764,7 +761,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1007,7 +1004,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1039,7 +1036,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1075,7 +1072,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1208,7 +1205,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Si tiene los datos necesarios actualizo el assign para la app */
 				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
 				{
-					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Cloud_Message, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 					m_pServer->Notify("dompi_ass_change", message, strlen(message));
 				}
@@ -1374,7 +1371,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				/* Si tiene los datos necesarios actualizo el assign para la app */
 				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
 				{
-					cJSON_PrintPreallocated(json_Cloud_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Cloud_Message, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 					m_pServer->Notify("dompi_ass_change", message, strlen(message));
 				}
@@ -1415,7 +1412,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(json_Message) cJSON_Delete(json_Message);
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				}
 				if(json_Message) cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -1483,7 +1480,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1515,7 +1512,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1551,7 +1548,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1792,7 +1789,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1824,7 +1821,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -1861,7 +1858,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2105,7 +2102,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -2137,7 +2134,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -2173,7 +2170,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2413,7 +2410,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -2449,7 +2446,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2468,7 +2465,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				json_Message = cJSON_CreateObject();
 				cJSON_AddItemReferenceToObject(json_Message, "response", json_System_Config);
-				cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+				cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 				cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2611,7 +2608,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -2649,7 +2646,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 						cJSON_Delete(json_Message);
 					}
 					else
@@ -2689,7 +2686,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2950,7 +2947,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -2984,7 +2981,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -3020,7 +3017,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3284,7 +3281,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 						cJSON_Delete(json_Message);
 					}
 					else
@@ -3324,7 +3321,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 						cJSON_Delete(json_Message);
 					}
 					else
@@ -3361,7 +3358,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3613,7 +3610,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 						cJSON_Delete(json_Message);
 					}
 					else
@@ -3653,7 +3650,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 						cJSON_Delete(json_Message);
 					}
 					else
@@ -3690,7 +3687,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3934,7 +3931,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -3966,7 +3963,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					json_Message = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					cJSON_Delete(json_Message);
 				}
 				else
@@ -4002,7 +3999,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						cJSON_Delete(json_Message);
 						json_Message = cJSON_CreateObject();
 						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
 				cJSON_Delete(json_Message);

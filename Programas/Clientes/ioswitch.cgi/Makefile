@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=ioswitch.cgi.o config.o strfunc.o
 OUTPUT=ioswitch.cgi
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

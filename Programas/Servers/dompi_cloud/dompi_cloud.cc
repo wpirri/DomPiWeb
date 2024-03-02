@@ -39,8 +39,6 @@ using namespace std;
 #include "cdb.h"
 #include "gevent.h"
 
-#define MAX_BUFFER_LEN 32767
-
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 int internal_timeout;
@@ -81,7 +79,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	int rc;
 	char fn[33];
 	char typ[1];
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	char db_host[32];
 	char db_name[32];
 	char db_user[32];
@@ -166,7 +164,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Interface con la nube inicializada.");
 
 	wait = 250;
-	while((rc = m_pServer->Wait(fn, typ, message, MAX_BUFFER_LEN, &message_len, wait )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, GM_COMM_MSG_LEN, &message_len, wait )) >= 0)
 	{
 		wait = 250;
 		if(rc > 0)
@@ -188,7 +186,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(m_cloud_status)
 				{
 					cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
-					cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 					{
 						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
@@ -286,7 +284,7 @@ void OnClose(int sig)
 int KeepAliveCloud( void )
 {
 	int rc;
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	cJSON *json_Message;
 	cJSON *json_arr;
 
@@ -298,7 +296,7 @@ int KeepAliveCloud( void )
 
 		/* Si hay que agragar mas objetos */
 
-		cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+		cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 		cJSON_Delete(json_Message);
 
 		m_pServer->m_pLog->Add(100, "[CLOUD] << [%s]", message);
@@ -360,7 +358,7 @@ int KeepAliveCloud( void )
 			json_arr = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
 			if(json_arr && cJSON_IsArray(json_arr))
 			{
-				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+				cJSON_PrintPreallocated(json_arr, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
 				return 1;
@@ -382,7 +380,7 @@ int KeepAliveCloud( void )
 int SendToCloud( void )
 {
     CGMServerBase::GMIOS resp;
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	cJSON *json_Message;
 	cJSON *json_arr;
 	int rc = 0;
@@ -416,7 +414,7 @@ int SendToCloud( void )
 			json_arr = cJSON_GetObjectItemCaseSensitive(json_Message, "response");
 			if(json_arr && cJSON_IsArray(json_arr))
 			{
-				cJSON_PrintPreallocated(json_arr, message, MAX_BUFFER_LEN, 0);
+				cJSON_PrintPreallocated(json_arr, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
 			}
@@ -428,7 +426,6 @@ int SendToCloud( void )
 		}
 		rc = 1;
     }
-    m_pServer->Free(resp);
 	return rc;
 }
 
@@ -469,7 +466,7 @@ void CheckUpdateAssignCloud( void )
 			{
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+				cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 				{
 					m_pServer->m_pLog->Add(1, "[CheckUpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
@@ -510,7 +507,7 @@ void CheckUpdateAssignCloud( void )
 
 				/* Agrego datos del sistema */
 				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-				cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+				cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 
 				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 				{
@@ -525,7 +522,7 @@ void CheckUpdateAssignCloud( void )
 
 void CheckUpdateAlarmCloud( void )
 {
-	char message[MAX_BUFFER_LEN+1];
+	char message[GM_COMM_MSG_LEN+1];
 	time_t t;
 	cJSON *json_Message;
 
@@ -537,10 +534,10 @@ void CheckUpdateAlarmCloud( void )
 		update_alarm_t = t + 600;
 
 		m_pServer->m_pLog->Add(10, "[CheckUpdateAlarmCloud] Actualizando estado general de alarma en la nube.");
-		pEV->Estado_Alarma_General(message, MAX_BUFFER_LEN);
+		pEV->Estado_Alarma_General(message, GM_COMM_MSG_LEN);
 		json_Message = cJSON_Parse(message);
 		cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
-		cJSON_PrintPreallocated(json_Message, message, MAX_BUFFER_LEN, 0);
+		cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 		cJSON_Delete(json_Message);
 		if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 		{
@@ -589,7 +586,7 @@ void CheckUpdateUserCloud( void )
 					{
 						/* Agrego datos del sistema */
 						cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-						cJSON_PrintPreallocated(json_QueryRow, message, MAX_BUFFER_LEN, 0);
+						cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 						if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 						{
 							m_pServer->m_pLog->Add(1, "[CheckUpdateUserCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
@@ -631,7 +628,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
     char url_default[] = "/cgi-bin/dompi_cloud_notif.cgi";
 
 	CTcp *pSock;
-	char buffer[MAX_BUFFER_LEN+1];
+	char buffer[GM_COMM_MSG_LEN+1];
 	char *ps;
 	int rc = 0;
 
@@ -641,7 +638,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		pSock = new CTcp(1, 3);
 		if(port == 0) port = 443;
     		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		rc =pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		rc =pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
 		delete pSock;
 	}
 	else
@@ -649,7 +646,7 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 		pSock = new CTcp();
 		if(port == 0) port = 80;
     		sprintf(buffer, http_post, url_default, host, strlen(send_msg), send_msg);
-		rc = pSock->Query(host, port, buffer, buffer, MAX_BUFFER_LEN, external_timeout);
+		rc = pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
 		delete pSock;
 	}
 
@@ -752,9 +749,5 @@ void LoadSystemConfig(void)
 
 void AddSaf( void )
 {
-	ST_SQUEUE sq;
-
-	strcpy(sq.saf_name, "dompi_msg_to_cloud");
-	sq.len = 0;
-	m_pServer->Notify(".create-queue", &sq, sizeof(ST_SQUEUE));	
+	m_pServer->Notify(".create-queue", "dompi_msg_to_cloud", 19);	
 }

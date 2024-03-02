@@ -142,7 +142,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     fprintf(stdout, "{ \"rc\":\"%02i\", \"msg\":\"%s\" }\r\n", rc, gmerror.Message(rc).c_str());
   }
-  pClient->Free(resp);
+  //pClient->Free(resp);
 
   delete pClient;
   return 0;

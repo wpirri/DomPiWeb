@@ -8,7 +8,7 @@ NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
 OBJECTS=dompi_cloud.o strfunc.o config.o cmydb.o gevent.o
 OUTPUT=dompi_cloud
-DEFINE=-D __NO__DEBUG__ -D __NO_DEBUG_TCP
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

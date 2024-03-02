@@ -7,7 +7,7 @@ CXXFLAGS=-g -Wall -Wextra -MMD -O2
 LIBS=$(PROCESSOR-PARAMS) -lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=iostatus.cgi.o config.o strfunc.o
 OUTPUT=iostatus.cgi
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:

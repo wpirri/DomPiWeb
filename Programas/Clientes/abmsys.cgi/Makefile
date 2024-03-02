@@ -7,7 +7,7 @@ CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
 OBJECTS=abmsys.cgi.o config.o strfunc.o
 OUTPUT=abmsys.cgi
-DEFINE=-D __NO__DEBUG__
+DEFINE=$(GENERAL_DEFINE)
 CC=g++
 
 #.cc.o:
