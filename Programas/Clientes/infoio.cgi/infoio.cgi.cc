@@ -44,6 +44,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   DPConfig *pConfig;
   STRFunc Str;
   cJSON *json_request;
+  cJSON *json_response;
+  cJSON *json_obj;
   
   char server_address[16];
   char s[16];
@@ -179,15 +181,59 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     {
       syslog(LOG_DEBUG, "Call R: [%s]", response.C_Str());
     }
-    /*Armar respuesta en formato POST con datos de response.Data() en formato JSON */
-    json_request = cJSON_Parse(response.C_Str());
-
-    fprintf(stdout, "%s\r\n", response.Data());
-    if(trace)
+    json_response = cJSON_Parse(response.C_Str());
+    if(json_response)
     {
-      syslog(LOG_DEBUG, "%s\r\n", response.Data());
+      /* Armar respuesta en formato de formulario con datos de response en formato JSON */
+      post_data[0] = 0;
+      json_obj = json_response;
+      while( json_obj )
+      {
+          /* Voy hasta el elemento con datos */
+          if(json_obj->type == cJSON_Object)
+          {
+              json_obj = json_obj->child;
+          }
+          else
+          {
+              if(json_obj->type == cJSON_String)
+              {
+                  if(json_obj->string && json_obj->valuestring)
+                  {
+                      if(strlen(json_obj->string))
+                      {
+                        strcpy(label, json_obj->string);
+                        strcpy(value, json_obj->valuestring);
+                        /* Algunas sustitucions */
+                        if( !strcmp(label, "resp_code")) strcpy(label, "error");
+                        else if( !strcmp(label, "resp_msg")) strcpy(label, "msg");
+                        /* */
+                        if(post_data[0] != 0) strcat(post_data, "&");
+                        strcat(post_data, label);
+                        strcat(post_data, "=");
+                        strcat(post_data, value);
+                      }
+                  }
+              }
+              json_obj = json_obj->next;
+          }
+      }
+      fprintf(stdout, "%s\r\n", post_data);
+      if(trace)
+      {
+        syslog(LOG_DEBUG, "%s\r\n", post_data);
+      }
+      cJSON_Delete(json_response);
     }
-    cJSON_Delete(json_request);
+    else
+    {
+      /* Supongo que la respuesta ya estaba en formato de formulario y la mando directamente */
+      fprintf(stdout, "%s\r\n", response.Data());
+      if(trace)
+      {
+        syslog(LOG_DEBUG, "%s\r\n", response.Data());
+      }
+    }
   }
   else
   {
