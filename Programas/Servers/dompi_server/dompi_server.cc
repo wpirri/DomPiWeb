@@ -116,6 +116,25 @@ char sys_backup[32];
 
 time_t last_daily;
 
+#define MAX_HW_LIST_NEW 128
+#define MAX_CARD_LIST_NEW 128
+
+typedef struct _new_hw_list
+{
+	char mac[16];
+	time_t last_info;
+} new_hw_list;
+
+new_hw_list g_dompi_server_new_hw_list[MAX_HW_LIST_NEW];
+
+typedef struct _new_card_list
+{
+	char card[16];
+	time_t last_info;
+} new_card_list;
+
+new_card_list g_dompi_server_new_card_list[MAX_CARD_LIST_NEW];
+
 void OnClose(int sig);
 void CheckHWOffline( void );
 void GroupTask( void );
@@ -129,6 +148,8 @@ int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
 void AutoChangeNotify(void);
 void AddSaf( void );
+void CheckNewHWList(const char* mac);
+void CheckNewCardList(const char* card);
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -167,6 +188,7 @@ char cli_help[] = 	"------------------------------------------------------------
 
 int main(/*int argc, char** argv, char** env*/void)
 {
+	int i;
 	int rc;
 	char fn[33];
 	char typ[1];
@@ -275,6 +297,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pEV = new GEvent(pDB, m_pServer);
 
+	memset(g_dompi_server_new_hw_list, 0, sizeof(g_dompi_server_new_hw_list));
+
 	/*
 	Se distribuye equitativamente entre las colas menos cargadas
 		GM_MSG_TYPE_CR		- Se espera respuesta (Call)
@@ -284,6 +308,8 @@ int main(/*int argc, char** argv, char** env*/void)
 		GM_MSG_TYPE_MSG		- Sin respuesta (Post)
 	*/
 	m_pServer->Suscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_hw_list_new", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_user_list_new_card", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_info", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_ass_on", GM_MSG_TYPE_CR);
@@ -374,6 +400,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if(rc == 0)
 					{
+						CheckNewHWList(json_HW_Id->valuestring);
 						/* NOT FOUND */
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
 					}
@@ -397,6 +424,94 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				cJSON_Delete(json_Message);
 
+			}
+			/* ****************************************************************
+			*		dompi_hw_list_new - Listado de Harware recientemente descubierto
+			**************************************************************** */
+			if( !strcmp(fn, "dompi_hw_list_new"))
+			{
+				message[0] = 0;
+
+				for(i = 0; i < MAX_HW_LIST_NEW; i++)
+				{
+					if(g_dompi_server_new_hw_list[i].mac[0])
+					{
+						if(message[0])
+						{
+							/* agrego alamento */
+							sprintf(&message[strlen(message)], ",{\"label\":\"%s\",\"value\":\"%s\"}",
+								g_dompi_server_new_hw_list[i].mac, g_dompi_server_new_hw_list[i].mac);
+						}
+						else
+						{
+							/* Inicio del array */
+							sprintf(message, "{\"response\":[{\"label\":\"%s\",\"value\":\"%s\"}",
+								g_dompi_server_new_hw_list[i].mac, g_dompi_server_new_hw_list[i].mac);
+						}
+					}
+				}
+				/* */
+				if(message[0])
+				{
+					/* Fin del array */
+					strcat(message, "]}");
+				}
+				else
+				{
+					/* array vacío */
+					strcat(message, "{\"response\":[]}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_user_list_new_card - Listado de Tarjetas no asignadas
+			**************************************************************** */
+			if( !strcmp(fn, "dompi_user_list_new_card"))
+			{
+				message[0] = 0;
+
+				for(i = 0; i < MAX_CARD_LIST_NEW; i++)
+				{
+					if(g_dompi_server_new_card_list[i].card[0])
+					{
+						if(message[0])
+						{
+							/* agrego alamento */
+							sprintf(&message[strlen(message)], ",{\"label\":\"%s\",\"value\":\"%s\"}",
+								g_dompi_server_new_card_list[i].card, g_dompi_server_new_card_list[i].card);
+						}
+						else
+						{
+							/* Inicio del array */
+							sprintf(message, "{\"response\":[{\"label\":\"%s\",\"value\":\"%s\"}",
+								g_dompi_server_new_card_list[i].card, g_dompi_server_new_card_list[i].card);
+						}
+					}
+				}
+				/* */
+				if(message[0])
+				{
+					/* Fin del array */
+					strcat(message, "]}");
+				}
+				else
+				{
+					/* array vacío */
+					strcat(message, "{\"response\":[]}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
 			}
 			/* ****************************************************************
 			*		dompi_ass_status
@@ -1594,6 +1709,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			/*  */
 			AutoChangeNotify();
 			/*  */
+			CheckNewHWList(NULL);
+			CheckNewCardList(NULL);
+			/*  */
 			delta_t = 100;
 			next_t = t + 1;
 		}
@@ -1608,6 +1726,8 @@ void OnClose(int sig)
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
 	m_pServer->UnSuscribe("dompi_infoio", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_list_new", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_user_list_new_card", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_status", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_info", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_ass_on", GM_MSG_TYPE_CR);
@@ -2229,6 +2349,7 @@ int CheckWirelessCard( const char* card )
 	else if(rc == 0)
 	{
 		m_pServer->m_pLog->Add(10, "[CheckWirelessCard] Tarjeta: %s desconocida", card);
+		CheckNewCardList(card);
 	}
 	cJSON_Delete(QueryResult);
 
@@ -2354,4 +2475,92 @@ void AddSaf( void )
 {
 	m_pServer->Notify(".create-queue", "dompi_infoio_synch", 19);	
 	m_pServer->Notify(".create-queue", "dompi_changeio_synch", 21);	
+}
+
+void CheckNewHWList(const char* mac)
+{
+	int i;
+	time_t t = time(&t);
+
+	/* Busco para actualizar */
+	for(i = 0; i < MAX_HW_LIST_NEW; i++)
+	{
+		if(mac)
+		{
+			if( !strcmp(mac, g_dompi_server_new_hw_list[i].mac) )
+			{
+				g_dompi_server_new_hw_list[i].last_info = t;
+				break;
+			}
+		}
+	}
+
+	/* Si no existe la agrego */
+	if(mac && i == MAX_HW_LIST_NEW)
+	{
+		for(i = 0; i < MAX_HW_LIST_NEW; i++)
+		{
+			if(g_dompi_server_new_hw_list[i].mac[0] == 0)
+			{
+				strcpy(g_dompi_server_new_hw_list[i].mac, mac);
+				g_dompi_server_new_hw_list[i].last_info = t;
+				break;
+			}
+		}
+
+	}
+
+	/* Busco viejas para dar de baja las que tengan mas de 2 min */
+	for(i = 0; i < MAX_HW_LIST_NEW; i++)
+	{
+		if(g_dompi_server_new_hw_list[i].last_info && g_dompi_server_new_hw_list[i].last_info < (t-120))
+		{
+			g_dompi_server_new_hw_list[i].mac[0] = 0;
+			g_dompi_server_new_hw_list[i].last_info = 0;
+		}
+	}
+}
+
+void CheckNewCardList(const char* card)
+{
+	int i;
+	time_t t = time(&t);
+
+	/* Busco para actualizar */
+	for(i = 0; i < MAX_CARD_LIST_NEW; i++)
+	{
+		if(card)
+		{
+			if( !strcmp(card, g_dompi_server_new_card_list[i].card) )
+			{
+				g_dompi_server_new_card_list[i].last_info = t;
+				break;
+			}
+		}
+	}
+
+	/* Si no existe la agrego */
+	if(card && i == MAX_CARD_LIST_NEW)
+	{
+		for(i = 0; i < MAX_CARD_LIST_NEW; i++)
+		{
+			if(g_dompi_server_new_card_list[i].card[0] == 0)
+			{
+				strcpy(g_dompi_server_new_card_list[i].card, card);
+				g_dompi_server_new_card_list[i].last_info = t;
+				break;
+			}
+		}
+
+	}
+
+	/* Busco viejas para dar de baja las que tengan mas de 2 min */
+	for(i = 0; i < MAX_CARD_LIST_NEW; i++)
+	{
+		if(g_dompi_server_new_card_list[i].last_info && g_dompi_server_new_card_list[i].last_info < (t-120))
+		{
+			g_dompi_server_new_card_list[i].card[0] = 0;
+			g_dompi_server_new_card_list[i].last_info = 0;
+		}
+	}
 }

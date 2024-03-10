@@ -195,6 +195,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_db_struct");
   }
+  else if( !strcmp(funcion, "new_card"))
+  {
+    strcpy(funcion_call, "dompi_user_list_new_card");
+  }
   else
   {
     strcpy(funcion_call, "dompi_user_list");

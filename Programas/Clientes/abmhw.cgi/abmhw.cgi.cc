@@ -197,6 +197,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_db_struct");
   }
+  else if( !strcmp(funcion, "new_hw"))
+  {
+    strcpy(funcion_call, "dompi_hw_list_new");
+  }
   else
   {
     strcpy(funcion_call, "dompi_hw_list");

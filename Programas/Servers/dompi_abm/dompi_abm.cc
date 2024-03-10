@@ -546,7 +546,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -925,7 +925,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -1278,7 +1278,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -1711,7 +1711,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -2025,7 +2025,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -2335,7 +2335,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -2859,7 +2859,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -3143,7 +3143,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -3485,7 +3485,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -3814,7 +3814,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
@@ -4163,7 +4163,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							if(json_un_obj->string && json_un_obj->valuestring)
 							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{

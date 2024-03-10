@@ -18,6 +18,8 @@ include('head-abm.php');
 <div id='hw_add_div' class='abm-div'></div>
 
 <script type="text/javascript" >
+    var listaNewHw = [];
+
     function fillHWForm(json_list, dst_div, title) {
         // Getting the all column names 
         var headers = getAbmTableHedaer(json_list);
@@ -34,8 +36,10 @@ include('head-abm.php');
             output += '<td>';
             if(headers[i] == 'Id') {
                 output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+            } else if(headers[i] == 'MAC' && listaNewHw.length > 0) {
+                output += fillSimpleList('MAC', listaNewHw);
             } else if(headers[i] == 'Tipo') {
-                output += fillSimpleList(headers[i], TipoHW);
+                output += fillSimpleList('Tipo', TipoHW);
             } else {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
             }
@@ -46,18 +50,26 @@ include('head-abm.php');
         document.getElementById(dst_div).innerHTML = output;
     }
 
+    function OnLoad() {
+        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=new_hw', LoadNewHWList, false);
+    }
+
+    function LoadNewHWList(msg) {
+        try {
+            listaNewHw = JSON.parse(msg).response;
+        } catch (error) {
+            listaNewHw = [];
+         }
+        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&Id=0', LoadData, false);
+    }
+
     function LoadData(msg) {
         fillHWForm(JSON.parse(msg).response, 'hw_add_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {
         newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=add', null, false, collectFormData('add_form'));
-
         window.location.replace('hw_list.php');
-    }
-
-    function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmhw.cgi?funcion=get&Id=0', LoadData, false);
     }
 </script>
 

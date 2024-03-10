@@ -246,13 +246,13 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckUpdateAlarmCloud();
 		CheckUpdateUserCloud();
 
-		if(SendToCloud())
+		if(SendToCloud() > 0)
 		{
 			wait = 1;
 		}
 		else
 		{
-			if(KeepAliveCloud())
+			if(KeepAliveCloud() > 0)
 			{
 				wait = 25;
 			}
@@ -361,6 +361,7 @@ int KeepAliveCloud( void )
 				cJSON_PrintPreallocated(json_arr, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+				m_pServer->m_pLog->Add(20, "[KeepAliveCloud] Recibidas acciones desde la nube");
 				return 1;
 			}
 			cJSON_Delete(json_Message);
@@ -372,7 +373,7 @@ int KeepAliveCloud( void )
 	}
 	else
 	{
-		m_pServer->m_pLog->Add(1, "No hay servidores definodos para reporte a la nube");
+		m_pServer->m_pLog->Add(1, "No hay servidores definidos para reporte a la nube");
 	}
 	return 0;
 }
@@ -383,7 +384,7 @@ int SendToCloud( void )
 	char message[GM_COMM_MSG_LEN+1];
 	cJSON *json_Message;
 	cJSON *json_arr;
-	int rc = 0;
+	int rc;
 
 	if(m_cloud_status == 0) return 0;
 
@@ -403,6 +404,7 @@ int SendToCloud( void )
 			}
 			m_pServer->m_pLog->Add(1, "[CLOUD] Conexión perdida con %s", m_host_actual);
 			m_cloud_status = 0;
+			return (-1);
 		}
 		else if( rc > 0 && strlen(message) )
 		{
@@ -417,6 +419,7 @@ int SendToCloud( void )
 				cJSON_PrintPreallocated(json_arr, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(50, "[dompi_cloud_notification][%s]", message);
 				m_pServer->Notify("dompi_cloud_notification", message, strlen(message));
+				m_pServer->m_pLog->Add(20, "[SendToCloud] Recibidas acciones desde la nube");
 			}
 			cJSON_Delete(json_Message);
 		}
@@ -424,9 +427,9 @@ int SendToCloud( void )
 		{
 			m_pServer->m_pLog->Add(100, "[CLOUD] >> Respuesta vacia");
 		}
-		rc = 1;
+		return 1;
     }
-	return rc;
+	return 0;
 }
 
 void CheckUpdateAssignCloud( void )

@@ -52,3 +52,5 @@
 /etc/cron.monthly/make-db-backup.sh
 /usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/drop_ipc.sh
+/usr/local/bin/make_dump.sh
+/usr/local/bin/make_dump.sql

@@ -18,8 +18,57 @@ include('head-abm.php');
 <div id='user_add_div' class='abm-div'></div>
 
 <script type="text/javascript" >
+    var newCardList = [];
+
+    function fillUserForm(json_list, dst_div, title) {
+        // Getting the all column names 
+        var headers = getAbmTableHedaer(json_list);
+        var output = '<p class=abm-table-title>' + title + '</p>\n<table class=abm-table id=abm_edit_table>\n';
+        var i = 0;
+
+        // Header
+        for (i = 0; i < headers.length; i++) { 
+            output += '<tr>';
+            output += '<th>';
+            if(headers[i] == 'Id') { output += '&nbsp;'; }
+            else { output += headers[i]; }
+            output += '</th>';
+            output += '<td>';
+            if(headers[i] == 'Id') {
+                output += '<input type="hidden" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+            } else if(headers[i] == 'Tarjeta') {
+
+                output += fillSimpleList('Tarjeta', newCardList, '');
+                
+            } else if(headers[i] == 'Dias_Semana') {
+                output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
+            } else {
+                output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
+            }
+            output += '</td>';
+            output += '</tr>\n';
+        }
+        output += '</table>\n';
+        document.getElementById(dst_div).innerHTML = output;
+    }
+
+    function OnLoad() {
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=new_card', LoadNewCardList, false);
+    }
+
+    function LoadNewCardList(msg) {
+        try {
+            newCardList = JSON.parse(msg).response;
+            newCardList[newCardList.length] = { value: '', label: 'Sin Tarjeta' }
+        } catch (error) {
+            newCardList = [];
+            newCardList[0] = { value: '', label: 'Sin Tarjeta' }
+        }
+        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Id=0', LoadData, false);
+    }
+
     function LoadData(msg) {
-        fillAbmForm(JSON.parse(msg).response, 'user_add_div', '<?php echo $TITLE; ?>');
+        fillUserForm(JSON.parse(msg).response, 'user_add_div', '<?php echo $TITLE; ?>');
     }
 
     function SaveData() {
@@ -28,9 +77,6 @@ include('head-abm.php');
         window.location.replace('user_list.php');
     }
 
-    function OnLoad() {
-        newAJAXCommand('/cgi-bin/abmuser.cgi?funcion=get&Id=0', LoadData, false);
-    }
 </script>
 
 </form>
