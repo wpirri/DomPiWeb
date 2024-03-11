@@ -42,6 +42,14 @@ include('head-abm.php');
                 
             } else if(headers[i] == 'Dias_Semana') {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="Lu,Ma,Mi,Ju,Vi,Sa,Do"/>';
+			} else if(headers[i] == 'Hora_Inicio') {
+				output += fillSimpleList(headers[i], TablaHoras);
+			} else if(headers[i] == 'Minuto_Inicio') {
+				output += fillSimpleList(headers[i], TablaMinutos);
+			} else if(headers[i] == 'Hora_Fin') {
+				output += fillSimpleList(headers[i], TablaHoras);
+			} else if(headers[i] == 'Minuto_Fin') {
+				output += fillSimpleList(headers[i], TablaMinutos);
             } else {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
             }

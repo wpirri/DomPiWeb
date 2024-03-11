@@ -51,6 +51,14 @@ include('head-abm.php');
                 output += '&nbsp;&nbsp;&nbsp;';
                 output += '<a OnClick="ChangeInputTarjeta();">(Ingreso manual)</a>';
                 output += '</div>';
+			} else if(headers[i] == 'Hora_Inicio') {
+				output += fillSimpleList(headers[i], TablaHoras, val);
+			} else if(headers[i] == 'Minuto_Inicio') {
+				output += fillSimpleList(headers[i], TablaMinutos, val);
+			} else if(headers[i] == 'Hora_Fin') {
+				output += fillSimpleList(headers[i], TablaHoras, val);
+			} else if(headers[i] == 'Minuto_Fin') {
+				output += fillSimpleList(headers[i], TablaMinutos, val);
             } else {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '" />';
             }

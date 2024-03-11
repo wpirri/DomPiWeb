@@ -58,6 +58,14 @@ include('head-abm.php');
 				output += fillSimpleList(headers[i], TablaAcciones);
 			} else if(headers[i] == 'Enviar_Min') {
 				output += fillSimpleList(headers[i], TablaAcciones);
+			} else if(headers[i] == 'Hora_Inicio') {
+				output += fillSimpleList(headers[i], TablaHoras);
+			} else if(headers[i] == 'Minuto_Inicio') {
+				output += fillSimpleList(headers[i], TablaMinutos);
+			} else if(headers[i] == 'Hora_Fin') {
+				output += fillSimpleList(headers[i], TablaHoras);
+			} else if(headers[i] == 'Minuto_Fin') {
+				output += fillSimpleList(headers[i], TablaMinutos);
 			} else if(headers[i] == 'Habilitado') {
 				output += fillSimpleList(headers[i], ListaOnOffAuto);
 			} else {
