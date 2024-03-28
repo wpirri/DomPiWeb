@@ -215,7 +215,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	STRFunc Strf;
 	//CGMServerBase::GMIOS call_resp;
 
-    cJSON *json_Message;
+    cJSON *json_Request;
+    cJSON *json_Response;
     cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
@@ -227,6 +228,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Objeto;
 	cJSON *json_Tipo;
 	cJSON *json_Tipo_HW;
+	cJSON *json_Port;
 	cJSON *json_Estado;
 	cJSON *json_Accion;
 	cJSON *json_Segundos;
@@ -358,14 +360,14 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			if( !strcmp(fn, "dompi_infoio"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				//message[0] = 0;
 
-				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ID");
+				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "ID");
 				if(json_HW_Id)
 				{
 					/* Identifico las distintas placas que entran por este servicio */
-					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Request, "TYP");
 					/* Si son placas viejas de Dom32-IO-WiFi no informan el TYP en la mensajería
 						así que se la agrego para mantener compatibilidad 
 						IO = Dom32-IO-WiFi 			- Typ: 1
@@ -373,8 +375,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					*/
 					if( !json_Tipo_HW )
 					{
-						cJSON_AddStringToObject(json_Message, "TYP", "IO");
-						json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Message, "TYP");
+						cJSON_AddStringToObject(json_Request, "TYP", "IO");
+						json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Request, "TYP");
 					}
 
 					rc = pEV->ExtIOEvent(message);
@@ -385,10 +387,48 @@ int main(/*int argc, char** argv, char** env*/void)
 						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
 #endif
-						/* OK */
-						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						/* Me traigo los estados de las salidas del dispositivo */
+						json_Query_Result = cJSON_CreateArray();
+						sprintf(query, "SELECT A.Port, A.Estado "
+											"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+											"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' "
+												"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_Query_Result, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc > 0)
+						{
+							json_Response = cJSON_CreateObject();
+							/* Recorro el array */
+							cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+							{
+								/* Saco los datos que necesito */
+								json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
+								json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+								cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+							}
+							/* Armo la respuesta con los estados de las salidas */
+							cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+							cJSON_Delete(json_Response);
+							/* Borro e flag de update si estaba */
+							sprintf(query, "UPDATE TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+												"SET A.Actualizar = 0 "
+												"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' "
+													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
+							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+							rc = pDB->Query(NULL, query);
+							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						}
+						else
+						{
+							/* Si no hay estados para responder le pongo un OK por default */
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						}
+						cJSON_Delete(json_Query_Result);
 						/* Si está todo bien me fijo si pidio enviar configuracion */
-						json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "GETCONF");
+						json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "GETCONF");
 						if(json_un_obj)
 						{
 							if( atoi(json_un_obj->valuestring) > 0 )
@@ -422,13 +462,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				cJSON_Delete(json_Message);
+				cJSON_Delete(json_Request);
 
 			}
 			/* ****************************************************************
 			*		dompi_hw_list_new - Listado de Harware recientemente descubierto
 			**************************************************************** */
-			if( !strcmp(fn, "dompi_hw_list_new"))
+			else if( !strcmp(fn, "dompi_hw_list_new"))
 			{
 				message[0] = 0;
 
@@ -472,7 +512,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ****************************************************************
 			*		dompi_user_list_new_card - Listado de Tarjetas no asignadas
 			**************************************************************** */
-			if( !strcmp(fn, "dompi_user_list_new_card"))
+			else if( !strcmp(fn, "dompi_user_list_new_card"))
 			{
 				message[0] = 0;
 
@@ -518,11 +558,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_status"))				
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
 				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "Id");
+				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Port,Icono_Apagado,Icono_Encendido,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Estado,Perif_Data FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
@@ -544,12 +584,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_Message) cJSON_Delete(json_Message);
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					if(json_Request) cJSON_Delete(json_Request);
+					json_Request = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Request, message, GM_COMM_MSG_LEN, 0);
 				}
-				if(json_Message) cJSON_Delete(json_Message);
+				if(json_Request) cJSON_Delete(json_Request);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -562,11 +602,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_info"))				
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
 				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "Id");
+				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
@@ -588,12 +628,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_Message) cJSON_Delete(json_Message);
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					if(json_Request) cJSON_Delete(json_Request);
+					json_Request = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Request, message, GM_COMM_MSG_LEN, 0);
 				}
-				if(json_Message) cJSON_Delete(json_Message);
+				if(json_Request) cJSON_Delete(json_Request);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -606,9 +646,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_on"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 1, 0);
@@ -637,9 +677,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_off"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 2, 0);
@@ -668,9 +708,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_switch"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 3, 0);
@@ -699,12 +739,12 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_ass_pulse"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
-					json_Segundos = cJSON_GetObjectItemCaseSensitive(json_Message, "Segundos");
+					json_Segundos = cJSON_GetObjectItemCaseSensitive(json_Request, "Segundos");
 					/* Actualizo el estado en la base */
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 4, (json_Segundos)?stoi(json_Segundos->valuestring):0);
 					if(rc > 0)
@@ -732,10 +772,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_cmdline"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
 				/* *********************************************************** */
-				json_query = cJSON_GetObjectItemCaseSensitive(json_Message, "query");
+				json_query = cJSON_GetObjectItemCaseSensitive(json_Request, "query");
 				if(json_query)
 				{
 					json_cmdline = cJSON_GetObjectItemCaseSensitive(json_query, "CmdLine");
@@ -895,7 +935,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								rc = pDB->Query(json_Query_Result, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-								if(rc >= 0)
+								if(rc > 0)
 								{
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result) { break; }
@@ -988,7 +1028,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 				}
 				/* *********************************************************** */
-				cJSON_Delete(json_Message);
+				cJSON_Delete(json_Request);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1001,11 +1041,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_status"))				
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
 				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "Id");
+				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Estado,Estado_Sensor,Estado_Salida "
@@ -1032,12 +1072,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_Message) cJSON_Delete(json_Message);
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					if(json_Request) cJSON_Delete(json_Request);
+					json_Request = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Request, message, GM_COMM_MSG_LEN, 0);
 				}
-				if(json_Message) cJSON_Delete(json_Message);
+				if(json_Request) cJSON_Delete(json_Request);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1050,11 +1090,11 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_info"))				
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
 				json_Query_Result = cJSON_CreateArray();
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Message, "Planta");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "Id");
+				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
 					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
@@ -1079,12 +1119,12 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_Message) cJSON_Delete(json_Message);
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					if(json_Request) cJSON_Delete(json_Request);
+					json_Request = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Request, message, GM_COMM_MSG_LEN, 0);
 				}
-				if(json_Message) cJSON_Delete(json_Message);
+				if(json_Request) cJSON_Delete(json_Request);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1097,9 +1137,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_enable"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					/* Actualizo el estado en la base */
@@ -1116,7 +1156,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"Error en update a TB_DOM_ASSIGN\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"Error en update a TB_DOM_AUTO\"}}");
 					}
 				}
 				else
@@ -1135,9 +1175,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_auto_disable"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					/* Actualizo el estado en la base */
@@ -1154,7 +1194,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_AUTO\"}}");
 					}
 				}
 				else
@@ -1560,9 +1600,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_mobile_list_objects"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_Grupo = cJSON_GetObjectItemCaseSensitive(json_Message, "Grupo");
+				json_Grupo = cJSON_GetObjectItemCaseSensitive(json_Request, "Grupo");
 				if(json_Grupo)
 				{
 					json_Query_Result = cJSON_CreateArray();
@@ -1577,13 +1617,13 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc > 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Request);
+						json_Request = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Request, message, GM_COMM_MSG_LEN, 0);
 					}
 				}
-				cJSON_Delete(json_Message);
+				cJSON_Delete(json_Request);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1597,9 +1637,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_mobile_touch_object"))
 			{
-				json_Message = cJSON_Parse(message);
+				json_Request = cJSON_Parse(message);
 				message[0] = 0;
-				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Message, "Objeto");
+				json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "Objeto");
 				if(json_un_obj)
 				{
 					rc = pEV->ChangeAssignByName(json_un_obj->valuestring, 3, 0);
@@ -1788,7 +1828,7 @@ void CheckHWOffline( void )
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
@@ -1833,7 +1873,7 @@ void GroupTask( void )
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 		{
@@ -1908,7 +1948,7 @@ void AssignTask( void )
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
@@ -2030,7 +2070,7 @@ void CheckTask()
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
@@ -2153,7 +2193,7 @@ void CheckUpdateHWConfig()
 					rc = pDB->Query(json_arr_Assign, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc >= 0)
+					if(rc > 0)
 					{
 						cJSON_PrintPreallocated(json_Config, message, GM_COMM_MSG_LEN, 0);
 						m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_port_config][%s]", message);
@@ -2377,7 +2417,7 @@ void CheckWiegandData( void )
 	rc = pDB->Query(QueryResult, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		/* Recorro el array */
 		cJSON_ArrayForEach(QueryRow, QueryResult)
@@ -2429,7 +2469,7 @@ void AutoChangeNotify( void )
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc >= 0)
+	if(rc > 0)
 	{
 		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 		{
