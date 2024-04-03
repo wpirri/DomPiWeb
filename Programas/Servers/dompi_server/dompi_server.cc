@@ -203,6 +203,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	time_t t;
 	time_t next_t;
+	struct tm *s_tm;
 	int delta_t;
 	char s[16];
 
@@ -353,6 +354,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		if(rc > 0)
 		{
+			t = time(&t);
+			s_tm = localtime(&t);
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 			/* ****************************************************************
@@ -391,7 +394,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						json_Query_Result = cJSON_CreateArray();
 						sprintf(query, "SELECT A.Port, A.Estado "
 											"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-											"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' "
+											"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
 												"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						rc = pDB->Query(json_Query_Result, query);
@@ -423,8 +426,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else
 						{
-							/* Si no hay estados para responder le pongo un OK por default */
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							/* Si no hay estados para responder mando la hora (YYYY/MM/DD hh:mm:ss) */
+							sprintf(message, "{\"TIME\":\"%04i/%02i/%02i %02i:%02i:%02i\"}", 
+								s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday, s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
 						}
 						cJSON_Delete(json_Query_Result);
 						/* Si está todo bien me fijo si pidio enviar configuracion */
@@ -1809,21 +1813,38 @@ void CheckHWOffline( void )
 {
 	char query[4096];
 	int rc;
+	unsigned long tolerancia = 0;
 	time_t t;
 	cJSON *json_QueryArray;
 	cJSON *json_QueryRow;
 	cJSON *json_HW_Id;
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
+	cJSON *json_Last_Config;
+	cJSON *Wifi_Report;
 
 	m_pServer->m_pLog->Add(100, "[CheckHWOffline]");
 
+	/* Traigo el intervalo de actualizacion de la configuración para calcular la tolerancia */
+	if(json_System_Config)
+	{
+		cJSON_ArrayForEach(json_Last_Config, json_System_Config) { break; }
+		if(json_Last_Config)
+		{
+			Wifi_Report = cJSON_GetObjectItemCaseSensitive(json_Last_Config, "Wifi_Report");
+			if(Wifi_Report)
+			{
+				tolerancia = 3 * atoi(Wifi_Report->valuestring);
+			}
+		}
+	}
+	if(tolerancia == 0)	tolerancia = 180;
 	/* Dispositivos offline */
 	t = time(&t);
 	json_QueryArray = cJSON_CreateArray();
 	sprintf(query, "SELECT Id, MAC, Direccion_IP "
 					"FROM TB_DOM_PERIF "
-					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-180);
+					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-tolerancia);
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
