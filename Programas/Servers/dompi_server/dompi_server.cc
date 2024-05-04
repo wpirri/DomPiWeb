@@ -113,6 +113,7 @@ cJSON *json_System_Config;
 #ifdef ACTIVO_ACTIVO
 char sys_backup[32];
 #endif
+int i;
 
 time_t last_daily;
 
@@ -177,7 +178,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
 					"    dispositivo: MAC de un dispositivo existente.\r\n"
-					"    modulo: wifi, ports.\r\n"
+					"    modulo: wifi, config, firmware.\r\n"
 					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
 					"    numero: Numero de telefono destino del mensaje.\r\n"
 					"    mensaje: Mensaje a enviar.\r\n"
@@ -206,12 +207,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	struct tm *s_tm;
 	int delta_t;
 	char s[16];
+	STRFunc sf;
 
 	char comando[1024];
 	char objeto[1024];
 	char parametro[1024];
 
 	char update_hw_config_mac[16];
+	char update_firmware_mac[256][16];
 	
 	STRFunc Strf;
 	//CGMServerBase::GMIOS call_resp;
@@ -301,6 +304,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	pEV = new GEvent(pDB, m_pServer);
 
 	memset(g_dompi_server_new_hw_list, 0, sizeof(g_dompi_server_new_hw_list));
+	memset(update_firmware_mac, 0, sizeof(update_firmware_mac));
 
 	/*
 	Se distribuye equitativamente entre las colas menos cargadas
@@ -390,6 +394,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 						message[0] = 0;
 #endif
+						json_Response = cJSON_CreateObject();
 						/* Me traigo los estados de las salidas del dispositivo */
 						json_Query_Result = cJSON_CreateArray();
 						sprintf(query, "SELECT A.Port, A.Estado "
@@ -402,7 +407,6 @@ int main(/*int argc, char** argv, char** env*/void)
 						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 						if(rc > 0)
 						{
-							json_Response = cJSON_CreateObject();
 							/* Recorro el array */
 							cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 							{
@@ -411,9 +415,6 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
 								cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
 							}
-							/* Armo la respuesta con los estados de las salidas */
-							cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
-							cJSON_Delete(json_Response);
 							/* Borro e flag de update si estaba */
 							sprintf(query, "UPDATE TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
 												"SET A.Actualizar = 0 "
@@ -427,10 +428,28 @@ int main(/*int argc, char** argv, char** env*/void)
 						else
 						{
 							/* Si no hay estados para responder mando la hora (YYYY/MM/DD hh:mm:ss) */
-							sprintf(message, "{\"TIME\":\"%04i/%02i/%02i %02i:%02i:%02i\"}", 
-								s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday, s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
+							sprintf(message, "%04i/%02i/%02i %02i:%02i:%02i", 
+								s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
+								s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
+							cJSON_AddStringToObject(json_Response, "TIME", message);
+							message[0] = 0;
 						}
 						cJSON_Delete(json_Query_Result);
+						/* Me fijo si hay que decirle que se actualice */
+						sf.ToUpper(json_HW_Id->valuestring, s);
+						for(i = 0; i < 256; i++)
+						{
+							if(update_firmware_mac[i][0])
+							{
+								if( !strncmp(update_firmware_mac[i], s, 16)) break;
+							}
+						}
+						if(i < 256)
+						{
+							/* UPDATE-FW */
+							cJSON_AddStringToObject(json_Response, "UPDATE-FW", "1");
+							update_firmware_mac[i][0] = 0;
+						}
 						/* Si está todo bien me fijo si pidio enviar configuracion */
 						json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "GETCONF");
 						if(json_un_obj)
@@ -441,6 +460,10 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(update_hw_config_mac, json_HW_Id->valuestring);
 							}
 						}
+
+						/* Armo la respuesta con lo que hay en el JSon */
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else if(rc == 0)
 					{
@@ -963,11 +986,42 @@ int main(/*int argc, char** argv, char** env*/void)
 									}
 								}
 								cJSON_Delete(json_Query_Result);
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
-							else if( !memcmp(objeto, "port", 4))
+							else if( !memcmp(parametro, "config", 6))
 							{
-								/* Actualizar I/O */
-
+								strncpy(update_hw_config_mac, objeto, 15);
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							else if( !memcmp(parametro, "firmware", 8))
+							{
+								objeto[15] = 0;
+								sf.ToUpper(objeto, s);
+								/* Me fijo si ya está en la lista */
+								for(i = 0; i < 256; i++)
+								{
+									if(update_firmware_mac[i][0])
+									{
+										if( !strncmp(update_firmware_mac[i], s, 15)) break;
+									}
+								}
+								if(i == 256)
+								{
+									/* Lo pongo en el primer hueco libre */
+									for(i = 0; i < 256; i++)
+									{
+										if(update_firmware_mac[i][0] == 0) break;
+									}
+									if(i < 256)
+									{
+										strncpy(update_firmware_mac[i], s, 15);
+									}
+								}
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
 						}
 						else if( !strcmp(comando, "habilitar") )
