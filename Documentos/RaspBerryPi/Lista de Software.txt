@@ -12,6 +12,10 @@ apache2
     
     
 WiringPi
+    https://github.com/WiringPi
+    wiringpi_3.2-bullseye_armhf.deb
+    (Versión para 32 bits compilado con Debian bullseye)
 
+    dpkg -i wiringpi_3.2-bullseye_armhf.deb
 
 WiringSerial
