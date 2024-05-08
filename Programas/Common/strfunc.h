@@ -49,6 +49,9 @@ public:
   void ToUpper(const char* in, char* out);
   void ToLower(const char* in, char* out);
 
+  unsigned long Fecha2Timestamp(const char* fecha);
+  
+
 
 private:
 

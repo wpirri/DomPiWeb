@@ -1,0 +1,12 @@
+
+
+
+sudo nmcli -p connection show
+
+sudo nmcli con mod "Wired connection 1" ipv4.addresses 192.168.10.9/24 ipv4.method manual
+
+sudo nmcli con mod "Wired connection 1" ipv4.gateway 192.168.10.1
+
+sudo nmcli con mod "Wired connection 1" ipv4.dns 10.0.0.1
+
+sudo nmcli con mod "Wired connection 1" ipv4.dns "149.112.112.112,1.1.1.1"

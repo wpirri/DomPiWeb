@@ -238,3 +238,76 @@ void STRFunc::ToLower(const char* in, char* out)
     }
     *out = 0;
 }
+
+/*
+    Convierte "Feb 14 2023 19:48:17" en unix time
+    
+*/
+unsigned long STRFunc::Fecha2Timestamp(const char* fecha)
+{
+    struct tm stm;
+    char s[8];
+
+    /* Mes */
+    s[0] = *fecha++;
+    s[1] = *fecha++;
+    s[2] = *fecha++;
+    s[3] = 0;
+    if( !strcmp(s, "Ene")) { stm.tm_mon = 0; }
+    else if( !strcmp(s, "Feb")) { stm.tm_mon = 1; }
+    else if( !strcmp(s, "Mar")) { stm.tm_mon = 2; }
+    else if( !strcmp(s, "Abr")) { stm.tm_mon = 3; }
+    else if( !strcmp(s, "May")) { stm.tm_mon = 4; }
+    else if( !strcmp(s, "Jun")) { stm.tm_mon = 5; }
+    else if( !strcmp(s, "Jul")) { stm.tm_mon = 6; }
+    else if( !strcmp(s, "Ago")) { stm.tm_mon = 7; }
+    else if( !strcmp(s, "Sep")) { stm.tm_mon = 8; }
+    else if( !strcmp(s, "Oct")) { stm.tm_mon = 9; }
+    else if( !strcmp(s, "Nov")) { stm.tm_mon = 10; }
+    else if( !strcmp(s, "Dic")) { stm.tm_mon = 11; }
+
+    /* Día */
+    fecha++;
+    if(*fecha == ' ')
+    {
+        fecha++; 
+        s[0] = *fecha++;
+    }
+    else
+    {
+        s[0] = *fecha++;
+        s[1] = *fecha++;
+        s[2] = 0;
+    }
+    stm.tm_mday = atoi(s);
+
+    /*Año*/
+    fecha++;
+    s[0] = *fecha++;
+    s[1] = *fecha++;
+    s[2] = *fecha++;
+    s[3] = *fecha++;
+    s[4] = 0;
+    stm.tm_year = atoi(s) - 1900;
+
+    /*Hora*/
+    fecha++;
+    s[0] = *fecha++;
+    s[1] = *fecha++;
+    s[2] = 0;
+    stm.tm_hour = atoi(s);
+    /*Minuto*/
+    fecha++;
+    s[0] = *fecha++;
+    s[1] = *fecha++;
+    s[2] = 0;
+    stm.tm_min = atoi(s);
+    /*Segundo*/
+    fecha++;
+    s[0] = *fecha++;
+    s[1] = *fecha++;
+    s[2] = 0;
+    stm.tm_sec = atoi(s);
+
+    return mktime(&stm);
+}

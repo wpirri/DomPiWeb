@@ -1,0 +1,17 @@
+/etc/dhcpcd.conf
+
+interface eth0
+static ip_address=192.168.10.25
+static routers=192.168.10.1
+static domain_name_servers=192.168.10.4 192.168.10.6
+static domain_search=pueyrredon2679.com.ar
+noipv6
+
+o
+
+interface wlan0
+static ip_address=192.168.10.25
+static routers=192.168.10.1
+static domain_name_servers=149.112.112.112 1.1.1.1
+static domain_search=pueyrredon2679.com.ar
+noipv6
