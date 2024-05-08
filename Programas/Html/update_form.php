@@ -20,6 +20,9 @@ include('head-abm.php');
     <br />
     &nbsp;<input type="file" size="35" name="uploadedfile" />
     <br />
+    <p>Es posible cargar al sistema dos tipos de archivo:</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;gmonitor_dompiweb_update.tar.gz: Es un archivo de actualizaci&oacute;n para la central de dom&oacute;tica. Luego de la carga correcta el sistema se reinicia e instala la actualizaci&oacute;n.</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;pgm.hex: Es un archivo de actualizaci&oacute;n para los dispositivos Dom32-IO-WiFi.  Luego de la carga correcta los dispositivos serán notificados para que tomen la actualización y se ir&aacute;n reiniciando dentro de los siguientes tres minutos</p>
     <br />
     <br />
     <div id='update_result_div' class='abm-result-message'>&nbsp;</div>
@@ -36,7 +39,7 @@ include('head-abm.php');
         if ( move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $UPLOAD_FOLDER."/".$_FILES['uploadedfile']['name']) )
         { 
             ?>
-            document.getElementById('update_result_div').innerHTML = 'Actualizacion ok, el sistema se va a reiniciar.';
+            document.getElementById('update_result_div').innerHTML = 'Carga de archivo de actualizaci&oacute;n correcta.';
             <?php
         }
         else
@@ -53,7 +56,7 @@ include('head-abm.php');
     }
 
     function Upload() {
-        document.getElementById('update_result_div').innerHTML = 'Actualizando...';
+        document.getElementById('update_result_div').innerHTML = 'Cargando archivo...';
         document.update_form.submit();
     }
 </script>
