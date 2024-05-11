@@ -844,7 +844,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
 						}
-						else if( !strcmp(comando, "listar") )
+						else if( !strcmp(comando, "listar") || !strcmp(comando, "list"))
 						{
 							/* TODO: Completar comando listar */
 							if( !memcmp(objeto, "dis", 3))
@@ -955,7 +955,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 						}
 						/* TODO: Completar varios comandos sobre objetos */
-						else if( !strcmp(comando, "encender") )
+						else if( !strcmp(comando, "encender") || !strcmp(comando, "enc"))
 						{
 							if(objeto)
 							{
@@ -966,7 +966,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
 							}
 						}
-						else if( !strcmp(comando, "apagar") )
+						else if( !strcmp(comando, "apagar") || !strcmp(comando, "apa"))
 						{
 							if(objeto)
 							{
@@ -977,7 +977,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
 							}
 						}
-						else if( !strcmp(comando, "cambiar") || !strcmp(comando, "switch") )
+						else if( !strcmp(comando, "cambiar") || !strcmp(comando, "switch") || !strcmp(comando, "sw") )
 						{
 							if(objeto)
 							{
@@ -999,11 +999,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
 							}
 						}
-						else if( !strcmp(comando, "estado") )
-						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"No implementado\"}}");
-						}
-						else if( !strcmp(comando, "actualizar") )
+						else if( !strcmp(comando, "actualizar"))
 						{
 							/* Saco los datos que necesito */
 							if( !memcmp(parametro, "wifi", 4))
@@ -1042,12 +1038,12 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_Delete(json_Query_Result);
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
-							else if( !memcmp(parametro, "config", 6))
+							else if( !memcmp(parametro, "conf", 4))
 							{
 								strncpy(update_hw_config_mac, objeto, 15);
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
-							else if( !memcmp(parametro, "firmware", 8))
+							else if( !memcmp(parametro, "firm", 4))
 							{
 								objeto[15] = 0;
 								sf.ToUpper(objeto, s);
@@ -1078,7 +1074,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
 						}
-						else if( !strcmp(comando, "habilitar") )
+						else if( !strcmp(comando, "habilitar") || !strcmp(comando, "hab"))
 						{
 							/*                    Zona       Partición */
 							if(pEV->Habilitar_Alarma(objeto, parametro) == 0)
@@ -1090,7 +1086,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
 						}
-						else if( !strcmp(comando, "deshabilitar") )
+						else if( !strcmp(comando, "deshabilitar"))
 						{
 							/*                       Zona       Partición */
 							if(pEV->Deshabilitar_Alarma(objeto, parametro) == 0)
@@ -1102,7 +1098,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
 						}
-						else if( !strcmp(comando, "activar") )
+						else if( !strcmp(comando, "activar"))
 						{
 							if( !strcmp(objeto, "alarma"))
 							{

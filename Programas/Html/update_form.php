@@ -8,21 +8,23 @@ include('head-abm.php');
 <form enctype="multipart/form-data" action="update_form.php" method="post" id="update_form" name="update_form" method="post">
 
 <div id='update_back_btn' class='back-btn' onclick="window.location.replace('<?php echo $CONFIG_MENU?>');" >
-	<img id='update_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Cancelar
+	<img id='update_back_icon' class='icon-btn' src='images/no.png'>&nbsp;Volver
 </div>
 
-<div id='update_save_btn' class='submit-btn' onclick="Upload();" >
-	<img id='update_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Actualizar
+<div id='update_si_no'>
+    <div id='update_save_btn' class='submit-btn' onclick="Upload();" >
+        <img id='update_save_icon' class='icon-btn' src='images/ok.png'>&nbsp;Actualizar
+    </div>
 </div>
 
 <div id='update_div' class='abm-div'>
     <p class=abm-table-title>&nbsp;Actualizar</p>
     <br />
-    &nbsp;<input type="file" size="35" name="uploadedfile" />
+    &nbsp;&nbsp;&nbsp;&nbsp;<input type="file" size="35" name="uploadedfile" />
     <br />
-    <p>Es posible cargar al sistema dos tipos de archivo:</p>
-    <p>&nbsp;&nbsp;&nbsp;&nbsp;gmonitor_dompiweb_update.tar.gz: Es un archivo de actualizaci&oacute;n para la central de dom&oacute;tica. Luego de la carga correcta el sistema se reinicia e instala la actualizaci&oacute;n.</p>
-    <p>&nbsp;&nbsp;&nbsp;&nbsp;pgm.hex: Es un archivo de actualizaci&oacute;n para los dispositivos Dom32-IO-WiFi.  Luego de la carga correcta los dispositivos serán notificados para que tomen la actualización y se ir&aacute;n reiniciando dentro de los siguientes tres minutos</p>
+    <p>&nbsp;&nbsp;Es posible cargar al sistema dos tipos de archivo:</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;gmonitor_dompiweb_update.tar.gz</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;pgm.hex</p>
     <br />
     <br />
     <div id='update_result_div' class='abm-result-message'>&nbsp;</div>
@@ -40,6 +42,7 @@ include('head-abm.php');
         { 
             ?>
             document.getElementById('update_result_div').innerHTML = 'Carga de archivo de actualizaci&oacute;n correcta.';
+            document.getElementById('update_si_no').innerHTML = '&nbsp;';
             <?php
         }
         else
