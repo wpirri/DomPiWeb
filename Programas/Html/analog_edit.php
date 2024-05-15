@@ -67,7 +67,7 @@ include('head-abm.php');
 			} else if(headers[i] == 'Minuto_Fin') {
 				output += fillSimpleList(headers[i], TablaMinutos, val);
 			} else if(headers[i] == 'Habilitado') {
-				output += fillSimpleList(headers[i], TablaOnOffAuto, val);
+				output += fillSimpleList(headers[i], ListaOnOffAuto, val);
 			} else {
 				output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" value="' + val + '"/>';
 			}
