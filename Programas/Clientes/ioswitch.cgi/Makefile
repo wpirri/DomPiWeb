@@ -5,32 +5,36 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
-OBJECTS=ioswitch.cgi.o config.o strfunc.o
-OUTPUT=ioswitch.cgi
 DEFINE=$(GENERAL_DEFINE)
 CC=g++
+OBJECTS=$(OBJ)/ioswitch.cgi.o $(OBJ)/config.o $(OBJ)/strfunc.o
+OUTPUT=$(PROG)/$(EXE)
+EXE=ioswitch.cgi
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: ioswitch.cgi
+all: $(OUTPUT)
 
-ioswitch.cgi.o: ioswitch.cgi.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ioswitch.cgi.cc
-config.o: ../../Common/config.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
-strfunc.o: ../../Common/strfunc.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
+$(OBJ)/ioswitch.cgi.o: ioswitch.cgi.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ioswitch.cgi.cc -o $(OBJ)/ioswitch.cgi.o
+$(OBJ)/config.o: ../../Common/config.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o
+$(OBJ)/strfunc.o: ../../Common/strfunc.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc -o $(OBJ)/strfunc.o
 
-ioswitch.cgi: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
+$(OUTPUT): $(OBJECTS)
+	$(MKDIR) $(PROG)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
 
 clean:
-	$(RM) $(OBJECTS) $(OUTPUT) *.d
+	$(RMR) $(MACHINE)
 
 install:
-	cp $(OUTPUT) /usr/lib/cgi-bin/
+	$(CP) $(OUTPUT) $(INST_CGIDIR)/
 
 uninstall:
-	$(RM) /usr/lib/cgi-bin/$(OUTPUT)
-
+	$(RM) $(INST_CGIDIR)/$(EXE)

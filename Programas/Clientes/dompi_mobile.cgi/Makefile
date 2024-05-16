@@ -3,33 +3,38 @@
 include ../../../configure.mk
 
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
-CXXFLAGS=-g -Wall -Wextra -MMD -O2
+CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
-OBJECTS=dompi_mobile.cgi.o config.o strfunc.o
-OUTPUT=dompi_mobile.cgi
 DEFINE=$(GENERAL_DEFINE)
 CC=g++
+OBJECTS=$(OBJ)/dompi_mobile.cgi.o $(OBJ)/config.o $(OBJ)/strfunc.o
+OUTPUT=$(PROG)/$(EXE)
+EXE=dompi_mobile.cgi
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: dompi_mobile.cgi
+all: $(OUTPUT)
 
-dompi_mobile.cgi.o: dompi_mobile.cgi.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_mobile.cgi.cc
-config.o: ../../Common/config.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
-strfunc.o: ../../Common/strfunc.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
+$(OBJ)/dompi_mobile.cgi.o: dompi_mobile.cgi.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c dompi_mobile.cgi.cc -o $(OBJ)/dompi_mobile.cgi.o
+$(OBJ)/config.o: ../../Common/config.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o
+$(OBJ)/strfunc.o: ../../Common/strfunc.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc -o $(OBJ)/strfunc.o
 
-dompi_mobile.cgi: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
+$(OUTPUT): $(OBJECTS)
+	$(MKDIR) $(PROG)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
 
 clean:
-	$(RM) $(OBJECTS) $(OUTPUT) *.d
+	$(RMR) $(MACHINE)
 
 install:
-	$(CP) $(OUTPUT) $(INST_CGIDIR)
+	$(CP) $(OUTPUT) $(INST_CGIDIR)/
 
 uninstall:
-	$(RM) $(INST_CGIDIR)/$(OUTPUT)
+	$(RM) $(INST_CGIDIR)/$(EXE)

@@ -1,15 +1,22 @@
-
-**/*.o
-**/*.d
-**/*.lib
-**/*.*-bak
-**/*.*-cache
-**/*.FCStd1
-**/*.blend1
-**/*.d
-**/*.autosave
-**/*.*~
-**/*.stl
+*.o
+*.obj
+*.d
+*.lib
+*.bak
+*.*-bak
+*.*-cache
+*.FCStd1
+*.blend1
+*.d
+*.autosave
+*.*~
+*.stl
+*.zip
+*.tmp
+Thumbs.db
+.vscode
+.parmv7l
+.px86_64
 Gabinete/DPW-Frente-20210615.FCStd
 Gabinete/DPW-Caja-20210615.FCStd
 Gabinete/FreeCAD/DPW-Caja (copia).FCStd
@@ -21,10 +28,8 @@ Programas/Clientes/abmuser.cgi/abmuser.cgi
 Programas/Clientes/abmhw.cgi/abmhw.cgi
 Programas/Clientes/abmev.cgi/abmev.cgi
 Programas/Clientes/dompi_manager/dompi_manager
-Programas/Clientes/dompi_manager/Makefile~
 Programas/Servers/dompi_netcomm/dompi_netcomm
 Programas/Servers/dompi_gpio/dompi_gpio
-Programas/Clientes/domcli/Makefile~
 Programas/Clientes/domcli/domcli
 Circuito-IO/fp-info-cache
 Programas/Clientes/clear
@@ -33,10 +38,6 @@ Programas/Servers/dompi_cloud/dompi_cloud
 Programas/Clientes/statusio.cgi/statusio.cgi
 Programas/Clientes/abmsys.cgi/abmsys.cgi
 Programas/Servers/dompi_gsm/dompi_gsm
-Programas/Html/images/Thumbs.db
-Programas/Html/images/w/Thumbs.db
-.vscode/c_cpp_properties.json
-*.zip
 Circuito-IO/DomPiWeb.html
 Circuito-IO/DomPiWeb.wrl
 Circuito-IO/DomPiWeb.xml
@@ -46,17 +47,13 @@ Config/.DomPiWebDB.sqll3
 Documentos/DMG2305UX.pdf
 Documentos/Mayer/Mayer - Cuentas para transferencia.xls
 Documentos/Mayer/Pirri Walter Presupuesto Nº 234095 19-11-21.pdf
-Gabinete/OpenSCAD/Montaje.obj
 Gabinete/OpenSCAD/Montaje.ply
 Programas/Clientes/abmauto.cgi/abmauto.cgi
-*.tmp
 Programas/Clientes/abmat.cgi/abmat.cgi
 Programas/Clientes/abmgroup.cgi/abmgroup.cgi
 Programas/Servers/dompi_abm/dompi_abm
-Circuito-IO/Thumbs.db
 Programas/Clientes/abmalarma.cgi/abmalarma.cgi
 Programas/Servers/dompi_garnet/dompi_garnet
-Gabinete/OpenSCAD/Thumbs.db
 Programas/Clientes/gmonitor_get_saf.cgi/gmonitor_get_saf.cgi
 Programas/Clientes/ctrlalarma.cgi/ctrlalarma.cgi
 Programas/Clientes/dompi_mobile.cgi/dompi_mobile.cgi
@@ -67,5 +64,4 @@ Programas/Clientes/ioconfig.cgi/ioconfig.cgi
 Programas/Clientes/iostatus.cgi/iostatus.cgi
 Programas/Clientes/ioswitch.cgi/ioswitch.cgi
 Programas/Clientes/wifi.cgi/wifi.cgi
-Programas/Html/m/objetos_m.php.bak
 Documentos/dump-DB_DOMPIWEB-240324165403.sql

@@ -5,32 +5,36 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lstdc++ -lgmshared -lgmc -lcjson -lssl -lcrypto
-OBJECTS=abmgroup.cgi.o config.o strfunc.o
-OUTPUT=abmgroup.cgi
 DEFINE=$(GENERAL_DEFINE)
 CC=g++
+OBJECTS=$(OBJ)/abmgroup.cgi.o $(OBJ)/config.o $(OBJ)/strfunc.o
+OUTPUT=$(PROG)/$(EXE)
+EXE=abmgroup.cgi
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: abmgroup.cgi
+all: $(OUTPUT)
 
-abmgroup.cgi.o: abmgroup.cgi.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c abmgroup.cgi.cc
-config.o: ../../Common/config.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc
-strfunc.o: ../../Common/strfunc.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc
+$(OBJ)/abmgroup.cgi.o: abmgroup.cgi.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c abmgroup.cgi.cc -o $(OBJ)/abmgroup.cgi.o
+$(OBJ)/config.o: ../../Common/config.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o
+$(OBJ)/strfunc.o: ../../Common/strfunc.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc -o $(OBJ)/strfunc.o
 
-abmgroup.cgi: $(OBJECTS)
+$(OUTPUT): $(OBJECTS)
+	$(MKDIR) $(PROG)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
 
 clean:
-	$(RM) $(OBJECTS) $(OUTPUT) *.d
+	$(RMR) $(MACHINE)
 
 install:
 	$(CP) $(OUTPUT) $(INST_CGIDIR)/
 
 uninstall:
-	$(RM) $(INST_CGIDIR)/$(OUTPUT)
-
+	$(RM) $(INST_CGIDIR)/$(EXE)

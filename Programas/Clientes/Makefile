@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 
 all:
-	make -C abmassign.cgi
 	make -C abmalarma.cgi
+	make -C abmassign.cgi
 	make -C abmat.cgi
 	make -C abmauto.cgi
 	make -C abmev.cgi
@@ -17,14 +17,14 @@ all:
 	make -C gmonitor_get_saf.cgi
 	make -C dompi_mobile.cgi
 # Pi IO
-	make -C wifi.cgi
-	make -C iostatus.cgi
-	make -C ioswitch.cgi
-	make -C ioconfig.cgi
+	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi )
+	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi )
 
 clean:
-	make -C abmassign.cgi clean
 	make -C abmalarma.cgi clean
+	make -C abmassign.cgi clean
 	make -C abmat.cgi clean
 	make -C abmauto.cgi clean
 	make -C abmev.cgi clean
@@ -39,14 +39,14 @@ clean:
 	make -C gmonitor_get_saf.cgi clean
 	make -C dompi_mobile.cgi clean
 # Pi IO
-	make -C wifi.cgi clean
-	make -C iostatus.cgi clean
-	make -C ioswitch.cgi clean
-	make -C ioconfig.cgi clean
+	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi clean )
+	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi clean )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi clean )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi clean )
 
 install:
-	make -C abmassign.cgi install
 	make -C abmalarma.cgi install
+	make -C abmassign.cgi install
 	make -C abmat.cgi install
 	make -C abmauto.cgi install
 	make -C abmev.cgi install
@@ -61,14 +61,14 @@ install:
 	make -C gmonitor_get_saf.cgi install
 	make -C dompi_mobile.cgi install
 # Pi IO
-	make -C wifi.cgi install
-	make -C iostatus.cgi install
-	make -C ioswitch.cgi install
-	make -C ioconfig.cgi install
+	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi install )
+	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi install )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi install )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi install )
 
 uninstall:
-	make -C abmassign.cgi uninstall
 	make -C abmalarma.cgi uninstall
+	make -C abmassign.cgi uninstall
 	make -C abmat.cgi uninstall
 	make -C abmauto.cgi uninstall
 	make -C abmev.cgi uninstall
@@ -83,7 +83,7 @@ uninstall:
 	make -C gmonitor_get_saf.cgi uninstall
 	make -C dompi_mobile.cgi uninstall
 # Pi IO
-	make -C wifi.cgi uninstall
-	make -C iostatus.cgi uninstall
-	make -C ioswitch.cgi uninstall
-	make -C ioconfig.cgi uninstall
+	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi uninstall )
+	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi uninstall )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi uninstall )
+	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi uninstall )

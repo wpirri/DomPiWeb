@@ -5,43 +5,44 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lwiringPi -lssl -lcrypto
-OBJECTS=dompi_gpio.o dom32iopi.o config.o strfunc.o serial.o
-OUTPUT=dompi_gpio
 DEFINE=$(GENERAL_DEFINE)
-HWNAME=uname -m
 CC=g++
+OBJECTS=$(OBJ)/dompi_gpio.o $(OBJ)/dom32iopi.o $(OBJ)/config.o $(OBJ)/strfunc.o $(OBJ)/serial.o
+OUTPUT=$(PROG)/$(EXE)
+EXE=dompi_abm
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: dompi_gpio
+all: $(OUTPUT)
 
-dompi_gpio.o: dompi_gpio.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c dompi_gpio.cc
+$(OBJ)/dompi_gpio.o: dompi_gpio.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE)  $(MODULOS_INCLUIDOS) -c dompi_gpio.cc -o $(OBJ)/dompi_gpio.
+$(OBJ)/config.o: ../../Common/config.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o
+$(OBJ)/strfunc.o: ../../Common/strfunc.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc -o $(OBJ)/strfunc.o
+$(OBJ)/dom32iopi.o: ../../Common/dom32iopi.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/dom32iopi.cc -o $(OBJ)/dom32iopi.o
+$(OBJ)/serial.o: ../../Common/serial.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/serial.cc -o $(OBJ)/serial.o
 
-config.o: ../../Common/config.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/config.cc
-
-dom32iopi.o: ../../Common/dom32iopi.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/dom32iopi.cc
-
-strfunc.o: ../../Common/strfunc.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/strfunc.cc
-
-serial.o: ../../Common/serial.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c ../../Common/serial.cc
-
-
-dompi_gpio: $(OBJECTS)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT)
+$(OUTPUT): $(OBJECTS)
+	$(MKDIR) $(PROG)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:
-	$(RM) $(OBJECTS) $(OUTPUT) *.d
+	$(RMR) $(MACHINE)
 
 install:
 	$(CHMOD) +x install_server.sh
 	$(CHMOD) +x update-tables.sh
-	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
+	./install_server.sh $(EXE) $(PROG) $(INST_SBINDIR) $(INST_VARDIR)
 
 uninstall:
-	$(RM) $(INST_SBINDIR)/$(OUTPUT)
+	$(RM) $(INST_SBINDIR)/$(EXE)

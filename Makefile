@@ -27,27 +27,27 @@ installer:
 
 	cp -av Programas/Html/* $(RUN_HOME)/html/
 	rm $(RUN_HOME)/html/Makefile
-	cp Programas/Clientes/abmalarma.cgi/abmalarma.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmassign.cgi/abmassign.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmat.cgi/abmat.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmauto.cgi/abmauto.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmcamara.cgi/abmcamara.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmev.cgi/abmev.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmgroup.cgi/abmgroup.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmhw.cgi/abmhw.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmsys.cgi/abmsys.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmuser.cgi/abmuser.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/infoio.cgi/infoio.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/statusio.cgi/statusio.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/gmonitor_get_saf.cgi/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/dompi_mobile.cgi/dompi_mobile.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmalarma.cgi/$(PROG)/abmalarma.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmassign.cgi/$(PROG)/abmassign.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmat.cgi/$(PROG)/abmat.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmauto.cgi/$(PROG)/abmauto.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmcamara.cgi/$(PROG)/abmcamara.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmev.cgi/$(PROG)/abmev.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmgroup.cgi/$(PROG)/abmgroup.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmhw.cgi/$(PROG)/abmhw.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmsys.cgi/$(PROG)/abmsys.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/abmuser.cgi/$(PROG)/abmuser.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/infoio.cgi/$(PROG)/infoio.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/statusio.cgi/$(PROG)/statusio.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/gmonitor_get_saf.cgi/$(PROG)/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/dompi_mobile.cgi/$(PROG)/dompi_mobile.cgi $(RUN_HOME)/cgi/
 
-	cp Programas/Clientes/ioconfig.cgi/ioconfig.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/iostatus.cgi/iostatus.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/ioswitch.cgi/ioswitch.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/wifi.cgi/wifi.cgi $(RUN_HOME)/cgi/
+	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/ioconfig.cgi/$(PROG)/ioconfig.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/iostatus.cgi/$(PROG)/iostatus.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/ioswitch.cgi/$(PROG)/ioswitch.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/wifi.cgi/$(PROG)/wifi.cgi $(RUN_HOME)/cgi/ )
 
-	tar cvzf $(UPDATE_FILE) --files-from=update-files.lst
+	$(if $(findstring arm,$(MACHINE)) , tar cvzf $(UPDATE_FILE_ARM) --files-from=update-files-arm.lst , tar cvzf $(UPDATE_FILE_I386) --files-from=update-files-i386.lst )
 
 	cp Database/create.sql $(RUN_HOME)/
 	cp Database/init.sql $(RUN_HOME)/
@@ -58,7 +58,7 @@ installer:
 	cp Config/server.tab $(RUN_HOME)/
 	cp Config/server_parametro.tab $(RUN_HOME)/
 	
-	tar cvzf $(INSTALL_FILE) --files-from=install-files.lst
+	$(if $(findstring arm,$(MACHINE)) , tar cvzf $(INSTALL_FILE_ARM) --files-from=install-files-arm.lst , tar cvzf $(INSTALL_FILE_I386) --files-from=install-files-i386.lst )
 
 	#
 	# *******************************************************************************"
@@ -80,3 +80,28 @@ installer:
 	# * 
 	# *******************************************************************************"
 	#
+
+test:
+	@echo "RUN_USER:      "$(RUN_USER)
+	@echo "RUN_HOME:      "$(RUN_HOME)
+	@echo "INST_USER:     "$(INST_USER)
+	@echo "INST_LIBDIR:   "$(INST_LIBDIR)
+	@echo "INST_HEADDIR:  "$(INST_HEADDIR)
+	@echo "INST_BINDIR:   "$(INST_BINDIR)
+	@echo "INST_SBINDIR:  "$(INST_SBINDIR)
+	@echo "INST_ETCDIR:   "$(INST_ETCDIR)
+	@echo "INST_VARDIR:   "$(INST_VARDIR)
+	@echo "INST_INCDIR:   "$(INST_INCDIR)
+	@echo "INST_LOGDIR:   "$(INST_LOGDIR)
+	@echo "INST_CGIDIR:   "$(INST_CGIDIR)
+	@echo "INST_HTMLDIR:  "$(INST_HTMLDIR)
+	@echo "DATABASE:      "$(DATABASE)
+	@echo "SQL:           "$(SQL)
+	@echo "UPDATE_FILE:   "$(UPDATE_FILE)
+	@echo "INSTALL_FILE:  "$(INSTALL_FILE)
+	@echo "MACHINE:       "$(MACHINE)
+	@echo "OBJ:           "$(OBJ)
+	@echo "PROG:          "$(PROG)
+	@echo "INST:          "$(INST)
+
+	$(if $(findstring arm,$(MACHINE)) ,@echo "Compilando para RaspBerry Pi", @echo "Compilando para PC" )

@@ -6,43 +6,44 @@ INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/loca
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
 LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
-OBJECTS=dompi_server.o cmydb.o config.o strfunc.o gevent.o
-OUTPUT=dompi_server
 DEFINE=$(GENERAL_DEFINE)
 CC=g++
+OBJECTS=$(OBJ)/dompi_server.o $(OBJ)/cmydb.o $(OBJ)/config.o $(OBJ)/strfunc.o $(OBJ)/gevent.o
+OUTPUT=$(PROG)/$(EXE)
+EXE=dompi_server
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
-all: dompi_server
+all: $(OUTPUT)
 
-dompi_server.o: dompi_server.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c dompi_server.cc
+$(OBJ)/dompi_server.o: dompi_server.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c dompi_server.cc -o $(OBJ)/dompi_server.o
+$(OBJ)/config.o: ../../Common/config.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o
+$(OBJ)/strfunc.o: ../../Common/strfunc.cc
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc -o $(OBJ)/strfunc.o
+$(OBJ)/cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/cmydb.cc -o $(OBJ)/cmydb.o
+$(OBJ)/gevent.o: ../../Common/gevent.cc ../../Common/gevent.h
+	$(MKDIR) $(OBJ)
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/gevent.cc -o $(OBJ)/gevent.o
 
-config.o: ../../Common/config.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc
-strfunc.o: ../../Common/strfunc.cc
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/strfunc.cc
-#cpgdb.o: ../../Common/cpgdb.cc ../../Common/cpgdb.h
-#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/cpgdb.cc
-#csqlite.o: ../../Common/csqlite.cc
-#	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/csqlite.cc
-cmydb.o: ../../Common/cmydb.cc ../../Common/cmydb.h
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/cmydb.cc
-gevent.o: ../../Common/gevent.cc ../../Common/gevent.h
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/gevent.cc
-
-
-dompi_server: $(OBJECTS)
+$(OUTPUT): $(OBJECTS)
+	$(MKDIR) $(PROG)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:
-	$(RM) $(OBJECTS) $(OUTPUT) *.d
+	$(RMR) $(MACHINE)
 
 install:
 	$(CHMOD) +x install_server.sh
 	$(CHMOD) +x update-tables.sh
-	./install_server.sh $(INST_SBINDIR) $(OUTPUT) $(INST_VARDIR)
+	./install_server.sh $(EXE) $(PROG) $(INST_SBINDIR) $(INST_VARDIR)
 
 uninstall:
-	$(RM) $(INST_SBINDIR)/$(OUTPUT)
+	$(RM) $(INST_SBINDIR)/$(EXE)
