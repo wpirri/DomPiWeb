@@ -1,5 +1,11 @@
  #!/usr/bin/make -f
 
+# =============================================================================
+# instalar
+#	Para Desarrollo:  xinetd apache2 php libapache2-mod-php default-libmysqlclient-dev libcjson-dev libssl-dev [default-mysql-server]
+#	Para Home Server: xinetd dapache2 php libapache2-mod-php default-mysql-server libcjson1 libssl
+#
+
 include configure.mk
 
 all:

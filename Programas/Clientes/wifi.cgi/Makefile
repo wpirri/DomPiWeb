@@ -28,7 +28,7 @@ $(OBJ)/strfunc.o: ../../Common/strfunc.cc
 
 $(OUTPUT): $(OBJECTS)
 	$(MKDIR) $(PROG)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) $(LIBS) -O $(OBJECTS) -o $(OUTPUT) 
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(LFLAGS) -O $(OBJECTS) $(LIBS) -o $(OUTPUT) 
 
 clean:
 	$(RMR) $(MACHINE)
