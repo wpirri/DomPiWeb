@@ -9,7 +9,6 @@
 include configure.mk
 
 all:
-	find . -name "*.sh" -exec sed -i 's/\r//g' {} \;
 	make -C Programas
 
 clean:
@@ -111,3 +110,8 @@ test:
 	@echo "INST:          "$(INST)
 
 	$(if $(findstring arm,$(MACHINE)) ,@echo "Compilando para RaspBerry Pi", @echo "Compilando para PC" )
+
+fixeol:
+	dos2unix fixeol.sh
+	./fixeol.sh
+

@@ -18,5 +18,7 @@ else
     ./update-tables.sh $VAR funcion || echo "Fallo"
 
     gmt_pid=`ps -eaf | grep -v grep | grep $SBIN/gmt | awk '{ print $2; }'`
-    kill -HUP $gmt_pid > /dev/null 2>&1
+    if [ "X${gmt_pid}" != "X" ]; then
+        kill -HUP $gmt_pid > /dev/null 2>&1
+    fi
 fi
