@@ -601,6 +601,7 @@ void CheckUpdateUserCloud( void )
 		cJSON_Delete(json_QueryArray);
 	}
 }
+
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg)
 {
     /* POST
