@@ -12,6 +12,7 @@ include('head-abm.php');
 <div id='camera_list' class='abm-lateral-list-div'></div>
 
 <div id='camera_image' class='abm-div'></div>
+<iframe id='nvr_image' class='abm-div'></iframe>
 
 <script type="text/javascript" >
   <?php
@@ -44,39 +45,46 @@ include('head-abm.php');
       var i = 0;
       var j = 0;
 
-      for (i = 0; i < json_list.length; i++) {
-        if(json_list[i]['Id'] > 0) {
-          output += '<tr><td onclick="SelectCamera(';
-          output += '\'';
-          output += json_list[i]['Nombre'];
-          output += '\'';
-          output += ',';
-          output += '\'';
-          output += json_list[i]['Direccion_IP'];
-          output += '\'';
-          output += ',';
-          output += '\'';
-          output += json_list[i]['Usuario'];
-          output += '\'';
-          output += ',';
-          output += '\'';
-          output += json_list[i]['Clave'];
-          output += '\'';
-          output += ',';
-          output += '\'';
-          output += json_list[i]['Protocolo'];
-          output += '\'';
-          output += ',';
-          output += '\'';
-          output += json_list[i]['Requerimiento'];
-          output += '\'';
-          output += ')">';
-          output += json_list[i]['Nombre'];
-          output += '</td></tr>';
-        }
+      if(json_list.length == 2 && json_list[1]['Protocolo'] == 'iframe')
+      {
+        document.getElementById('nvr_image').src = json_list[1]['Direccion_IP'];
       }
-      output += '</table>\n';
-      document.getElementById(dst_div).innerHTML = output;
+      else
+      {
+        for (i = 0; i < json_list.length; i++) {
+          if(json_list[i]['Id'] > 0) {
+            output += '<tr><td onclick="SelectCamera(';
+            output += '\'';
+            output += json_list[i]['Nombre'];
+            output += '\'';
+            output += ',';
+            output += '\'';
+            output += json_list[i]['Direccion_IP'];
+            output += '\'';
+            output += ',';
+            output += '\'';
+            output += json_list[i]['Usuario'];
+            output += '\'';
+            output += ',';
+            output += '\'';
+            output += json_list[i]['Clave'];
+            output += '\'';
+            output += ',';
+            output += '\'';
+            output += json_list[i]['Protocolo'];
+            output += '\'';
+            output += ',';
+            output += '\'';
+            output += json_list[i]['Requerimiento'];
+            output += '\'';
+            output += ')">';
+            output += json_list[i]['Nombre'];
+            output += '</td></tr>';
+          }
+        }
+        output += '</table>\n';
+        document.getElementById(dst_div).innerHTML = output;
+      }
     } 
 
     function SelectCamera(nombre, ip, usuario, clave, proto, req) {

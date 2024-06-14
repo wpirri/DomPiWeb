@@ -15,8 +15,7 @@
 *.tmp
 Thumbs.db
 .vscode
-.parmv7l
-.px86_64
+.tmp_*
 Gabinete/DPW-Frente-20210615.FCStd
 Gabinete/DPW-Caja-20210615.FCStd
 Gabinete/FreeCAD/DPW-Caja (copia).FCStd

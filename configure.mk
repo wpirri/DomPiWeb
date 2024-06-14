@@ -24,7 +24,7 @@ INSTALL_FILE_ARM=gmonitor_dompiweb_install_arm.tar.gz
 UPDATE_FILE_I386=gmonitor_dompiweb_update_i386.tar.gz
 INSTALL_FILE_I386=gmonitor_dompiweb_install_i386.tar.gz
 
-MACHINE=.p$(shell uname -m)
+MACHINE=.tmp_$(shell uname -n)
 
 OBJ=$(MACHINE)/obj
 PROG=$(MACHINE)/exe

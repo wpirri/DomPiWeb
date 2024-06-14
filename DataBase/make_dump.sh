@@ -1,14 +1,23 @@
 #!/bin/sh
 
-HOST=127.0.0.1
 DB=DB_DOMPIWEB
-USER=dompi_web
-PASS=dompi_web
+HOSTNAME="https://witchblade.com.ar"
+UPLOAD_FORM="dpc/upload_client_config.php"
 
 FECHA=`date +%y%m%d%H%M%S`
-
+BACKUP_PATH="/var/gmonitor/backup"
 INFILE=/usr/local/bin/make_dump.sql
-OUTFILE=$HOME/dump-"${DB}"-"${FECHA}".sql
+
+echo "Obteniendo sistema..."
+SYSTEM_KEY=`echo "SELECT System_Key FROM DB_DOMPIWEB.TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;" | /usr/bin/mysql -D "${DB}" -N -r`
+echo "        Sistema: ${SYSTEM_KEY}"
+FILE="backup-mysql-${DB}-${SYSTEM_KEY}-${FECHA}.sql"
+OUTFILE="${BACKUP_PATH}/${FILE}"
+
+mkdir -p $BACKUP_PATH
+
+echo "Optimizando Base de Datos ${DB} ..."
+/usr/bin/mysqloptimize $DB >/dev/null
 
 echo "Generando ${OUTFILE} ..."
 
@@ -37,8 +46,10 @@ echo "DELETE FROM TB_DOM_USER;" >> "${OUTFILE}"
 echo "DELETE FROM TB_DOM_CONFIG;" >> "${OUTFILE}"
 echo "-- ####" >> "${OUTFILE}"
 
-#echo "mysql -h ${HOST} -u ${USER} -p${PASS} -D ${DB} -N -r < ${INFILE} >> ${OUTFILE}"
-mysql -h "${HOST}" -u "${USER}" -p"${PASS}" -D "${DB}" -N -r < "${INFILE}" >> "${OUTFILE}"
+/usr/bin/mysql -D "${DB}" -N -r < "${INFILE}" >> "${OUTFILE}"
 sed -i 's/\t//g' "${OUTFILE}"
 sed -i 's/NULL//g' "${OUTFILE}"
 sed -i 's/,,/,NULL,/g' "${OUTFILE}"
+
+echo "Subiendo backup a ${HOSTNAME}..."
+/usr/bin/curl --insecure -F "file=@${OUTFILE};filename=${FILE}" "${HOSTNAME}/${UPLOAD_FORM}" >/dev/null

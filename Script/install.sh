@@ -18,38 +18,57 @@ CGI_ROOT=/usr/lib/cgi-bin/
 
 if [ ! -x $SQL ]; then
     echo "No se encuentra mysql"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/xinetd ]; then
     echo "No se encuentra xinetd"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/apache2 ]; then
     echo "No se encuentra apache2"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
 if [ ! -x /usr/bin/php ]; then
     echo "No se encuentra php"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
 if [ ! -x /usr/share/doc/libapache2-mod-php ]; then
     echo "No se encuentra libapache2-mod-php"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
 x=`find /usr/lib -name libcjson.so`
 if [ "X${x}" = "X" ]; then
     echo "No se encuentra libcjson.so"
-    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    exit 1
+fi
+
+x=`find /usr/lib -name libssl.so`
+if [ "X${x}" = "X" ]; then
+    echo "No se encuentra libssl.so"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    exit 1
+fi
+
+if [ ! -x /usr/bin/curl ]; then
+    echo "No se encuentra curl"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    exit 1
+fi
+
+if [ ! -x /usr/bin/openssl ]; then
+    echo "No se encuentra curl"
+    echo "Se debe instalar xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
     exit 1
 fi
 
