@@ -316,6 +316,18 @@ int KeepAliveCloud( void )
 				m_port_actual = m_CloudHost1Port;
 				m_proto_actual = &m_CloudHost1Proto[0];
 			}
+			else if(m_CloudHost1Address[0])
+			{
+				m_host_actual = &m_CloudHost1Address[0];
+				m_port_actual = m_CloudHost1Port;
+				m_proto_actual = &m_CloudHost1Proto[0];
+			}
+			else if(m_CloudHost2Address[0])
+			{
+				m_host_actual = &m_CloudHost2Address[0];
+				m_port_actual = m_CloudHost2Port;
+				m_proto_actual = &m_CloudHost2Proto[0];
+			}
 			else
 			{
 				m_host_actual = nullptr;
