@@ -9,7 +9,7 @@ DEFINE=$(GENERAL_DEFINE)
 CC=g++
 OBJECTS=$(OBJ)/dompi_gpio.o $(OBJ)/dom32iopi.o $(OBJ)/config.o $(OBJ)/strfunc.o $(OBJ)/serial.o
 OUTPUT=$(PROG)/$(EXE)
-EXE=dompi_abm
+EXE=dompi_gpio
 
 #.cc.o:
 #	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) -c $<
@@ -18,7 +18,7 @@ all: $(OUTPUT)
 
 $(OBJ)/dompi_gpio.o: dompi_gpio.cc
 	$(MKDIR) $(OBJ)
-	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE)  $(MODULOS_INCLUIDOS) -c dompi_gpio.cc -o $(OBJ)/dompi_gpio.
+	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE)  $(MODULOS_INCLUIDOS) -c dompi_gpio.cc -o $(OBJ)/dompi_gpio.o
 $(OBJ)/config.o: ../../Common/config.cc
 	$(MKDIR) $(OBJ)
 	$(CC) $(CFLAGS) $(CXXFLAGS) $(INCLUDE) $(DEFINE) $(MODULOS_INCLUIDOS) -c ../../Common/config.cc -o $(OBJ)/config.o

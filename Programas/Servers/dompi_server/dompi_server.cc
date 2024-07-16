@@ -398,6 +398,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						if(sf.Fecha2Timestamp(json_FW->valuestring) > sf.Fecha2Timestamp("Abr  1 2024 00:00:00"))
 						{
+							m_pServer->m_pLog->Add(100, "HW %s soporta respuesta con datos.", json_HW_Id->valuestring);
 							soporta_respuesta_con_datos = true;
 						}
 					}
@@ -413,35 +414,47 @@ int main(/*int argc, char** argv, char** env*/void)
 						if(soporta_respuesta_con_datos)
 						{
 							json_Response = cJSON_CreateObject();
-							/* Me traigo los estados de las salidas del dispositivo */
+							/* Me traigo los estados de las salidas del dispositivo
+							   para informar si hay cambios en la misma respuesta */
 							json_Query_Result = cJSON_CreateArray();
-							sprintf(query, "SELECT A.Port, A.Estado "
-												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-												"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
-													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
+							sprintf(query, "SELECT MAC, P.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
+												"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, "
+												"A.Estado, A.Analog_Mult_Div_Valor "
+											"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+											"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
+												"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
 							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 							rc = pDB->Query(json_Query_Result, query);
 							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 							if(rc > 0)
 							{
+								m_pServer->m_pLog->Add(100, "Respondiendo con cambios de estado");
 								/* Recorro el array */
 								cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 								{
 									/* Saco los datos que necesito */
+									json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "ASS_Id");
 									json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
 									json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+									json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
+									/* Armo la respuesta */
 									cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+									/* Borro el flag de update de los que ya aviso */
+									sprintf(query, "UPDATE TB_DOM_ASSIGN "
+														"SET Actualizar = 0, Estado_HW = %s "
+														"WHERE Id = %s;", json_Estado->valuestring, json_Id->valuestring);
+									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+									rc = pDB->Query(NULL, query);
+									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+									if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+									/* Notifico a la nube */
+									m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
+															json_Objeto->valuestring, json_Estado->valuestring);
+									cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
+									m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+									m_pServer->Notify("dompi_ass_change", message, strlen(message));
 								}
-								/* Borro e flag de update si estaba */
-								sprintf(query, "UPDATE TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-													"SET A.Actualizar = 0 "
-													"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' "
-														"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
-								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-								rc = pDB->Query(NULL, query);
-								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 							}
 							else
 							{
@@ -836,9 +849,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						Strf.ParseCommand(cmdline, comando, objeto, parametro);
 
 						m_pServer->m_pLog->Add(80, "[dompi_cmdline] Comando: %s - Objeto: %s - Parametro: %s", 
-											(comando)?comando:"NULL", 
-											(objeto)?objeto:"NULL", 
-											(parametro)?parametro:"NULL");
+											(comando[0])?comando:"NULL", 
+											(objeto[0])?objeto:"NULL", 
+											(parametro[0])?parametro:"NULL");
 
 						if( !strcmp(comando, "help") || !strcmp(comando, "?"))
 						{
@@ -935,11 +948,11 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "sms") )
 						{
-							if(objeto && parametro)
+							if(objeto[0] && parametro[0])
 							{
 								json_un_obj = cJSON_CreateObject();
-								cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto)?objeto:"98765432");
-								cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro)?parametro:"test");
+								cJSON_AddStringToObject(json_un_obj, "SmsTo", (objeto[0])?objeto:"98765432");
+								cJSON_AddStringToObject(json_un_obj, "SmsTxt", (parametro[0])?parametro:"test");
 								cJSON_PrintPreallocated(json_un_obj, message, GM_COMM_MSG_LEN, 0);
 								m_pServer->m_pLog->Add(90, "Enqueue [dompi_sms_output][%s]", message);
 								rc = m_pServer->Enqueue("dompi_sms_output", message, strlen(message));
@@ -957,7 +970,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						/* TODO: Completar varios comandos sobre objetos */
 						else if( !strcmp(comando, "encender") || !strcmp(comando, "enc"))
 						{
-							if(objeto)
+							if(objeto[0])
 							{
 								pEV->ChangeAssignByName(objeto, 1, 0);
 							}
@@ -968,7 +981,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "apagar") || !strcmp(comando, "apa"))
 						{
-							if(objeto)
+							if(objeto[0])
 							{
 								pEV->ChangeAssignByName(objeto, 2, 0);
 							}
@@ -979,7 +992,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "cambiar") || !strcmp(comando, "switch") || !strcmp(comando, "sw") )
 						{
-							if(objeto)
+							if(objeto[0])
 							{
 								pEV->ChangeAssignByName(objeto, 3, 0);
 							}
@@ -990,7 +1003,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "pulso") )
 						{
-							if(objeto)
+							if(objeto[0])
 							{
 								pEV->ChangeAssignByName(objeto, 4, 0);
 							}

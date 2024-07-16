@@ -47,12 +47,12 @@ installer:
 	cp Programas/Clientes/gmonitor_get_saf.cgi/$(PROG)/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
 	cp Programas/Clientes/dompi_mobile.cgi/$(PROG)/dompi_mobile.cgi $(RUN_HOME)/cgi/
 
-	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/ioconfig.cgi/$(PROG)/ioconfig.cgi $(RUN_HOME)/cgi/ )
-	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/iostatus.cgi/$(PROG)/iostatus.cgi $(RUN_HOME)/cgi/ )
-	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/ioswitch.cgi/$(PROG)/ioswitch.cgi $(RUN_HOME)/cgi/ )
-	$(if $(findstring arm,$(MACHINE)) , cp Programas/Clientes/wifi.cgi/$(PROG)/wifi.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/ioconfig.cgi/$(PROG)/ioconfig.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/iostatus.cgi/$(PROG)/iostatus.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/ioswitch.cgi/$(PROG)/ioswitch.cgi $(RUN_HOME)/cgi/ )
+	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/wifi.cgi/$(PROG)/wifi.cgi $(RUN_HOME)/cgi/ )
 
-	$(if $(findstring arm,$(MACHINE)) , tar cvzf $(UPDATE_FILE_ARM) --files-from=update-files-arm.lst , tar cvzf $(UPDATE_FILE_I386) --files-from=update-files-i386.lst )
+	$(if $(findstring arm,$(ARQ)) , tar cvzf $(UPDATE_FILE_ARM) --files-from=update-files-arm.lst , tar cvzf $(UPDATE_FILE_I386) --files-from=update-files-i386.lst )
 
 	cp Database/create.sql $(RUN_HOME)/
 	cp Database/init.sql $(RUN_HOME)/
@@ -63,7 +63,9 @@ installer:
 	cp Config/server.tab $(RUN_HOME)/
 	cp Config/server_parametro.tab $(RUN_HOME)/
 	
-	$(if $(findstring arm,$(MACHINE)) , tar cvzf $(INSTALL_FILE_ARM) --files-from=install-files-arm.lst , tar cvzf $(INSTALL_FILE_I386) --files-from=install-files-i386.lst )
+	$(if $(findstring arm,$(ARQ)) , tar cvzf $(INSTALL_FILE_ARM) --files-from=install-files-arm.lst , tar cvzf $(INSTALL_FILE_I386) --files-from=install-files-i386.lst )
+
+### TODO: agregar gmonitor a los grupos gpio y dialout
 
 	#
 	# *******************************************************************************"
@@ -105,11 +107,12 @@ test:
 	@echo "UPDATE_FILE:   "$(UPDATE_FILE)
 	@echo "INSTALL_FILE:  "$(INSTALL_FILE)
 	@echo "MACHINE:       "$(MACHINE)
+	@echo "ARQ:           "$(ARQ)
 	@echo "OBJ:           "$(OBJ)
 	@echo "PROG:          "$(PROG)
 	@echo "INST:          "$(INST)
 
-	$(if $(findstring arm,$(MACHINE)) ,@echo "Compilando para RaspBerry Pi", @echo "Compilando para PC" )
+	$(if $(findstring arm,$(ARQ)) ,@echo "Compilando para RaspBerry Pi", @echo "Compilando para PC" )
 
 fixeol:
 	dos2unix fixeol.sh

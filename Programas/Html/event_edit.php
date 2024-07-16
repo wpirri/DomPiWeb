@@ -75,7 +75,7 @@ include('head-abm.php');
 
     function LoadGrpData(msg) {
         loadGrpTable(JSON.parse(msg).response);
-        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=list_part', LoadPartData, LoadPartData, false);
+        newAJAXCommand('/cgi-bin/abmalarma.cgi?funcion=list_part', LoadPartData, false);
     }
 
     function LoadPartData(msg) {

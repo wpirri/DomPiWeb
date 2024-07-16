@@ -1,21 +1,15 @@
-libcjson-dev
-    git clone https://github.com/DaveGamble/cJSON
-    cd cJSON
-    make
-    sudo make install
-    
-sqlite3
-    sudo apt install sqlite3 libsqlite3-dev
-    
-apache2
-    sudo apt install apache2 php libapache2-mod-php
-    
-    
+
+Desarrollo:
+	xinetd apache2 php libapache2-mod-php default-mysql-server default-libmysqlclient-dev libcjson-dev curl libssl-dev cifs-utils
+
+Central:
+	xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl
+
 WiringPi
     https://github.com/WiringPi
-    wiringpi_3.2-bullseye_armhf.deb
-    (Versión para 32 bits compilado con Debian bullseye)
+    32 bit: wiringpi_3.2-bullseye_armhf.deb (Versión para 32 bits compilado con Debian bullseye)
+    64 bit: wiringpi_3.6_arm64.deb
 
-    dpkg -i wiringpi_3.2-bullseye_armhf.deb
+    dpkg -i wiringpi_####.deb
 
 WiringSerial

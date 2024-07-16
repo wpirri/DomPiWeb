@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+include ../../configure.mk
+
 all:
 	make -C dompi_abm
 	make -C dompi_cloud
@@ -8,7 +10,7 @@ all:
 	make -C dompi_netcomm
 	make -C dompi_server
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C dompi_gpio )
+	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio )
 	
 
 clean:
@@ -19,7 +21,7 @@ clean:
 	make -C dompi_netcomm clean
 	make -C dompi_server clean
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C dompi_gpio clean )
+	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio clean )
 
 install:
 	make -C dompi_abm install
@@ -29,7 +31,7 @@ install:
 	make -C dompi_netcomm install
 	make -C dompi_server install
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C dompi_gpio install )
+	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio install )
 
 uninstall:
 	make -C dompi_abm uninstall
@@ -39,4 +41,4 @@ uninstall:
 	make -C dompi_netcomm uninstall
 	make -C dompi_server uninstall
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C dompi_gpio uninstall )
+	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio uninstall )

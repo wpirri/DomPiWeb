@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+include ../../configure.mk
+
 all:
 	make -C abmalarma.cgi
 	make -C abmassign.cgi
@@ -17,10 +19,10 @@ all:
 	make -C gmonitor_get_saf.cgi
 	make -C dompi_mobile.cgi
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi )
-	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi )
+	$(if $(findstring arm,$(ARQ)) , make -C wifi.cgi )
+	$(if $(findstring arm,$(ARQ)) , make -C iostatus.cgi )
+	$(if $(findstring arm,$(ARQ)) , make -C ioswitch.cgi )
+	$(if $(findstring arm,$(ARQ)) , make -C ioconfig.cgi )
 
 clean:
 	make -C abmalarma.cgi clean
@@ -39,10 +41,10 @@ clean:
 	make -C gmonitor_get_saf.cgi clean
 	make -C dompi_mobile.cgi clean
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi clean )
-	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi clean )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi clean )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi clean )
+	$(if $(findstring arm,$(ARQ)) , make -C wifi.cgi clean )
+	$(if $(findstring arm,$(ARQ)) , make -C iostatus.cgi clean )
+	$(if $(findstring arm,$(ARQ)) , make -C ioswitch.cgi clean )
+	$(if $(findstring arm,$(ARQ)) , make -C ioconfig.cgi clean )
 
 install:
 	make -C abmalarma.cgi install
@@ -61,10 +63,10 @@ install:
 	make -C gmonitor_get_saf.cgi install
 	make -C dompi_mobile.cgi install
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi install )
-	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi install )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi install )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi install )
+	$(if $(findstring arm,$(ARQ)) , make -C wifi.cgi install )
+	$(if $(findstring arm,$(ARQ)) , make -C iostatus.cgi install )
+	$(if $(findstring arm,$(ARQ)) , make -C ioswitch.cgi install )
+	$(if $(findstring arm,$(ARQ)) , make -C ioconfig.cgi install )
 
 uninstall:
 	make -C abmalarma.cgi uninstall
@@ -83,7 +85,7 @@ uninstall:
 	make -C gmonitor_get_saf.cgi uninstall
 	make -C dompi_mobile.cgi uninstall
 # Pi IO
-	$(if $(findstring arm,$(MACHINE)) , make -C wifi.cgi uninstall )
-	$(if $(findstring arm,$(MACHINE)) , make -C iostatus.cgi uninstall )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioswitch.cgi uninstall )
-	$(if $(findstring arm,$(MACHINE)) , make -C ioconfig.cgi uninstall )
+	$(if $(findstring arm,$(ARQ)) , make -C wifi.cgi uninstall )
+	$(if $(findstring arm,$(ARQ)) , make -C iostatus.cgi uninstall )
+	$(if $(findstring arm,$(ARQ)) , make -C ioswitch.cgi uninstall )
+	$(if $(findstring arm,$(ARQ)) , make -C ioconfig.cgi uninstall )

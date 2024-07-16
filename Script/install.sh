@@ -140,9 +140,9 @@ echo "Configurando TCP..."
 /sbin/sysctl -w net.ipv4.tcp_keepalive_time=75
 
 echo "# Agregado por DomPiWeb" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_keepalive_intvl=75" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_keepalive_probes=8" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_keepalive_time=75" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_intvl=1" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_probes=10" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_keepalive_time=80" >> /etc/sysctl.conf
 echo "=================================================================="
 echo
 # Mensajes finales
@@ -153,9 +153,3 @@ echo "Modificar en php.ini y luego reiniciar Apache:"
 echo "   upload_max_filesize=10M"
 echo "   post_max_size=11M"
 echo
-echo "Ejecutar una vez levantado el sistema"
-echo "   gm_safcfg -c dompi_infoio_synch"
-echo "   gm_safcfg -c dompi_changeio_synch"
-echo "   gm_safcfg -c dompi_sms_input"
-echo "   gm_safcfg -c dompi_sms_output"
-echo "   gm_safcfg -c dompi_msg_to_cloud"
