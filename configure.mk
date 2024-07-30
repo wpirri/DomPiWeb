@@ -19,10 +19,10 @@ INST_HTMLDIR=/var/www/html
 DATABASE=DB_DOMPIWEB
 SQL=/usr/bin/mysql
 
-UPDATE_FILE_ARM=gmonitor_dompiweb_update_arm.tar.gz
-INSTALL_FILE_ARM=gmonitor_dompiweb_install_arm.tar.gz
-UPDATE_FILE_I386=gmonitor_dompiweb_update_i386.tar.gz
-INSTALL_FILE_I386=gmonitor_dompiweb_install_i386.tar.gz
+UPDATE_FILE_ARM=Distrib/arm/gmonitor_dompiweb_update.tar.gz
+INSTALL_FILE_ARM=Distrib/arm/gmonitor_dompiweb_install.tar.gz
+UPDATE_FILE_I386=Distrib/i386/gmonitor_dompiweb_update.tar.gz
+INSTALL_FILE_I386=Distrib/i386/gmonitor_dompiweb_install.tar.gz
 
 MACHINE=.tmp_$(shell uname -n)
 ARQ=$(shell uname -m)

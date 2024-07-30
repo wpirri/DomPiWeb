@@ -2331,7 +2331,8 @@ void CheckUpdateHWConfig()
 					rc = pDB->Query(json_arr_Assign, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-					if(rc > 0)
+					/* Aunque no haya assigs lo mando igual para que vaya la configuración de HTTPS y Wiegand */
+					if(rc >= 0)
 					{
 						cJSON_PrintPreallocated(json_Config, message, GM_COMM_MSG_LEN, 0);
 						m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_port_config][%s]", message);

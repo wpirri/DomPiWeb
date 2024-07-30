@@ -88,9 +88,11 @@ chown -v $GMON_USER: $SYTEM_LIB
 mkdir -v -p $SYTEM_LOG
 chown -v $GMON_USER: $SYTEM_LOG
 mkdir -v -p $DOCUMENT_ROOT
-# Directorio para upload
+# Directorio para upload / download
 mkdir -v -p $DOCUMENT_ROOT/upload
 chmod 0777 $DOCUMENT_ROOT/upload
+mkdir -v -p $DOCUMENT_ROOT/download
+chmod 0777 $DOCUMENT_ROOT/download
 
 echo "Agregando la configuracion de gmonitor y DomPiWeb..."
 # Agrego los la configuración de gmonitor y DomPiWeb

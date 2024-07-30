@@ -316,7 +316,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 	external_timeout = 1000;
-	if( pConfig->GetParam("INTERNAL-TIMEOUT", s))
+	if( pConfig->GetParam("EXTERNAL-TIMEOUT", s))
 	{
 		external_timeout = atoi(s) * 1000;
 	}
