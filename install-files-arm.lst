@@ -50,6 +50,7 @@
 /etc/cron.daily/clean-gmonitor-logs
 /usr/local/sbin/clean-gmonitor-old-logs.sh
 /etc/cron.monthly/make-db-backup.sh
+/etc/cron.monthly/restart-60-seg.sh
 /usr/local/sbin/make-dompidb-backup.sh
 /usr/local/sbin/drop_ipc.sh
 /usr/local/bin/make_dump.sh
