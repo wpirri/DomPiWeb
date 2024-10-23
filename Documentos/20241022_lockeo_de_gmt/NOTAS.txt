@@ -1,0 +1,63 @@
+Debug gmt
+
+
+Cola de gmt
+---------------------------------------
+Message Queue msqid=1281130534
+uid=1001        gid=1001        cuid=1001       cgid=1001       mode=0600
+cbytes=16371    qbytes=0        qnum=34 lspid=8514      lrpid=8426
+send_time=Sun Aug 11 13:16:40 2024
+rcv_time=Sun Aug 11 13:14:40 2024
+change_time=Tue Jul 30 09:43:30 2024
+
+Semaforos
+---------------------------------------
+Semaphore Array semid=1
+uid=1001         gid=1001        cuid=1001       cgid=1001
+mode=0600, access_perms=0600
+nsems = 2
+otime = Wed Oct 23 09:51:11 2024
+ctime = Tue Jul 30 09:43:30 2024
+semnum     value      ncount     zcount     pid
+0          1          0          0          21997
+1          1          0          0          21997
+
+
+back trace
+---------------------------------------
+__GI___semtimedop64 (semid=1, sops=0x76f0f514 <CSincro::SemBuff(int, int)::m_SemBuff>, nsops=1, timeout=0x0)
+    at ../sysdeps/unix/sysv/linux/semtimedop.c:62
+62      ../sysdeps/unix/sysv/linux/semtimedop.c: No such file or directory.
+(gdb) bt
+#0  __GI___semtimedop64 (semid=1, sops=0x76f0f514 <CSincro::SemBuff(int, int)::m_SemBuff>, nsops=1, timeout=0x0)
+    at ../sysdeps/unix/sysv/linux/semtimedop.c:62
+#1  0x76be58c0 in __semtimedop (semid=<optimized out>, sops=<optimized out>, nsops=<optimized out>, timeout=<optimized out>)
+    at ../sysdeps/unix/sysv/linux/semtimedop.c:82
+#2  0x76f0b808 in CSincMem::WriteBloq (this=this@entry=0x4eb300, in_out=in_out@entry=1) at sincmem.cc:124
+#3  0x76f0b924 in CSincMem::GetAt (this=0x4eb300, pos=4, pos@entry=0, data=0x7e8c7100, data@entry=0x7e8c70f8,
+    length=length@entry=16) at sincmem.cc:108
+#4  0x76f02eb8 in CGMTdb::GetSysInfo (this=<optimized out>, si=si@entry=0x7e8c70f8) at gmontdb.cc:1164
+#5  0x00012364 in OnChildExit () at gmt.cc:190
+#6  <signal handler called>
+#7  __GI___semtimedop64 (semid=1, sops=0x76f0f514 <CSincro::SemBuff(int, int)::m_SemBuff>, nsops=1, timeout=0x0)
+    at ../sysdeps/unix/sysv/linux/semtimedop.c:62
+#8  0x76be58c0 in __semtimedop (semid=<optimized out>, sops=<optimized out>, nsops=<optimized out>, timeout=<optimized out>)
+    at ../sysdeps/unix/sysv/linux/semtimedop.c:82
+#9  0x76f0b8c0 in CSincMem::WriteBloq (this=this@entry=0x4eb300, in_out=in_out@entry=1) at sincmem.cc:136
+#10 0x76f0b924 in CSincMem::GetAt (this=0x4eb300, pos=4, pos@entry=0, data=0x7e8c74a8, data@entry=0x7e8c74a0,
+    length=length@entry=16) at sincmem.cc:108
+#11 0x76f02eb8 in CGMTdb::GetSysInfo (this=<optimized out>, si=si@entry=0x7e8c74a0) at gmontdb.cc:1164
+#12 0x000131b0 in MsgRouter () at gmt.cc:244
+#13 0x00012098 in main (argc=<optimized out>, argv=<optimized out>) at gmt.cc:161
+(gdb)
+
+119     int CSincMem::WriteBloq(int in_out)
+120     {
+121             long count;
+122
+123             /* entro al contador de lectores y si soy el primero bloqueo el semaforo de escritores */
+124 >>>>        if(Wait(SSHMEM_READ_SEM) != 0) return -1;
+125             if(CShMem::GetAt(0, &count, sizeof(long)) != 0)
+126             {
+127                     Signal(SSHMEM_READ_SEM);
+128                     return -1;

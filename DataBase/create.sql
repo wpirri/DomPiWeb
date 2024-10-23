@@ -226,6 +226,8 @@ Parametro_Evento integer DEFAULT 0,     -- Se pasa si es Variable o Funcion
 Condicion_Variable integer DEFAULT 0,             -- Condiciona el evento
 Condicion_Igualdad integer DEFAULT 0,             -- 0 ==, 1 >, 2 <
 Condicion_Valor integer DEFAULT 0,                -- Valor de condicion
+Filtro_Repeticion integer DEFAULT 0,              -- Segundos para ignorar repeticiones
+Ultimo_Evento  integer DEFAULT 0,
 Flags integer DEFAULT 0,
 FOREIGN KEY(Objeto_Origen) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Objeto_Destino) REFERENCES TB_DOM_ASSIGN(Id),

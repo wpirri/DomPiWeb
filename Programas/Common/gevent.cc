@@ -564,6 +564,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
 {
 	char query[4096];
     int rc;
+    time_t time_now;
     cJSON *json_AssignArray;
     cJSON *json_AssignRow;
     cJSON *json_EventArray;
@@ -581,8 +582,13 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
     cJSON *Condicion_Variable;
     cJSON *Condicion_Igualdad;
     cJSON *Condicion_Valor;
+    cJSON *Evento_Id;
+    cJSON *Filtro_Repeticion;
+    cJSON *Ultimo_Evento;
 
     m_pServer->m_pLog->Add(100, "[GEvent::CheckEvent] hw_id: %i port %s estado %i", hw_id, port, estado);
+
+    time_now = time(&time_now);
 
     sprintf(query, "SELECT Id, Objeto, Tipo "
                     "FROM TB_DOM_ASSIGN "
@@ -636,6 +642,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
                         cJSON_PrintPreallocated(json_EventRow, query, 4095, 0);
                         m_pServer->m_pLog->Add(50, "[EVENTO]: %s", query); 
 
+                        Evento_Id = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Id");
                         Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Objeto_Destino");
                         Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Grupo_Destino");
                         Particion_Destino = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Particion_Destino");
@@ -646,7 +653,21 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
                         Condicion_Variable = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Variable");
                         Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Igualdad");
                         Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Condicion_Valor");
+                        Filtro_Repeticion = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Filtro_Repeticion");
+                        Ultimo_Evento = cJSON_GetObjectItemCaseSensitive(json_EventRow, "Ultimo_Evento");
                         //Flags = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Flags");
+
+                        if(Filtro_Repeticion && Ultimo_Evento)
+                        {
+                            if(atol(Filtro_Repeticion->valuestring) > 0 )
+                            {
+                                if(time_now < (atol(Ultimo_Evento->valuestring) + atol(Filtro_Repeticion->valuestring)))
+                                {
+                                    /* Evento repetido con proximidad */
+                                    break;
+                                }
+                            }
+                        }
 
                         /* TODO: Evaluar condiciones */
                         if(Condicion_Variable && Condicion_Igualdad && Condicion_Valor)
@@ -655,6 +676,15 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
 
 
                         }
+
+                        /* Actualizo la hora del evento */
+                        sprintf(query, "UPDATE TB_DOM_EVENT "
+                                        "SET Ultimo_Evento = %li "
+                                        "WHERE Id = %s;", time_now, Evento_Id->valuestring);
+                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                        rc = m_pDB->Query(nullptr, query);
+                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
                         /* Si la condicion lo permite ejecuto según corresponda */
                         if( rc >= 0 && Enviar )
