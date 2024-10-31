@@ -403,114 +403,130 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 					}
 
-					rc = pEV->ExtIOEvent(message);
-					//message[0] = 0;
-					if(rc == 1)
+					if( !strcmp(json_Tipo_HW->valuestring, "IO") || !strcmp(json_Tipo_HW->valuestring, "PI")  )
 					{
-#ifdef ACTIVO_ACTIVO
-						if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
-						message[0] = 0;
-#endif
-						if(soporta_respuesta_con_datos)
+						rc = pEV->ExtIOEvent(message);
+						//message[0] = 0;
+						if(rc == 1)
 						{
-							json_Response = cJSON_CreateObject();
-							/* Me traigo los estados de las salidas del dispositivo
-							   para informar si hay cambios en la misma respuesta */
-							json_Query_Result = cJSON_CreateArray();
-							sprintf(query, "SELECT MAC, P.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-												"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, "
-												"A.Estado, A.Analog_Mult_Div_Valor "
-											"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-											"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
-												"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
-							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-							rc = pDB->Query(json_Query_Result, query);
-							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-							if(rc > 0)
+#ifdef ACTIVO_ACTIVO
+							if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
+							message[0] = 0;
+#endif
+							if(soporta_respuesta_con_datos)
 							{
-								m_pServer->m_pLog->Add(100, "Respondiendo con cambios de estado");
-								/* Recorro el array */
-								cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+								json_Response = cJSON_CreateObject();
+								/* Me traigo los estados de las salidas del dispositivo
+								para informar si hay cambios en la misma respuesta */
+								json_Query_Result = cJSON_CreateArray();
+								sprintf(query, "SELECT MAC, P.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
+													"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, "
+													"A.Estado, A.Analog_Mult_Div_Valor "
+												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+												"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
+													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(json_Query_Result, query);
+								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								if(rc > 0)
 								{
-									/* Saco los datos que necesito */
-									json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "ASS_Id");
-									json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
-									json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
-									json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
-									/* Armo la respuesta */
-									cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
-									/* Borro el flag de update de los que ya aviso */
-									sprintf(query, "UPDATE TB_DOM_ASSIGN "
-														"SET Actualizar = 0, Estado_HW = %s "
-														"WHERE Id = %s;", json_Estado->valuestring, json_Id->valuestring);
-									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-									rc = pDB->Query(NULL, query);
-									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-									if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-									/* Notifico a la nube */
-									m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
-															json_Objeto->valuestring, json_Estado->valuestring);
-									cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
-									m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-									m_pServer->Notify("dompi_ass_change", message, strlen(message));
+									m_pServer->m_pLog->Add(100, "Respondiendo con cambios de estado");
+									/* Recorro el array */
+									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+									{
+										/* Saco los datos que necesito */
+										json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "ASS_Id");
+										json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
+										json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+										json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
+										/* Armo la respuesta */
+										cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+										/* Borro el flag de update de los que ya aviso */
+										sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0, Estado_HW = %s "
+															"WHERE Id = %s;", json_Estado->valuestring, json_Id->valuestring);
+										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+										rc = pDB->Query(NULL, query);
+										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+										/* Notifico a la nube */
+										m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
+																json_Objeto->valuestring, json_Estado->valuestring);
+										cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
+										m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+										m_pServer->Notify("dompi_ass_change", message, strlen(message));
+									}
 								}
+								else
+								{
+									/* Si no hay estados para responder mando la hora (YYYY/MM/DD hh:mm:ss) */
+									sprintf(message, "%04i/%02i/%02i %02i:%02i:%02i", 
+										s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
+										s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
+									cJSON_AddStringToObject(json_Response, "TIME", message);
+									message[0] = 0;
+								}
+								cJSON_Delete(json_Query_Result);
+								/* Me fijo si hay que decirle que se actualice */
+								sf.ToUpper(json_HW_Id->valuestring, s);
+								for(i = 0; i < 256; i++)
+								{
+									if(update_firmware_mac[i][0])
+									{
+										if( !strncmp(update_firmware_mac[i], s, 16)) break;
+									}
+								}
+								if(i < 256)
+								{
+									/* UPDATE-FW */
+									cJSON_AddStringToObject(json_Response, "UPDATE-FW", "1");
+									update_firmware_mac[i][0] = 0;
+								}
+								/* Si está todo bien me fijo si pidio enviar configuracion */
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "GETCONF");
+								if(json_un_obj)
+								{
+									if( atoi(json_un_obj->valuestring) > 0 )
+									{
+										m_pServer->m_pLog->Add(50, "[HW] %s Solicita configuracion", json_HW_Id->valuestring);
+										strcpy(update_hw_config_mac, json_HW_Id->valuestring);
+									}
+								}
+
+								/* Armo la respuesta con lo que hay en el JSon */
+								cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+								cJSON_Delete(json_Response);
 							}
 							else
 							{
-								/* Si no hay estados para responder mando la hora (YYYY/MM/DD hh:mm:ss) */
-								sprintf(message, "%04i/%02i/%02i %02i:%02i:%02i", 
-									s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
-									s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
-								cJSON_AddStringToObject(json_Response, "TIME", message);
-								message[0] = 0;
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
-							cJSON_Delete(json_Query_Result);
-							/* Me fijo si hay que decirle que se actualice */
-							sf.ToUpper(json_HW_Id->valuestring, s);
-							for(i = 0; i < 256; i++)
-							{
-								if(update_firmware_mac[i][0])
-								{
-									if( !strncmp(update_firmware_mac[i], s, 16)) break;
-								}
-							}
-							if(i < 256)
-							{
-								/* UPDATE-FW */
-								cJSON_AddStringToObject(json_Response, "UPDATE-FW", "1");
-								update_firmware_mac[i][0] = 0;
-							}
-							/* Si está todo bien me fijo si pidio enviar configuracion */
-							json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "GETCONF");
-							if(json_un_obj)
-							{
-								if( atoi(json_un_obj->valuestring) > 0 )
-								{
-									m_pServer->m_pLog->Add(50, "[HW] %s Solicita configuracion", json_HW_Id->valuestring);
-									strcpy(update_hw_config_mac, json_HW_Id->valuestring);
-								}
-							}
-
-							/* Armo la respuesta con lo que hay en el JSon */
-							cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
-							cJSON_Delete(json_Response);
+						}
+						else if(rc == 0)
+						{
+							CheckNewHWList(json_HW_Id->valuestring);
+							/* NOT FOUND */
+							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
 						}
 						else
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							/* Otro Error */
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
 						}
 					}
-					else if(rc == 0)
+					else if( !strcmp(json_Tipo_HW->valuestring, "TOUCH") )
 					{
-						CheckNewHWList(json_HW_Id->valuestring);
-						/* NOT FOUND */
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
+
+
+
+
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 					}
-					else
+					else 
 					{
-						/* Otro Error */
-						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
+						/* HW TYP Desconocido */
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW TYP Unknoun\"}}");
 					}
 				}
 				else

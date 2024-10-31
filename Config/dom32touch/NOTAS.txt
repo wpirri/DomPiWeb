@@ -1,0 +1,45 @@
+# Formato de los archivos de Dom32Touch
+# =====================================
+#
+# Al inicio y al presionar un botón HOME se carga el archivo home.csv
+# NEXT y PREV navegan por screen0.csv a screen9.csv o menu0.csv a menu9.csv
+# 
+# <-- Línea en blanco y comenzada con # se ignora
+#
+# Línea que inicia con BOTON1 contiene parámetros de creación de un botón con texto y con o sin icono
+# Línea que inicia con BOTON2 contiene parámetros de creación de un botón con icono
+#
+# BOTON1,nombre,comando,x,y,ancho,alto,color fondo,color borde,color nombre,icono
+#    nombre - Texto que aparece en el frente del botón
+#    comando - Uno de los siguientes comandos locales o comando a enviar a la central
+#        HOME
+#        NEXT
+#        PREV
+#        MENU - 
+#    x,y - coordenadas de la esquina superior izquierda del botón
+#    ancho
+#    alto
+#    color fondo - ver Colores
+#    color borde - ver Colores
+#    color nombre - ver Colores
+#    icono - nombre de un archivo bmp que debe estar en la MicroSD
+#
+# Colores
+# BLACK        0
+# BLUE         31
+# RED          63488
+# GREEN        2016
+# CYAN         2047
+# YELLOW       65504
+# WHITE        65535
+# NAVY         15
+# DARKGREEN    992
+# DARKCYAN     1007
+# MAROON       3020
+# PURPLE       30735
+# OLIVE        31712
+# LIGHTGREY    50712
+# DARKGREY     31727
+# ORANGE       64800
+# GREENYELLOW  45029
+# PINK         65519
