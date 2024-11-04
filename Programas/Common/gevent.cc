@@ -372,7 +372,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             }
             else
             {
-                m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_hw_mac->valuestring, (json_raddr)?json_raddr->valuestring:"-");
+                /* Desconocido */
                 cJSON_Delete(json_QueryArray);
                 cJSON_Delete(json_obj);
                 return 0;

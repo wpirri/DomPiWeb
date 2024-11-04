@@ -87,6 +87,8 @@ Dom32IoWifi::Dom32IoWifi(CGMServerWait *pServer)
     url_get_wifi = "/wifi.cgi";
     url_set_wifi = "/wifi.cgi";
 
+    url_send_command = "/command.cgi";
+
     m_timeout = 1500;
     m_port = 80;
 
@@ -262,6 +264,16 @@ int Dom32IoWifi::PulseIO(const char *raddr, char* msg, void(*fcn)(const char* id
     cJSON *json_obj;
     json_obj = cJSON_Parse(msg);
     rc = PulseIO(raddr, json_obj, fcn);
+    cJSON_Delete(json_obj);
+    return rc;
+}
+
+int Dom32IoWifi::SendCommand(const char *raddr, char *cmd)
+{
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(cmd);
+    rc = SendCommand(raddr, json_obj);
     cJSON_Delete(json_obj);
     return rc;
 }
@@ -628,6 +640,45 @@ int Dom32IoWifi::PulseIO(const char *raddr, cJSON *json_obj, void(*fcn)(const ch
     return RequestEnqueue(raddr, buffer, fcn);
 }
 
+int Dom32IoWifi::SendCommand(const char *raddr, cJSON *json)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[1024];
+    cJSON *json_un_obj;
+
+    json_un_obj = json;
+    data[0] = 0;
+    while( json_un_obj )
+    {
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if(data[0] != 0) strcat(data, "&");
+                        strcat(data, json_un_obj->string);
+                        strcat(data, "=");
+                        strcat(data, json_un_obj->valuestring);
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
+    }
+    sprintf(buffer, http_post, url_send_command, raddr, strlen(data), data);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando comando para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
+    return RequestEnqueue(raddr, buffer, nullptr);
+}
+
 int Dom32IoWifi::HttpRespCode(const char* http)
 {
     char tmp[16];
@@ -658,6 +709,7 @@ void Dom32IoWifi::Task( void )
 {
     int i;
     queue_data *p;
+    int rc;
 
     for(i = 0; i < MAX_QUEUE_COUNT && m_queue_list[i].addr[0] != 0; i++)
     {
@@ -665,7 +717,8 @@ void Dom32IoWifi::Task( void )
         {
             if(QueueView(m_queue_list[i].id, (void**)&p))
             {
-                if(RequestDequeue(m_queue_list[i].addr, p, m_queue_list[i].retry) == 0)
+                rc = RequestDequeue(m_queue_list[i].addr, p, m_queue_list[i].retry);
+                if(rc >= 0)
                 {
                     QueueDel(m_queue_list[i].id);
                     m_queue_list[i].retry = 0;

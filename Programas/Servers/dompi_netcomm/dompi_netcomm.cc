@@ -178,6 +178,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pEV = new GEvent(pDB, m_pServer);
 
+	m_pServer->Suscribe("dompi_hw_send_command", GM_MSG_TYPE_NOT);	    /* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
@@ -207,7 +208,37 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			if( !strcmp(fn, "dompi_hw_set_port_config"))
+			if( !strcmp(fn, "dompi_hw_send_command"))
+			{
+				if(json_Direccion_IP && json_Tipo_HW)
+				{
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_TOUCH ||
+					   atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI   ) /* Dom32IOWiFi */
+					{
+						/* Interface Vía IP mensajeria HTTP */
+						/* Envío de configuración a WiFi */
+						pD32W->SendCommand(json_Direccion_IP->valuestring, message);
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						/* TODO: Envio de comandos a RBPi */
+
+
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_hw_set_port_config] ERROR: Datos insuficientes");
+				}
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_hw_set_port_config"))
 			{
 				//m_pServer->Resp(NULL, 0, GME_OK);
 
@@ -288,7 +319,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_TOUCH ||
+					   atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI   ) /* Dom32IOWiFi */
 					{
 						/* Envío de configuración a WiFi */
 						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
@@ -370,7 +402,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_TOUCH ||
+					   atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI   ) /* Dom32IOWiFi */
 					{
 						memset(&dom32_wifi_data, 0, sizeof(Dom32IoWifi::wifi_config_data));
 
@@ -443,7 +476,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				if(json_Direccion_IP && json_Tipo_HW)
 				{
-					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI) /* Dom32IOWiFi */
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_TOUCH ||
+					   atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI   ) /* Dom32IOWiFi */
 					{
 						/* Interface Vía IP mensajeria HTTP */
 						/* Envío de configuración a WiFi */
@@ -663,7 +697,7 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_camera_get_image", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_hw_send_command", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);
@@ -673,6 +707,7 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_hw_set_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_switch_io", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_pulse_io", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_camera_get_image", GM_MSG_TYPE_CR);
 
 	delete m_pServer;
 	delete pEV;

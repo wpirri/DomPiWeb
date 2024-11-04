@@ -16,6 +16,7 @@ TipoHW[1] = { value: 1, label: 'WiFi I/O' }
 TipoHW[2] = { value: 2, label: 'RBPi' }
 TipoHW[3] = { value: 3, label: 'DSC' }
 TipoHW[4] = { value: 4, label: 'Garnet' }
+TipoHW[5] = { value: 5, label: 'Touch' }
 
 var EstadoHW = [];
 EstadoHW[0] = { value: 0, label: '<img src="images/no.png">' }

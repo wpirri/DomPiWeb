@@ -6,7 +6,7 @@
 #define TIPO_HW_RBPI    2
 #define TIPO_HW_DSC     3
 #define TIPO_HW_GARNET  4
-
+#define TIPO_HW_TOUCH   5
 
 
 

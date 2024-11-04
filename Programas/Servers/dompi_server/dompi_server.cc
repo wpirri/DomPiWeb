@@ -167,6 +167,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  pulso <objeto>, [segundos]\r\n"
 					"  estado <objeto>\r\n"
 					"  actualizar <dispositivo>, <modulo>\r\n"
+					"  download <dispositivo>, <archivo>\r\n"
 					"  manten\r\n"
 					"  sms <numero>, <mensaje>\r\n"
 					"  habilitar <zona>, <particion>\r\n"
@@ -183,6 +184,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"    numero: Numero de telefono destino del mensaje.\r\n"
 					"    mensaje: Mensaje a enviar.\r\n"
 					"    particion: Nombre de la particion.\r\n"
+					"    archivo: Debe estar en el directorio download de la central.\r\n"
                     "\r\n"
 					"-------------------------------------------------------------------------------\r\n"
                     "\r\n";
@@ -215,6 +217,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	char update_hw_config_mac[16];
 	char update_firmware_mac[256][16];
+
+	char extra_info[1024];
 
 	bool soporta_respuesta_con_datos;
 	
@@ -249,6 +253,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Dispositivo;
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
+	cJSON *json_Command;
+    cJSON *json_arr_Perif;
+    cJSON *json_Perif;
 	
 	last_daily = 0;
 	
@@ -378,15 +385,17 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Request = cJSON_Parse(message);
 				//message[0] = 0;
 
-				json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Request, "ID");
-				if(json_HW_Id)
+				json_MAC = cJSON_GetObjectItemCaseSensitive(json_Request, "ID");
+				json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Request, "REMOTE_ADDR");
+				if(json_MAC)
 				{
 					/* Identifico las distintas placas que entran por este servicio */
 					json_Tipo_HW = cJSON_GetObjectItemCaseSensitive(json_Request, "TYP");
 					/* Si son placas viejas de Dom32-IO-WiFi no informan el TYP en la mensajería
 						así que se la agrego para mantener compatibilidad 
-						IO = Dom32-IO-WiFi 			- Typ: 1
-						PI = RBPi COn Server GPIO 	- Typ: 2
+						Dom32-IO-WiFi           - Typ: IO
+						RBPi COn Server GPIO    - Typ: PI
+						Dom32-Touch             - Typ: TOUCH
 					*/
 					if( !json_Tipo_HW )
 					{
@@ -398,7 +407,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						if(sf.Fecha2Timestamp(json_FW->valuestring) > sf.Fecha2Timestamp("Abr  1 2024 00:00:00"))
 						{
-							m_pServer->m_pLog->Add(100, "HW %s soporta respuesta con datos.", json_HW_Id->valuestring);
+							m_pServer->m_pLog->Add(100, "HW %s soporta respuesta con datos.", json_MAC->valuestring);
 							soporta_respuesta_con_datos = true;
 						}
 					}
@@ -423,8 +432,8 @@ int main(/*int argc, char** argv, char** env*/void)
 													"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, "
 													"A.Estado, A.Analog_Mult_Div_Valor "
 												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-												"WHERE A.Dispositivo = P.Id AND P.MAC = \'%s\' AND A.Actualizar > 0 "
-													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_HW_Id->valuestring);
+												"WHERE A.Dispositivo = P.Id AND UPPER(P.MAC) = UPPER(\'%s\') AND A.Actualizar > 0 "
+													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_MAC->valuestring);
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								rc = pDB->Query(json_Query_Result, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -469,7 +478,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								cJSON_Delete(json_Query_Result);
 								/* Me fijo si hay que decirle que se actualice */
-								sf.ToUpper(json_HW_Id->valuestring, s);
+								sf.ToUpper(json_MAC->valuestring, s);
 								for(i = 0; i < 256; i++)
 								{
 									if(update_firmware_mac[i][0])
@@ -489,8 +498,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									if( atoi(json_un_obj->valuestring) > 0 )
 									{
-										m_pServer->m_pLog->Add(50, "[HW] %s Solicita configuracion", json_HW_Id->valuestring);
-										strcpy(update_hw_config_mac, json_HW_Id->valuestring);
+										m_pServer->m_pLog->Add(50, "[HW] %s Solicita configuracion", json_MAC->valuestring);
+										strcpy(update_hw_config_mac, json_MAC->valuestring);
 									}
 								}
 
@@ -505,7 +514,8 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if(rc == 0)
 						{
-							CheckNewHWList(json_HW_Id->valuestring);
+							m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_MAC->valuestring, (json_Direccion_IP)?json_Direccion_IP->valuestring:"-");
+							CheckNewHWList(json_MAC->valuestring);
 							/* NOT FOUND */
 							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
 						}
@@ -517,11 +527,95 @@ int main(/*int argc, char** argv, char** env*/void)
 					}
 					else if( !strcmp(json_Tipo_HW->valuestring, "TOUCH") )
 					{
+						t = time(&t);
 
-
-
-
-						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						/* Busco el ID para relacionar con la tabla de assigns */
+						sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						json_arr_Perif = cJSON_CreateArray();
+						rc = pDB->Query(json_arr_Perif, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc > 0)
+						{
+							/* Recorro el array */
+							cJSON_ArrayForEach(json_Perif, json_arr_Perif)
+							{
+								/* Me fijo si tiene info de FW, HW, etc. */
+								extra_info[0] = 0;
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "HW");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "HW: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "SO");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "SO: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "FW");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "FW: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "SDK");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "SDK: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "AT");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "AT: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								json_un_obj = cJSON_GetObjectItemCaseSensitive(json_Request, "SSL");
+								if(json_un_obj)
+								{
+									strcat(extra_info, "SSL: ");
+									strcat(extra_info, json_un_obj->valuestring);
+									strcat(extra_info, "\n");
+								}
+								/* Actualizo la tabla de Dispositivos */
+								sprintf(query, "UPDATE TB_DOM_PERIF "
+													"SET Ultimo_Ok = %lu, "
+													"Direccion_IP = \'%s\', "
+													"Informacion  = \'%s\', "
+													"Estado = 1 "
+													"WHERE UPPER(MAC) = UPPER(\'%s\');",
+													t,
+													json_Direccion_IP->valuestring,
+													extra_info,
+													json_MAC->valuestring);
+								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+								rc = pDB->Query(NULL, query);
+								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+								
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+						}
+						else if(rc == 0)
+						{
+							m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_MAC->valuestring, (json_Direccion_IP)?json_Direccion_IP->valuestring:"-");
+							CheckNewHWList(json_MAC->valuestring);
+							/* NOT FOUND */
+							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
+						}
+						else
+						{
+							/* Otro Error */
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
+						}
 					}
 					else 
 					{
@@ -1026,6 +1120,56 @@ int main(/*int argc, char** argv, char** env*/void)
 							else
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Falta un dato\"}}");
+							}
+						}
+						else if( !strcmp(comando, "download"))
+						{
+							/*
+								Indica a un dispositivo que se debe bajar un archivo
+								objeto: nombre de un periferico
+								parametro: nombre de archivo 
+							 */
+							json_arr_Perif = cJSON_CreateArray();
+							sprintf(query, "SELECT * "
+											"FROM TB_DOM_PERIF "
+											"WHERE Dispositivo = \'%s\'; ", objeto);
+							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr_Perif, query);
+							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+							if(rc > 0)
+							{
+								/* Recorro el array */
+								cJSON_ArrayForEach(json_Perif, json_arr_Perif)
+								{
+									json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
+									json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
+									json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
+									json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
+
+									if(json_MAC && json_Tipo && json_HW_Id && json_Direccion_IP)
+									{
+										/* Un objeto para contener a todos */
+										json_Command = cJSON_CreateObject();
+										/* Saco los datos que necesito */
+										cJSON_AddStringToObject(json_Command, "Id", json_HW_Id->valuestring);
+										cJSON_AddStringToObject(json_Command, "MAC", json_MAC->valuestring);
+										cJSON_AddStringToObject(json_Command, "Direccion_IP", json_Direccion_IP->valuestring);
+										cJSON_AddStringToObject(json_Command, "Tipo_HW", json_Tipo->valuestring);
+										cJSON_AddStringToObject(json_Command, "Command", "download");
+										cJSON_AddStringToObject(json_Command, "Filename", parametro);
+
+										if( atoi(json_Tipo->valuestring) == TIPO_HW_WIFI ||
+											atoi(json_Tipo->valuestring) == TIPO_HW_TOUCH ||
+											atoi(json_Tipo->valuestring) == TIPO_HW_RBPI)
+										{
+											cJSON_PrintPreallocated(json_Command, message, GM_COMM_MSG_LEN, 0);
+											m_pServer->m_pLog->Add(90, "Notify [dompi_hw_send_command][%s]", message);
+											m_pServer->Notify("dompi_hw_send_command", message, strlen(message));
+										}
+										cJSON_Delete(json_Command);
+									}
+								}
 							}
 						}
 						else if( !strcmp(comando, "actualizar"))
