@@ -179,6 +179,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	pEV = new GEvent(pDB, m_pServer);
 
 	m_pServer->Suscribe("dompi_hw_send_command", GM_MSG_TYPE_NOT);	    /* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_hw_send_config", GM_MSG_TYPE_NOT);	    /* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
@@ -232,7 +233,37 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 				else
 				{
-					m_pServer->m_pLog->Add(1, "[dompi_hw_set_port_config] ERROR: Datos insuficientes");
+					m_pServer->m_pLog->Add(1, "[dompi_hw_send_command] ERROR: Datos insuficientes");
+				}
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_hw_send_config"))
+			{
+				if(json_Direccion_IP && json_Tipo_HW)
+				{
+					if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_TOUCH ||
+					   atoi(json_Tipo_HW->valuestring) == TIPO_HW_WIFI   ) /* Dom32IOWiFi */
+					{
+						/* Interface Vía IP mensajeria HTTP */
+						/* Envío de configuración a WiFi */
+						pD32W->SendConfig(json_Direccion_IP->valuestring, message);
+					}
+					else if(atoi(json_Tipo_HW->valuestring) == TIPO_HW_RBPI) /* RBPi */
+					{
+						/* TODO: Envio de comandos a RBPi */
+
+
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW no soportado\"}}");
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(1, "[dompi_hw_send_config] ERROR: Datos insuficientes");
 				}
 			}
 			/* ************************************************************* *
@@ -698,6 +729,7 @@ void OnClose(int sig)
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
 	m_pServer->UnSuscribe("dompi_hw_send_command", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_hw_send_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_set_port_config", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_hw_get_port_config", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_hw_set_comm_config", GM_MSG_TYPE_NOT);

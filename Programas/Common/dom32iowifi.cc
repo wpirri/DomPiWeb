@@ -88,6 +88,7 @@ Dom32IoWifi::Dom32IoWifi(CGMServerWait *pServer)
     url_set_wifi = "/wifi.cgi";
 
     url_send_command = "/command.cgi";
+    url_send_config = "/config.cgi";
 
     m_timeout = 1500;
     m_port = 80;
@@ -274,6 +275,16 @@ int Dom32IoWifi::SendCommand(const char *raddr, char *cmd)
     cJSON *json_obj;
     json_obj = cJSON_Parse(cmd);
     rc = SendCommand(raddr, json_obj);
+    cJSON_Delete(json_obj);
+    return rc;
+}
+
+int Dom32IoWifi::SendConfig(const char *raddr, char *cmd)
+{
+    int rc;
+    cJSON *json_obj;
+    json_obj = cJSON_Parse(cmd);
+    rc = SendConfig(raddr, json_obj);
     cJSON_Delete(json_obj);
     return rc;
 }
@@ -675,6 +686,45 @@ int Dom32IoWifi::SendCommand(const char *raddr, cJSON *json)
     }
     sprintf(buffer, http_post, url_send_command, raddr, strlen(data), data);
     if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando comando para %s", raddr);
+    if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
+    return RequestEnqueue(raddr, buffer, nullptr);
+}
+
+int Dom32IoWifi::SendConfig(const char *raddr, cJSON *json)
+{
+    char buffer[BUFFER_LEN+1];
+    char data[1024];
+    cJSON *json_un_obj;
+
+    json_un_obj = json;
+    data[0] = 0;
+    while( json_un_obj )
+    {
+        /* Voy hasta el elemento con datos */
+        if(json_un_obj->type == cJSON_Object)
+        {
+            json_un_obj = json_un_obj->child;
+        }
+        else
+        {
+            if(json_un_obj->type == cJSON_String)
+            {
+                if(json_un_obj->string && json_un_obj->valuestring)
+                {
+                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                    {
+                        if( !strcmp(json_un_obj->string, "Parametro"))
+                        {
+                            strcpy(data, json_un_obj->valuestring);
+                        }
+                    }
+                }
+            }
+            json_un_obj = json_un_obj->next;
+        }
+    }
+    sprintf(buffer, http_post, url_send_config, raddr, strlen(data), data);
+    if(m_pLog) m_pLog->Add(20, "[Dom32IoWifi] Encolando configuracion para %s", raddr);
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] [%s]", buffer);
     return RequestEnqueue(raddr, buffer, nullptr);
 }

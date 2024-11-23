@@ -175,6 +175,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  activar alarma, <particion>\r\n"
 					"  desactivar alarma, <particion>\r\n"
 					"  estado alarma, <particion>\r\n"
+					"  configurar <dispositivo>, <parametro=valor>\r\n"
 					"  help\r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
@@ -1172,6 +1173,56 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 							}
 						}
+						else if( !memcmp(comando, "conf", 4))
+						{
+							/*
+								Seteo un parametro de configuración
+								objeto: nombre de un periferico
+								parametro: parametro=valor 
+							 */
+							json_arr_Perif = cJSON_CreateArray();
+							sprintf(query, "SELECT * "
+											"FROM TB_DOM_PERIF "
+											"WHERE Dispositivo = \'%s\'; ", objeto);
+							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+							rc = pDB->Query(json_arr_Perif, query);
+							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+							if(rc > 0)
+							{
+								/* Recorro el array */
+								cJSON_ArrayForEach(json_Perif, json_arr_Perif)
+								{
+									json_MAC = cJSON_GetObjectItemCaseSensitive(json_Perif, "MAC");
+									json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Perif, "Tipo");
+									json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Perif, "Id");
+									json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Perif, "Direccion_IP");	
+
+									if(json_MAC && json_Tipo && json_HW_Id && json_Direccion_IP)
+									{
+										/* Un objeto para contener a todos */
+										json_Command = cJSON_CreateObject();
+										/* Saco los datos que necesito */
+										cJSON_AddStringToObject(json_Command, "Id", json_HW_Id->valuestring);
+										cJSON_AddStringToObject(json_Command, "MAC", json_MAC->valuestring);
+										cJSON_AddStringToObject(json_Command, "Direccion_IP", json_Direccion_IP->valuestring);
+										cJSON_AddStringToObject(json_Command, "Tipo_HW", json_Tipo->valuestring);
+										cJSON_AddStringToObject(json_Command, "Command", "config");
+										cJSON_AddStringToObject(json_Command, "Parametro", parametro);
+
+										if( atoi(json_Tipo->valuestring) == TIPO_HW_WIFI ||
+											atoi(json_Tipo->valuestring) == TIPO_HW_TOUCH ||
+											atoi(json_Tipo->valuestring) == TIPO_HW_RBPI)
+										{
+											cJSON_PrintPreallocated(json_Command, message, GM_COMM_MSG_LEN, 0);
+											m_pServer->m_pLog->Add(90, "Notify [dompi_hw_send_config][%s]", message);
+											m_pServer->Notify("dompi_hw_send_config", message, strlen(message));
+										}
+										cJSON_Delete(json_Command);
+									}
+								}
+							}
+						}
 						else if( !strcmp(comando, "actualizar"))
 						{
 							/* Saco los datos que necesito */
@@ -1180,7 +1231,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								json_Query_Result = cJSON_CreateArray();
 								sprintf(query, "SELECT Id, MAC, Direccion_IP, Tipo AS Tipo_HW "
 												"FROM TB_DOM_PERIF "
-												"WHERE UPPER(MAC) = UPPER(\'%s\');", objeto);
+												"WHERE Dispositivo = \'%s\';", objeto);
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								rc = pDB->Query(json_Query_Result, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);

@@ -52,6 +52,7 @@ public:
     int SwitchIO(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
     int PulseIO(const char *raddr, char *msg, void(*fcn)(const char* id, const char* data));
     int SendCommand(const char *raddr, char *cmd);
+    int SendConfig(const char *raddr, char *cmd);
 
     int GetConfig(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
     int SetConfig(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
@@ -60,6 +61,7 @@ public:
     int SwitchIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
     int PulseIO(const char *raddr, cJSON *json, void(*fcn)(const char* id, const char* data));
     int SendCommand(const char *raddr, cJSON *json);
+    int SendConfig(const char *raddr, cJSON *json);
 
 
     void Task( void );
@@ -109,6 +111,7 @@ protected:
     const char *url_get_wifi;
     const char *url_set_wifi;
     const char *url_send_command;
+    const char *url_send_config;
 
     CGLog *m_pLog;
     CGMServerWait *m_pServer;
