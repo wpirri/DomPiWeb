@@ -960,7 +960,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_Delete(json_Message);
 				if(strlen(query_where) && strlen(hw_id))
 				{
-					strcat(query_values, ",Actualizar = 1");
+					strcat(query_values, ",Update_Config = 1");
 					sprintf(query, "UPDATE TB_DOM_PERIF SET %s WHERE %s;", query_values, query_where);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -4246,7 +4246,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		{
 			m_pServer->m_pLog->Add(50, "Actualizar configuracion de HW Id: %i", update_hw_config_id);
 			sprintf(query, "UPDATE TB_DOM_PERIF "
-							"SET Actualizar = 1 "
+							"SET Update_Config = 1 "
 							"WHERE Id = %i;", update_hw_config_id);
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);

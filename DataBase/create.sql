@@ -92,9 +92,12 @@ Tipo integer DEFAULT 0,                         -- 0=Ninguno, 1=Wifi 2=RBPi 3=DS
 Estado integer DEFAULT 0,                       -- 0=Offline
 Direccion_IP varchar(16) DEFAULT "0.0.0.0",
 Ultimo_Ok integer DEFAULT 0,
-Actualizar integer DEFAULT 0,                   -- Enviar update de config al HW
 Usar_Https integer DEFAULT 0,
 Habilitar_Wiegand integer DEFAULT 0,
+Update_Firmware integer DEFAULT 0,
+Update_WiFi integer DEFAULT 0,
+Update_Config integer DEFAULT 0,
+
 Informacion varchar(1024),
 UNIQUE INDEX idx_perif_id (Id),
 UNIQUE INDEX idx_perif_mac (MAC)
