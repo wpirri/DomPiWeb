@@ -139,6 +139,7 @@ new_card_list g_dompi_server_new_card_list[MAX_CARD_LIST_NEW];
 void OnClose(int sig);
 void CheckHWOffline( void );
 void GroupTask( void );
+void GroupMaint( void );
 void AssignTask( void );
 void CheckTask();
 void CheckUpdateHWConfig();
@@ -422,6 +423,8 @@ int main(/*int argc, char** argv, char** env*/void)
 #endif
 							if(soporta_respuesta_con_datos)
 							{
+								GroupTask();
+
 								json_Response = cJSON_CreateObject();
 								/* Me traigo los estados de las salidas del dispositivo
 								para informar si hay cambios en la misma respuesta */
@@ -2039,6 +2042,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		 * *******************************************************************/
 		CheckWiegandData();
 		GroupTask();
+		GroupMaint();
 		AssignTask();
 		/* Hay que actualizar estado de alarma */
 		if(pEV->AlarmNeedUpdate())
@@ -2147,7 +2151,7 @@ void CheckHWOffline( void )
 	cJSON *json_Last_Config;
 	cJSON *Wifi_Report;
 
-	m_pServer->m_pLog->Add(100, "[CheckHWOffline]");
+	m_pServer->m_pLog->Add(50, "[CheckHWOffline]");
 
 	/* Traigo el intervalo de actualizacion de la configuración para calcular la tolerancia */
 	if(json_System_Config)
@@ -2197,6 +2201,7 @@ void CheckHWOffline( void )
 	cJSON_Delete(json_QueryArray);
 }
 
+/* Mantiene el estado de los miembros del grupo según los cambios de estado del grupo */
 void GroupTask( void )
 {
 	char query[4096];
@@ -2210,7 +2215,7 @@ void GroupTask( void )
 	cJSON *json_Listado_Objetos;
 	cJSON *json_Estado;
 
-	m_pServer->m_pLog->Add(100, "[GroupTask]");
+	m_pServer->m_pLog->Add(50, "[GroupTask]");
 
 	json_QueryArray = cJSON_CreateArray();
 	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE Actualizar = 1;");
@@ -2264,6 +2269,124 @@ void GroupTask( void )
 	cJSON_Delete(json_QueryArray);
 }
 
+/* Mantiene el estado del grupo según el estado de sus miembros */
+void GroupMaint( void )
+{
+	char query[4096];
+	int rc;
+	char *id, *p;
+	bool todos_encendidos;
+	bool todos_apagados;
+	cJSON *json_QueryResult_Group;
+	cJSON *json_QueryResult_Assign;
+	cJSON *json_QueryRow_Group;
+	cJSON *json_QueryRow_Assign;
+	cJSON *json_Id;
+	cJSON *json_Grupo;
+	cJSON *json_Listado_Objetos;
+	cJSON *json_Estado;
+	cJSON *json_ASS_Objeto;
+	cJSON *json_ASS_Estado;
+
+	m_pServer->m_pLog->Add(50, "[GroupMaint]");
+
+	json_QueryResult_Group = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_GROUP WHERE Id > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryResult_Group, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow_Group, json_QueryResult_Group)
+		{
+			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Group, "Id");
+			json_Grupo = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Group, "Grupo");
+			json_Listado_Objetos = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Group, "Listado_Objetos");
+			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Group, "Estado");
+
+			m_pServer->m_pLog->Add(50, "[GroupMaint] Analizando Grupo [%s]", json_Grupo->valuestring);
+			todos_encendidos = true;
+			todos_apagados = true;
+			/* Recorro el listado de id separados por , */
+			p = json_Listado_Objetos->valuestring;
+			while(*p)
+			{
+				id = p;
+				while(*p && *p != ',') p++;
+				if(*p)
+				{
+					*p = 0;
+					p++;
+				}
+				/* ASSIGN = atoi(id) */
+				sprintf(query, "SELECT Objeto, Estado "
+								"FROM TB_DOM_ASSIGN "
+								"WHERE Id = %s;", id);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				json_QueryResult_Assign = cJSON_CreateArray();
+				rc = pDB->Query(json_QueryResult_Assign, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc > 0)
+				{
+					/* Obtengo el primero del array del resultado del query */
+					cJSON_ArrayForEach(json_QueryRow_Assign, json_QueryResult_Assign)
+					{
+						json_ASS_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Assign, "Objeto");
+						json_ASS_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Assign, "Estado");
+						m_pServer->m_pLog->Add(50, "[GroupMaint] Mienbro: %s (%s)", json_ASS_Objeto->valuestring, json_ASS_Estado->valuestring);
+
+						if( atoi(json_ASS_Estado->valuestring) == 0 ) todos_encendidos = false;
+						else if( atoi(json_ASS_Estado->valuestring) == 1 ) todos_apagados = false;
+					}
+				}
+				else
+				{
+					m_pServer->m_pLog->Add(50, "[GroupMaint] Sin mienbros");
+					todos_encendidos = false;
+					todos_apagados = false;
+				}
+				cJSON_Delete(json_QueryResult_Assign);
+			}
+
+			if(todos_encendidos)
+			{
+				m_pServer->m_pLog->Add(50, "[GroupMaint] Todos encendidos");
+			}
+
+			if(todos_apagados)
+			{
+				m_pServer->m_pLog->Add(50, "[GroupMaint] Todos apagados");
+			}
+
+			if(todos_encendidos && ( atoi(json_Estado->valuestring) == 0 ))
+			{
+				m_pServer->m_pLog->Add(20, "[GroupMaint] Cambiando Grupo %s a estado 1", json_Grupo->valuestring);
+				sprintf(query, "UPDATE TB_DOM_GROUP "
+								"SET Estado = 1 "
+								"WHERE Id = %s;", json_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+			else if(todos_apagados && ( atoi(json_Estado->valuestring) == 1 ))
+			{
+				m_pServer->m_pLog->Add(20, "[GroupMaint] Cambiando Grupo %s a estado 0", json_Grupo->valuestring);
+				sprintf(query, "UPDATE TB_DOM_GROUP "
+								"SET Estado = 0 "
+								"WHERE Id = %s;", json_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryResult_Group);
+}
+
 void AssignTask( void )
 {
 	char query[4096];
@@ -2278,7 +2401,7 @@ void AssignTask( void )
 	int iEstado;
 
 
-	m_pServer->m_pLog->Add(100, "[AssignTask]");
+	m_pServer->m_pLog->Add(50, "[AssignTask]");
 
 	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
 	json_QueryArray = cJSON_CreateArray();
@@ -2361,7 +2484,7 @@ void CheckTask()
 	cJSON *json_Condicion_Igualdad;
 	cJSON *json_Condicion_Valor;
 	
-	m_pServer->m_pLog->Add(100, "[CheckTask]");
+	m_pServer->m_pLog->Add(50, "[CheckTask]");
 
 	t = time(&t);
 	now = localtime(&t);
@@ -2493,7 +2616,7 @@ void CheckUpdateHWConfig()
 	cJSON *json_Update_Config;
 	cJSON *json_Update_WiFi;
 
-	m_pServer->m_pLog->Add(100, "[CheckUpdateHWConfig]");
+	m_pServer->m_pLog->Add(50, "[CheckUpdateHWConfig]");
 
 	/* Controlo si hay que actualizar configuración de dispositivo */
 	json_arr_Perif = cJSON_CreateArray();
@@ -2605,7 +2728,7 @@ void CheckDaily()
 	struct tm *tmNow, *tmLastDaily;
 	int day_now, day_last;
 
-	m_pServer->m_pLog->Add(100, "[CheckDaily]");
+	m_pServer->m_pLog->Add(50, "[CheckDaily]");
 
 	now = time(&now);
 	tmNow = localtime(&now);
@@ -2627,7 +2750,7 @@ void LoadSystemConfig(void)
 
 	if(pDB == NULL) return;
 
-	m_pServer->m_pLog->Add(100, "[LoadSystemConfig]");
+	m_pServer->m_pLog->Add(50, "[LoadSystemConfig]");
 
 	if(json_System_Config) cJSON_Delete(json_System_Config);
 	json_System_Config = cJSON_CreateArray();
@@ -2661,7 +2784,7 @@ int CheckWirelessCard( const char* card )
 
 	int i_now, i_desde, i_hasta;
 
-	m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Tarjeta: %s", card);
+	m_pServer->m_pLog->Add(50, "[CheckWirelessCard] Tarjeta: %s", card);
 
 	t = time(&t);
 	now = localtime(&t);
@@ -2720,7 +2843,7 @@ int CheckWirelessCard( const char* card )
 			Minuto_Hasta = cJSON_GetObjectItemCaseSensitive(QueryRow, "Minuto_Hasta");
 			Estado = cJSON_GetObjectItemCaseSensitive(QueryRow, "Estado");
 
-			m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Verificando Tarjeta: %s de Usuario: %s", card, Nombre_Completo->valuestring);
+			m_pServer->m_pLog->Add(50, "[CheckWirelessCard] Verificando Tarjeta: %s de Usuario: %s", card, Nombre_Completo->valuestring);
 
 			/* Controlo día de la semana */
 			if(strstr(Dias_Semana->valuestring, dia_semana))
@@ -2728,7 +2851,7 @@ int CheckWirelessCard( const char* card )
 				i_desde = (atoi(Hora_Desde->valuestring) * 100) + atoi(Minuto_Desde->valuestring);
 				i_hasta = (atoi(Hora_Hasta->valuestring) * 100) + atoi(Minuto_Hasta->valuestring);
 
-				m_pServer->m_pLog->Add(100, "[CheckWirelessCard] Hora %i <= %i <= %i", i_desde, i_now, i_hasta);
+				m_pServer->m_pLog->Add(50, "[CheckWirelessCard] Hora %i <= %i <= %i", i_desde, i_now, i_hasta);
 				/* Controlo horario */
 				if(atoi(Estado->valuestring) == 0)
 				{
@@ -2782,7 +2905,7 @@ void CheckWiegandData( void )
     cJSON *Dispositivo;
     cJSON *Perif_Data;
 
-	m_pServer->m_pLog->Add(100, "[CheckWiegandData]");
+	m_pServer->m_pLog->Add(50, "[CheckWiegandData]");
 
 	QueryResult = cJSON_CreateArray();
 	sprintf(query, "SELECT Id, Dispositivo, Perif_Data "
@@ -2836,7 +2959,7 @@ void AutoChangeNotify( void )
 	char s_tipo[16];
 	char s_id[16];
 
-	m_pServer->m_pLog->Add(100, "[GroupTask]");
+	m_pServer->m_pLog->Add(50, "[AutoChangeNotify]");
 
 	json_QueryArray = cJSON_CreateArray();
 	strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Actualizar = 1;");
