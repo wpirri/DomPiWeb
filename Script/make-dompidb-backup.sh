@@ -8,7 +8,7 @@ FILE="backup-mysql-${DATABASE}-${SYSTEM_KEY}-${DATE}.sql"
 FILENAME="${BACKUP_PATH}/${FILE}"
 
 HOSTNAME="https://witchblade.com.ar"
-UPLOAD_FORM="upload_client_config.php"
+UPLOAD_FORM="/dpc/upload_client_config.php"
 
 mkdir -p $BACKUP_PATH
 

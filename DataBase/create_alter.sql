@@ -101,5 +101,6 @@ alter table TB_DOM_EVENT add column Ultimo_Evento  integer DEFAULT 0;
 alter table TB_DOM_PERIF add column Update_Firmware integer DEFAULT 0;
 alter table TB_DOM_PERIF add column Update_WiFi integer DEFAULT 0;
 alter table TB_DOM_PERIF add column Update_Config integer DEFAULT 0;
+alter table TB_DOM_PERIF drop column Actualizar;
 
 
