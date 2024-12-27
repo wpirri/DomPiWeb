@@ -4,7 +4,6 @@ SU_USER="gmonitor"
 SYTEM_HOME=/home/$SU_USER
 DOCUMENT_ROOT=/var/www/html
 CGI_ROOT=/usr/lib/cgi-bin/
-FIRMWARE_NAME=pgm.hex
 FILE_NAME=gmonitor_dompiweb_update.tar.gz
 UPDATE_FILE="/home/${SU_USER}/${FILE_NAME}"
 OLD_UPDATE_FILE="/home/${SU_USER}/old_gmonitor_dompiweb_update.tar.gz"
@@ -33,11 +32,7 @@ check_for_updates_daemon()
 		/etc/init.d/gmond start
 	fi
 
-	if [ -f $CHECK_PATH/$FIRMWARE_NAME ]; then
-		sleep 5
-		mv $CHECK_PATH/$FIRMWARE_NAME $FIRMWARE_PATH/
-		logger "[DOMPIWEB] Actualizacion de firmware disponible para download"
-	fi
+	mv $CHECK_PATH/*.hex $FIRMWARE_PATH/
 
 	rm -f $CHECK_PATH/*
 }

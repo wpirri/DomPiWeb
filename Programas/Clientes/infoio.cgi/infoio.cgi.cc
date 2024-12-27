@@ -51,13 +51,13 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   char s[16];
   
   char remote_addr[16];
-  char request_uri[32];
+  char request_uri[4096];
   char request_method[8];
   int content_length;
   char s_content_length[8];
-  char post_data[1024];
-  char label[256];
-  char value[256];
+  char post_data[4096];
+  char label[64];
+  char value[1024];
 
   int i;
   int rc;
@@ -103,7 +103,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
-      strncpy(request_uri, env[i]+12, 31);
+      strncpy(request_uri, env[i]+12, 4095);
       cJSON_AddStringToObject(json_request, "REQUEST_URI", request_uri);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
@@ -121,7 +121,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(content_length)
   {
-    fgets(post_data, content_length+1, stdin);
+    fgets(post_data, ((content_length+1)<4096)?(content_length+1):4095, stdin);
   }
 
   fputs("Connection: close\r\n", stdout);
@@ -151,6 +151,9 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
   }
+
+  Str.EscapeHttp(request_uri, request_uri);
+  Str.EscapeHttp(post_data, post_data);
 
   for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
   {

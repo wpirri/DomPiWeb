@@ -24,7 +24,7 @@ include('head-abm.php');
     <br />
     <p>&nbsp;&nbsp;Es posible cargar al sistema dos tipos de archivo:</p>
     <p>&nbsp;&nbsp;&nbsp;&nbsp;gmonitor_dompiweb_update.tar.gz</p>
-    <p>&nbsp;&nbsp;&nbsp;&nbsp;pgm.hex</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;*.hex</p>
     <br />
     <br />
     <div id='update_result_div' class='abm-result-message'>&nbsp;</div>

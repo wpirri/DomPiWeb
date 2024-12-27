@@ -43,7 +43,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer response;
   DPConfig *pConfig;
   STRFunc Str;
-  int i;
+  cJSON *json_request;
+  cJSON *json_response;
   cJSON *json_obj;
   
   char server_address[16];
@@ -55,12 +56,15 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   int content_length;
   char s_content_length[8];
   char post_data[4096];
-  char buffer[4096];
   char label[64];
   char value[1024];
+
+  int i;
+  int rc;
+
   char funcion[64];
   char funcion_call[64];
-  int rc;
+  char buffer[4096];
 
   signal(SIGALRM, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
@@ -77,7 +81,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if( !pConfig->GetParam("DOMPIWEB_SERVER", server_address))
   {
-    fputs("{ \"rc\":\"01\", \"msg\":\"Error de configuracion\" }\r\n", stdout);
+    fputs("error=99&msg=Config Error\r\n", stdout);
     return 0;
   }
 
@@ -92,30 +96,30 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     timeout = atoi(s) * 1000;
   }
 
-  json_obj = cJSON_CreateObject();
+  json_request = cJSON_CreateObject();
 
   for(i = 0; env[i]; i++)
   {
     if( !memcmp(env[i], "REMOTE_ADDR=", 12))
     {
       strncpy(remote_addr, env[i]+12, 15);
-      cJSON_AddStringToObject(json_obj, "REMOTE_ADDR", remote_addr);
+      cJSON_AddStringToObject(json_request, "REMOTE_ADDR", remote_addr);
     }
     else if( !memcmp(env[i], "REQUEST_URI=", 12))
     {
       strncpy(request_uri, env[i]+12, 4095);
-      cJSON_AddStringToObject(json_obj, "REQUEST_URI", request_uri);
+      cJSON_AddStringToObject(json_request, "REQUEST_URI", request_uri);
     }
     else if( !memcmp(env[i], "REQUEST_METHOD=", 15))
     {
       strncpy(request_method, env[i]+15, 7);
-      cJSON_AddStringToObject(json_obj, "REQUEST_METHOD", request_method);
+      cJSON_AddStringToObject(json_request, "REQUEST_METHOD", request_method);
     }
     else if( !memcmp(env[i], "CONTENT_LENGTH=", 15))
     {
       strncpy(s_content_length, env[i]+15, 7);
       content_length = atoi(s_content_length);
-      cJSON_AddStringToObject(json_obj, "CONTENT_LENGTH", s_content_length);
+      cJSON_AddStringToObject(json_request, "CONTENT_LENGTH", s_content_length);
     }
   }
 
@@ -128,15 +132,20 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  Str.EscapeHttp(request_uri, request_uri);
-  Str.EscapeHttp(post_data, post_data);
-
   if(trace)
   {
-    openlog("abmassign.cgi", 0, LOG_USER);
-    syslog(LOG_DEBUG, "REMOTE_ADDR=%s REQUEST_URI=%s REQUEST_METHOD=%s CONTENT_LENGTH=%i POST=%s", 
-              remote_addr, request_uri, request_method,content_length, (content_length>0)?post_data:"(vacio)" );
+    openlog("infoio.cgi", 0, LOG_USER);
+
+    syslog(LOG_DEBUG, "REMOTE_ADDR: %s",remote_addr);
+    syslog(LOG_DEBUG, "REQUEST_URI: [%s]",request_uri);
+    syslog(LOG_DEBUG, "REQUEST_METHOD: %s",request_method);
+    syslog(LOG_DEBUG, "CONTENT_LENGTH: %s",s_content_length);
+    syslog(LOG_DEBUG, "CONFIG_FILE: /etc/dompiweb.config");
+    syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
   }
+
+  Str.EscapeHttp(request_uri, request_uri);
+  Str.EscapeHttp(post_data, post_data);
 
   gminit.m_host = server_address;
   gminit.m_port = 5533;
@@ -157,7 +166,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       }
       else /* El resto lo paso a json y va como dato */
       {
-        cJSON_AddStringToObject(json_obj, label, value);
+        cJSON_AddStringToObject(json_request, label, value);
       }
     }
   }
@@ -168,7 +177,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
     {
       /* lo agrego al JSon */
-      cJSON_AddStringToObject(json_obj, label, value);
+      cJSON_AddStringToObject(json_request, label, value);
     }
   }
 
@@ -225,22 +234,107 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     strcpy(funcion_call, "dompi_ass_list");
   }
 
-  /* Paso el objeto json a un buffer */
-  cJSON_PrintPreallocated(json_obj, buffer, 4095, 0);
-  cJSON_Delete(json_obj);
-
   query.Clear();
   response.Clear();
-  query = buffer;
-  if(trace) syslog(LOG_DEBUG, "Call %s [%s]", funcion_call, buffer); 
+
+  query = cJSON_PrintUnformatted(json_request);
+
+  cJSON_Delete(json_request);
+
+  if(trace)
+  {
+    syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
+  }
+
   rc = pClient->Call(funcion_call, query, response, timeout);
   if(rc == 0)
   {
-    fprintf(stdout, "%s\r\n", response.Data());
+    if(trace)
+    {
+      syslog(LOG_DEBUG, "Call R: [%s]", response.C_Str());
+    }
+
+    if( !strcmp(funcion, "on")      ||
+        !strcmp(funcion, "off")     ||
+        !strcmp(funcion, "switch")  ||
+        !strcmp(funcion, "pulse")    )
+    {
+      /* Esto se contesta en formato formulario */
+      json_response = cJSON_Parse(response.C_Str());
+      if(json_response)
+      {
+        /* Armar respuesta en formato de formulario con datos de response en formato JSON */
+        post_data[0] = 0;
+        json_obj = json_response;
+        while( json_obj )
+        {
+            /* Voy hasta el elemento con datos */
+            if(json_obj->type == cJSON_Object)
+            {
+                json_obj = json_obj->child;
+            }
+            else
+            {
+                if(json_obj->type == cJSON_String)
+                {
+                    if(json_obj->string && json_obj->valuestring)
+                    {
+                        if(strlen(json_obj->string))
+                        {
+                          strcpy(label, json_obj->string);
+                          strcpy(value, json_obj->valuestring);
+                          /* Algunas sustitucions */
+                          if( !strcmp(label, "resp_code")) strcpy(label, "error");
+                          else if( !strcmp(label, "resp_msg")) strcpy(label, "msg");
+                          /* */
+                          if(post_data[0] != 0) strcat(post_data, "&");
+                          strcat(post_data, label);
+                          strcat(post_data, "=");
+                          strcat(post_data, value);
+                        }
+                    }
+                }
+                json_obj = json_obj->next;
+            }
+        }
+        fprintf(stdout, "%s\r\n", post_data);
+        if(trace)
+        {
+          syslog(LOG_DEBUG, "%s\r\n", post_data);
+        }
+        cJSON_Delete(json_response);
+      }
+      else
+      {
+        /* Supongo que la respuesta ya estaba en formato de formulario y la mando directamente */
+        fprintf(stdout, "%s\r\n", response.Data());
+        if(trace)
+        {
+          syslog(LOG_DEBUG, "%s\r\n", response.Data());
+        }
+      }
+    }
+    else
+    {
+      /* Esto se contesta como viene */
+      fprintf(stdout, "%s\r\n", response.Data());
+      if(trace)
+      {
+        syslog(LOG_DEBUG, "%s\r\n", response.Data());
+      }
+    }
   }
   else
   {
-    fprintf(stdout, "{ \"rc\":\"%02i\", \"msg\":\"%s\" }\r\n", rc, gmerror.Message(rc).c_str());
+    if(trace)
+    {
+      syslog(LOG_DEBUG, "Call R: [** Error **]");
+    }
+    fprintf(stdout, "error=%02i&msg=%s\r\n", rc, gmerror.Message(rc).c_str());
+    if(trace)
+    {
+      syslog(LOG_DEBUG, "error=%02i&msg=%s\r\n", rc, gmerror.Message(rc).c_str());
+    }
   }
   delete pClient;
   return 0;
