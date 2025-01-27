@@ -103,4 +103,10 @@ alter table TB_DOM_PERIF add column Update_WiFi integer DEFAULT 0;
 alter table TB_DOM_PERIF add column Update_Config integer DEFAULT 0;
 alter table TB_DOM_PERIF drop column Actualizar;
 
-
+## 06/01/2025
+alter table TB_DOM_GROUP add Icono_Apagado varchar(32);
+alter table TB_DOM_GROUP add Icono_Encendido varchar(32);
+alter table TB_DOM_GROUP add Grupo_Visual integer DEFAULT 0;
+alter table TB_DOM_GROUP add Planta integer DEFAULT 0;
+alter table TB_DOM_GROUP add Cord_x integer DEFAULT 0;
+alter table TB_DOM_GROUP add Cord_y integer DEFAULT 0;

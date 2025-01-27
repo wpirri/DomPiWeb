@@ -769,6 +769,22 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
+					if(json_Id == nullptr)
+					{
+						if(json_Planta)
+						{
+							sprintf(query, "SELECT Id,Grupo,Icono_Apagado,Icono_Encendido,Estado FROM TB_DOM_GROUP WHERE Planta = %s;", json_Planta->valuestring);
+						}
+						else
+						{
+							strcpy(query, "SELECT Id,Grupo,Icono_Apagado,Icono_Encendido,Estado FROM TB_DOM_GROUP;");
+						}
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_Query_Result, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					}
+					/* Queda en json_Query_Result los datos de los dos querys */
 					if(json_Request) cJSON_Delete(json_Request);
 					json_Request = cJSON_CreateObject();
 					cJSON_AddItemToObject(json_Request, "response", json_Query_Result);
@@ -985,7 +1001,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							if( !memcmp(objeto, "dis", 3))
 							{
 								listado[0] = 0;
-								sprintf(query, "SELECT Dispositivo, MAC, Direccion_IP "
+								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP "
 												"FROM TB_DOM_PERIF "
 												"ORDER BY Dispositivo ASC;");
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -1003,13 +1019,17 @@ int main(/*int argc, char** argv, char** env*/void)
 									{
 										if(json_Query_Row)
 										{
+											json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
 											json_Dispositivo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Dispositivo");
 											json_MAC = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "MAC");
 											json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Direccion_IP");
 											if(json_Dispositivo && json_MAC && json_Direccion_IP)
 											{
-												sprintf(&listado[strlen(listado)], "%-30.30s %12.12s %-15.15s\n", 
-													json_Dispositivo->valuestring, json_MAC->valuestring, json_Direccion_IP->valuestring);
+												if(atoi(json_Id->valuestring))
+												{
+													sprintf(&listado[strlen(listado)], "%-30.30s %12.12s %-15.15s\n", 
+														json_Dispositivo->valuestring, json_MAC->valuestring, json_Direccion_IP->valuestring);
+												}
 											}
 												
 										}
@@ -1020,7 +1040,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( !memcmp(objeto, "obj", 3))
 							{
 								listado[0] = 0;
-								sprintf(query, "SELECT Objeto, Tipo, Estado "
+								sprintf(query, "SELECT Id, Objeto, Tipo, Estado "
 												"FROM TB_DOM_ASSIGN "
 												"ORDER BY Objeto ASC;");
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -1037,13 +1057,17 @@ int main(/*int argc, char** argv, char** env*/void)
 									{
 										if(json_Query_Row)
 										{
+											json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
 											json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
 											json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo");
 											json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
 											if(json_Objeto && json_Tipo && json_Estado)
 											{
-												sprintf(&listado[strlen(listado)], "%-40.40s %3s %5s\n", 
-													json_Objeto->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
+												if(atoi(json_Id->valuestring))
+												{
+													sprintf(&listado[strlen(listado)], "%-40.40s %3s %5s\n", 
+														json_Objeto->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
+												}
 											}
 												
 										}
@@ -2476,7 +2500,7 @@ void CheckTask()
 	cJSON *json_Agenda;
 	cJSON *json_Objeto_Destino;
 	cJSON *json_Grupo_Destino;
-	cJSON *json_Funcion_Destino;
+	/*cJSON *json_Funcion_Destino;*/
 	cJSON *json_Variable_Destino;
 	cJSON *json_Evento;
 	cJSON *json_Parametro_Evento;
@@ -2547,7 +2571,7 @@ void CheckTask()
 			json_Agenda = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Agenda");
 			json_Objeto_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto_Destino");
 			json_Grupo_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Grupo_Destino");
-			json_Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Funcion_Destino");
+			/*json_Funcion_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Funcion_Destino");*/
 			json_Variable_Destino = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Variable_Destino");
 			json_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Evento");
 			json_Parametro_Evento = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Parametro_Evento");
@@ -2555,7 +2579,7 @@ void CheckTask()
 			json_Condicion_Igualdad = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Igualdad");
 			json_Condicion_Valor = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Condicion_Valor");
 
-			if(json_Agenda && json_Objeto_Destino && json_Grupo_Destino && json_Funcion_Destino &&
+			if(json_Agenda && json_Objeto_Destino && json_Grupo_Destino && /*json_Funcion_Destino &&*/
 			   json_Variable_Destino && json_Evento && json_Parametro_Evento && 
 			   json_Condicion_Variable && json_Condicion_Igualdad && json_Condicion_Valor)
 			{
@@ -2589,6 +2613,19 @@ void CheckTask()
 				rc = pDB->Query(NULL, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
+			else
+			{
+				if( !json_Agenda ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Agenda");
+				if( !json_Objeto_Destino ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Objeto_Destino");
+				if( !json_Grupo_Destino ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Grupo_Destino");
+				/*if( !json_Funcion_Destino ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Funcion_Destino");*/
+				if( !json_Variable_Destino ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Variable_Destino");
+				if( !json_Evento ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Evento");
+				if( !json_Parametro_Evento ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Parametro_Evento");
+				if( !json_Condicion_Variable ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Condicion_Variable");
+				if( !json_Condicion_Igualdad ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Condicion_Igualdad");
+				if( !json_Condicion_Valor ) m_pServer->m_pLog->Add(10, "[CheckTask] ERROR: Valor NULL para Condicion_Valor");
 			}
 		}
 	}

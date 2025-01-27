@@ -141,6 +141,12 @@ Id integer primary key,
 Grupo varchar(128) NOT NULL,
 Listado_Objetos varchar(256),       -- Id de assign separados por , (comas)
 Estado integer DEFAULT 0,            -- Define el estado que deben tener los objetos del grupo
+Icono_Apagado varchar(32),
+Icono_Encendido varchar(32),
+Grupo_Visual integer DEFAULT 0,             -- 0=Ninguno 1=Alarma 2=Iluminación 3=Puertas 4=Climatización 5=Cámaras 6=Riego
+Planta integer DEFAULT 0,
+Cord_x integer DEFAULT 0,
+Cord_y integer DEFAULT 0,
 Actualizar integer DEFAULT 0,
 UNIQUE INDEX idx_group_id (Id)
 );
