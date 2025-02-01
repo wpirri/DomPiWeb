@@ -9,6 +9,8 @@ all:
 	make -C dompi_gsm
 	make -C dompi_netcomm
 	make -C dompi_server
+	make -C dompi_command
+	make -C dompi_task
 # Pi IO
 	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio )
 	
@@ -20,6 +22,8 @@ clean:
 	make -C dompi_gsm clean
 	make -C dompi_netcomm clean
 	make -C dompi_server clean
+	make -C dompi_command clean
+	make -C dompi_task clean
 # Pi IO
 	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio clean )
 
@@ -30,6 +34,8 @@ install:
 	make -C dompi_gsm install
 	make -C dompi_netcomm install
 	make -C dompi_server install
+	make -C dompi_command install
+	make -C dompi_task install
 # Pi IO
 	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio install )
 
@@ -40,5 +46,7 @@ uninstall:
 	make -C dompi_gsm uninstall
 	make -C dompi_netcomm uninstall
 	make -C dompi_server uninstall
+	make -C dompi_command install
+	make -C dompi_task install
 # Pi IO
 	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio uninstall )

@@ -54,9 +54,7 @@ char m_CloudHost1Proto[8];
 char m_CloudHost2Address[64];
 int  m_CloudHost2Port;
 char m_CloudHost2Proto[8];
-time_t update_ass_t;
-time_t update_alarm_t;
-time_t update_user_t;
+time_t update_t;
 
 int m_cloud_status;
 char *m_host_actual;
@@ -70,9 +68,13 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 void LoadSystemConfig(void);
 void AddSaf( void );
 
-void CheckUpdateAssignCloud( void );
-void CheckUpdateAlarmCloud( void );
-void CheckUpdateUserCloud( void );
+
+void CheckUpdate();
+void UpdateGroupCloud(void);
+void UpdateAutoCloud(void);
+void UpdateAssignCloud( void );
+void UpdateAlarmCloud( void );
+void UpdateUserCloud( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -88,6 +90,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char s[16];
 	int wait;
 
+	cJSON *json_Ass_Id;
 	cJSON *json_Message;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -105,9 +108,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_CloudHost1Address[0] = 0;
 	m_CloudHost2Address[0] = 0;
-	update_ass_t = 0;
-	update_alarm_t = 0;
-	update_user_t = 0;
+	update_t = 0;
 	m_cloud_status = 0;
 
 	m_pServer = new CGMServerWait;
@@ -185,6 +186,11 @@ int main(/*int argc, char** argv, char** env*/void)
 				m_pServer->m_pLog->Add(20, "[dompi_ass_change] Encolando actualizacion con datos de assign");
 				if(m_cloud_status)
 				{
+					/* Cambio el Is por Ass_Id */
+					json_Ass_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+					cJSON_AddStringToObject(json_Message, "ASS_Id", json_Ass_Id->valuestring);
+					cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
+					/* Agrego datos del sistema */
 					cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
 					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
@@ -203,16 +209,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT */
 			{
-				//m_pServer->Resp(NULL, 0, GME_OK);
-				update_user_t = 0;
+
 			}
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_alarm_change")) /* Tipo NOT */
 			{
-				//m_pServer->Resp(NULL, 0, GME_OK);
-				update_alarm_t = 0;
 
 			}
 			/* ****************************************************************
@@ -242,9 +245,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 		}
 		/* Después de recibir un mensaje o expirar el timer */
-		CheckUpdateAssignCloud();
-		CheckUpdateAlarmCloud();
-		CheckUpdateUserCloud();
+		CheckUpdate();
 
 		if(SendToCloud() > 0)
 		{
@@ -292,6 +293,7 @@ int KeepAliveCloud( void )
 	{
 		json_Message = cJSON_CreateObject();
 
+		/* Agrego datos del sistema */
 		cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
 
 		/* Si hay que agragar mas objetos */
@@ -444,127 +446,153 @@ int SendToCloud( void )
 	return 0;
 }
 
-void CheckUpdateAssignCloud( void )
+void CheckUpdate()
+{
+	time_t t;
+
+	t = time(&t);
+
+	if(t >= update_t && m_cloud_status && m_host_actual)
+	{
+		/* Actualizacion de objetos en la nube cada 10 min */
+		update_t = t + 600;
+
+		UpdateUserCloud();
+		UpdateAssignCloud();
+		UpdateGroupCloud();
+		UpdateAutoCloud();
+		UpdateAlarmCloud();
+	}
+}
+
+void UpdateAssignCloud( void )
 {
 	char query[4096];
 	char message[4096];
 	int rc;
 	cJSON *json_QueryArray;
 	cJSON *json_QueryRow;
-	cJSON *json_Id;
-	cJSON *json_Tipo;
-	cJSON *json_Estado;
 
-	int i_tipo;
-	char s_tipo[12];
-
-	time_t t;
-
-	t = time(&t);
-
-	if(t >= update_ass_t && m_cloud_status && m_host_actual)
+	m_pServer->m_pLog->Add(10, "[UpdateAssignCloud] Actualizando estado general de objetos en la nube.");
+	/* Genero un listado de los objetos con su estado para subir a la nube */
+	json_QueryArray = cJSON_CreateArray();
+	strcpy(query, "SELECT Id AS ASS_Id,Objeto,Tipo,Estado,Icono_Apagado,"
+					"Icono_Encendido,Grupo_Visual,Planta,Cord_x,"
+					"Cord_y,Coeficiente,Analog_Mult_Div,Analog_Mult_Div_Valor,Flags "
+				"FROM TB_DOM_ASSIGN WHERE Id > 0 AND Grupo_Visual > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
 	{
-		/* Actualizacion de objetos en la nube cada 10 min */
-		update_ass_t = t + 600;
-
-		m_pServer->m_pLog->Add(10, "[CheckUpdateAssignCloud] Actualizando estado general de objetos en la nube.");
-		/* Genero un listado de los objetos con su estado para subir a la nube */
-		json_QueryArray = cJSON_CreateArray();
-		strcpy(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id > 0;");
-		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		if(rc >= 0)
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 		{
-			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+			/* Agrego datos del sistema */
+			cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
+			if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 			{
-				/* Agrego datos del sistema */
-				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-				cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-				{
-					m_pServer->m_pLog->Add(1, "[CheckUpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-				}
+				m_pServer->m_pLog->Add(1, "[UpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 			}
 		}
-		cJSON_Delete(json_QueryArray);
-
-		/* Genero un listado de los automatismos con su estado para subir a la nube */
-		json_QueryArray = cJSON_CreateArray();
-		strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Id > 0;");
-		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		if(rc >= 0)
-		{
-			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-			{
-				/* Cambio el Id (le sumo 10000) */
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
-				i_tipo = atoi(json_Id->valuestring);
-				sprintf(s_tipo, "%d", i_tipo + 10000);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Id");
-				cJSON_AddStringToObject(json_QueryRow, "Id", s_tipo);
-
-				/* Cambio el tipo (le sumo 10) */
-				json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
-				i_tipo = atoi(json_Tipo->valuestring);
-				sprintf(s_tipo, "%d", i_tipo + 10);
-				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Tipo");
-				cJSON_AddStringToObject(json_QueryRow, "Tipo", s_tipo);
-
-				/* Cambio el estado por el valor de Habilitado */
-				json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Habilitado");
-				cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Estado");
-				cJSON_AddStringToObject(json_QueryRow, "Estado", json_Estado->valuestring);
-
-				/* Agrego datos del sistema */
-				cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-				cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-
-				if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-				{
-					m_pServer->m_pLog->Add(1, "[CheckUpdateAssignCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-				}
-			}
-		}
-		cJSON_Delete(json_QueryArray);
-
 	}
+	cJSON_Delete(json_QueryArray);
 }
 
-void CheckUpdateAlarmCloud( void )
+void UpdateGroupCloud( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+
+	/* Genero un listado de los automatismos con su estado para subir a la nube */
+	json_QueryArray = cJSON_CreateArray();
+	/* Cambio el tipo (le sumo 10) */
+	/* Cambio el estado por el valor de Habilitado */
+	strcpy(query, "SELECT Id AS GRP_Id,Grupo AS Objeto,Estado,Icono_Apagado,"
+					"Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
+				"FROM TB_DOM_GROUP WHERE Id > 0 AND Grupo_Visual > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			/* Agrego datos del sistema */
+			cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
+
+			if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+			{
+				m_pServer->m_pLog->Add(1, "[UpdateGroupCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void UpdateAutoCloud( void )
+{
+	char query[4096];
+	char message[4096];
+	int rc;
+	cJSON *json_QueryArray;
+	cJSON *json_QueryRow;
+
+	/* Genero un listado de los automatismos con su estado para subir a la nube */
+	json_QueryArray = cJSON_CreateArray();
+	/* Cambio el tipo (le sumo 10) */
+	/* Cambio el estado por el valor de Habilitado */
+	strcpy(query, "SELECT Id AS AUT_Id,Objeto,Tipo+10,Habilitado AS Estado,Icono_Apagado,"
+					"Icono_Encendido,Icono_Auto,Grupo_Visual,Planta,Cord_x,Cord_y,Flags "
+				"FROM TB_DOM_AUTO WHERE Id > 0 AND Grupo_Visual > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
+	{
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+		{
+			/* Agrego datos del sistema */
+			cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
+
+			if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
+			{
+				m_pServer->m_pLog->Add(1, "[UpdateAutoCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+			}
+		}
+	}
+	cJSON_Delete(json_QueryArray);
+}
+
+void UpdateAlarmCloud( void )
 {
 	char message[GM_COMM_MSG_LEN+1];
-	time_t t;
 	cJSON *json_Message;
 
-	t = time(&t);
-
-	if(t >= update_alarm_t && m_cloud_status && m_host_actual)
+	m_pServer->m_pLog->Add(10, "[UpdateAlarmCloud] Actualizando estado general de alarma en la nube.");
+	pEV->Estado_Alarma_General(message, GM_COMM_MSG_LEN);
+	json_Message = cJSON_Parse(message);
+	/* Agrego datos del sistema */
+	cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
+	cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+	cJSON_Delete(json_Message);
+	if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 	{
-		/* Actualizacion de objetos en la nube cada 10 min */
-		update_alarm_t = t + 600;
-
-		m_pServer->m_pLog->Add(10, "[CheckUpdateAlarmCloud] Actualizando estado general de alarma en la nube.");
-		pEV->Estado_Alarma_General(message, GM_COMM_MSG_LEN);
-		json_Message = cJSON_Parse(message);
-		cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
-		cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-		cJSON_Delete(json_Message);
-		if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-		{
-			m_pServer->m_pLog->Add(1, "[CheckUpdateAlarmCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-		}
+		m_pServer->m_pLog->Add(1, "[UpdateAlarmCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 	}
 }
 
-void CheckUpdateUserCloud( void )
+void UpdateUserCloud( void )
 {
 	int rc;
-	time_t t;
 	char query[4096];
 	char message[4096];
 	cJSON *json_QueryArray;
@@ -572,46 +600,38 @@ void CheckUpdateUserCloud( void )
 	cJSON *json_Usuario_Cloud;
 	cJSON *json_Clave_Cloud;
 
-	t = time(&t);
-
-	if(t >= update_user_t && m_cloud_status && m_host_actual)
+	m_pServer->m_pLog->Add(10, "[UpdateUserCloud] Actualizando usuarios en la nube.");
+	/* Genero un listado de los objetos con su estado para subir a la nube */
+	json_QueryArray = cJSON_CreateArray();
+	strcpy(query, "SELECT * FROM TB_DOM_USER WHERE Id > 0;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(json_QueryArray, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
 	{
-		/* TODO: Actualizacion de usuarios en la nube cada 10 min */
-		update_user_t = t + 600;
-
-		m_pServer->m_pLog->Add(10, "[CheckUpdateUserCloud] Actualizando usuarios en la nube.");
-		/* Genero un listado de los objetos con su estado para subir a la nube */
-		json_QueryArray = cJSON_CreateArray();
-		strcpy(query, "SELECT * FROM TB_DOM_USER WHERE Id > 0;");
-		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = pDB->Query(json_QueryArray, query);
-		m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		if(rc >= 0)
+		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
 		{
-			cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
+			json_Usuario_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Usuario_Cloud");
+			json_Clave_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Clave_Cloud");
+			/* Lo envío a la nube solo si tiene usuario y clave definidos */
+			if(json_Usuario_Cloud && json_Clave_Cloud)
 			{
-				json_Usuario_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Usuario_Cloud");
-				json_Clave_Cloud = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Clave_Cloud");
-				/* Lo envío a la nube solo si tiene usuario y clave definidos */
-				if(json_Usuario_Cloud && json_Clave_Cloud)
+				if(strlen(json_Usuario_Cloud->valuestring) > 0 && strcmp(json_Usuario_Cloud->valuestring, "NULL") &&
+					strlen(json_Clave_Cloud->valuestring) > 0 && strcmp(json_Clave_Cloud->valuestring, "NULL"))
 				{
-					if(strlen(json_Usuario_Cloud->valuestring) > 0 && strcmp(json_Usuario_Cloud->valuestring, "NULL") &&
-						strlen(json_Clave_Cloud->valuestring) > 0 && strcmp(json_Clave_Cloud->valuestring, "NULL"))
+					/* Agrego datos del sistema */
+					cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
+					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
+					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 					{
-						/* Agrego datos del sistema */
-						cJSON_AddStringToObject(json_QueryRow, "System_Key", m_SystemKey);
-						cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-						if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
-						{
-							m_pServer->m_pLog->Add(1, "[CheckUpdateUserCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
-						}
+						m_pServer->m_pLog->Add(1, "[UpdateUserCloud] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 					}
 				}
 			}
 		}
-		cJSON_Delete(json_QueryArray);
 	}
+	cJSON_Delete(json_QueryArray);
 }
 
 int DompiCloud_Notificar(const char* host, int port, const char* proto, const char* send_msg, char* receive_msg)
