@@ -54,7 +54,6 @@ char m_CloudHost1Proto[8];
 char m_CloudHost2Address[64];
 int  m_CloudHost2Port;
 char m_CloudHost2Proto[8];
-time_t update_t;
 
 int m_cloud_status;
 char *m_host_actual;
@@ -68,6 +67,11 @@ int DompiCloud_Notificar(const char* host, int port, const char* proto, const ch
 void LoadSystemConfig(void);
 void AddSaf( void );
 
+time_t next_update_group;
+time_t next_update_auto;
+time_t next_update_assign;
+time_t next_update_alarm;
+time_t next_update_user;
 
 void CheckUpdate();
 void UpdateGroupCloud(void);
@@ -90,7 +94,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char s[16];
 	int wait;
 
-	cJSON *json_Ass_Id;
 	cJSON *json_Message;
 
 	signal(SIGPIPE, SIG_IGN);
@@ -108,8 +111,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_CloudHost1Address[0] = 0;
 	m_CloudHost2Address[0] = 0;
-	update_t = 0;
 	m_cloud_status = 0;
+	next_update_group = 0;
+	next_update_auto = 0;
+	next_update_assign = 0;
+	next_update_alarm = 0;
+	next_update_user = 0;
+
 
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_cloud");
@@ -158,6 +166,9 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
 	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_auto_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_group_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 
 	AddSaf();
@@ -181,17 +192,13 @@ int main(/*int argc, char** argv, char** env*/void)
 				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				json_Message = cJSON_Parse(message);
-				message[0] = 0;
 
 				m_pServer->m_pLog->Add(20, "[dompi_ass_change] Encolando actualizacion con datos de assign");
 				if(m_cloud_status)
 				{
-					/* Cambio el Is por Ass_Id */
-					json_Ass_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-					cJSON_AddStringToObject(json_Message, "ASS_Id", json_Ass_Id->valuestring);
-					cJSON_DeleteItemFromObjectCaseSensitive(json_Message, "Id");
 					/* Agrego datos del sistema */
 					cJSON_AddStringToObject(json_Message, "System_Key", m_SystemKey);
+					message[0] = 0;
 					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 					{
@@ -209,14 +216,28 @@ int main(/*int argc, char** argv, char** env*/void)
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_user_change")) /* Tipo NOT */
 			{
-
+				next_update_user = 0;
 			}
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
 			else if( !strcmp(fn, "dompi_alarm_change")) /* Tipo NOT */
 			{
-
+				next_update_alarm = 0;
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_auto_change")) /* Tipo NOT */
+			{
+				next_update_alarm = 0;
+			}
+			/* ************************************************************* *
+			 *
+			 * ************************************************************* */
+			else if( !strcmp(fn, "dompi_group_change")) /* Tipo NOT */
+			{
+				next_update_alarm = 0;
 			}
 			/* ****************************************************************
 			*		dompi_reload_config
@@ -272,6 +293,8 @@ void OnClose(int sig)
 	m_pServer->UnSuscribe("dompi_ass_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_user_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_auto_change", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_group_change", GM_MSG_TYPE_NOT);
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;
@@ -450,18 +473,35 @@ void CheckUpdate()
 {
 	time_t t;
 
-	t = time(&t);
-
-	if(t >= update_t && m_cloud_status && m_host_actual)
+	if(m_cloud_status && m_host_actual)
 	{
-		/* Actualizacion de objetos en la nube cada 10 min */
-		update_t = t + 600;
+		t = time(&t);
 
-		UpdateUserCloud();
-		UpdateAssignCloud();
-		UpdateGroupCloud();
-		UpdateAutoCloud();
-		UpdateAlarmCloud();
+		if(t > next_update_group)
+		{
+			next_update_group = t + 600;
+			UpdateGroupCloud();
+		}
+		if(t > next_update_auto)
+		{
+			next_update_auto = t + 600;
+			UpdateAutoCloud();
+		}
+		if(t > next_update_assign)
+		{
+			next_update_assign = t + 600;
+			UpdateAssignCloud();
+		}
+		if(t > next_update_alarm)
+		{
+			next_update_alarm = t + 600;
+			UpdateAlarmCloud();
+		}
+		if(t > next_update_user)
+		{
+			next_update_user = t + 600;
+			UpdateUserCloud();
+		}
 	}
 }
 

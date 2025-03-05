@@ -926,7 +926,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Estado,Estado_Sensor,Estado_Salida "
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Habilitado,Estado,Estado_Sensor,Estado_Salida "
 									"FROM TB_DOM_AUTO "
 									"WHERE Id = %s;", json_Id->valuestring);
 				}
@@ -975,7 +975,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Planta = cJSON_GetObjectItemCaseSensitive(json_Request, "Planta");
 				if(json_Id)
 				{
-					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Grupo_Visual,Planta,Cord_x,Cord_y "
+					sprintf(query, "SELECT Id,Objeto,Tipo,Icono_Disable,Icono_Apagado,Icono_Encendido,Habilitado,Grupo_Visual,Planta,Cord_x,Cord_y "
 									"FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 				}
 				else
@@ -1022,7 +1022,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_AUTO "
-									"SET Estado = 1 "
+									"SET Habilitado = 1 "
 									"WHERE UPPER(Objeto) = UPPER(\'%s\');", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1047,6 +1047,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
+				m_pServer->Notify("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_auto_disable
@@ -1060,7 +1063,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					/* Actualizo el estado en la base */
 					sprintf(query, 	"UPDATE TB_DOM_AUTO "
-									"SET Estado = 0 "
+									"SET Habilitado = 0 "
 									"WHERE UPPER(Objeto) = UPPER(\'%s\')", json_un_obj->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(NULL, query);
@@ -1085,6 +1088,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
+				m_pServer->Notify("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_alarm_part_info

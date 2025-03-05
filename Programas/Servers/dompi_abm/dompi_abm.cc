@@ -2270,6 +2270,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				m_pServer->m_pLog->Add(90, "Notify [dompi_group_change]");
+				m_pServer->Notify("dompi_group_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_group_delete
@@ -2392,6 +2395,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+
+				m_pServer->m_pLog->Add(90, "Notify [dompi_group_change]");
+				m_pServer->Notify("dompi_group_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_sysconf_list
@@ -2791,6 +2797,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				
+				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
+				m_pServer->Notify("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_auto_delete
@@ -2926,6 +2935,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
+				m_pServer->Notify("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_alarm_part_list

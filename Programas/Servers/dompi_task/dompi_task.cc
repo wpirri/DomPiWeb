@@ -82,7 +82,6 @@ void CheckUpdateHWConfig();
 void RunDaily( void );
 void CheckDaily();
 void LoadSystemConfig(void);
-void AutoChangeNotify(void);
 void AddSaf( void );
 
 int main(/*int argc, char** argv, char** env*/void)
@@ -165,7 +164,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	*/
 
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
-	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 
 	AddSaf();
 
@@ -230,9 +228,6 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckUpdateHWConfig();
 		/*  */
 		CheckHWOffline();
-		/*  */
-		AutoChangeNotify();
-
 	}
 	m_pServer->m_pLog->Add(1, "ERROR en la espera de mensajes");
 	OnClose(0);
@@ -244,7 +239,6 @@ void OnClose(int sig)
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
-	m_pServer->UnSuscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);
 
 	delete m_pServer;
 	delete pEV;
@@ -345,6 +339,7 @@ void GroupMaint( void )
 	char *id, *p;
 	bool todos_encendidos;
 	bool todos_apagados;
+	bool group_update;
 	cJSON *json_QueryResult_Group;
 	cJSON *json_QueryResult_Assign;
 	cJSON *json_QueryRow_Group;
@@ -366,6 +361,7 @@ void GroupMaint( void )
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 	if(rc > 0)
 	{
+		group_update = false;
 		cJSON_ArrayForEach(json_QueryRow_Group, json_QueryResult_Group)
 		{
 			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow_Group, "Id");
@@ -430,6 +426,7 @@ void GroupMaint( void )
 
 			if(todos_encendidos && ( atoi(json_Estado->valuestring) == 0 ))
 			{
+				group_update = true;
 				m_pServer->m_pLog->Add(20, "[GroupMaint] Cambiando Grupo %s a estado 1", json_Grupo->valuestring);
 				sprintf(query, "UPDATE TB_DOM_GROUP "
 								"SET Estado = 1 "
@@ -441,6 +438,7 @@ void GroupMaint( void )
 			}
 			else if(todos_apagados && ( atoi(json_Estado->valuestring) == 1 ))
 			{
+				group_update = true;
 				m_pServer->m_pLog->Add(20, "[GroupMaint] Cambiando Grupo %s a estado 0", json_Grupo->valuestring);
 				sprintf(query, "UPDATE TB_DOM_GROUP "
 								"SET Estado = 0 "
@@ -450,6 +448,12 @@ void GroupMaint( void )
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 			}
+		}
+
+		if(group_update)
+		{
+			m_pServer->m_pLog->Add(20, "Actualizar datos de grupos");
+			m_pServer->Notify("dompi_group_change", nullptr, 0);
 		}
 	}
 	cJSON_Delete(json_QueryResult_Group);
@@ -824,75 +828,6 @@ void CheckDaily()
 		RunDaily();
 		last_daily = now;
 	}
-}
-
-void AutoChangeNotify( void )
-{
-	char query[4096];
-	char message[4096];
-	int rc;
-	//char *id, *p;
-	//int accion;
-	cJSON *json_QueryArray;
-	cJSON *json_QueryRow;
-	cJSON *json_Id;
-	cJSON *json_Objeto;
-	cJSON *json_Tipo;
-	cJSON *json_Estado;
-
-	int i_tipo;
-	int i_id;
-	char s_tipo[16];
-	char s_id[16];
-
-	m_pServer->m_pLog->Add(50, "[AutoChangeNotify]");
-
-	json_QueryArray = cJSON_CreateArray();
-	strcpy(query, "SELECT * FROM TB_DOM_AUTO WHERE Actualizar = 1;");
-	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = pDB->Query(json_QueryArray, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-	if(rc > 0)
-	{
-		cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
-		{
-			json_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
-			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
-			m_pServer->m_pLog->Add(20, "[AutoChangeNotify] Actualizando estado de automatismo [%s]", json_Objeto->valuestring);
-
-			/* Cambio el Id (le sumo 10000) */
-			i_id = atoi(json_Id->valuestring);
-			sprintf(s_id, "%d", i_id + 10000);
-			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Id");
-			cJSON_AddStringToObject(json_QueryRow, "Id", s_id);
-
-			/* Cambio el Tipo (le sumo 10) */
-			json_Tipo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo");
-			i_tipo = atoi(json_Tipo->valuestring);
-			sprintf(s_tipo, "%d", i_tipo + 10);
-			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Tipo");
-			cJSON_AddStringToObject(json_QueryRow, "Tipo", s_tipo);
-
-			/* Cambio el estado por el valor de Habilitado */
-			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Habilitado");
-			cJSON_DeleteItemFromObjectCaseSensitive(json_QueryRow, "Estado");
-			cJSON_AddStringToObject(json_QueryRow, "Estado", json_Estado->valuestring);
-
-			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-			m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-			m_pServer->Notify("dompi_ass_change", message, strlen(message));
-
-			sprintf(query, "UPDATE TB_DOM_AUTO "
-							"SET Actualizar = 0 "
-							"WHERE Id = %i;", i_id);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(NULL, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-		}
-	}
-	cJSON_Delete(json_QueryArray);
 }
 
 void AddSaf( void )
