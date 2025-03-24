@@ -20,8 +20,7 @@ include("obj_style.php");
 
 <div class="home-group" id="home-div">
 <?php
-$edit = 1;
-include("obj_draw.php");
+include("obj_draw_edit.php");
 ?>
 	<img class="home-image" id="plano1" src="images/home.png" />
 </div>
