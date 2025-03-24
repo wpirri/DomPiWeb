@@ -37,16 +37,14 @@
     }
 
     function onMouseMove(js_id) {
-        if(moveObj)
-        {
+        if(moveObj) {
             var e = window.event;
-            posX = e.clientX + 40;
-            posY = e.clientY - 40;
+            posX = e.clientX + 45;
+            posY = e.clientY - 30;
             obj = document.getElementById(js_id);
             obj.style.left = posX + "px";
             obj.style.top = posY + "px";
         }
-
     }
     </script>
     <?php

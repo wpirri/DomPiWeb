@@ -7,7 +7,7 @@ include("head.php");
 
 <?php
 $PLANTA=1;
-include("obj_style.php");
+include("obj_style_edit.php");
 ?>
 
 <div class="back-btn" id="back-from-planta" onclick="window.location.replace('<?php echo $CONFIG_MENU?>');">
