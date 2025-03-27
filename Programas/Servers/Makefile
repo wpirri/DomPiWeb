@@ -46,7 +46,7 @@ uninstall:
 	make -C dompi_gsm uninstall
 	make -C dompi_netcomm uninstall
 	make -C dompi_server uninstall
-	make -C dompi_command install
-	make -C dompi_task install
+	make -C dompi_command uninstall
+	make -C dompi_task uninstall
 # Pi IO
 	$(if $(findstring arm,$(ARQ)) , make -C dompi_gpio uninstall )

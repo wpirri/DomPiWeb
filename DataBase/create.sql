@@ -1,6 +1,7 @@
 CREATE DATABASE DB_DOMPIWEB;
 USE DB_DOMPIWEB;
 
+DROP TABLE IF EXISTS TB_DOM_TOUCH;
 DROP TABLE IF EXISTS TB_DOM_AUTO;
 DROP TABLE IF EXISTS TB_DOM_AT;
 DROP TABLE IF EXISTS TB_DOM_EVENT;
@@ -318,3 +319,27 @@ FOREIGN KEY(Objeto_Sensor) REFERENCES TB_DOM_ASSIGN(Id),
 FOREIGN KEY(Grupo_Visual) REFERENCES TB_DOM_GRUPO_VISUAL(Id),
 UNIQUE INDEX idx_auto_id (Id)
 );
+
+CREATE TABLE IF NOT EXISTS TB_DOM_TOUCH (
+Dispositivo integer,
+Screen integer,
+Line integer,
+Button integer,
+Evento integer DEFAULT 0,
+Objeto integer DEFAULT 0,
+X integer DEFAULT 0,
+Y integer DEFAULT 0,
+W integer DEFAULT 0,
+H integer DEFAULT 0,
+Redondo integer DEFAULT 0,
+texto varchar(16),
+icono varchar(16),
+color_borde integer DEFAULT 0,
+color_fondo integer DEFAULT 0,
+color_texto integer DEFAULT 0,
+orientacion integer DEFAULT 0,
+UNIQUE INDEX idx_touch_id (Dispositivo,Screen,Line,Button),
+FOREIGN KEY(Dispositivo) REFERENCES TB_DOM_PERIF(Id),
+FOREIGN KEY(Objeto) REFERENCES TB_DOM_ASSIGN(Id)
+);
+

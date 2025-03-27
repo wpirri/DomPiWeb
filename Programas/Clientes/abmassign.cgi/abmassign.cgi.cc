@@ -134,7 +134,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(trace)
   {
-    openlog("infoio.cgi", 0, LOG_USER);
+    openlog("abmassign.cgi", 0, LOG_USER);
 
     syslog(LOG_DEBUG, "REMOTE_ADDR: %s",remote_addr);
     syslog(LOG_DEBUG, "REQUEST_URI: [%s]",request_uri);
@@ -243,7 +243,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(trace)
   {
-    syslog(LOG_DEBUG, "Call Q: dompi_infoio [%s]", query.C_Str());
+    syslog(LOG_DEBUG, "Call Q: %s [%s]", funcion_call, query.C_Str());
   }
 
   rc = pClient->Call(funcion_call, query, response, timeout);

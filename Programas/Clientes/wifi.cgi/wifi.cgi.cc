@@ -174,7 +174,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   if(trace)
   {
-    syslog(LOG_DEBUG, "Call Q: wifi [%s]", query.C_Str());
+    syslog(LOG_DEBUG, "Call Q: dompi_pi_wifi [%s]", query.C_Str());
   }
 
   rc = pClient->Call("dompi_pi_wifi", query, response, 100);

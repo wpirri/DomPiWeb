@@ -93,7 +93,7 @@ alter table TB_DOM_PERIF add column Informacion varchar(1024);
 ## 22/02/2024
 alter table TB_DOM_EVENT drop index idx_event_obj_origen;
 
-## 2310/2024
+## 23/10/2024
 alter table TB_DOM_EVENT add column Filtro_Repeticion integer DEFAULT 0;
 alter table TB_DOM_EVENT add column Ultimo_Evento  integer DEFAULT 0;
 

@@ -181,7 +181,7 @@ setCurrentTime();
 window.onclick = function() {window.location.replace('<?php echo $MAIN?>');}
 
 /* Reload para actualizaciones */
-setTimeout("window.location.replace('<?php echo $INDEX?>');", 3600000);
+setTimeout("window.location.replace('<?php echo $INDEX?>');", 36000000);
 
 </script>
 </body>

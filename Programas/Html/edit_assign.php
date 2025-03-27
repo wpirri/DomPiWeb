@@ -42,6 +42,10 @@ include('head-abm.php');
                 output += fillSimpleList(headers[i], PortAss, val);
             } else if(headers[i] == 'Tipo') {
                 output += fillSimpleList(headers[i], TipoAss, val);
+            } else if(headers[i] == 'Icono_Apagado') {
+                output += fillSimpleList(headers[i], ImagenObjeto, val);
+            } else if(headers[i] == 'Icono_Encendido') {
+                output += fillSimpleList(headers[i], ImagenObjeto, val);
             } else if(headers[i] == 'Grupo_Visual') {
                 output += fillSimpleList(headers[i], GrupoVisual, val);
             } else {

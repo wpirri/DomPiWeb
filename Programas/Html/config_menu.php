@@ -40,10 +40,11 @@ include("head.php");
 	<img id="event-icon" class="icon-btn" src="images/event.png">&nbsp;Eventos
 </div>
 
-
-<!--<div class="normal-btn" id="btn-config-flags" onclick="window.location.replace('flag_list.php');">
-	<img id="flags-icon" class="icon-btn" src="images/var.png">&nbsp;Variables
-</div>-->
+<!--
+<div class="normal-btn" id="btn-config-touch" onclick="window.location.replace('touch_list.php');">
+	<img id="touch-icon" class="icon-btn" src="images/hard.png">&nbsp;T&aacute;ctiles
+</div>
+-->
 <!--<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
 	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
 </div>-->

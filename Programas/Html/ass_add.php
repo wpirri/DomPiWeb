@@ -42,6 +42,10 @@ include('head-abm.php');
                 output += fillSimpleList(headers[i], TipoAss);
             } else if(headers[i] == 'Grupo_Visual') {
                 output += fillSimpleList(headers[i], GrupoVisual);
+            } else if(headers[i] == 'Icono_Apagado') {
+                output += fillSimpleList(headers[i], ImagenObjeto);
+            } else if(headers[i] == 'Icono_Encendido') {
+                output += fillSimpleList(headers[i], ImagenObjeto);
             } else {
                 output += '<input type="text" id="' + headers[i] + '" name="' + headers[i] + '" class="abm-edit-input-text" />';
             }

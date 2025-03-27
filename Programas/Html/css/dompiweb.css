@@ -203,11 +203,11 @@ body {
 	border: 3px solid pink;
 	}
 
-#btn-config-flags {
+#btn-config-touch {
 	left: 95px; 
 	top: 265px; 
-	background: teal;
-	border: 3px solid lightseagreen;
+	background: black;
+	border: 3px solid green;
 	}
 
 #btn-config-dummy3 {
@@ -216,7 +216,7 @@ body {
 	background: black;
 	border: 3px solid gray;
 	}
-
+	
 #btn-config-alarm {
 	left: 415px; 
 	top: 265px; 

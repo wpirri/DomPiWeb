@@ -223,6 +223,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_camara_add", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_camara_delete", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_camara_update", GM_MSG_TYPE_CR);
+	/* Terminales Touch */
+	m_pServer->Suscribe("dompi_touch_list", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_touch_list_all", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_touch_get", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_touch_add", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_touch_delete", GM_MSG_TYPE_CR);
+	m_pServer->Suscribe("dompi_touch_update", GM_MSG_TYPE_CR);
 
 	m_pServer->m_pLog->Add(1, "ABM de domotica inicializado.");
 
@@ -982,7 +989,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
-
 			}
 			/* ****************************************************************
 			*		dompi_ass_list
@@ -4232,6 +4238,320 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 
 			}
+			/* ****************************************************************
+			*		dompi_touch_list
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_list"))
+			{
+				message[0] = 0;
+
+				json_Query_Result = cJSON_CreateArray();
+				strcpy(query, "SELECT HW.Id, HW.Dispositivo, HW.Estado "
+								"FROM TB_DOM_TOUCH AS TCH, TB_DOM_PERIF AS HW "
+								"WHERE TCH.Dispositivo = HW.Id AND TCH.Line = 1 AND TCH.Button = 1 "
+								"ORDER BY HW.Dispositivo ASC;");
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_Query_Result, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc >= 0)
+				{
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Message);
+				}
+				else
+				{
+					cJSON_Delete(json_Query_Result);
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_touch_list_all
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_list_all"))
+			{
+				message[0] = 0;
+
+				json_Query_Result = cJSON_CreateArray();
+				strcpy(query, "SELECT * FROM TB_DOM_TOUCH;");
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(json_Query_Result, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc >= 0)
+				{
+					json_Message = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Message);
+				}
+				else
+				{
+					cJSON_Delete(json_Query_Result);
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_touch_get
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_get"))				
+			{
+				json_Message = cJSON_Parse(message);
+				message[0] = 0;
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				if(json_Id)
+				{
+					json_Query_Result = cJSON_CreateArray();
+					sprintf(query, "SELECT * FROM TB_DOM_TOUCH WHERE Dispositivo = %s;", json_Id->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(json_Query_Result, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						cJSON_Delete(json_Message);
+						json_Message = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					}
+				}
+				cJSON_Delete(json_Message);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_touch_add
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_add"))
+			{
+				json_Message = cJSON_Parse(message);
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+
+				json_Cloud_Message = cJSON_CreateObject();
+
+				json_un_obj = json_Message;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+								{
+									if(ExcluirDeABM(json_un_obj->string) == 0)
+									{
+										/* Dato */
+										if(strlen(query_into) == 0)
+										{
+											strcpy(query_into, "(");
+										}
+										else
+										{
+											strcat(query_into, ",");
+										}
+										strcat(query_into, json_un_obj->string);
+										/* Valor */
+										if(strlen(query_values) == 0)
+										{
+											strcpy(query_values, "(");
+										}
+										else
+										{
+											strcat(query_values, ",");
+										}
+										strcat(query_values, "'");
+										strcat(query_values, json_un_obj->valuestring);
+										strcat(query_values, "'");
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_Message);
+
+				strcat(query_into, ")");
+				strcat(query_values, ")");
+
+				sprintf(query, "INSERT INTO TB_DOM_TOUCH %s VALUES %s;", query_into, query_values);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+				if(rc <= 0)
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+				cJSON_Delete(json_Cloud_Message);
+
+			}
+			/* ****************************************************************
+			*		dompi_touch_delete
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_delete"))
+			{
+				json_Message = cJSON_Parse(message);
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				if(json_Id)
+				{
+					if( atoi(json_Id->valuestring) != 0 )
+					{
+						sprintf(query, "DELETE FROM TB_DOM_TOUCH WHERE Dispositivo = %s;", json_Id->valuestring);
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(NULL, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc <= 0)
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+						}
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid User\"}}");
+					}
+				}
+
+				cJSON_Delete(json_Message);
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+			}
+			/* ****************************************************************
+			*		dompi_touch_update
+			**************************************************************** */
+			else if( !strcmp(fn, "dompi_touch_update"))
+			{
+				json_Message = cJSON_Parse(message);
+				message[0] = 0;
+
+				query[0] = 0;
+				query_into[0] = 0;
+				query_values[0] = 0;
+				query_where[0] = 0;
+
+				json_Cloud_Message = cJSON_CreateObject();
+
+				json_un_obj = json_Message;
+				while( json_un_obj )
+				{
+					/* Voy hasta el elemento con datos */
+					if(json_un_obj->type == cJSON_Object)
+					{
+						json_un_obj = json_un_obj->child;
+					}
+					else
+					{
+						if(json_un_obj->type == cJSON_String)
+						{
+							if(json_un_obj->string && json_un_obj->valuestring)
+							{
+								if(strlen(json_un_obj->string) /*&& strlen(json_un_obj->valuestring)*/)
+								{
+									if(ExcluirDeABM(json_un_obj->string) == 0)
+									{
+										if( !strcmp(json_un_obj->string, "Id") )
+										{
+											strcpy(query_where, json_un_obj->string);
+											strcat(query_where, "='");
+											strcat(query_where, json_un_obj->valuestring);
+											strcat(query_where, "'");
+
+											strcpy(hw_id, json_un_obj->valuestring);
+										}
+										else
+										{
+											/* Dato = Valor */
+											if(strlen(query_values) > 0)
+											{
+												strcat(query_values, ",");
+											}
+											strcat(query_values, json_un_obj->string);
+											strcat(query_values, "='");
+											strcat(query_values, json_un_obj->valuestring);
+											strcat(query_values, "'");
+										}
+									}
+								}
+							}
+						}
+						json_un_obj = json_un_obj->next;
+					}
+				}
+				cJSON_Delete(json_Message);
+				if(strlen(query_where))
+				{
+					sprintf(query, "UPDATE TB_DOM_TOUCH SET %s WHERE %s;", query_values, query_where);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc > 0)
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Form Data Error\"}}");
+				}
+
+				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
+				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
+				{
+					/* error al responder */
+					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
+				}
+
+				cJSON_Delete(json_Cloud_Message);
+			}
 
 
 
@@ -4356,13 +4676,18 @@ void OnClose(int sig)
     m_pServer->UnSuscribe("dompi_alarm_salida_add", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_update", GM_MSG_TYPE_CR);
     m_pServer->UnSuscribe("dompi_alarm_salida_delete", GM_MSG_TYPE_CR);
-	/* Camaras */
 	m_pServer->UnSuscribe("dompi_camara_list", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_list_all", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_get", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_add", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_delete", GM_MSG_TYPE_CR);
 	m_pServer->UnSuscribe("dompi_camara_update", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_list", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_list_all", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_get", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_add", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_delete", GM_MSG_TYPE_CR);
+	m_pServer->UnSuscribe("dompi_touch_update", GM_MSG_TYPE_CR);
 
 	delete m_pServer;
 	delete pConfig;

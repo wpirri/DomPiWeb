@@ -52,8 +52,6 @@ PortAss[16] = { value: 'TEMP', 		label: 'Sensor Temperatura' }
 PortAss[17] = { value: 'HUM', 		label: 'Sensor Humedad' }
 PortAss[18] = { value: 'CARD', 		label: 'Lector Tarjetas' }
 
-
-
 var GrupoVisual = [];
 GrupoVisual[0] = { value: 0, label: 'Ninguno' }
 GrupoVisual[1] = { value: 1, label: 'Alarma' }
@@ -234,6 +232,33 @@ TablaMinutos[57] = { value: 57, label: '57' }
 TablaMinutos[58] = { value: 58, label: '58' }
 TablaMinutos[59] = { value: 59, label: '59' }
 TablaMinutos[60] = { value: 60, label: 'Todos' }
+
+var ImagenObjeto = [];
+ImagenObjeto[0] = { value: 'key.png', label: 'Llave' }
+ImagenObjeto[1] = { value: 'lamp1.png', label: 'Luz encendida' }
+ImagenObjeto[2] = { value: 'lamp0.png', label: 'Luz apagada' }
+ImagenObjeto[3] = { value: 'calef1.png', label: 'Estufa encendida' }
+ImagenObjeto[4] = { value: 'calef0.png', label: 'Estufa apagada' }
+ImagenObjeto[5] = { value: 'vent1.png', label: 'Extractor encendido' }
+ImagenObjeto[6] = { value: 'vent0.png', label: 'Extractor apagado' }
+ImagenObjeto[7] = { value: 'aire1.png', label: 'Aire encendido' }
+ImagenObjeto[8] = { value: 'aire0.png', label: 'Aire apagado' }
+ImagenObjeto[9] = { value: 'campana1.png', label: 'Campanilla encendida' }
+ImagenObjeto[10] = { value: 'campana0.png', label: 'Campanilla apagada' }
+ImagenObjeto[11] = { value: 'lock1.png', label: 'Candado cerrado' }
+ImagenObjeto[12] = { value: 'lock0.png', label: 'Candado abierto' }
+ImagenObjeto[13] = { value: 'manguera1.png', label: 'Riego encendido' }
+ImagenObjeto[14] = { value: 'manguera0.png', label: 'Riego apagado' }
+ImagenObjeto[15] = { value: 'pir1.png', label: 'PIR encendido' }
+ImagenObjeto[16] = { value: 'pir0.png', label: 'PIR apagado' }
+ImagenObjeto[17] = { value: 'sirena1.png', label: 'Sirena encendida' }
+ImagenObjeto[18] = { value: 'sirena0.png', label: 'Sirena apagada' }
+ImagenObjeto[19] = { value: 'switch1.png', label: 'Switch encendido' }
+ImagenObjeto[20] = { value: 'switch0.png', label: 'Switch apagado' }
+ImagenObjeto[21] = { value: 'door1.png', label: 'Puerta abierta' }
+ImagenObjeto[22] = { value: 'door0.png', label: 'Puerta cerrada' }
+ImagenObjeto[23] = { value: 'window1.png', label: 'Ventana abierta' }
+ImagenObjeto[24] = { value: 'window0.png', label: 'Ventana cerrada' }
 
 /* Arma un Drop down listbox */
 function fillSimpleList(name, list, selected, onchange) {
