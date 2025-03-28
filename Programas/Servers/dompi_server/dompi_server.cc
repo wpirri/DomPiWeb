@@ -363,6 +363,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						//message[0] = 0;
 						if(rc == 1)
 						{
+							/* El evento tuvo acciones */
 #ifdef ACTIVO_ACTIVO
 							if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
 							message[0] = 0;
@@ -469,18 +470,21 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 							}
+							/* Para que notifique los cambios mas rápido */
+							m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+							m_pServer->Notify("dompi_check_task", nullptr, 0);
 						}
 						else if(rc == 0)
+						{
+							/* Sin novedades */
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+						}
+						else
 						{
 							m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_MAC->valuestring, (json_Direccion_IP)?json_Direccion_IP->valuestring:"-");
 							CheckNewHWList(json_MAC->valuestring);
 							/* NOT FOUND */
 							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
-						}
-						else
-						{
-							/* Otro Error */
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
 						}
 					}
 					else if( !strcmp(json_Tipo_HW->valuestring, "TOUCH") )
@@ -818,6 +822,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				/* Para que notifique los cambios mas rápido */
+				m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+				m_pServer->Notify("dompi_check_task", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_ass_off
@@ -849,6 +856,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				/* Para que notifique los cambios mas rápido */
+				m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+				m_pServer->Notify("dompi_check_task", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_ass_switch
@@ -869,6 +879,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Error en UPDATE a TB_DOM_ASSIGN\"}}");
 					}
+
 				}
 				else
 				{
@@ -880,6 +891,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				/* Para que notifique los cambios mas rápido */
+				m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+				m_pServer->Notify("dompi_check_task", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_ass_pulse
@@ -913,6 +927,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				/* Para que notifique los cambios mas rápido */
+				m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+				m_pServer->Notify("dompi_check_task", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_auto_status
@@ -1476,6 +1493,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 						}
 					}
+					/* Para que notifique los cambios mas rápido */
+					m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+					m_pServer->Notify("dompi_check_task", nullptr, 0);
 				}
 				cJSON_Delete(json_Query_Result);
 			}
@@ -1546,6 +1566,9 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
+				/* Para que notifique los cambios mas rápido */
+				m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+				m_pServer->Notify("dompi_check_task", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_reload_config
@@ -1710,6 +1733,9 @@ void GroupTask( void )
 			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 		}
+		/* Para que notifique los cambios mas rápido */
+		m_pServer->m_pLog->Add(90, "Notify [dompi_check_task]");
+		m_pServer->Notify("dompi_check_task", nullptr, 0);
 	}
 	cJSON_Delete(json_QueryArray);
 }

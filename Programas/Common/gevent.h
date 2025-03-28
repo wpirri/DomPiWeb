@@ -28,8 +28,8 @@ public:
     int SyncIO(const char* json_evt);
     int ChangeIO(const char* json_evt);
 
-    void CheckEvent(int hw_id, const char* port, int estado);
-    void CheckAuto(int hw_id, const char* port, int estado);
+    int CheckEvent(int hw_id, const char* port, int estado);
+    int CheckAuto(int hw_id, const char* port, int estado);
 
 /*
     accion  1 = Encender

@@ -164,12 +164,13 @@ int main(/*int argc, char** argv, char** env*/void)
 	*/
 
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
+	m_pServer->Suscribe("dompi_check_task", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
 
 	AddSaf();
 
 	m_pServer->m_pLog->Add(1, "Servicios de Tareas Offline inicializados.");
 
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 500 )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1000 )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -184,8 +185,12 @@ int main(/*int argc, char** argv, char** env*/void)
 
 				LoadSystemConfig();
 			}
-			
-
+			else if( !strcmp(fn, "dompi_check_task"))
+			{
+				/* No se hace nada, es solamente para romper el timer */
+				/* Las tareas de este servicio están fuera del loop de procesamiento */
+				/* En Actualizaciones de estados */
+			}
 
 
 
@@ -239,6 +244,7 @@ void OnClose(int sig)
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_check_task", GM_MSG_TYPE_NOT);
 
 	delete m_pServer;
 	delete pEV;

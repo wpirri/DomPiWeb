@@ -134,6 +134,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_tmp;
     STRFunc str;
     char extra_info[1024];
+    int cambios = 0;
 
     m_pServer->m_pLog->Add(100, "[GEvent::ExtIOEvent] json_evt: %s", json_evt);
 
@@ -280,7 +281,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                             /* Si existe un assign me fijo si hay alguna automatización */
                                             if(rc > 0)
                                             {
-                                                CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
+                                                if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
+                                                {
+                                                    cambios = 1;
+                                                }
                                             }
                                         }
                                     }
@@ -310,7 +314,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
-                                        CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
+                                        if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
+                                        {
+                                            cambios = 1;
+                                        }
                                     }
                                     else if( !memcmp(json_un_obj->string, "HUM", 3))
                                     {
@@ -326,7 +333,10 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
-                                        CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
+                                        if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
+                                        {
+                                            cambios = 1;
+                                        }
                                     }
                                 }
                             }
@@ -348,11 +358,17 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         json_status = cJSON_GetObjectItemCaseSensitive(json_obj, s);
                         if(json_status)
                         {
-                            CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring));
+                            if(CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring)))
+                            {
+                                cambios = 1;
+                            }
                         }
                         else
                         {
-                            CheckEvent(atoi(json_hw_id->valuestring), s, 1);
+                            if(CheckEvent(atoi(json_hw_id->valuestring), s, 1))
+                            {
+                                cambios = 1;
+                            }
                         }
                         i++;
                     }
@@ -368,20 +384,20 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 /**/
                 cJSON_Delete(json_QueryArray);
                 cJSON_Delete(json_obj);
-                return 1;
+                return cambios;
             }
             else
             {
                 /* Desconocido */
                 cJSON_Delete(json_QueryArray);
                 cJSON_Delete(json_obj);
-                return 0;
+                return (-1);
             }
         }
         cJSON_Delete(json_obj);
-        return 0;
+        return (-1);
     }
-    return 0;
+    return (-1);
 }
 
 int GEvent::SyncIO(const char* json_evt)
@@ -560,10 +576,11 @@ int GEvent::ChangeIO(const char* json_evt)
     return 0;
 }
 
-void GEvent::CheckEvent(int hw_id, const char* port, int estado)
+int GEvent::CheckEvent(int hw_id, const char* port, int estado)
 {
 	char query[4096];
     int rc;
+    int cambios = 0;
     time_t time_now;
     cJSON *json_AssignArray;
     cJSON *json_AssignRow;
@@ -610,7 +627,7 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
             {
                 m_pServer->m_pLog->Add(1, "[CheckEvent] Error obteniendo datos de: HW: %i Port: %s", hw_id, port);
                 cJSON_Delete(json_AssignArray);
-                return;
+                return (-1);
             }
             m_pServer->m_pLog->Add(20, "[CheckEvent] Assign: Ass: %s Typ: %s", Assign_Nombre->valuestring, Assign_Tipo->valuestring);
 
@@ -689,6 +706,8 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
                         /* Si la condicion lo permite ejecuto según corresponda */
                         if( rc >= 0 && Enviar )
                         {
+                            cambios = 1;
+
                             if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
                             {
                                 ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
@@ -727,9 +746,10 @@ void GEvent::CheckEvent(int hw_id, const char* port, int estado)
         }
     }
     cJSON_Delete(json_AssignArray);
+    return cambios;
 }
 
-void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
+int GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
 {
 	char query[4096];
     int rc;
@@ -738,6 +758,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
 	char dia[3];
     int enviar;
     int set_estado;
+    int cambios = 0;
 
     cJSON *json_QueryArray;
     cJSON *json_QueryRow;
@@ -986,6 +1007,8 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
             /* Si la condicion lo permite ejecuto según corresponda */
             if( enviar > 0 )
             {
+                cambios = 1;
+
                 if(Objeto_Salida &&  atoi(Objeto_Salida->valuestring) > 0 )
                 {
                     ChangeAssignById(   atoi(Objeto_Salida->valuestring), enviar,
@@ -1029,6 +1052,7 @@ void GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
     }
 
     cJSON_Delete(json_QueryArray);
+    return cambios;
 }
 
 int GEvent::ChangeAssignByName(const char* name, int accion, int param)
