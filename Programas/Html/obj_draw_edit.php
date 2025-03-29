@@ -9,41 +9,58 @@
     ?>
     <script type="text/javascript" >
     var moveObj = false;
-    var posX = 0;
-    var posY = 0;
+    var delta_x = 0;
+    var delta_y = 0;
+    var mouse_pos_x = 0;
+    var mouse_pos_y = 0;
+    var pic_pos_x = 0;
+    var pic_pos_y = 0;
+    var pic_obj = null;
 
-    function onMouseDown(id) {
+    function onMouseDown(obj_id, js_id) {
         // 0 : Left button
         // 1 : Wheel or middle button (if present)
         // 2 : Right button
         if(event.button == 0) {
             if(moveObj) {
-                if(posX > 0 && posY > 0) {
-                    newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=update', null, false, 'Id=' + id + '&Cord_x=' + posX + '&Cord_y=' + posY);
+                if(pic_pos_x > 0 && pic_pos_y > 0) {
+                    newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=update', null, false, 'Id=' + obj_id + '&Cord_x=' + pic_pos_x + '&Cord_y=' + pic_pos_y);
                 }
                 moveObj = false;
+                pic_pos_x = 0;
+                pic_pos_y = 0;
             } else {
                 moveObj = true;
+                pic_obj = document.getElementById(js_id);
+                pic_pos_x = pic_obj.offsetLeft;
+                pic_pos_y = pic_obj.offsetTop;
+                delta_x = 0; 
+                delta_y = 0;
+                //alert('pic x: ' + pic_pos.x + ' y: ' + pic_pos.y + '\n css x: ' + pic_obj.offsetLeft + ' y: ' + pic_obj.offsetTop);
             }
         }
     }
 
-    function onMouseUp(js_id) {
+    function onMouseUp(obj_id, js_id) {
         mouseDown = false;
     }
 
-    function onDblClick(obj_id) {
+    function onDblClick(obj_id, js_id) {
         window.location.replace('edit_assign.php?Id=' + obj_id);
     }
 
-    function onMouseMove(js_id) {
+    function onMouseMove(obj_id, js_id) {
         if(moveObj) {
             var e = window.event;
-            posX = e.clientX + 45;
-            posY = e.clientY - 30;
-            obj = document.getElementById(js_id);
-            obj.style.left = posX + "px";
-            obj.style.top = posY + "px";
+            if(delta_x == 0 && delta_y == 0) {
+                delta_x = pic_pos_x - e.clientX;
+                delta_y = pic_pos_y - e.clientY;
+            }
+            pic_pos_x = e.clientX + delta_x;
+            pic_pos_y = e.clientY + delta_y;
+            //alert('pic x: ' + pic_pos.x + ' y: ' + pic_pos.y + '\n css x: ' + pic_obj.offsetLeft + ' y: ' + pic_obj.offsetTop);
+            pic_obj.style.left = pic_pos_x + "px";
+            pic_obj.style.top = pic_pos_y + "px";
         }
     }
     </script>
@@ -68,13 +85,12 @@
         $Segundos = $obj_list[$i]['Analog_Mult_Div_Valor'];
 
         $src = "src=\"images/".$Icono_Encendido."\"";
-        $onDblClick = "onDblClick=\"onDblClick('".$Id."');\"";
-        $onMouseDown = "onMouseDown=\"onMouseDown('".$Id."');\"";
-
         $js_id = "id-".$Objeto;
-        $onMouseMove = "onMouseMove=\"onMouseMove('".$js_id."');\"";
-        $onMouseUp = "onMouseUp=\"onMouseUp('".$js_id."');\"";
-    //
+        $onDblClick = "onDblClick=\"onDblClick('".$Id."','".$js_id."');\"";
+        $onMouseDown = "onMouseDown=\"onMouseDown('".$Id."','".$js_id."');\"";
+        $onMouseMove = "onMouseMove=\"onMouseMove('".$Id."','".$js_id."');\"";
+        $onMouseUp = "onMouseUp=\"onMouseUp('".$Id."','".$js_id."');\"";
+        //
         // Representacion del objeto segun el tipo
         //
         if ($Tipo == 2)
