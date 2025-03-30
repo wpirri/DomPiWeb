@@ -151,22 +151,22 @@ int main(/*int argc, char** argv, char** env*/void)
 	char fn[33];
 	char typ[1];
 	char message[GM_COMM_MSG_LEN+1];
-	char cmdline[1024];
+//	char cmdline[1024];
 	char db_host[32];
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
 	char query[4096];
-	char listado[4096];
+//	char listado[4096];
 	unsigned long message_len;
 	time_t t;
 	struct tm *s_tm;
 	char s[16];
 	STRFunc sf;
 
-	char comando[1024];
-	char objeto[1024];
-	char parametro[1024];
+//	char comando[1024];
+//	char objeto[1024];
+//	char parametro[1024];
 
 	char extra_info[1024];
 
@@ -181,12 +181,12 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
 	cJSON *json_Query_Row;
-    cJSON *json_query;
-    cJSON *json_cmdline;
+//    cJSON *json_query;
+//    cJSON *json_cmdline;
 
-    cJSON *json_HW_Id;
+//    cJSON *json_HW_Id;
 	cJSON *json_Objeto;
-	cJSON *json_Tipo;
+//	cJSON *json_Tipo;
 	cJSON *json_Tipo_HW;
 	cJSON *json_Port;
 	cJSON *json_Estado;
@@ -199,14 +199,14 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Zona;
 	cJSON *json_Salida;
 	cJSON *json_FW;
-	cJSON *json_Dispositivo;
+//	cJSON *json_Dispositivo;
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
-	cJSON *json_Command;
+//	cJSON *json_Command;
     cJSON *json_arr_Perif;
     cJSON *json_Perif;
-    cJSON *json_Actualizar;
-    cJSON *json_Update_Firmware;
+//    cJSON *json_Actualizar;
+//    cJSON *json_Update_Firmware;
 	
 	last_daily = 0;
 	
@@ -360,28 +360,30 @@ int main(/*int argc, char** argv, char** env*/void)
 					if( !strcmp(json_Tipo_HW->valuestring, "IO") || !strcmp(json_Tipo_HW->valuestring, "PI")  )
 					{
 						rc = pEV->ExtIOEvent(message);
-						//message[0] = 0;
-						if(rc == 1)
+						if(rc >= 0)
 						{
-							/* El evento tuvo acciones */
 #ifdef ACTIVO_ACTIVO
-							if(strlen(sys_backup)) m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
-							message[0] = 0;
+							if(strlen(sys_backup))
+							{
+								m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
+							}
 #endif
+							message[0] = 0;
 							if(soporta_respuesta_con_datos)
 							{
-								GroupTask();
-
+								if(rc == 2)
+								{
+									/* Se modificaron grupos */
+									GroupTask();
+								}
 								json_Response = cJSON_CreateObject();
 								/* Me traigo los estados de las salidas del dispositivo
 								para informar si hay cambios en la misma respuesta */
 								json_Query_Result = cJSON_CreateArray();
-								sprintf(query, "SELECT P.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-													"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, A.Actualizar, "
-													"A.Estado, A.Analog_Mult_Div_Valor, P.Update_Firmware "
+								sprintf(query, "SELECT Objeto, A.Id AS ASS_Id, Port, A.Estado "
 												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
 												"WHERE A.Dispositivo = P.Id AND UPPER(P.MAC) = UPPER(\'%s\') "
-												    "AND ( A.Actualizar > 0 OR P.Update_Firmware > 0 ) "
+												    "AND ( A.Estado <> A.Estado_HW OR A.Actualizar > 0 ) "
 													"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_MAC->valuestring);
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								rc = pDB->Query(json_Query_Result, query);
@@ -395,54 +397,58 @@ int main(/*int argc, char** argv, char** env*/void)
 									{
 										/* Saco los datos que necesito */
 										json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "ASS_Id");
-										json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "HW_Id");
 										json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
 										json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
 										json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
-										json_Actualizar = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Actualizar");
-										json_Update_Firmware = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Update_Firmware");
-										if(atoi(json_Actualizar->valuestring))
-										{
-											/* Armo la respuesta */
-											cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
-											/* Borro el flag de update de los que ya aviso */
-											sprintf(query, "UPDATE TB_DOM_ASSIGN "
-																"SET Actualizar = 0, Estado_HW = %s "
-																"WHERE Id = %s;", json_Estado->valuestring, json_Id->valuestring);
-											m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-											rc = pDB->Query(NULL, query);
-											m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-											if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-											/* Notifico a la nube */
-											m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
-																	json_Objeto->valuestring, json_Estado->valuestring);
-											cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
-											m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-											m_pServer->Notify("dompi_ass_change", message, strlen(message));
-										}
-										/* UPDATE-FW */
-										if(atoi(json_Update_Firmware->valuestring))
-										{
-											cJSON_AddStringToObject(json_Response, "UPDATE-FW", "1");
-											/* Borro el flag de update de firmware */
-											sprintf(query, "UPDATE TB_DOM_PERIF "
-																"SET Update_firmware = 0 "
-																"WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
-											m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-											rc = pDB->Query(NULL, query);
-											m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-											if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-										}
+										/* Armo la respuesta */
+										cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+										/* Borro el flag de update de los que ya aviso */
+										sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0, Estado_HW = Estado "
+															"WHERE Id = %s;", json_Id->valuestring);
+										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+										rc = pDB->Query(NULL, query);
+										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+										/* Notifico a la nube */
+										m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
+																json_Objeto->valuestring, json_Estado->valuestring);
+										cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
+										m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
+										m_pServer->Notify("dompi_ass_change", message, strlen(message));
+										message[0] = 0;
 									}
 								}
 								else
 								{
-									/* Si no hay estados para responder mando la hora (YYYY/MM/DD hh:mm:ss) */
-									sprintf(message, "%04i/%02i/%02i %02i:%02i:%02i", 
-										s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
-										s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
-									cJSON_AddStringToObject(json_Response, "TIME", message);
-									message[0] = 0;
+									/* Si no hay estados para responder me fijo si hay update de firmware pendiente */
+									sprintf(query, "SELECT MAC "
+											"FROM TB_DOM_PERIF "
+											"WHERE UPPER(P.MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+									rc = pDB->Query(nullptr, query);
+									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+									if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+									if(rc > 0)
+									{
+										cJSON_AddStringToObject(json_Response, "UPDATE-FW", "1");
+										/* Borro el flag de update de firmware */
+										sprintf(query, "UPDATE TB_DOM_PERIF "
+											"SET Update_firmware = 0 "
+											"WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+										rc = pDB->Query(nullptr, query);
+										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+									}
+									else
+									{
+										/* Si no hay nada para responder le mando la hora */
+										sprintf(message, "%04i/%02i/%02i %02i:%02i:%02i", 
+											s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
+											s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
+										cJSON_AddStringToObject(json_Response, "TIME", message);
+									}
 								}
 								cJSON_Delete(json_Query_Result);
 								/* Si está todo bien me fijo si pidio enviar configuracion */
@@ -1669,7 +1675,7 @@ void LoadSystemConfig(void)
 	if(rc >= 0) m_pServer->m_pLog->Add(1, "[LoadSystemConfig] Lectura de configuracion OK.");
 }
 
-/* Mantiene el estado de los miembros del grupo según los cambios de estado del grupo */
+/* Actualiza el estado de los assign que pertenecen a un grupo que tiene cambios pendientes de actualizar */
 void GroupTask( void )
 {
 	char query[4096];

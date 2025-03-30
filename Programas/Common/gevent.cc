@@ -115,6 +115,17 @@ GEvent::~GEvent()
 
 }
 
+/*
+Devuelve (en caso de cambios realizados como efecto de lo informado en el campo CHG):
+    0   Si no hubo cambios
+    1   Si cambió un assign
+    2   Si cambió un grupo
+    3   Si cambió una particion de alarma
+    4   Si llamó una función
+    5   Si cambió una variable
+    (-1) Si no se encuentra el dispositivo
+*/
+
 int GEvent::ExtIOEvent(const char* json_evt)
 {
     int i;
@@ -281,10 +292,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                             /* Si existe un assign me fijo si hay alguna automatización */
                                             if(rc > 0)
                                             {
-                                                if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
-                                                {
-                                                    cambios = 1;
-                                                }
+                                                CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
                                             }
                                         }
                                     }
@@ -313,10 +321,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         rc = m_pDB->Query(NULL, query);
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-
-                                        if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
+                                        if(rc > 0)
                                         {
-                                            cambios = 1;
+                                            CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
                                         }
                                     }
                                     else if( !memcmp(json_un_obj->string, "HUM", 3))
@@ -332,10 +339,9 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                         rc = m_pDB->Query(NULL, query);
                                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-
-                                        if(CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival))
+                                        if(rc > 0)
                                         {
-                                            cambios = 1;
+                                            CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
                                         }
                                     }
                                 }
@@ -358,17 +364,11 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         json_status = cJSON_GetObjectItemCaseSensitive(json_obj, s);
                         if(json_status)
                         {
-                            if(CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring)))
-                            {
-                                cambios = 1;
-                            }
+                            cambios = CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring));
                         }
                         else
                         {
-                            if(CheckEvent(atoi(json_hw_id->valuestring), s, 1))
-                            {
-                                cambios = 1;
-                            }
+                            cambios = CheckEvent(atoi(json_hw_id->valuestring), s, 1);
                         }
                         i++;
                     }
@@ -576,6 +576,15 @@ int GEvent::ChangeIO(const char* json_evt)
     return 0;
 }
 
+/*
+Devuelve:
+    0   Si no hubo cambios
+    1   Si cambió un assign
+    2   Si cambió un grupo
+    3   Si cambió una particion de alarma
+    4   Si llamó una función
+    5   Si cambió una variable
+*/
 int GEvent::CheckEvent(int hw_id, const char* port, int estado)
 {
 	char query[4096];
@@ -706,34 +715,37 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                         /* Si la condicion lo permite ejecuto según corresponda */
                         if( rc >= 0 && Enviar )
                         {
-                            cambios = 1;
-
                             if(Objeto_Destino &&  atoi(Objeto_Destino->valuestring) > 0 )
                             {
+                                cambios = 1;
                                 ChangeAssignById(   atoi(Objeto_Destino->valuestring), 
                                                 atoi(Enviar->valuestring),
                                                 (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                             }
                             else if(Grupo_Destino &&  atoi(Grupo_Destino->valuestring) > 0 )
                             {
+                                cambios = 2;
                                 ChangeGroupById(   atoi(Grupo_Destino->valuestring), 
                                                 atoi(Enviar->valuestring),
                                                 (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                             }
                             else if(Particion_Destino &&  atoi(Particion_Destino->valuestring) > 0 )
                             {
+                                cambios = 3;
                                 ChangeParticionById(   atoi(Particion_Destino->valuestring), 
                                                 atoi(Enviar->valuestring),
                                                 (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                             }
                             else if(Funcion_Destino &&  atoi(Funcion_Destino->valuestring) > 0 )
                             {
+                                cambios = 4;
                                 ChangeFcnById(   atoi(Funcion_Destino->valuestring), 
                                                 atoi(Enviar->valuestring),
                                                 (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                             }
                             else if(Variable_Destino &&  atoi(Variable_Destino->valuestring) > 0 )
                             {
+                                cambios = 5;
                                 ChangeVarById(   atoi(Variable_Destino->valuestring), 
                                                 atoi(Enviar->valuestring),
                                                 (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
@@ -1007,31 +1019,35 @@ int GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
             /* Si la condicion lo permite ejecuto según corresponda */
             if( enviar > 0 )
             {
-                cambios = 1;
 
                 if(Objeto_Salida &&  atoi(Objeto_Salida->valuestring) > 0 )
                 {
+                    cambios = 1;
                     ChangeAssignById(   atoi(Objeto_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
 
                 }
                 else if(Grupo_Salida &&  atoi(Grupo_Salida->valuestring) > 0 )
                 {
+                    cambios = 2;
                     ChangeGroupById(   atoi(Grupo_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Particion_Salida &&  atoi(Particion_Salida->valuestring) > 0 )
                 {
+                    cambios = 3;
                     ChangeParticionById(   atoi(Particion_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Funcion_Salida &&  atoi(Funcion_Salida->valuestring) > 0 )
                 {
+                    cambios = 4;
                     ChangeFcnById(   atoi(Funcion_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
                 else if(Variable_Salida &&  atoi(Variable_Salida->valuestring) > 0 )
                 {
+                    cambios = 5;
                     ChangeVarById(   atoi(Variable_Salida->valuestring), enviar,
                                     (Parametro_Evento)?atoi(Parametro_Evento->valuestring):0);
                 }
