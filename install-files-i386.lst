@@ -44,7 +44,6 @@
 /usr/local/sbin/dompi_gsm
 
 /usr/local/sbin/dompi_command
-/usr/local/sbin/dompi_task
 /usr/local/sbin/check_for_updates.sh
 
 /etc/gmonitor/gmonitor
