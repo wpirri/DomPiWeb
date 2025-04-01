@@ -110,9 +110,6 @@ int internal_timeout;
 CDB *pDB;
 GEvent *pEV;
 cJSON *json_System_Config;
-#ifdef ACTIVO_ACTIVO
-char sys_backup[32];
-#endif
 int i;
 
 time_t last_daily;
@@ -151,7 +148,6 @@ void RunDaily( void );
 void CheckDaily();
 int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
-void AddSaf( void );
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -251,13 +247,6 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 
-#ifdef ACTIVO_ACTIVO
-	sys_backup[0] = 0;
-	pConfig->GetParam("BACKUP", sys_backup);
-#endif
-
-	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
-	//pDB = new CDB(db_filename);
 	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s en %s ...", db_name, db_host);
 	pDB = new CDB(db_host, db_name, db_user, db_password);
 	if(pDB->Open() != 0)
@@ -317,8 +306,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->Suscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
 
-	AddSaf();
-
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
 	t = time(&t);
@@ -373,12 +360,6 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pEV->ExtIOEvent(message);
 						if(rc >= 0)
 						{
-#ifdef ACTIVO_ACTIVO
-							if(strlen(sys_backup))
-							{
-								m_pServer->Enqueue("dompi_infoio_synch", message, message_len);
-							}
-#endif
 							message[0] = 0;
 							if(soporta_respuesta_con_datos)
 							{
@@ -1747,10 +1728,6 @@ void AssignTask( void )
 				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
 				m_pServer->Notify("dompi_ass_change", message, strlen(message));
-#ifdef ACTIVO_ACTIVO
-				/* Encolo la sincronización */
-				if(strlen(sys_backup)) m_pServer->Enqueue("dompi_changeio_synch", message, strlen(message));
-#endif
 				iEstado = atoi(json_Estado->valuestring);
 				if(iEstado != 1) iEstado = 0;
 			}
@@ -2590,10 +2567,4 @@ void CheckWiegandData( void )
 		}
 	}
 	cJSON_Delete(QueryResult);
-}
-
-void AddSaf( void )
-{
-	m_pServer->Notify(".create-queue", "dompi_infoio_synch", 19);	
-	m_pServer->Notify(".create-queue", "dompi_changeio_synch", 21);	
 }

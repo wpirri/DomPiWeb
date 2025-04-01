@@ -80,6 +80,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  desactivar alarma, <particion>\r\n"
 					"  estado alarma, <particion>\r\n"
 					"  configurar <dispositivo>, <parametro=valor>\r\n"
+					"  sincronizar, <nombre tabla|todo>\r\n"
 					"  help\r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
@@ -96,7 +97,6 @@ char cli_help[] = 	"------------------------------------------------------------
 
 int main(/*int argc, char** argv, char** env*/void)
 {
-	int i;
 	int rc;
 	char fn[33];
 	char typ[1];
@@ -117,16 +117,10 @@ int main(/*int argc, char** argv, char** env*/void)
 	char objeto[1024];
 	char parametro[1024];
 
-	char extra_info[1024];
-
-	bool soporta_respuesta_con_datos;
-	
 	STRFunc Strf;
 	//CGMServerBase::GMIOS call_resp;
 
     cJSON *json_Request;
-    cJSON *json_Response;
-    cJSON *json_obj;
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
 	cJSON *json_Query_Row;
@@ -136,26 +130,14 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_HW_Id;
 	cJSON *json_Objeto;
 	cJSON *json_Tipo;
-	cJSON *json_Tipo_HW;
-	cJSON *json_Port;
 	cJSON *json_Estado;
-	cJSON *json_Accion;
-	cJSON *json_Segundos;
-	cJSON *json_Planta;
 	cJSON *json_Id;
-	cJSON *json_Grupo;
-	cJSON *json_Part;
-	cJSON *json_Zona;
-	cJSON *json_Salida;
-	cJSON *json_FW;
 	cJSON *json_Dispositivo;
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Command;
     cJSON *json_arr_Perif;
     cJSON *json_Perif;
-    cJSON *json_Actualizar;
-    cJSON *json_Update_Firmware;
 	
 	last_daily = 0;
 	
@@ -228,8 +210,6 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (-1) )) >= 0)
 	{
-		soporta_respuesta_con_datos = false;
-
 		if(rc > 0)
 		{
 			message[message_len] = 0;
@@ -522,6 +502,19 @@ int main(/*int argc, char** argv, char** env*/void)
 										cJSON_Delete(json_Command);
 									}
 								}
+							}
+						}
+						else if( !memcmp(comando, "sinc", 4))
+						{
+							/* Saco los datos que necesito */
+							if( !strcmp(objeto, "todo"))
+							{
+								m_pServer->Notify("dompi_aa_full_synch", nullptr, 0);
+								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 							}
 						}
 						else if( !strcmp(comando, "actualizar"))

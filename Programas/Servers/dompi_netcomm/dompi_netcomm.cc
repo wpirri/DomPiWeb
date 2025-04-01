@@ -47,18 +47,11 @@ GEvent *pEV;
 int internal_timeout;
 int external_timeout;
 CDB *pDB;
-#ifdef ACTIVO_ACTIVO
-char sys_backup[32];
-#endif
 
 #define BT_BUF_SIZE 256
 
 void OnClose(int sig);
-int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
 void Update_Last_Connection(const char* id, const char* data);
-#ifdef ACTIVO_ACTIVO
-int Check_Remote_Synch( void );
-#endif
 void SetIO_CallBack(const char* id, const char* data);
 void SwitchIO_CallBack(const char* id, const char* data);
 void PulseIO_CallBack(const char* id, const char* data);
@@ -84,9 +77,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	unsigned long message_len;
 	char s[16];
 	int timer_count = 0;
-	#ifdef ACTIVO_ACTIVO
-	int timer_synch = 0;
-	#endif
 
 	char db_host[32];
 	char db_name[32];
@@ -123,6 +113,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	//signal(SIGSEGV, OnClose);
 	//signal(SIGBUS,  OnClose);
 
+	
 	m_pServer = new CGMServerWait;
 	m_pServer->Init("dompi_netcomm");
 	m_pServer->m_pLog->Add(1, "Iniciando interface NETCOMM...");
@@ -147,11 +138,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		external_timeout = atoi(s) * 1000;
 	}
-
-#ifdef ACTIVO_ACTIVO
-	sys_backup[0] = 0;
-	pConfig->GetParam("BACKUP", sys_backup);
-#endif
 
     Dom32IoWifi *pD32W;
     Dom32IoWifi::wifi_config_data dom32_wifi_data;
@@ -704,14 +690,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				pD32W->Timer();
 				pRBPi->Timer();
 			}
-
-#ifdef ACTIVO_ACTIVO
-			/* expiracion del timer 10s*/
-			if(++timer_synch >= 1000)
-			{
-				if(Check_Remote_Synch() != 1) timer_synch = 0;
-			}
-#endif /* ACTIVO_ACTIVO */
 		}
 
 		pD32W->Task();
@@ -748,100 +726,6 @@ void OnClose(int sig)
 	
 	exit(0);
 }
-
-int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max)
-{
-    /*
-    * GET
-    * 1.- %s: URI
-    * 2.- %s: GET
-	* 3.- %s: Host
-    */
-    char http_get[] =   "GET %s%s HTTP/1.1\r\n"
-                        "Host: %s\r\n"
-                        "Connection: close\r\n"
-                        "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
-                        "Accept: text/html,text/xml\r\n\r\n";
-
-    char url_default[] = "/cgi-bin/gmonitor_get_saf.cgi";
-
-	CTcp *pSock;
-	char buffer[GM_COMM_MSG_LEN+1];
-	char get[256];
-	char *ps;
-	int rc = 0;
-
-	buffer[0] = 0;
-	sprintf(get, "?saf=%s", saf_name);
-	if( proto && !strcmp(proto, "https"))
-	{
-		pSock = new CTcp(1, 3);
-		if(port == 0) port = 443;
-    		sprintf(buffer, http_get, url_default, get, host);
-		rc =pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
-		delete pSock;
-	}
-	else
-	{
-		pSock = new CTcp();
-		if(port == 0) port = 80;
-    		sprintf(buffer, http_get, url_default, get, host);
-		rc = pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
-		delete pSock;
-	}
-	if(msg)
-	{
-		*msg = 0;
-		if(rc > 0 && strlen(buffer))
-		{
-			ps = strstr(buffer, "\r\n\r\n");
-			if(ps)
-			{
-				ps += 4;
-
-				/* Está viniendo algo raro al princiìo de la parte de datos que no la puedo sacar */
-				while(*ps && *ps != '{') ps++;
-				strncpy(msg, ps, msg_max);
-			}
-		}
-		rc = strlen(msg);
-	}
-	return rc;
-}
-
-#ifdef ACTIVO_ACTIVO
-int Check_Remote_Synch( void )
-{
-	int rc;
-	char saf_message[GM_COMM_MSG_LEN];
-
-	if(strlen(sys_backup) == 0) return (-1);
-	m_pServer->m_pLog->Add(100, "[Check_Remote_Synch]");
-
-	rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_infoio_synch", saf_message, GM_COMM_MSG_LEN);
-	m_pServer->m_pLog->Add(100, "[SYNCH] INFO rc=%i [%s]", rc, saf_message);
-	if(rc > 100)
-	{
-		pEV->SyncIO(saf_message);
-		rc = 1;
-	}
-	else
-	{
-		rc = GetSAFRemoto(sys_backup, 80, "http", "dompi_changeio_synch", saf_message, GM_COMM_MSG_LEN);
-		m_pServer->m_pLog->Add(100, "[SYNCH] CHANGE rc=%i [%s]", rc, saf_message);
-		if(rc > 100)
-		{
-			pEV->ChangeIO(saf_message);
-			rc = 1;
-		}
-		else
-		{
-			rc = 0;
-		}
-	}
-	return rc;
-}
-#endif /* ACTIVO_ACTIVO */
 
 /*  */
 void Update_Last_Connection(const char* id, const char* data)

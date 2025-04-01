@@ -15,3 +15,4 @@ dompi_gsm|Interface de mensajeria SMS|2|/usr/local/sbin/dompi_gsm
 dompi_abm|Server de Administracion|2|/usr/local/sbin/dompi_abm
 dompi_gpio|Interface con GPIO|2|/usr/local/sbin/dompi_gpio
 dompi_command|Server de DOMCLI|2|/usr/local/sbin/dompi_command
+dompi_activo|Server de Sincronizacion|2|/usr/local/sbin/dompi_activo
