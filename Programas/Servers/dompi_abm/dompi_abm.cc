@@ -485,8 +485,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_user_change]");
-				m_pServer->Notify("dompi_user_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_user_change]");
+				m_pServer->Post("dompi_user_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_user_delete
@@ -618,8 +618,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_user_change]");
-				m_pServer->Notify("dompi_user_change", message, strlen(message));
+				m_pServer->m_pLog->Add(90, "Post [dompi_user_change]");
+				m_pServer->Post("dompi_user_change", message, strlen(message));
 			}
 			/* ****************************************************************
 			*		dompi_user_check
@@ -1212,8 +1212,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
 				{
 					cJSON_PrintPreallocated(json_Cloud_Message, message, GM_COMM_MSG_LEN, 0);
-					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-					m_pServer->Notify("dompi_ass_change", message, strlen(message));
+					m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
+					m_pServer->Post("dompi_assign_change", message, strlen(message));
 				}
 				cJSON_Delete(json_Cloud_Message);
 
@@ -1378,8 +1378,8 @@ int main(/*int argc, char** argv, char** env*/void)
 				if( cJSON_GetObjectItemCaseSensitive(json_Cloud_Message, "Objeto"))
 				{
 					cJSON_PrintPreallocated(json_Cloud_Message, message, GM_COMM_MSG_LEN, 0);
-					m_pServer->m_pLog->Add(90, "Notify [dompi_ass_change][%s]", message);
-					m_pServer->Notify("dompi_ass_change", message, strlen(message));
+					m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
+					m_pServer->Post("dompi_assign_change", message, strlen(message));
 				}
 				cJSON_Delete(json_Cloud_Message);
 
@@ -2277,8 +2277,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_group_change]");
-				m_pServer->Notify("dompi_group_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_group_change]");
+				m_pServer->Post("dompi_group_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_group_delete
@@ -2402,8 +2402,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_group_change]");
-				m_pServer->Notify("dompi_group_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_group_change]");
+				m_pServer->Post("dompi_group_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_sysconf_list
@@ -2804,8 +2804,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 				
-				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
-				m_pServer->Notify("dompi_auto_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_auto_change]");
+				m_pServer->Post("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_auto_delete
@@ -2941,8 +2941,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
-				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
-				m_pServer->Notify("dompi_auto_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_auto_change]");
+				m_pServer->Post("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_alarm_part_list

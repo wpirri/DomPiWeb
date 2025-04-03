@@ -163,11 +163,11 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pEV = new GEvent(pDB, m_pServer);
 
-	m_pServer->Suscribe("dompi_ass_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_auto_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_group_change", GM_MSG_TYPE_NOT);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_assign_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_auto_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_group_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
 	
 	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
 
@@ -187,13 +187,13 @@ int main(/*int argc, char** argv, char** env*/void)
 			/* ************************************************************* *
 			 *
 			 * ************************************************************* */
-			if( !strcmp(fn, "dompi_ass_change")) /* Tipo NOT */
+			if( !strcmp(fn, "dompi_assign_change")) /* Tipo NOT */
 			{
 				//m_pServer->Resp(NULL, 0, GME_OK);
 
 				json_Message = cJSON_Parse(message);
 
-				m_pServer->m_pLog->Add(20, "[dompi_ass_change] Encolando actualizacion con datos de assign");
+				m_pServer->m_pLog->Add(20, "[dompi_assign_change] Encolando actualizacion con datos de assign");
 				if(m_cloud_status)
 				{
 					/* Agrego datos del sistema */
@@ -202,12 +202,12 @@ int main(/*int argc, char** argv, char** env*/void)
 					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
 					if(m_pServer->Enqueue("dompi_msg_to_cloud", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_ass_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
+						m_pServer->m_pLog->Add(1, "[dompi_assign_change] ERROR: Encolando en SAF dompi_msg_to_cloud [%s]", message);
 					}
 				}
 				else
 				{
-					m_pServer->m_pLog->Add(1, "[dompi_ass_change] OFFLINE: Encolando actualizacion con datos de assign [%s]", message);
+					m_pServer->m_pLog->Add(1, "[dompi_assign_change] OFFLINE: Encolando actualizacion con datos de assign [%s]", message);
 				}
 				cJSON_Delete(json_Message);
 			}
@@ -290,11 +290,11 @@ void OnClose(int sig)
 {
 	m_pServer->m_pLog->Add(1, "Exit on signal %i", sig);
 
-	m_pServer->UnSuscribe("dompi_ass_change", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_user_change", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_alarm_change", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_auto_change", GM_MSG_TYPE_NOT);
-	m_pServer->UnSuscribe("dompi_group_change", GM_MSG_TYPE_NOT);
+	m_pServer->UnSuscribe("dompi_assign_change", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_user_change", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_alarm_change", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_auto_change", GM_MSG_TYPE_MSG);
+	m_pServer->UnSuscribe("dompi_group_change", GM_MSG_TYPE_MSG);
 	m_pServer->UnSuscribe("dompi_reload_config", GM_MSG_TYPE_MSG);
 
 	delete m_pServer;

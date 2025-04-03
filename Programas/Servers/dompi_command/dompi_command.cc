@@ -80,7 +80,7 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  desactivar alarma, <particion>\r\n"
 					"  estado alarma, <particion>\r\n"
 					"  configurar <dispositivo>, <parametro=valor>\r\n"
-					"  sincronizar, <nombre tabla|todo>\r\n"
+					"  sincronizar <nombre tabla|todo>, [Id]\r\n"
 					"  help\r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
 					"    objeto: Nombre de un objeto existente.\r\n"
@@ -509,13 +509,22 @@ int main(/*int argc, char** argv, char** env*/void)
 							/* Saco los datos que necesito */
 							if( !strcmp(objeto, "todo"))
 							{
-								m_pServer->Notify("dompi_aa_full_synch", nullptr, 0);
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								m_pServer->Post("dompi_full_change", nullptr, 0);
 							}
-							else
+							else if( !strcmp(objeto, "assign"))
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+								if(strlen(parametro))
+								{
+									sprintf(message, "{\"Id\":\"%s\"}", parametro);
+									m_pServer->Post("dompi_assign_change", message, strlen(message)+1);
+								}
+								else
+								{
+									m_pServer->Post("dompi_assign_change", nullptr, 0);
+								}
+
 							}
+							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else if( !strcmp(comando, "actualizar"))
 						{
