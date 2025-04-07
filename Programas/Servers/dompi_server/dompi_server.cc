@@ -326,7 +326,8 @@ int main(/*int argc, char** argv, char** env*/void)
 			if( !strcmp(fn, "dompi_infoio"))
 			{
 				json_Request = cJSON_Parse(message);
-				//message[0] = 0;
+				json_Response = cJSON_CreateObject();
+				//message[0] = 0; - No blanquear, lo usa ExtIOEvent mas abajo
 
 				json_MAC = cJSON_GetObjectItemCaseSensitive(json_Request, "ID");
 				json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Request, "REMOTE_ADDR");
@@ -368,7 +369,6 @@ int main(/*int argc, char** argv, char** env*/void)
 									/* Se modificaron grupos */
 									GroupTask();
 								}
-								json_Response = cJSON_CreateObject();
 								/* Me traigo los estados de las salidas del dispositivo
 								para informar si hay cambios en la misma respuesta */
 								json_Query_Result = cJSON_CreateArray();
@@ -392,8 +392,9 @@ int main(/*int argc, char** argv, char** env*/void)
 										json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
 										json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
 										json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
-										/* Armo la respuesta */
+										/* Armo la respuesta del servicio */
 										cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+
 										/* Borro el flag de update de los que ya aviso */
 										sprintf(query, "UPDATE TB_DOM_ASSIGN "
 															"SET Actualizar = 0, Estado_HW = Estado "
@@ -402,6 +403,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										rc = pDB->Query(NULL, query);
 										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
 										/* Notifico a la nube */
 										m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
 																json_Objeto->valuestring, json_Estado->valuestring);
@@ -460,27 +462,21 @@ int main(/*int argc, char** argv, char** env*/void)
 										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 									}
 								}
-
-								/* Armo la respuesta con lo que hay en el JSon */
-								cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
-								cJSON_Delete(json_Response);
 							}
 							else
 							{
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								/* Armo la respuesta del servicio */
+								cJSON_AddStringToObject(json_Response, "resp_code", "0");
+								cJSON_AddStringToObject(json_Response, "resp_msg", "Ok");
 							}
-						}
-						else if(rc == 0)
-						{
-							/* Sin novedades */
-							strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 						}
 						else
 						{
 							m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_MAC->valuestring, (json_Direccion_IP)?json_Direccion_IP->valuestring:"-");
 							CheckNewHWList(json_MAC->valuestring);
 							/* NOT FOUND */
-							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
+							cJSON_AddStringToObject(json_Response, "resp_code", "2");
+							cJSON_AddStringToObject(json_Response, "resp_msg", "HW ID Not Found in Data Base");
 						}
 					}
 					else if( !strcmp(json_Tipo_HW->valuestring, "TOUCH") )
@@ -559,7 +555,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 								
-								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+								cJSON_AddStringToObject(json_Response, "resp_code", "0");
+								cJSON_AddStringToObject(json_Response, "resp_msg", "Ok");
 							}
 						}
 						else if(rc == 0)
@@ -567,33 +564,39 @@ int main(/*int argc, char** argv, char** env*/void)
 							m_pServer->m_pLog->Add(10, "[HW] %s %s Desconocido", json_MAC->valuestring, (json_Direccion_IP)?json_Direccion_IP->valuestring:"-");
 							CheckNewHWList(json_MAC->valuestring);
 							/* NOT FOUND */
-							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in Data Base\"}}");
+							cJSON_AddStringToObject(json_Response, "resp_code", "2");
+							cJSON_AddStringToObject(json_Response, "resp_msg", "HW ID Not Found in Data Base");
 						}
 						else
 						{
 							/* Otro Error */
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"General Error\"}}");
+							cJSON_AddStringToObject(json_Response, "resp_code", "1");
+							cJSON_AddStringToObject(json_Response, "resp_msg", "General Error");
 						}
 					}
 					else 
 					{
 						/* HW TYP Desconocido */
-						strcpy(message, "{\"response\":{\"resp_code\":\"3\", \"resp_msg\":\"HW TYP Unknoun\"}}");
+						cJSON_AddStringToObject(json_Response, "resp_code", "3");
+						cJSON_AddStringToObject(json_Response, "resp_msg", "HW TYP Unknoun");
 					}
 				}
 				else
 				{
 					/* El mensaje vino sin HWID */
-					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"HW ID Not Found in message\"}}");
+					cJSON_AddStringToObject(json_Response, "resp_code", "2");
+					cJSON_AddStringToObject(json_Response, "resp_msg", "HW ID Not Found in message");
 				}
+
+				cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
-
 				cJSON_Delete(json_Request);
+				cJSON_Delete(json_Response);
 
 			}
 			/* ****************************************************************
