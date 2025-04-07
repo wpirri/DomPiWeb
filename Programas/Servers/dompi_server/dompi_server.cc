@@ -156,6 +156,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char fn[33];
 	char typ[1];
 	char message[GM_COMM_MSG_LEN+1];
+	char message2[GM_COMM_MSG_LEN+1];
 //	char cmdline[1024];
 	char db_host[32];
 	char db_name[32];
@@ -397,6 +398,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										/* Borro el flag de update de los que ya aviso */
 										if(atoi(json_Estado->valuestring) > 1)
 										{
+											/* parche para el envío de pulsos */
 											sprintf(query, "UPDATE TB_DOM_ASSIGN "
 															"SET Actualizar = 0, Estado = 0 "
 															"WHERE Id = %s;", json_Id->valuestring);
@@ -411,13 +413,6 @@ int main(/*int argc, char** argv, char** env*/void)
 										rc = pDB->Query(NULL, query);
 										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-										/* Notifico a la nube */
-										m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
-																json_Objeto->valuestring, json_Estado->valuestring);
-										cJSON_PrintPreallocated(json_Query_Row, message, GM_COMM_MSG_LEN, 0);
-										m_pServer->m_pLog->Add(90, "Notify [dompi_assign_change][%s]", message);
-										m_pServer->Post("dompi_assign_change", message, strlen(message));
-										message[0] = 0;
 									}
 								}
 								else
@@ -477,6 +472,26 @@ int main(/*int argc, char** argv, char** env*/void)
 							else
 							{
 								strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+							}
+							/* Busco los assign del dispositivo para enviar la actualización al par y a la nube */
+							sprintf(query, "SELECT A.Id AS ASS_Id "
+												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+												"WHERE A.Dispositivo = P.Id AND "
+												"UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+							json_Query_Result = cJSON_CreateArray();
+							rc = pDB->Query(json_Query_Result, query);
+							m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+							if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+							if(rc > 0)
+							{
+								cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
+								{
+									/* Notifico al par y a la nube */
+									cJSON_PrintPreallocated(json_Query_Row, message2, GM_COMM_MSG_LEN, 0);
+									m_pServer->m_pLog->Add(90, "Notify [dompi_assign_change][%s]", message2);
+									m_pServer->Post("dompi_assign_change", message2, strlen(message2));
+								}
 							}
 						}
 						else if(rc == 0)
@@ -1736,11 +1751,20 @@ void AssignTask( void )
 				m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
 				m_pServer->Post("dompi_assign_change", message, strlen(message));
 			}
-
 			/* Borro el flag de actualizacion */
-			sprintf(query, "UPDATE TB_DOM_ASSIGN "
-							"SET Actualizar = 0 "
-							"WHERE Id = %s;", json_ASS_Id->valuestring);
+			if(atoi(json_Estado->valuestring) > 1)
+			{
+				/* parche para el envío de pulsos */
+				sprintf(query, "UPDATE TB_DOM_ASSIGN "
+								"SET Actualizar = 0, Estado = 0 "
+								"WHERE Id = %s;", json_ASS_Id->valuestring);
+			}
+			else
+			{
+				sprintf(query, "UPDATE TB_DOM_ASSIGN "
+								"SET Actualizar = 0 "
+								"WHERE Id = %s;", json_ASS_Id->valuestring);
+			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);

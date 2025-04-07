@@ -40,6 +40,287 @@ using namespace std;
 #include "defines.h"
 #include "ctcp.h"
 
+#define ACTIVE_UPDATE_INTERVAL 3600
+
+const char *TB_DOM_CONFIG[] = {
+	"Id",
+	"Creacion",
+	"System_Key",
+	"Cloud_Host_1_Address",
+	"Cloud_Host_1_Port",
+	"Cloud_Host_1_Proto",
+	"Cloud_Host_2_Address",
+	"Cloud_Host_2_Port",
+	"Cloud_Host_2_Proto",
+	"Wifi_AP1",
+	"Wifi_AP1_Pass",
+	"Wifi_AP2",
+	"Wifi_AP2_Pass",
+	"Home_Host_1_Address",
+	"Home_Host_2_Address",
+	"Rqst_Path",
+	"Wifi_Report",
+	"Gprs_APN_Auto",
+	"Gprs_APN",
+	"Gprs_DNS1",
+	"Gprs_DNS2",
+	"Gprs_User",
+	"Gprs_Pass",
+	"Gprs_Auth",
+	"Send_Method",
+	"Planta1",
+	"Planta2",
+	"Planta3",
+	"Planta4",
+	"Planta5",
+	"Flags",
+	0};
+
+const char *TB_DOM_USER[] = {
+	"Id",
+	"Usuario",
+	"Nombre_Completo",
+	"Pin_Teclado",
+	"Pin_SMS",
+	"Pin_WEB",
+	"Telefono_Voz",
+	"Telefono_SMS",
+	"Usuario_Cloud",
+	"Clave_Cloud",
+	"Amazon_Key",
+	"Google_Key",
+	"Apple_Key",
+	"Other_Key",
+	"Tarjeta",
+	"Acceso_Fisico",
+	"Acceso_Web",
+	"Acceso_Clowd",
+	"Dias_Semana",
+	"Hora_Desde",
+	"Minuto_Desde",
+	"Hora_Hasta",
+	"Minuto_Hasta",
+	"Estado",
+	"Contador_Error",
+	"Ultimo_Acceso",
+	"Ultimo_Error",
+	"Flags",
+	0};
+
+const char *TB_DOM_PERIF[] = {
+	"Id",
+	"MAC",
+	"Dispositivo",
+	"Tipo",
+	"Estado",
+	"Direccion_IP",
+	"Ultimo_Ok",
+	"Usar_Https",
+	"Habilitar_Wiegand",
+	"Update_Firmware",
+	"Update_WiFi",
+	"Update_Config",
+	"Informacion",
+	0};
+	
+const char *TB_DOM_ASSIGN[] = {
+	"Id",
+	"Objeto",
+	"Dispositivo",
+	"Port",
+	"Tipo",
+	"Estado",
+	"Estado_HW",
+	"Perif_Data",
+	"Icono_Apagado",
+	"Icono_Encendido",
+	"Grupo_Visual",
+	"Planta",
+	"Cord_x",
+	"Cord_y",
+	"Coeficiente",
+	"Analog_Mult_Div",
+	"Analog_Mult_Div_Valor",
+	"Actualizar",
+	"Flags",
+	0};
+	
+const char *TB_DOM_GROUP[] = {
+	"Id",
+	"Grupo",
+	"Listado_Objetos",
+	"Estado",
+	"Icono_Apagado",
+	"Icono_Encendido",
+	"Grupo_Visual",
+	"Planta",
+	"Cord_x",
+	"Cord_y",
+	"Actualizar",
+	0};
+
+const char *TB_DOM_FLAG[] = {
+	"Id",
+	"Variable",
+	"Valor",
+	0};
+	
+const char *TB_DOM_ALARM_PARTICION[] = {
+	"Id",
+	"Nombre",
+	"Entrada_Act_Total",
+	"Entrada_Act_Parcial",
+	"Testigo_Activacion",
+	"Estado_Activacion",
+	"Estado_Memoria",
+	"Estado_Alarma",
+	"Delay_Activacion",
+	"Delay_Alarma",
+	"Tiempo_De_Salida",
+	"Tiempo_De_Entrada",
+	"Tiempo_De_Alerta",
+	"Notificar_SMS_Activacion",
+	"Notificar_SMS_Alerta",
+	0};
+	
+const char *TB_DOM_ALARM_ZONA[] = {
+	"Id",
+	"Particion",
+	"Objeto_Zona",
+	"Tipo_Zona",
+	"Grupo",
+	"Activa",
+	0};
+	
+const char *TB_DOM_ALARM_SALIDA[] = {
+	"Id",
+	"Particion",
+	"Objeto_Salida",
+	"Tipo_Salida",
+	0};
+	
+const char *TB_DOM_CAMARA[] = {
+	"Id",
+	"Nombre",
+	"Direccion_IP",
+	"Usuario",
+	"Clave",
+	"Protocolo",
+	"Requerimiento",
+	"Flags",
+	0};
+	
+const char *TB_DOM_EVENT[] = {
+	"Id",
+	"Evento",
+	"Objeto_Origen",
+	"Objeto_Destino",
+	"Grupo_Destino",
+	"Particion_Destino",
+	"Variable_Destino",
+	"ON_a_OFF",
+	"OFF_a_ON",
+	"Enviar",
+	"Parametro_Evento",
+	"Condicion_Variable",
+	"Condicion_Igualdad",
+	"Condicion_Valor",
+	"Filtro_Repeticion",
+	"Ultimo_Evento",
+	"Flags",
+	0};
+	
+const char *TB_DOM_AT[] = {
+	"Id",
+	"Agenda",
+	"Mes",
+	"Dia",
+	"Hora",
+	"Minuto",
+	"Dias_Semana",
+	"Objeto_Destino",
+	"Grupo_Destino",
+	"Variable_Destino",
+	"Evento",
+	"Parametro_Evento",
+	"Condicion_Variable",
+	"Condicion_Igualdad",
+	"Condicion_Valor",
+	"Ultimo_Mes",
+	"Ultimo_Dia",
+	"Ultima_Hora",
+	"Ultimo_Minuto",
+	"Flags",
+	0};
+	
+const char *TB_DOM_AUTO[] = {
+	"Id",
+	"Objeto",
+	"Tipo",
+	"Objeto_Sensor",
+	"Objeto_Salida",
+	"Grupo_Salida",
+	"Particion_Salida",
+	"Variable_Salida",
+	"Parametro_Evento",
+	"Min_Sensor",
+	"Enviar_Min",
+	"Max_Sensor",
+	"Enviar_Max",
+	"Hora_Inicio",
+	"Minuto_Inicio",
+	"Hora_Fin",
+	"Minuto_Fin",
+	"Dias_Semana",
+	"Condicion_Variable",
+	"Condicion_Igualdad",
+	"Condicion_Valor",
+	"Estado",
+	"Habilitado",
+	"Icono_Apagado",
+	"Icono_Encendido",
+	"Icono_Auto",
+	"Grupo_Visual",
+	"Planta",
+	"Cord_x",
+	"Cord_y",
+	"Actualizar",
+	"Flags",
+	0};
+	
+const char *TB_DOM_TOUCH[] = {
+	"Dispositivo",
+	"Screen",
+	"Line",
+	"Button",
+	"Evento",
+	"Objeto",
+	"X",
+	"Y",
+	"W",
+	"H",
+	"Redondo",
+	"texto",
+	"icono",
+	"color_borde",
+	"color_fondo",
+	"color_texto",
+	"orientacion",
+	0};
+
+int ExisteColumna(const char* columna, const char** lista)
+{
+	int i = 0;
+
+	if(!columna || !lista) return 0;
+	while(lista[i])
+	{
+		if( !strcmp(columna, lista[i])) return 1;
+		i++;
+	}
+	return 0;
+}
+
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 int internal_timeout;
@@ -54,8 +335,8 @@ void LoadSystemConfig(void);
 void AddSaf( void );
 int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
 
-int DBInsert(CDB* db, const char* tabla, cJSON* jdata);
-int DBUpdate(CDB* db, const char* tabla, const char *key, cJSON* jdata);
+int DBInsert(CDB* db, const char* tabla, const char** columnas, cJSON* jdata);
+int DBUpdate(CDB* db, const char* tabla, const char *key, const char** columnas, cJSON* jdata);
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -85,6 +366,21 @@ int main(/*int argc, char** argv, char** env*/void)
 	bool send_at = false;
 	bool send_auto = false;
 	bool send_touch = false;
+	time_t t;
+	time_t time_last_config;
+	time_t time_last_user;
+	time_t time_last_perif;
+	time_t time_last_assign;
+	time_t time_last_group;
+	time_t time_last_flag;
+	time_t time_last_particion;
+	time_t time_last_zona;
+	time_t time_last_salida;
+	time_t time_last_camara;
+	time_t time_last_event;
+	time_t time_last_at;
+	time_t time_last_auto;
+	time_t time_last_touch;
 
     cJSON *json_Message;
     cJSON *json_Query_Result = NULL;
@@ -168,8 +464,26 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(1, "Servicios de Sincronizacion inicializados.");
 
+	time_last_config = 0;
+	time_last_user = 0;
+	time_last_perif = 0;
+	time_last_assign = 0;
+	time_last_group = 0;
+	time_last_flag = 0;
+	time_last_particion = 0;
+	time_last_zona = 0;
+	time_last_salida = 0;
+	time_last_camara = 0;
+	time_last_event = 0;
+	time_last_at = 0;
+	time_last_auto = 0;
+	time_last_touch = 0;
+
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 1000 )) >= 0)
 	{
+		t = time(&t);
+		json_Id = nullptr;
+
 		if(rc > 0)
 		{
 			message[message_len] = 0;
@@ -177,12 +491,17 @@ int main(/*int argc, char** argv, char** env*/void)
 
 			json_Message = cJSON_Parse(message);
 			message[0] = 0;
+			if(json_Message)
+			{
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+			}
 			
 			/* ****************************************************************
 			*		dompi_infoio - Notificacion de estado y/o cambio de I/O
 			**************************************************************** */
 			if( !strcmp(fn, "dompi_full_change"))
 			{
+				json_Message = nullptr;
 				json_Id = nullptr;
 
 				send_config = true;
@@ -206,18 +525,15 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_user_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_user = true;
 			}
 			else if( !strcmp(fn, "dompi_perif_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_perif = true;
 			}
 			else if( !strcmp(fn, "dompi_assign_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				if(json_Id == nullptr)
+				if(json_Id == nullptr && json_Message)
 				{
 					json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "ASS_Id");
 				}
@@ -225,8 +541,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_group_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				if(json_Id == nullptr)
+				if(json_Id == nullptr && json_Message)
 				{
 					json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "GRP_Id");
 				}
@@ -234,47 +549,38 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 			else if( !strcmp(fn, "dompi_flag_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_flag = true;
 			}
 			else if( !strcmp(fn, "dompi_partition_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_partition = true;
 			}
 			else if( !strcmp(fn, "dompi_alarm_zona_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_alarm_zona = true;
 			}
 			else if( !strcmp(fn, "dompi_alarm_salida_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_alarm_salida = true;
 			}
 			else if( !strcmp(fn, "dompi_camara_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_camara = true;
 			}
 			else if( !strcmp(fn, "dompi_event_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_event = true;
 			}
 			else if( !strcmp(fn, "dompi_at_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_at = true;
 			}
 			else if( !strcmp(fn, "dompi_auto_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_auto = true;
 			}
 			else if( !strcmp(fn, "dompi_touch_change"))
 			{
-				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				send_touch = true;
 			}
 			/* ****************************************************************
@@ -303,13 +609,32 @@ int main(/*int argc, char** argv, char** env*/void)
 			}
 		}
 
+		/* Control de sincronización periódica */
+		/*
+		if(t > (time_last_config + ACTIVE_UPDATE_INTERVAL)) send_config = true;
+		if(t > (time_last_user + ACTIVE_UPDATE_INTERVAL)) send_user = true;
+		if(t > (time_last_perif + ACTIVE_UPDATE_INTERVAL)) send_perif = true;
+		if(t > (time_last_assign + ACTIVE_UPDATE_INTERVAL)) send_assign = true;
+		if(t > (time_last_group + ACTIVE_UPDATE_INTERVAL)) send_group = true;
+		if(t > (time_last_flag + ACTIVE_UPDATE_INTERVAL)) send_flag = true;
+		if(t > (time_last_particion + ACTIVE_UPDATE_INTERVAL)) send_partition = true;
+		if(t > (time_last_zona + ACTIVE_UPDATE_INTERVAL)) send_alarm_zona = true;
+		if(t > (time_last_salida + ACTIVE_UPDATE_INTERVAL)) send_alarm_salida = true;
+		if(t > (time_last_camara + ACTIVE_UPDATE_INTERVAL)) send_camara = true;
+		if(t > (time_last_event + ACTIVE_UPDATE_INTERVAL)) send_event = true;
+		if(t > (time_last_at + ACTIVE_UPDATE_INTERVAL)) send_at = true;
+		if(t > (time_last_auto + ACTIVE_UPDATE_INTERVAL)) send_auto = true;
+		if(t > (time_last_touch + ACTIVE_UPDATE_INTERVAL)) send_touch = true;
+		*/
 
 		/* Encolo datos para el sistema remoto */
 		if(send_config)
 		{
 			send_config = false;
+			time_last_config = t;
 			/* Configuración */
 			json_Query_Result = cJSON_CreateArray();
+			m_pServer->m_pLog->Add(10, "Generando sincronizacion de configuracion");
 			strcpy(query, "SELECT * FROM TB_DOM_CONFIG ORDER BY Id DESC LIMIT 1;");
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 			rc = pDB->Query(json_Query_Result, query);
@@ -319,9 +644,9 @@ int main(/*int argc, char** argv, char** env*/void)
 			{
 				cJSON_PrintPreallocated(json_Query_Result, message, GM_COMM_MSG_LEN, 0);
 				m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_config]", message);
-				if(m_pServer->Enqueue("dompi_config", message, strlen(message)) != GME_OK)
+				if(m_pServer->Enqueue("dompi_config_change", message, strlen(message)) != GME_OK)
 				{
-					m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_config [%s]", message);
+					m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_config [%s]", message);
 				}
 			}
 			cJSON_Delete(json_Query_Result);
@@ -330,14 +655,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_user)
 		{
 			send_user = false;
+			time_last_user = t;
 			/* Usuarios */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de usuario [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_USER WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de usuarios");
 				strcpy(query, "SELECT * FROM TB_DOM_USER;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -350,9 +678,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_user]", message);
-					if(m_pServer->Enqueue("dompi_user", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_user_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_user [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_user [%s]", message);
 					}
 				}
 			}
@@ -362,14 +690,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_perif)
 		{
 			send_perif = false;
+			time_last_perif = t;
 			/* Perifericos */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de periferico [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_PERIF WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de perifericos");
 				strcpy(query, "SELECT * FROM TB_DOM_PERIF;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -382,9 +713,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_perif]", message);
-					if(m_pServer->Enqueue("dompi_perif", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_perif_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_perif [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_perif [%s]", message);
 					}
 				}
 			}
@@ -394,14 +725,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_assign)
 		{
 			send_assign = false;
+			time_last_assign = t;
 			/* Objetos */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de objeto [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_ASSIGN WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de objetos");
 				strcpy(query, "SELECT * FROM TB_DOM_ASSIGN;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -413,10 +747,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				cJSON_ArrayForEach(json_QueryRow, json_Query_Result)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_assign]", message);
-					if(m_pServer->Enqueue("dompi_assign", message, strlen(message)) != GME_OK)
+					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_assign_change]", message);
+					if(m_pServer->Enqueue("dompi_assign_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_assign [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_assign_change [%s]", message);
 					}
 				}
 			}
@@ -426,14 +760,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_group)
 		{
 			send_group = false;
+			time_last_group = t;
 			/* Grupos */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de grupo [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_GROUP WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de grupos");
 				strcpy(query, "SELECT * FROM TB_DOM_GROUP;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -446,9 +783,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_group]", message);
-					if(m_pServer->Enqueue("dompi_group", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_group_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_group [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_group [%s]", message);
 					}
 				}
 			}
@@ -458,14 +795,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_flag)
 		{
 			send_flag = false;
+			time_last_flag = t;
 			/* Flags */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de flag [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_FLAG WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de usuario flags");
 				strcpy(query, "SELECT * FROM TB_DOM_FLAG;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -478,9 +818,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_flag]", message);
-					if(m_pServer->Enqueue("dompi_flag", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_flag_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_flag [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_flag [%s]", message);
 					}
 				}
 			}
@@ -490,14 +830,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_partition)
 		{
 			send_partition = false;
+			time_last_particion = t;
 			/* Particiones */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de particion [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_ALARM_PARTICION WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de particiones");
 				strcpy(query, "SELECT * FROM TB_DOM_ALARM_PARTICION;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -510,9 +853,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_particion]", message);
-					if(m_pServer->Enqueue("dompi_particion", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_particion_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_particion [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_particion [%s]", message);
 					}
 				}
 			}
@@ -522,14 +865,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_alarm_zona)
 		{
 			send_alarm_zona = false;
+			time_last_zona = t;
 			/* Zonas */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de zona [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_ALARM_ZONA WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de usuario zonas");
 				strcpy(query, "SELECT * FROM TB_DOM_ALARM_ZONA;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -542,9 +888,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_alarm_zona]", message);
-					if(m_pServer->Enqueue("dompi_alarm_zona", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_alarm_zona_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_alarm_zona [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_alarm_zona [%s]", message);
 					}
 				}
 			}
@@ -554,14 +900,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_alarm_salida)
 		{
 			send_alarm_salida = false;
+			time_last_salida = t;
 			/* Salidas de Alarma */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de salida [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_ALARM_SALIDA WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de salidas");
 				strcpy(query, "SELECT * FROM TB_DOM_ALARM_SALIDA;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -574,9 +923,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_alarm_salida]", message);
-					if(m_pServer->Enqueue("dompi_alarm_salida", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_alarm_salida_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_alarm_salida [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_alarm_salida [%s]", message);
 					}
 				}
 			}
@@ -586,14 +935,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_camara)
 		{
 			send_camara = false;
+			time_last_camara = t;
 			/* Camaras */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de camara [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_CAMARA WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de usuario camaras");
 				strcpy(query, "SELECT * FROM TB_DOM_CAMARA;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -606,9 +958,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_camara]", message);
-					if(m_pServer->Enqueue("dompi_camara", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_camara_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_camara [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_camara [%s]", message);
 					}
 				}
 			}
@@ -618,14 +970,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_event)
 		{
 			send_event = false;
+			time_last_event = t;
 			/* Eventos */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de evento [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_EVENT WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de eventos");
 				strcpy(query, "SELECT * FROM TB_DOM_EVENT;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -638,9 +993,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_event]", message);
-					if(m_pServer->Enqueue("dompi_event", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_event_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_event [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_event [%s]", message);
 					}
 				}
 			}
@@ -650,14 +1005,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_at)
 		{
 			send_at = false;
+			time_last_at = t;
 			/* AT */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de tarea programada [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_AT WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de tareas programadas");
 				strcpy(query, "SELECT * FROM TB_DOM_AT;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -670,9 +1028,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_at]", message);
-					if(m_pServer->Enqueue("dompi_at", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_at_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_at [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_at [%s]", message);
 					}
 				}
 			}
@@ -682,14 +1040,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_auto)
 		{
 			send_auto = false;
+			time_last_auto = t;
 			/* Auto */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de automatismo [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_AUTO WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de automatosmos");
 				strcpy(query, "SELECT * FROM TB_DOM_AUTO;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -702,9 +1063,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_auto]", message);
-					if(m_pServer->Enqueue("dompi_auto", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_auto_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_auto [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_auto [%s]", message);
 					}
 				}
 			}
@@ -714,14 +1075,17 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(send_touch)
 		{
 			send_touch = false;
+			time_last_touch = t;
 			/* Touch */
 			json_Query_Result = cJSON_CreateArray();
 			if(json_Id)
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de panel tactil [%s]", json_Id->valuestring);
 				sprintf(query, "SELECT * FROM TB_DOM_TOUCH WHERE Id = %s;", json_Id->valuestring);
 			}
 			else
 			{
+				m_pServer->m_pLog->Add(10, "Generando sincronizacion de paneles tactiles");
 				strcpy(query, "SELECT * FROM TB_DOM_TOUCH;");
 			}
 			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -734,9 +1098,9 @@ int main(/*int argc, char** argv, char** env*/void)
 				{
 					cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 					m_pServer->m_pLog->Add(100, "[SYNCH] [%s] -> [dompi_touch]", message);
-					if(m_pServer->Enqueue("dompi_touch", message, strlen(message)) != GME_OK)
+					if(m_pServer->Enqueue("dompi_touch_change", message, strlen(message)) != GME_OK)
 					{
-						m_pServer->m_pLog->Add(1, "[dompi_full_change] ERROR: Encolando en SAF dompi_touch [%s]", message);
+						m_pServer->m_pLog->Add(1, "ERROR: Encolando en SAF dompi_touch [%s]", message);
 					}
 				}
 			}
@@ -748,7 +1112,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(host_backup[0] != 0)
 		{
 			/* Configuracion */
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_config", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_config_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_config] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -756,13 +1120,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_CONFIG", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando configuracion");
+				if( DBUpdate(pDB, "TB_DOM_CONFIG", "Id", TB_DOM_CONFIG, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_CONFIG", json_Message);
+					DBInsert(pDB, "TB_DOM_CONFIG", TB_DOM_CONFIG, json_Message);
 				}
 			}
 
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_user", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_user_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_user] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -770,13 +1135,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_USER", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando usuario [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_USER", "Id", TB_DOM_USER, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_USER", json_Message);
+					DBInsert(pDB, "TB_DOM_USER", TB_DOM_USER, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_perif", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_perif_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_perif] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -784,27 +1150,29 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_PERIF", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando periferico [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_PERIF", "Id", TB_DOM_PERIF, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_PERIF", json_Message);
+					DBInsert(pDB, "TB_DOM_PERIF", TB_DOM_PERIF, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_assign", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_assign_change", message, GM_COMM_MSG_LEN) > 0)
 			{
-				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_assign] -> [%s]", message);
+				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_assign_change] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_ASSIGN", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando objeto [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_ASSIGN", "Id", TB_DOM_ASSIGN, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_ASSIGN", json_Message);
+					DBInsert(pDB, "TB_DOM_ASSIGN", TB_DOM_ASSIGN, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_group", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_group_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_group] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -812,13 +1180,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_GROUP", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando grupo [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_GROUP", "Id", TB_DOM_GROUP, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_GROUP", json_Message);
+					DBInsert(pDB, "TB_DOM_GROUP", TB_DOM_GROUP, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_flag", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_flag_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_flag] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -826,13 +1195,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_FLAG", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando flag [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_FLAG", "Id", TB_DOM_FLAG, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_FLAG", json_Message);
+					DBInsert(pDB, "TB_DOM_FLAG", TB_DOM_FLAG, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_particion", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_particion_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_particion] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -840,13 +1210,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_ALARM_PARTICION", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando particion [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_ALARM_PARTICION", "Id", TB_DOM_ALARM_PARTICION, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_ALARM_PARTICION", json_Message);
+					DBInsert(pDB, "TB_DOM_ALARM_PARTICION", TB_DOM_ALARM_PARTICION, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_zona", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_zona_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_alarm_zona] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -854,13 +1225,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_ALARM_ZONA", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando zona [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_ALARM_ZONA", "Id", TB_DOM_ALARM_ZONA, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_ALARM_ZONA", json_Message);
+					DBInsert(pDB, "TB_DOM_ALARM_ZONA", TB_DOM_ALARM_ZONA, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_salida", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_salida_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_alarm_salida] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -868,13 +1240,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_ALARM_SALIDA", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando salida [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_ALARM_SALIDA", "Id", TB_DOM_ALARM_SALIDA, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_ALARM_SALIDA", json_Message);
+					DBInsert(pDB, "TB_DOM_ALARM_SALIDA", TB_DOM_ALARM_SALIDA, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_camara", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_camara_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_camara] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -882,13 +1255,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_CAMARA", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando camara [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_CAMARA", "Id", TB_DOM_CAMARA, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_CAMARA", json_Message);
+					DBInsert(pDB, "TB_DOM_CAMARA", TB_DOM_CAMARA, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_event", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_event_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_event] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -896,13 +1270,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_EVENT", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando evento [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_EVENT", "Id", TB_DOM_EVENT, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_EVENT", json_Message);
+					DBInsert(pDB, "TB_DOM_EVENT", TB_DOM_EVENT, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_at", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_at_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_at] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -910,13 +1285,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_AT", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando tarea programada [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_AT", "Id", TB_DOM_AT, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_AT", json_Message);
+					DBInsert(pDB, "TB_DOM_AT", TB_DOM_AT, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_auto", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_auto_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_auto] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -924,13 +1300,14 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_AUTO", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando automatismo [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_AUTO", "Id", TB_DOM_AUTO, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_AUTO", json_Message);
+					DBInsert(pDB, "TB_DOM_AUTO", TB_DOM_AUTO, json_Message);
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_touch", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, 0, "http", "dompi_touch_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_touch] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -938,9 +1315,10 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(!json_Message) break;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
 				if(!json_Id) break;
-				if( DBUpdate(pDB, "TB_DOM_TOUCH", "Id", json_Message) <= 0)
+				m_pServer->m_pLog->Add(10, "Sincronizando panel tactil [%s]", json_Id->valuestring);
+				if( DBUpdate(pDB, "TB_DOM_TOUCH", "Id", TB_DOM_TOUCH, json_Message) <= 0)
 				{
-					DBInsert(pDB, "TB_DOM_TOUCH", json_Message);
+					DBInsert(pDB, "TB_DOM_TOUCH", TB_DOM_TOUCH, json_Message);
 				}
 			}
 		}
@@ -1002,20 +1380,20 @@ void LoadSystemConfig(void)
 
 void AddSaf( void )
 {
-	m_pServer->Notify(".create-queue", "dompi_config", 16);	
-	m_pServer->Notify(".create-queue", "dompi_user", 14);	
-	m_pServer->Notify(".create-queue", "dompi_perif", 15);	
-	m_pServer->Notify(".create-queue", "dompi_assign", 16);	
-	m_pServer->Notify(".create-queue", "dompi_group", 15);	
-	m_pServer->Notify(".create-queue", "dompi_flag", 14);	
-	m_pServer->Notify(".create-queue", "dompi_particion", 19);	
-	m_pServer->Notify(".create-queue", "dompi_alarm_zona", 20);	
-	m_pServer->Notify(".create-queue", "dompi_alarm_salida", 22);	
-	m_pServer->Notify(".create-queue", "dompi_camara", 16);	
-	m_pServer->Notify(".create-queue", "dompi_event", 15);	
-	m_pServer->Notify(".create-queue", "dompi_at", 12);	
-	m_pServer->Notify(".create-queue", "dompi_auto", 14);	
-	m_pServer->Notify(".create-queue", "dompi_touch", 15);	
+	m_pServer->Notify(".create-queue", "dompi_config_change", 20);	
+	m_pServer->Notify(".create-queue", "dompi_user_change", 18);	
+	m_pServer->Notify(".create-queue", "dompi_perif_change", 19);	
+	m_pServer->Notify(".create-queue", "dompi_assign_change", 20);	
+	m_pServer->Notify(".create-queue", "dompi_group_change", 19);	
+	m_pServer->Notify(".create-queue", "dompi_flag_change", 18);	
+	m_pServer->Notify(".create-queue", "dompi_particion_change", 23);	
+	m_pServer->Notify(".create-queue", "dompi_alarm_zona_change", 24);	
+	m_pServer->Notify(".create-queue", "dompi_alarm_salida_change", 26);	
+	m_pServer->Notify(".create-queue", "dompi_camara_change", 20);	
+	m_pServer->Notify(".create-queue", "dompi_event_change", 19);	
+	m_pServer->Notify(".create-queue", "dompi_at_change", 16);	
+	m_pServer->Notify(".create-queue", "dompi_auto_change", 18);	
+	m_pServer->Notify(".create-queue", "dompi_touch_change", 19);	
 }
 
 int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max)
@@ -1087,7 +1465,7 @@ int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_
 	return rc;
 }
 
-int DBInsert(CDB* db, const char* tabla, cJSON* jdata)
+int DBInsert(CDB* db, const char* tabla, const char** columnas, cJSON* jdata)
 {
 	cJSON *j;
 	int rc;
@@ -1113,30 +1491,33 @@ int DBInsert(CDB* db, const char* tabla, cJSON* jdata)
 			{
 				if(j->string && j->valuestring)
 				{
-					if(strlen(j->string) && strlen(j->valuestring))
+					if(ExisteColumna(j->string, columnas))
 					{
-						/* Dato */
-						if(strlen(query_into) == 0)
+						if(strlen(j->string) && strlen(j->valuestring))
 						{
-							strcpy(query_into, "(");
+							/* Dato */
+							if(strlen(query_into) == 0)
+							{
+								strcpy(query_into, "(");
+							}
+							else
+							{
+								strcat(query_into, ",");
+							}
+							strcat(query_into, j->string);
+							/* Valor */
+							if(strlen(query_values) == 0)
+							{
+								strcpy(query_values, "(");
+							}
+							else
+							{
+								strcat(query_values, ",");
+							}
+							strcat(query_values, "'");
+							strcat(query_values, j->valuestring);
+							strcat(query_values, "'");
 						}
-						else
-						{
-							strcat(query_into, ",");
-						}
-						strcat(query_into, j->string);
-						/* Valor */
-						if(strlen(query_values) == 0)
-						{
-							strcpy(query_values, "(");
-						}
-						else
-						{
-							strcat(query_values, ",");
-						}
-						strcat(query_values, "'");
-						strcat(query_values, j->valuestring);
-						strcat(query_values, "'");
 					}
 				}
 			}
@@ -1150,11 +1531,10 @@ int DBInsert(CDB* db, const char* tabla, cJSON* jdata)
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = db->Query(NULL, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
-	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", db->m_last_error_text, query);
 	return rc;
 }
 
-int DBUpdate(CDB* db, const char* tabla, const char *key, cJSON* jdata)
+int DBUpdate(CDB* db, const char* tabla, const char *key, const char** columnas, cJSON* jdata)
 {
 	cJSON *j;
 	int rc;
@@ -1183,24 +1563,27 @@ int DBUpdate(CDB* db, const char* tabla, const char *key, cJSON* jdata)
 				{
 					if(strlen(j->string) /*&& strlen(j->valuestring)*/)
 					{
-						if( !strcmp(j->string, key) )
+						if(ExisteColumna(j->string, columnas))
 						{
-							strcpy(query_where, j->string);
-							strcat(query_where, "='");
-							strcat(query_where, j->valuestring);
-							strcat(query_where, "'");
-						}
-						else
-						{
-							/* Dato = Valor */
-							if(strlen(query_values) > 0)
+							if( !strcmp(j->string, key) )
 							{
-								strcat(query_values, ",");
+								strcpy(query_where, j->string);
+								strcat(query_where, "='");
+								strcat(query_where, j->valuestring);
+								strcat(query_where, "'");
 							}
-							strcat(query_values, j->string);
-							strcat(query_values, "='");
-							strcat(query_values, j->valuestring);
-							strcat(query_values, "'");
+							else
+							{
+								/* Dato = Valor */
+								if(strlen(query_values) > 0)
+								{
+									strcat(query_values, ",");
+								}
+								strcat(query_values, j->string);
+								strcat(query_values, "='");
+								strcat(query_values, j->valuestring);
+								strcat(query_values, "'");
+							}
 						}
 					}
 				}
@@ -1215,7 +1598,6 @@ int DBUpdate(CDB* db, const char* tabla, const char *key, cJSON* jdata)
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 		rc = db->Query(NULL, query);
 		m_pServer->m_pLog->Add((db->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
-		if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", db->m_last_error_text, query);
 		return rc;
 	}
 	return (-1);

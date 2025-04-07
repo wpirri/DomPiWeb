@@ -38,12 +38,14 @@
 
 /usr/local/bin/domcli
 /usr/local/sbin/dompi_abm
+/usr/local/sbin/dompi_activo
 /usr/local/sbin/dompi_server
 /usr/local/sbin/dompi_netcomm
 /usr/local/sbin/dompi_cloud
 /usr/local/sbin/dompi_gsm
 /usr/local/sbin/dompi_gpio
 /usr/local/sbin/dompi_command
+
 /usr/local/sbin/check_for_updates.sh
 
 /etc/gmonitor/gmonitor
