@@ -112,9 +112,9 @@ const char *TB_DOM_PERIF[] = {
 	"MAC",
 	"Dispositivo",
 	"Tipo",
-	"Estado",
+	/*"Estado",*/
 	"Direccion_IP",
-	"Ultimo_Ok",
+	/*"Ultimo_Ok",*/
 	"Usar_Https",
 	"Habilitar_Wiegand",
 	"Update_Firmware",
@@ -1493,30 +1493,33 @@ int DBInsert(CDB* db, const char* tabla, const char** columnas, cJSON* jdata)
 				{
 					if(ExisteColumna(j->string, columnas))
 					{
-						if(strlen(j->string) && strlen(j->valuestring))
+						if(strlen(j->string) /*&& strlen(j->valuestring)*/)
 						{
-							/* Dato */
-							if(strlen(query_into) == 0)
+							if(strcmp(j->valuestring, "NULL"))
 							{
-								strcpy(query_into, "(");
+								/* Dato */
+								if(strlen(query_into) == 0)
+								{
+									strcpy(query_into, "(");
+								}
+								else
+								{
+									strcat(query_into, ",");
+								}
+								strcat(query_into, j->string);
+								/* Valor */
+								if(strlen(query_values) == 0)
+								{
+									strcpy(query_values, "(");
+								}
+								else
+								{
+									strcat(query_values, ",");
+								}
+								strcat(query_values, "'");
+								strcat(query_values, j->valuestring);
+								strcat(query_values, "'");
 							}
-							else
-							{
-								strcat(query_into, ",");
-							}
-							strcat(query_into, j->string);
-							/* Valor */
-							if(strlen(query_values) == 0)
-							{
-								strcpy(query_values, "(");
-							}
-							else
-							{
-								strcat(query_values, ",");
-							}
-							strcat(query_values, "'");
-							strcat(query_values, j->valuestring);
-							strcat(query_values, "'");
 						}
 					}
 				}
@@ -1563,7 +1566,7 @@ int DBUpdate(CDB* db, const char* tabla, const char *key, const char** columnas,
 				{
 					if(strlen(j->string) /*&& strlen(j->valuestring)*/)
 					{
-						if(ExisteColumna(j->string, columnas))
+						if(ExisteColumna(j->string, columnas) && strcmp(j->valuestring, "NULL"))
 						{
 							if( !strcmp(j->string, key) )
 							{

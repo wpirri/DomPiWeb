@@ -133,6 +133,8 @@ typedef struct _new_card_list
 
 new_card_list g_dompi_server_new_card_list[MAX_CARD_LIST_NEW];
 
+char g_hw_id_replica_ass[16];
+
 void OnClose(int sig);
 void LoadSystemConfig(void);
 
@@ -148,6 +150,8 @@ void RunDaily( void );
 void CheckDaily();
 int CheckWirelessCard( const char* card );
 void CheckWiegandData(void);
+void NotifyAssignOfDisp(const char* hw_id);
+
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -313,6 +317,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10000 )) >= 0)
 	{
 		soporta_respuesta_con_datos = false;
+		g_hw_id_replica_ass[0] = 0;
 
 		if(rc > 0)
 		{
@@ -358,6 +363,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
 					if( !strcmp(json_Tipo_HW->valuestring, "IO") || !strcmp(json_Tipo_HW->valuestring, "PI")  )
 					{
+						strcpy(g_hw_id_replica_ass, json_MAC->valuestring);
 						rc = pEV->ExtIOEvent(message);
 						if(rc >= 0)
 						{
@@ -394,11 +400,20 @@ int main(/*int argc, char** argv, char** env*/void)
 										json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
 										/* Armo la respuesta del servicio */
 										cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
-
 										/* Borro el flag de update de los que ya aviso */
-										sprintf(query, "UPDATE TB_DOM_ASSIGN "
-															"SET Actualizar = 0, Estado_HW = Estado "
+										if(atoi(json_Estado->valuestring) > 1)
+										{
+											/* parche para el envío de pulsos */
+											sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0, Estado = 0 "
 															"WHERE Id = %s;", json_Id->valuestring);
+										}
+										else
+										{
+											sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0 "
+															"WHERE Id = %s;", json_Id->valuestring);
+										}
 										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 										rc = pDB->Query(NULL, query);
 										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1610,6 +1625,12 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckNewHWList(NULL);
 		/*  */
 		CheckNewCardList(NULL);
+		/* */
+		if(g_hw_id_replica_ass[0])
+		{
+			NotifyAssignOfDisp(g_hw_id_replica_ass);
+			g_hw_id_replica_ass[0] = 0;
+		}
 	}
 	m_pServer->m_pLog->Add(1, "ERROR en la espera de mensajes");
 	OnClose(0);
@@ -1688,6 +1709,7 @@ void AssignTask( void )
 	cJSON *json_Objeto;
 	cJSON *json_ASS_Id;
 	cJSON *json_Estado;
+	cJSON *json_Estado_Perif;
 	cJSON *json_Tipo_ASS;
 	int iEstado;
 
@@ -1695,13 +1717,12 @@ void AssignTask( void )
 
 	/* Controlo si hay que actualizar estados de Assign de dispositivos que estén en linea */
 	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT MAC, PERIF.Tipo AS Tipo_HW, Direccion_IP, Objeto, "
-							"ASS.Id AS ASS_Id, ASS.Tipo AS Tipo_ASS, Port, ASS.Estado, ASS.Analog_Mult_Div_Valor "
-					"FROM TB_DOM_PERIF AS PERIF, TB_DOM_ASSIGN AS ASS "
-					"WHERE ASS.Dispositivo = PERIF.Id AND "
-					     "PERIF.Estado = 1 AND "
-					     "(ASS.Tipo = 0 OR ASS.Tipo = 3 OR ASS.Tipo = 5) AND "
-					     "( (ASS.Estado <> ASS.Estado_HW) OR (ASS.Actualizar <> 0) );");
+	sprintf(query, "SELECT MAC, P.Tipo AS Tipo_HW, Direccion_IP, Objeto, P.Estado AS Estado_Perif, "
+					"A.Id AS ASS_Id, A.Tipo AS Tipo_ASS, Port, A.Estado, A.Analog_Mult_Div_Valor "
+					"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+					"WHERE A.Dispositivo = P.Id AND "
+					     "(A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5) AND "
+					     "( (A.Estado <> A.Estado_HW) OR (A.Actualizar <> 0) );");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(json_QueryArray, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1714,21 +1735,39 @@ void AssignTask( void )
 			json_Objeto = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Objeto");
 			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
 			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+			iEstado = atoi(json_Estado->valuestring);
+			json_Estado_Perif = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado_Perif");
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
+
 			m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] Estado: %s",
 									json_Objeto->valuestring, json_Estado->valuestring);
 			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
-			/* Me fijo si es estado o pulso */
+
+			/* Me fijo si es estado o pulso y si está en línea */
 			if(atoi(json_Tipo_ASS->valuestring) == 5)
-			{	/* Pulso */
-				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
-				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+			{	
+				/* Pulso */
+				if(atoi(json_Estado_Perif->valuestring) > 0)
+				{
+					m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
+					m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+				}
+				else
+				{
+					/* Notifico a la nube y al par que debería tenerlo en linea */
+					m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
+					m_pServer->Post("dompi_assign_change", message, strlen(message));
+				}
 				iEstado = 0;
 			}
 			else
-			{	/* El resto de las salidas */
-				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
-				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+			{
+				/* Cambios de estado */
+				if(atoi(json_Estado_Perif->valuestring) > 0)
+				{
+					m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
+					m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+				}
 				m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
 				m_pServer->Post("dompi_assign_change", message, strlen(message));
 				iEstado = atoi(json_Estado->valuestring);
@@ -1811,7 +1850,10 @@ void GroupTask( void )
 			rc = pDB->Query(NULL, query);
 			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
 		}
+		m_pServer->m_pLog->Add(20, "Actualizar datos de grupos");
+		m_pServer->Post("dompi_group_change", nullptr, 0);
 	}
 	cJSON_Delete(json_QueryArray);
 }
@@ -1938,7 +1980,7 @@ void GroupMaint( void )
 		if(group_update)
 		{
 			m_pServer->m_pLog->Add(20, "Actualizar datos de grupos");
-			m_pServer->Notify("dompi_group_change", nullptr, 0);
+			m_pServer->Post("dompi_group_change", nullptr, 0);
 		}
 	}
 	cJSON_Delete(json_QueryResult_Group);
@@ -2452,6 +2494,7 @@ int CheckWirelessCard( const char* card )
 
 	if(!card) return 0;
 	if(strlen(card) == 0) return 0;
+	if(!strcmp(card, "NULL")) return 0;
 
 	QueryResult = cJSON_CreateArray();
 	sprintf(query, "SELECT Nombre_Completo, Dias_Semana, Hora_Desde, Minuto_Desde, Hora_Hasta, Minuto_Hasta, Estado "
@@ -2569,5 +2612,37 @@ void CheckWiegandData( void )
 			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 		}
 	}
+	cJSON_Delete(QueryResult);
+}
+
+void NotifyAssignOfDisp(const char* hw_id)
+{
+	int rc;
+	char query[4096];
+    cJSON *QueryResult;
+    cJSON *QueryRow;
+
+	m_pServer->m_pLog->Add(20, "[NotifyAssignOfDisp] HW Id: [%s]", hw_id);
+	QueryResult = cJSON_CreateArray();
+	/* Busco los assign del dispositivo para enviar la actualización al par y a la nube */
+	sprintf(query, "SELECT A.Id AS ASS_Id "
+		"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+		"WHERE A.Dispositivo = P.Id AND "
+		"UPPER(MAC) = UPPER(\'%s\');", hw_id);
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	QueryResult = cJSON_CreateArray();
+	rc = pDB->Query(QueryResult, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc > 0)
+	{
+		cJSON_ArrayForEach(QueryRow, QueryResult)
+		{
+			/* Notifico al par y a la nube */
+			cJSON_PrintPreallocated(QueryRow, query, GM_COMM_MSG_LEN, 0);
+			m_pServer->m_pLog->Add(90, "Notify [dompi_assign_change][%s]", query);
+			m_pServer->Post("dompi_assign_change", query, strlen(query));
+		}
+	}	
 	cJSON_Delete(QueryResult);
 }
