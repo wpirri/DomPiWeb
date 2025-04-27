@@ -5,7 +5,7 @@ include ../../../configure.mk
 INCLUDE=-I../../Common/ `mysql_config --cflags` -I/usr/local/include -I/usr/local/include/gmonitor
 CXXFLAGS=$(PROCESSOR-PARAMS) -g -Wall -Wextra -MMD -O2
 NO_LIBS=-lsqlite3
-LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs`
+LIBS=-lgmqw -lgmshared -lstdc++ -lcjson -lssl -lcrypto `mysql_config --libs` -lgmc
 DEFINE=$(GENERAL_DEFINE)
 CC=g++
 OBJECTS=$(OBJ)/dompi_activo.o $(OBJ)/cmydb.o $(OBJ)/config.o $(OBJ)/strfunc.o $(OBJ)/gevent.o

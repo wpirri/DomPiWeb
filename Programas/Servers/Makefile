@@ -4,7 +4,6 @@ include ../../configure.mk
 
 all:
 	make -C dompi_abm
-	make -C dompi_activo
 	make -C dompi_cloud
 #	make -C dompi_garnet
 	make -C dompi_gsm
@@ -17,7 +16,6 @@ all:
 
 clean:
 	make -C dompi_abm clean
-	make -C dompi_activo clean
 	make -C dompi_cloud clean
 #	make -C dompi_garnet clean
 	make -C dompi_gsm clean
@@ -29,7 +27,6 @@ clean:
 
 install:
 	make -C dompi_abm install
-	make -C dompi_activo install
 	make -C dompi_cloud install
 #	make -C dompi_garnet install
 	make -C dompi_gsm install
@@ -41,7 +38,6 @@ install:
 
 uninstall:
 	make -C dompi_abm uninstall
-	make -C dompi_activo uninstall
 	make -C dompi_cloud uninstall
 #	make -C dompi_garnet uninstall
 	make -C dompi_gsm uninstall

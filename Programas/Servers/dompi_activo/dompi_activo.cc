@@ -22,6 +22,8 @@
 #include <gmonitor/gmswaited.h>
 #include <gmonitor/svcstru.h>
 
+#include <gmonitor/gmc.h>
+
 #include <string>
 #include <iostream>
 #include <csignal>
@@ -31,6 +33,7 @@ using namespace std;
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 
 #include <cjson/cJSON.h>
 
@@ -41,6 +44,7 @@ using namespace std;
 #include "ctcp.h"
 
 #define ACTIVE_UPDATE_INTERVAL 3600
+#define GMONITOR_PORT 5533
 
 const char *TB_DOM_CONFIG[] = {
 	"Id",
@@ -333,10 +337,12 @@ void OnClose(int sig);
 void LoadSystemConfig(void);
 
 void AddSaf( void );
-int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max);
 
 int DBInsert(CDB* db, const char* tabla, const char** columnas, cJSON* jdata);
 int DBUpdate(CDB* db, const char* tabla, const char *key, const char** columnas, cJSON* jdata);
+
+CGMClient *m_pClient;
+int GetSAFRemoto(const char* host, int port, const char* saf_name, char* msg, unsigned int msg_max);
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -386,7 +392,7 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_Query_Result = NULL;
     cJSON *json_QueryRow;
     cJSON *json_Id;
-	
+
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
@@ -434,6 +440,8 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	json_System_Config = NULL;
 	LoadSystemConfig();
+
+	m_pClient = NULL;
 
 	/*
 	Se distribuye equitativamente entre las colas menos cargadas
@@ -1112,7 +1120,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		if(host_backup[0] != 0)
 		{
 			/* Configuracion */
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_config_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_config_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_config] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1127,7 +1135,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_user_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_user_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_user] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1142,7 +1150,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_perif_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_perif_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_perif] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1157,7 +1165,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_assign_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_assign_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_assign_change] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1172,7 +1180,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_group_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_group_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_group] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1187,7 +1195,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_flag_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_flag_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_flag] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1202,7 +1210,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_particion_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_particion_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_particion] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1217,7 +1225,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_zona_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_alarm_zona_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_alarm_zona] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1232,7 +1240,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_alarm_salida_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_alarm_salida_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_alarm_salida] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1247,7 +1255,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_camara_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_camara_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_camara] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1262,7 +1270,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_event_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_event_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_event] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1277,7 +1285,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_at_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_at_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_at] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1292,7 +1300,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_auto_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_auto_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_auto] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1307,7 +1315,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				}
 			}
 			
-			while(GetSAFRemoto(host_backup, 0, "http", "dompi_touch_change", message, GM_COMM_MSG_LEN) > 0)
+			while(GetSAFRemoto(host_backup, GMONITOR_PORT, "dompi_touch_change", message, GM_COMM_MSG_LEN) > 0)
 			{
 				m_pServer->m_pLog->Add(100, "[SYNCH] [dompi_touch] -> [%s]", message);
 				json_Message = cJSON_Parse(message);
@@ -1396,72 +1404,37 @@ void AddSaf( void )
 	m_pServer->Notify(".create-queue", "dompi_touch_change", 19);	
 }
 
-int GetSAFRemoto(const char* host, int port, const char* proto, const char* saf_name, char* msg, unsigned int msg_max)
+int GetSAFRemoto(const char* host, int port, const char* saf_name, char* msg, unsigned int msg_max)
 {
-    /*
-    * GET
-    * 1.- %s: URI
-    * 2.- %s: GET
-	* 3.- %s: Host
-    */
-    char http_get[] =   "GET %s%s HTTP/1.1\r\n"
-                        "Host: %s\r\n"
-                        "Connection: close\r\n"
-                        "User-Agent: DomPiSrv/1.00 (RaspBerryPi;Dom32)\r\n"
-                        "Accept: text/html,text/xml\r\n\r\n";
-
-    char url_default[] = "/cgi-bin/gmonitor_get_saf.cgi";
-
-	CTcp *pSock;
-	char buffer[GM_COMM_MSG_LEN+1];
-	char get[256];
-	char *ps;
 	int rc = 0;
+	CGMClient::GMIOS resp_data;
+	CGMInitData client_init;
 
-	buffer[0] = 0;
-	sprintf(get, "?saf=%s", saf_name);
-	if( proto && !strcmp(proto, "https"))
-	{
-		pSock = new CTcp(1, 3);
-		if(port == 0) port = 443;
-		sprintf(buffer, http_get, url_default, get, host);
-		m_pServer->m_pLog->Add(100, "[GetSAFRemoto] https://%s [%s].", host, buffer);
-		rc = pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
-		delete pSock;
-	}
-	else
-	{
-		pSock = new CTcp();
-		if(port == 0) port = 80;
-		sprintf(buffer, http_get, url_default, get, host);
-		m_pServer->m_pLog->Add(100, "[GetSAFRemoto] http://%s [%s].", host, buffer);
-		rc = pSock->Query(host, port, buffer, buffer, GM_COMM_MSG_LEN, external_timeout);
-		delete pSock;
-	}
+	client_init.m_host = host;
+	client_init.m_port = port;
+	client_init.m_user = "dompiweb";
+	client_init.m_client = "dompiweb";
+	client_init.m_key = "dompiweb";
+	client_init.m_group = "dompiweb";
+	client_init.m_flags = 0;
 
+	if(m_pClient == nullptr)
+	{
+		m_pClient = new CGMClient(&client_init);
+	}
+	rc = m_pClient->Dequeue(saf_name, &resp_data);
+	if(rc == 0)
+	{
+		rc = MIN(resp_data.len, msg_max);
+		memcpy(msg, resp_data.data, rc);
+		*(msg + rc + 1) = 0;
+	}
 	if(rc < 0)
 	{
-		m_pServer->m_pLog->Add(100, "[GetSAFRemoto] ERROR en CTcp::Query.");
+		delete m_pClient;
+		m_pClient = nullptr;
 	}
 
-	if(msg && rc > 0)
-	{
-		*msg = 0;
-		if(rc > 0 && strlen(buffer))
-		{
-			ps = strstr(buffer, "\r\n\r\n");
-			if(ps)
-			{
-				ps += 4;
-
-				/* Está viniendo algo raro al princiìo de la parte de datos que no la puedo sacar */
-				while(*ps && *ps != '{') ps++;
-				strncpy(msg, ps, msg_max);
-				m_pServer->m_pLog->Add(100, "[GetSAFRemoto] Resp [%s].", msg);
-			}
-		}
-		rc = strlen(msg);
-	}
 	return rc;
 }
 
@@ -1532,8 +1505,8 @@ int DBInsert(CDB* db, const char* tabla, const char** columnas, cJSON* jdata)
 
 	sprintf(query, "INSERT INTO %s %s VALUES %s;", tabla, query_into, query_values);
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-	rc = db->Query(NULL, query);
-	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
+	//rc = db->Query(NULL, query);
+	//m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
 	return rc;
 }
 
@@ -1599,8 +1572,8 @@ int DBUpdate(CDB* db, const char* tabla, const char *key, const char** columnas,
 	{
 		sprintf(query, "UPDATE %s SET %s WHERE %s;", tabla, query_values, query_where);
 		m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-		rc = db->Query(NULL, query);
-		m_pServer->m_pLog->Add((db->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
+		//rc = db->Query(NULL, query);
+		//m_pServer->m_pLog->Add((db->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, db->LastQueryTime(), query);
 		return rc;
 	}
 	return (-1);

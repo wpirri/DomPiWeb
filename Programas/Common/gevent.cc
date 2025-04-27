@@ -136,6 +136,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     char query[4096];
     cJSON *json_obj;
     cJSON *json_QueryArray;
+    cJSON *json_QueryRow;
     cJSON *json_hw_id;
     cJSON *json_hw_mac;
     cJSON *json_raddr;
@@ -145,7 +146,6 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_tmp;
     STRFunc str;
     char extra_info[1024];
-    int cambios = 0;
 
     m_pServer->m_pLog->Add(100, "[GEvent::ExtIOEvent] json_evt: %s", json_evt);
 
@@ -165,75 +165,78 @@ int GEvent::ExtIOEvent(const char* json_evt)
             rc = m_pDB->Query(json_QueryArray, query);
             m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-            if(rc >= 0 && json_QueryArray->child)
+            if(rc > 0)
             {
-                json_hw_id = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Id");
-                json_status = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Estado");
-                if(json_raddr)
+                cJSON_ArrayForEach(json_QueryRow, json_QueryArray)
                 {
-                    if(atoi(json_status->valuestring) == 0)
+                    json_hw_id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
+                    json_status = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
+                    if(json_raddr)
                     {
-                        m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                        if(atoi(json_status->valuestring) == 0)
+                        {
+                            m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                        }
+                        /* Me fijo si tiene info de FW, HW, etc. */
+                        extra_info[0] = 0;
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "HW");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "HW: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SO");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "SO: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "FW");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "FW: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SDK");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "SDK: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "AT");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "AT: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SSL");
+                        if(json_tmp)
+                        {
+                            strcat(extra_info, "SSL: ");
+                            strcat(extra_info, json_tmp->valuestring);
+                            strcat(extra_info, "\n");
+                        }
+                        /* Actualizo la tabla de Dispositivos */
+                        sprintf(query, "UPDATE TB_DOM_PERIF "
+                                            "SET Ultimo_Ok = %lu, "
+                                            "Direccion_IP = \'%s\', "
+                                            "Informacion  = \'%s\', "
+                                            "Estado = 1 "
+                                            "WHERE UPPER(MAC) = UPPER(\'%s\');",
+                                            t,
+                                            json_raddr->valuestring,
+                                            extra_info,
+                                            json_hw_mac->valuestring);
+                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                        rc = m_pDB->Query(NULL, query);
+                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                     }
-                    /* Me fijo si tiene info de FW, HW, etc. */
-                    extra_info[0] = 0;
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "HW");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "HW: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SO");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "SO: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "FW");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "FW: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SDK");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "SDK: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "AT");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "AT: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "SSL");
-                    if(json_tmp)
-                    {
-                        strcat(extra_info, "SSL: ");
-                        strcat(extra_info, json_tmp->valuestring);
-                        strcat(extra_info, "\n");
-                    }
-                    /* Actualizo la tabla de Dispositivos */
-                    sprintf(query, "UPDATE TB_DOM_PERIF "
-                                        "SET Ultimo_Ok = %lu, "
-                                        "Direccion_IP = \'%s\', "
-                                        "Informacion  = \'%s\', "
-                                        "Estado = 1 "
-                                        "WHERE UPPER(MAC) = UPPER(\'%s\');",
-                                        t,
-                                        json_raddr->valuestring,
-                                        extra_info,
-                                        json_hw_mac->valuestring);
-                    m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                    rc = m_pDB->Query(NULL, query);
-                    m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-                    if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                 }
                 /* Actualizo los assign que vengan  en el mensaje */
                 json_un_obj = json_obj;
@@ -364,18 +367,18 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         json_status = cJSON_GetObjectItemCaseSensitive(json_obj, s);
                         if(json_status)
                         {
-                            cambios = CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring));
+                            CheckEvent(atoi(json_hw_id->valuestring), s, atoi(json_status->valuestring));
                         }
                         else
                         {
-                            cambios = CheckEvent(atoi(json_hw_id->valuestring), s, 1);
+                            CheckEvent(atoi(json_hw_id->valuestring), s, 1);
                         }
                         i++;
                     }
                 }
                 else
                 {
-                    /* TODO: Si no se informaron cambios */
+                    /* TODO: Si no se informaron cambios busco diferencia con la base */
 
 
 
@@ -384,20 +387,24 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 /**/
                 cJSON_Delete(json_QueryArray);
                 cJSON_Delete(json_obj);
-                return cambios;
+                return 1;
             }
             else
             {
-                /* Desconocido */
+                /* Desconocido o error */
                 cJSON_Delete(json_QueryArray);
                 cJSON_Delete(json_obj);
-                return (-1);
+                return rc;
             }
         }
         cJSON_Delete(json_obj);
         return (-1);
     }
-    return (-1);
+    else
+    {
+        /* No se pudo parsear el parámetro JSon */
+        return (-1);
+    }
 }
 
 int GEvent::SyncIO(const char* json_evt)

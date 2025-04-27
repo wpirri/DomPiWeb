@@ -163,13 +163,13 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	pEV = new GEvent(pDB, m_pServer);
 
-	m_pServer->Suscribe("dompi_assign_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_auto_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
-	m_pServer->Suscribe("dompi_group_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_assign_change", GM_MSG_TYPE_MSG);	  	/* Sin respuesta, lo atienden todos */
+	m_pServer->Suscribe("dompi_user_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atienden todos */
+	m_pServer->Suscribe("dompi_alarm_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atienden todos */
+	m_pServer->Suscribe("dompi_auto_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atienden todos */
+	m_pServer->Suscribe("dompi_group_change", GM_MSG_TYPE_MSG);	  		/* Sin respuesta, lo atienden todos */
 	
-	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
+	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, lo atienden todos */
 
 	AddSaf();
 
