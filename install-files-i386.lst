@@ -38,7 +38,6 @@
 
 /usr/local/bin/domcli
 /usr/local/sbin/dompi_abm
-/usr/local/sbin/dompi_activo
 /usr/local/sbin/dompi_server
 /usr/local/sbin/dompi_netcomm
 /usr/local/sbin/dompi_cloud

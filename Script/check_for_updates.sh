@@ -32,7 +32,9 @@ check_for_updates_daemon()
 		/etc/init.d/gmond start
 	fi
 
-	mv $CHECK_PATH/*.hex $FIRMWARE_PATH/
+    ls $CHECK_PATH/*.hex 2>/dev/null | while read FILENAME; do
+        mv $FILENAME $FIRMWARE_PATH/
+	done
 
 	rm -f $CHECK_PATH/*
 }

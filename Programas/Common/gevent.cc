@@ -1149,7 +1149,7 @@ int GEvent::ChangeAssignById(int id, int accion, int param)
 							"WHERE Id = %i;", id);
 			break;
 		case 4: /* Pulso */
-            if(param > 0)
+            if(param > 1)
             {
                 sprintf(query, 	"UPDATE TB_DOM_ASSIGN "
                                 "SET Estado = %i, Actualizar = 1 "
