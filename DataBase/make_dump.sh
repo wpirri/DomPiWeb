@@ -16,6 +16,8 @@ OUTFILE="${BACKUP_PATH}/${FILE}"
 
 mkdir -p $BACKUP_PATH
 
+/usr/bin/logger "Optimizacion y Backup mensual de Base de Datos de DOMPIWEB - Inicio"
+
 echo "Optimizando Base de Datos ${DB} ..."
 /usr/bin/mysqloptimize $DB >/dev/null
 
@@ -48,9 +50,14 @@ echo "DELETE FROM TB_DOM_CONFIG;" >> "${OUTFILE}"
 echo "-- ####" >> "${OUTFILE}"
 
 /usr/bin/mysql -D "${DB}" -N -r < "${INFILE}" >> "${OUTFILE}"
+
 sed -i 's/\t//g' "${OUTFILE}"
 sed -i 's/NULL//g' "${OUTFILE}"
 sed -i 's/,,/,NULL,/g' "${OUTFILE}"
 
+/usr/bin/gzip "${OUTFILE}"
+
 echo "Subiendo backup a ${HOSTNAME}..."
-/usr/bin/curl --insecure -F "file=@${OUTFILE};filename=${FILE}" "${HOSTNAME}/${UPLOAD_FORM}" >/dev/null
+/usr/bin/curl --insecure -F "file=@${OUTFILE}.gz;filename=${FILE}.gz" "${HOSTNAME}/${UPLOAD_FORM}" >/dev/null
+
+/usr/bin/logger "Optimizacion y Backup mensual de Base de Datos de DOMPIWEB - Fin"

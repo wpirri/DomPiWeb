@@ -41,13 +41,14 @@ include("head.php");
 </div>
 
 <!--
-<div class="normal-btn" id="btn-config-touch" onclick="window.location.replace('touch_list.php');">
-	<img id="touch-icon" class="icon-btn" src="images/hard.png">&nbsp;T&aacute;ctiles
+<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
+	<img id="touch-icon" class="icon-btn" src="images/hard.png">&nbsp;Dummy3
 </div>
 -->
-<!--<div class="normal-btn" id="btn-config-dummy3" onclick="window.location.replace('');">
-	<img id="crono-icon" class="icon-btn" src="images/cron.png">&nbsp;Programas
-</div>-->
+<div class="normal-btn" id="btn-config-touch" onclick="window.location.replace('touch_list.php');">
+	<img id="crono-icon" class="icon-btn" src="images/hard.png">&nbsp;T&aacute;ctiles
+</div>
+
 <div class="normal-btn" id="btn-config-alarm" onclick="window.location.replace('alarm_list.php');">
 	<img id="alarm-icon" class="icon-btn" src="images/lock1.png">&nbsp;Alarma
 </div>

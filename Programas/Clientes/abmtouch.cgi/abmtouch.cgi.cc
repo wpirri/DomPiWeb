@@ -201,30 +201,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   {
     strcpy(funcion_call, "dompi_db_struct");
   }
-  else if( !strcmp(funcion, "status"))
-  {
-    strcpy(funcion_call, "dompi_touch_status");
-  }
-  else if( !strcmp(funcion, "info"))
-  {
-    strcpy(funcion_call, "dompi_touch_info");
-  }
-  else if( !strcmp(funcion, "on"))
-  {
-    strcpy(funcion_call, "dompi_touch_on");
-  }
-  else if( !strcmp(funcion, "off"))
-  {
-    strcpy(funcion_call, "dompi_touch_off");
-  }
-  else if( !strcmp(funcion, "switch"))
-  {
-    strcpy(funcion_call, "dompi_touch_switch");
-  }
-  else if( !strcmp(funcion, "pulse"))
-  {
-    strcpy(funcion_call, "dompi_touch_pulse");
-  }
   else
   {
     strcpy(funcion_call, "dompi_touch_list");

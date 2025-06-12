@@ -5,6 +5,10 @@ var ListaSiNo = [];
 ListaSiNo[0] = { value: 0, label: 'No' }
 ListaSiNo[1] = { value: 1, label: 'Si' }
 
+var ListaHoVe = [];
+ListaHoVe[0] = { value: 0, label: 'Horizontal' }
+ListaHoVe[1] = { value: 1, label: 'Vertical' }
+
 var ListaOnOffAuto = [];
 ListaOnOffAuto[0] = { value: 0, label: 'Apagado' }
 ListaOnOffAuto[1] = { value: 1, label: 'Encendido' }
@@ -259,6 +263,22 @@ ImagenObjeto[21] = { value: 'door1.png', label: 'Puerta abierta' }
 ImagenObjeto[22] = { value: 'door0.png', label: 'Puerta cerrada' }
 ImagenObjeto[23] = { value: 'window1.png', label: 'Ventana abierta' }
 ImagenObjeto[24] = { value: 'window0.png', label: 'Ventana cerrada' }
+
+var ListaEventoTouch = [];
+ListaEventoTouch[0] = { value: 0, label: 'Nada' }
+ListaEventoTouch[1] = { value: 1, label: 'On' }
+ListaEventoTouch[2] = { value: 2, label: 'Off' }
+ListaEventoTouch[3] = { value: 3, label: 'Switch' }
+ListaEventoTouch[4] = { value: 4, label: 'Pulso' }
+ListaEventoTouch[5] = { value: 5, label: '' }
+ListaEventoTouch[6] = { value: 6, label: '' }
+ListaEventoTouch[7] = { value: 7, label: '' }
+ListaEventoTouch[8] = { value: 8, label: '' }
+ListaEventoTouch[9] = { value: 9, label: '' }
+ListaEventoTouch[10] = { value: 10, label: 'Config' }
+ListaEventoTouch[11] = { value: 11, label: 'Home' }
+ListaEventoTouch[12] = { value: 12, label: 'Prev' }
+ListaEventoTouch[13] = { value: 13, label: 'Next' }
 
 /* Arma un Drop down listbox */
 function fillSimpleList(name, list, selected, onchange) {

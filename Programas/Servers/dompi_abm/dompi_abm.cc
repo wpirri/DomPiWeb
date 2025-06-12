@@ -76,6 +76,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	STRFunc Strf;
 
     cJSON *json_Message;
+    cJSON *json_Response;
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
     cJSON *json_row;
@@ -86,6 +87,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Id;
 	cJSON *json_Particion;
 	cJSON *json_Cloud_Message;
+	cJSON *json_Pantalla;
+	cJSON *json_Boton;
 
 	load_system_config = 0;
 	update_hw_config_id = 0;
@@ -259,10 +262,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -292,15 +299,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -324,15 +332,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -383,10 +392,14 @@ int main(/*int argc, char** argv, char** env*/void)
 								cJSON_AddStringToObject(json_row, "Clave_Cloud", "****************");
 							}
 						}
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -674,6 +687,10 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 
 					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+					}
 				}
 				cJSON_Delete(json_Message);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
@@ -698,15 +715,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -730,15 +748,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -765,10 +784,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1008,15 +1031,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1040,15 +1064,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1075,10 +1100,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1294,8 +1323,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -1415,12 +1442,18 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					if(json_Message) cJSON_Delete(json_Message);
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
-				if(json_Message) cJSON_Delete(json_Message);
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+				}
+
+				cJSON_Delete(json_Message);
+
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1459,6 +1492,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid Object\"}}");
 				}
 
+				cJSON_Delete(json_Message);
+
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -1484,15 +1519,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1516,15 +1552,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1551,10 +1588,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -1727,8 +1768,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -1793,15 +1832,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1825,15 +1865,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -1861,10 +1902,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2041,8 +2086,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -2106,15 +2149,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2138,15 +2182,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2173,10 +2218,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2354,8 +2403,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -2420,15 +2467,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2455,10 +2503,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2475,10 +2527,10 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_sysconf_get_current"))				
 			{
-				json_Message = cJSON_CreateObject();
-				cJSON_AddItemReferenceToObject(json_Message, "response", json_System_Config);
-				cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-				cJSON_Delete(json_Message);
+				json_Response = cJSON_CreateObject();
+				cJSON_AddItemReferenceToObject(json_Response, "response", json_System_Config);
+				cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+				cJSON_Delete(json_Response);
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
 				{
@@ -2618,15 +2670,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2656,15 +2709,16 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-						cJSON_Delete(json_Message);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else
 					{
-						cJSON_Delete(json_Query_Result);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
+					//cJSON_Delete(json_Query_Result);
 				}
 				else
 				{
@@ -2695,10 +2749,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -2884,8 +2942,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -2962,15 +3018,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -2996,15 +3053,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3031,10 +3089,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3170,8 +3232,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -3296,16 +3356,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-						cJSON_Delete(json_Message);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else
 					{
-						cJSON_Delete(json_Query_Result);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
+				
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3336,16 +3398,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-						cJSON_Delete(json_Message);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else
 					{
-						cJSON_Delete(json_Query_Result);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
+
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3372,10 +3436,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3512,8 +3580,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -3625,16 +3691,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-						cJSON_Delete(json_Message);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else
 					{
-						cJSON_Delete(json_Query_Result);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
+
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3665,16 +3733,18 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-						cJSON_Delete(json_Message);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
 					}
 					else
 					{
-						cJSON_Delete(json_Query_Result);
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
+
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3701,10 +3771,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -3841,8 +3915,6 @@ int main(/*int argc, char** argv, char** env*/void)
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -3946,15 +4018,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -3978,15 +4051,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4013,10 +4087,14 @@ int main(/*int argc, char** argv, char** env*/void)
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -4243,28 +4321,57 @@ int main(/*int argc, char** argv, char** env*/void)
 			**************************************************************** */
 			else if( !strcmp(fn, "dompi_touch_list"))
 			{
+				json_Message = cJSON_Parse(message);
 				message[0] = 0;
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				json_Pantalla = cJSON_GetObjectItemCaseSensitive(json_Message, "Pantalla");
 
 				json_Query_Result = cJSON_CreateArray();
-				strcpy(query, "SELECT HW.Id, HW.Dispositivo, HW.Estado "
-								"FROM TB_DOM_TOUCH AS TCH, TB_DOM_PERIF AS HW "
-								"WHERE TCH.Dispositivo = HW.Id AND TCH.Line = 1 AND TCH.Button = 1 "
-								"ORDER BY HW.Dispositivo ASC;");
+				if(json_Id)
+				{
+					if(json_Pantalla)
+					{
+						/* Viene Id y Pantalla, listado de botones */
+						sprintf(query, "SELECT T.Boton, T.Boton AS Nro, T.Texto, Evento, A.Objeto "
+							"FROM TB_DOM_TOUCH AS T, TB_DOM_ASSIGN AS A "
+							"WHERE T.Objeto = A.Id "
+							"AND T.Dispositivo = %s AND T.Pantalla = %s "
+							"ORDER BY Boton;", 
+							json_Id->valuestring, json_Pantalla->valuestring);
+					}
+					else
+					{
+						/* Si viene solo el Id, listado de pantallas */
+						sprintf(query, "SELECT Pantalla, Pantalla AS Nro, COUNT(*) AS Botones "
+							"FROM TB_DOM_TOUCH "
+							"WHERE Dispositivo = %s "
+							"GROUP BY Pantalla ORDER BY Pantalla;", json_Id->valuestring);
+					}
+				}
+				else
+				{
+					/* Si no vienen datos, listado de displays */
+					strcpy(query, "SELECT Id, Dispositivo, Direccion_IP, Estado "
+									"FROM TB_DOM_PERIF "
+									"WHERE Id > 0 AND Tipo = 5 "
+									"ORDER BY Dispositivo ASC;");
+				}
 				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 				rc = pDB->Query(json_Query_Result, query);
 				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4288,15 +4395,16 @@ int main(/*int argc, char** argv, char** env*/void)
 				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 				if(rc >= 0)
 				{
-					json_Message = cJSON_CreateObject();
-					cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-					cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
-					cJSON_Delete(json_Message);
+					json_Response = cJSON_CreateObject();
+					cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+					cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+					cJSON_Delete(json_Response);
 				}
 				else
 				{
-					cJSON_Delete(json_Query_Result);
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+				//cJSON_Delete(json_Query_Result);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4313,20 +4421,31 @@ int main(/*int argc, char** argv, char** env*/void)
 				json_Message = cJSON_Parse(message);
 				message[0] = 0;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
-				if(json_Id)
+				json_Pantalla = cJSON_GetObjectItemCaseSensitive(json_Message, "Pantalla");
+				json_Boton = cJSON_GetObjectItemCaseSensitive(json_Message, "Boton");
+
+				if(json_Id && json_Pantalla && json_Boton)
 				{
 					json_Query_Result = cJSON_CreateArray();
-					sprintf(query, "SELECT * FROM TB_DOM_TOUCH WHERE Dispositivo = %s;", json_Id->valuestring);
+					/* Viene Id, Pantalla y Boton, datos del boton */
+					sprintf(query, "SELECT * "
+						"FROM TB_DOM_TOUCH "
+						"WHERE Dispositivo = %s AND Pantalla = %s AND Boton = %s;", 
+						json_Id->valuestring, json_Pantalla->valuestring, json_Boton->valuestring);
 					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 					rc = pDB->Query(json_Query_Result, query);
 					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 					if(rc >= 0)
 					{
-						cJSON_Delete(json_Message);
-						json_Message = cJSON_CreateObject();
-						cJSON_AddItemToObject(json_Message, "response", json_Query_Result);
-						cJSON_PrintPreallocated(json_Message, message, GM_COMM_MSG_LEN, 0);
+						json_Response = cJSON_CreateObject();
+						cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+						cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+						cJSON_Delete(json_Response);
+					}
+					else
+					{
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
 				cJSON_Delete(json_Message);
@@ -4344,75 +4463,72 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_touch_add"))
 			{
 				json_Message = cJSON_Parse(message);
+				message[0] = 0;
+				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				json_Pantalla = cJSON_GetObjectItemCaseSensitive(json_Message, "Pantalla");
+				json_Boton = cJSON_GetObjectItemCaseSensitive(json_Message, "Boton");
 
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
-				query[0] = 0;
-				query_into[0] = 0;
-				query_values[0] = 0;
-
-				json_Cloud_Message = cJSON_CreateObject();
-
-				json_un_obj = json_Message;
-				while( json_un_obj )
+				if(json_Id && json_Pantalla && json_Boton)
 				{
-					/* Voy hasta el elemento con datos */
-					if(json_un_obj->type == cJSON_Object)
+					sprintf(query, "INSERT INTO TB_DOM_TOUCH(Dispositivo, Pantalla, Boton) "
+									"VALUES(%s,%s,%s);", 
+									json_Id->valuestring,
+									json_Pantalla->valuestring,
+									json_Boton->valuestring);
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
 					{
-						json_un_obj = json_un_obj->child;
+						json_Query_Result = cJSON_CreateArray();
+
+						if(atoi(json_Boton->valuestring) > 1)
+						{
+							/* Listado de botones */
+							sprintf(query, "SELECT T.Boton, T.Boton AS Nro, T.Texto, Evento, A.Objeto "
+								"FROM TB_DOM_TOUCH AS T, TB_DOM_ASSIGN AS A "
+								"WHERE T.Objeto = A.Id "
+								"AND T.Dispositivo = %s AND T.Pantalla = %s "
+								"ORDER BY Boton;", 
+								json_Id->valuestring, json_Pantalla->valuestring);
+						}
+						else
+						{
+							/* Listado de pantallas */
+							sprintf(query, "SELECT Pantalla, Pantalla AS Nro, COUNT(*) AS Botones "
+								"FROM TB_DOM_TOUCH "
+								"WHERE Dispositivo = %s "
+								"GROUP BY Pantalla ORDER BY Pantalla;", json_Id->valuestring);
+						}
+
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						rc = pDB->Query(json_Query_Result, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							json_Response = cJSON_CreateObject();
+							cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+							cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+							cJSON_Delete(json_Response);
+						}
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+						}
 					}
 					else
 					{
-						if(json_un_obj->type == cJSON_String)
-						{
-							if(json_un_obj->string && json_un_obj->valuestring)
-							{
-								if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
-								{
-									if(ExcluirDeABM(json_un_obj->string) == 0)
-									{
-										/* Dato */
-										if(strlen(query_into) == 0)
-										{
-											strcpy(query_into, "(");
-										}
-										else
-										{
-											strcat(query_into, ",");
-										}
-										strcat(query_into, json_un_obj->string);
-										/* Valor */
-										if(strlen(query_values) == 0)
-										{
-											strcpy(query_values, "(");
-										}
-										else
-										{
-											strcat(query_values, ",");
-										}
-										strcat(query_values, "'");
-										strcat(query_values, json_un_obj->valuestring);
-										strcat(query_values, "'");
-									}
-								}
-							}
-						}
-						json_un_obj = json_un_obj->next;
+						strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 					}
 				}
-				cJSON_Delete(json_Message);
-
-				strcat(query_into, ")");
-				strcat(query_values, ")");
-
-				sprintf(query, "INSERT INTO TB_DOM_TOUCH %s VALUES %s;", query_into, query_values);
-				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-				rc = pDB->Query(NULL, query);
-				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-				if(rc <= 0)
+				else
 				{
-					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+					strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 				}
+
+				cJSON_Delete(json_Message);
 
 				m_pServer->m_pLog->Add(90, "%s:(R)[%s]", fn, message);
 				if(m_pServer->Resp(message, strlen(message), GME_OK) != GME_OK)
@@ -4420,8 +4536,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					/* error al responder */
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
-				cJSON_Delete(json_Cloud_Message);
-
 			}
 			/* ****************************************************************
 			*		dompi_touch_delete
@@ -4429,26 +4543,83 @@ int main(/*int argc, char** argv, char** env*/void)
 			else if( !strcmp(fn, "dompi_touch_delete"))
 			{
 				json_Message = cJSON_Parse(message);
-				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+				message[0] = 0;
 				json_Id = cJSON_GetObjectItemCaseSensitive(json_Message, "Id");
+				json_Pantalla = cJSON_GetObjectItemCaseSensitive(json_Message, "Pantalla");
+				json_Boton = cJSON_GetObjectItemCaseSensitive(json_Message, "Boton");
+
+				strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
+
 				if(json_Id)
 				{
-					if( atoi(json_Id->valuestring) != 0 )
+					if(json_Pantalla)
 					{
-						sprintf(query, "DELETE FROM TB_DOM_TOUCH WHERE Dispositivo = %s;", json_Id->valuestring);
-						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-						rc = pDB->Query(NULL, query);
-						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-						if(rc <= 0)
+						if(json_Boton)
 						{
-							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Database Error\"}}");
+							sprintf(query, "DELETE FROM TB_DOM_TOUCH "
+									"WHERE Dispositivo = %s AND Pantalla = %s AND Boton = %s;", 
+									json_Id->valuestring,
+									json_Pantalla->valuestring,
+									json_Boton->valuestring);
+						}
+						else
+						{
+							sprintf(query, "DELETE FROM TB_DOM_TOUCH "
+									"WHERE Dispositivo = %s AND Pantalla = %s;", 
+									json_Id->valuestring,
+									json_Pantalla->valuestring);
 						}
 					}
 					else
 					{
-						strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Invalid User\"}}");
+						sprintf(query, "DELETE FROM TB_DOM_TOUCH "
+								"WHERE Dispositivo = %s;", json_Id->valuestring);
 					}
+					m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+					rc = pDB->Query(NULL, query);
+					m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+					if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+					if(rc >= 0)
+					{
+						if(json_Boton)
+						{
+							/* Viene Id y Pantalla, listado de botones */
+							sprintf(query, "SELECT T.Boton, T.Boton AS Nro, T.Texto, Evento, A.Objeto "
+								"FROM TB_DOM_TOUCH AS T, TB_DOM_ASSIGN AS A "
+								"WHERE T.Objeto = A.Id "
+								"AND T.Dispositivo = %s AND T.Pantalla = %s "
+								"ORDER BY Boton;", 
+								json_Id->valuestring, json_Pantalla->valuestring);
+						}
+						else
+						{
+							/* Si viene solo el Id, listado de pantallas */
+							sprintf(query, "SELECT Pantalla, Pantalla AS Nro, COUNT(*) AS Botones "
+								"FROM TB_DOM_TOUCH "
+								"WHERE Dispositivo = %s "
+								"GROUP BY Pantalla ORDER BY Pantalla;", json_Id->valuestring);
+						}
+						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+						json_Query_Result = cJSON_CreateArray();
+						rc = pDB->Query(json_Query_Result, query);
+						m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+						if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+						if(rc >= 0)
+						{
+							json_Response = cJSON_CreateObject();
+							cJSON_AddItemToObject(json_Response, "response", json_Query_Result);
+							cJSON_PrintPreallocated(json_Response, message, GM_COMM_MSG_LEN, 0);
+							cJSON_Delete(json_Response);
+						}
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+						}
+					}
+				}
+				else
+				{
+					strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Faltan Datos\"}}");
 				}
 
 				cJSON_Delete(json_Message);
@@ -4473,8 +4644,6 @@ int main(/*int argc, char** argv, char** env*/void)
 				query_values[0] = 0;
 				query_where[0] = 0;
 
-				json_Cloud_Message = cJSON_CreateObject();
-
 				json_un_obj = json_Message;
 				while( json_un_obj )
 				{
@@ -4493,14 +4662,18 @@ int main(/*int argc, char** argv, char** env*/void)
 								{
 									if(ExcluirDeABM(json_un_obj->string) == 0)
 									{
-										if( !strcmp(json_un_obj->string, "Id") )
+										if( !strcmp(json_un_obj->string, "Dispositivo") ||
+											!strcmp(json_un_obj->string, "Pantalla") ||
+											!strcmp(json_un_obj->string, "Boton")  )
 										{
-											strcpy(query_where, json_un_obj->string);
+											if(strlen(query_where) > 0)
+											{
+												strcat(query_where, " AND ");
+											}
+											strcat(query_where, json_un_obj->string);
 											strcat(query_where, "='");
 											strcat(query_where, json_un_obj->valuestring);
 											strcat(query_where, "'");
-
-											strcpy(hw_id, json_un_obj->valuestring);
 										}
 										else
 										{
@@ -4550,7 +4723,6 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				cJSON_Delete(json_Cloud_Message);
 			}
 
 

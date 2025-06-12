@@ -43,6 +43,7 @@ using namespace std;
 CGMServerWait *m_pServer;
 DPConfig *pConfig;
 int internal_timeout;
+char www_root[FILENAME_MAX+1];
 CDB *pDB;
 GEvent *pEV;
 cJSON *json_System_Config;
@@ -55,6 +56,7 @@ time_t last_daily;
 
 void OnClose(int sig);
 void LoadSystemConfig(void);
+void BuildTouchConfig( void );
 
 /*                            11111111112222222222333333333344444444445555555555666666666677777777778
                      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
@@ -189,6 +191,9 @@ int main(/*int argc, char** argv, char** env*/void)
 		internal_timeout = atoi(s) * 1000;
 	}
 
+	strcpy(www_root, "/var/www/html");
+	pConfig->GetParam("WWW-ROOT", www_root);
+
 	//m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s...", db_filename);
 	//pDB = new CDB(db_filename);
 	m_pServer->m_pLog->Add(10, "Conectando a la base de datos %s en %s ...", db_name, db_host);
@@ -259,11 +264,11 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "listar") || !strcmp(comando, "list"))
 						{
-							/* TODO: Completar comando listar */
+							/* TODO: Completar comando listar (grupo y eventos) */
 							if( !memcmp(objeto, "dis", 3))
 							{
 								listado[0] = 0;
-								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP "
+								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP, Estado "
 												"FROM TB_DOM_PERIF "
 												"ORDER BY Dispositivo ASC;");
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -274,8 +279,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								if(rc >= 0)
 								{	/*                         11111111112222222222333333333344444444445555555555 */
 									/*               012345678901234567890123456789012345678901234567890123456789  */
-									/*               _______________________________ c8c9a34a61a0 000.000.000.000  */
-									strcpy(listado, " Nombre MAC IP\n"); 
+									/*WiFi-01-4a61af                 c8c9a34a61af 192.168.10.174  **/
+					 strcpy(listado, "> Nombre                       MAC          IP          En Linea\n"); 
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 									{
@@ -285,15 +290,16 @@ int main(/*int argc, char** argv, char** env*/void)
 											json_Dispositivo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Dispositivo");
 											json_MAC = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "MAC");
 											json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Direccion_IP");
-											if(json_Dispositivo && json_MAC && json_Direccion_IP)
+											json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
+											if(json_Dispositivo && json_MAC && json_Direccion_IP && json_Estado)
 											{
 												if(atoi(json_Id->valuestring))
 												{
-													sprintf(&listado[strlen(listado)], "%-30.30s %12.12s %-15.15s\n", 
-														json_Dispositivo->valuestring, json_MAC->valuestring, json_Direccion_IP->valuestring);
+													sprintf(&listado[strlen(listado)], "%-30.30s %12.12s %-15.15s %c\n", 
+														json_Dispositivo->valuestring, json_MAC->valuestring,
+														json_Direccion_IP->valuestring, (atoi(json_Estado->valuestring)?'*':' '));
 												}
 											}
-												
 										}
 									}
 								}
@@ -313,7 +319,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								if(rc >= 0)
 								{	/*                         11111111112222222222333333333344444444445555555555 */
 									/*               012345678901234567890123456789012345678901234567890123456789  */
-									strcpy(listado, "             Nombre                     Tipo Estado\n"); 
+									strcpy(listado, "> Nombre                                  Tipo  Estado\n"); 
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 									{
@@ -327,7 +333,7 @@ int main(/*int argc, char** argv, char** env*/void)
 											{
 												if(atoi(json_Id->valuestring))
 												{
-													sprintf(&listado[strlen(listado)], "%-40.40s %3s %5s\n", 
+													sprintf(&listado[strlen(listado)], "%-40.40s %3s  %5s\n", 
 														json_Objeto->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
 												}
 											}
@@ -350,8 +356,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						else if( !strcmp(comando, "manten") )
 						{
 							/* TODO: Hacer algún mantenimiento si es necesario */
-							m_pServer->m_pLog->Add(100, "[manten] Mantenimiento de la base de datos.");
-							if(pDB) pDB->Manten();
+							BuildTouchConfig();
 
 						}
 						else if( !strcmp(comando, "sms") )
@@ -731,4 +736,236 @@ void LoadSystemConfig(void)
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 	if(rc >= 0) m_pServer->m_pLog->Add(1, "[LoadSystemConfig] Lectura de configuracion OK.");
+}
+
+
+	/*
+		# FONDO,[color]
+		# BOTON_CUADRADO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]
+		# BOTON_REDONDO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]
+		#
+		# etiqueta: Texto que aparece en el botón (opcopnal)
+		# comando: SWITCH, PULSE, CONFIG, HOME, NEXT, PREV
+		# objeto: 
+		# x: posición X de la esquina superior derecha del botón
+		# y: posición Y de la esquina superior derecha del botón
+		# w: Ancho del botón
+		# h: altura del botón
+		# color fondo: 0 a 65535
+		# color borde: 0 a 65535
+		# color etiqueta: 0 a 65535
+		# icono: archivo BMP de 48x48 pixel (opcopnal)
+		# orientacion: 0 = Horizontal, 1 = Vertical
+		# 
+		FONDO,0
+		BOTON_REDONDO,,SWITCH:Luz Comedor,5,5,230,250,0,768,58624,power.bmp,0
+		# -----------------------------------------------------------------------------
+		#BOTON_CUADRADO,,PREV,20,260,60,60,0,0,0,prev.bmp,0
+		BOTON_CUADRADO,,CONFIG,20,260,60,60,0,0,0,gear.bmp,0
+		#BOTON_CUADRADO,,HOME,90,260,60,60,0,0,0,home.bmp,0
+		BOTON_CUADRADO,,NEXT,160,260,60,60,0,0,0,next.bmp,0
+	*/
+void BuildTouchConfig( void )
+{
+	int rc;
+	char query[4096];
+	int disp, pant, last_disp = (-1), last_pant = (-1);
+	FILE* f = nullptr;
+	char display_path[FILENAME_MAX+1];
+	char file_name[FILENAME_MAX+1];
+	char cmd[FILENAME_MAX+1];
+	char evento[256];
+	char texto[256];
+	char objeto[256];
+	char icono[256];
+
+
+	cJSON* jsQueryRes;
+	cJSON* jsQueryRow;
+
+	cJSON* jsMAC;
+	cJSON* jsDestino;
+	cJSON* jsDispositivo;
+	cJSON* jsPantalla;
+//	cJSON* jsBoton;
+	cJSON* jsEvento;
+	cJSON* jsObjeto;
+	cJSON* jsX;
+	cJSON* jsY;
+	cJSON* jsW;
+	cJSON* jsH;
+	cJSON* jsRedondo;
+	cJSON* jsTexto;
+	cJSON* jsIcono;
+	cJSON* jsColor_pantalla;
+	cJSON* jsColor_borde;
+	cJSON* jsColor_fondo;
+	cJSON* jsColor_texto;
+	cJSON* jsOrientacion;
+
+	m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Inicio");
+
+	jsQueryRes = cJSON_CreateArray();
+	sprintf(query, "SELECT T.*, P.MAC, A.Objeto AS Destino "
+					"FROM TB_DOM_TOUCH AS T, TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+					"WHERE T.Dispositivo > 0 AND T.Dispositivo = P.Id AND T.Objeto = A.Id;");
+	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+	rc = pDB->Query(jsQueryRes, query);
+	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+	if(rc >= 0)
+	{
+		cJSON_ArrayForEach(jsQueryRow, jsQueryRes)
+		{
+			jsMAC = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "MAC");
+			jsDestino = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Destino");
+			jsDispositivo = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Dispositivo");
+			jsPantalla = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Pantalla");
+//			jsBoton = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Boton");
+			jsEvento = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Evento");
+			jsObjeto = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Objeto");
+			jsX = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "X");
+			jsY = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Y");
+			jsW = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "W");
+			jsH = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "H");
+			jsRedondo = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Redondo");
+			jsTexto = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Texto");
+			jsIcono = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Icono");
+			jsColor_pantalla = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Color_pantalla");
+			jsColor_borde = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Color_borde");
+			jsColor_fondo = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Color_fondo");
+			jsColor_texto = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Color_texto");
+			jsOrientacion = cJSON_GetObjectItemCaseSensitive(jsQueryRow, "Orientacion");
+
+			disp = atoi(jsDispositivo->valuestring);
+			pant = atoi(jsPantalla->valuestring);
+			if(disp != last_disp)
+			{
+				if(f) fclose(f);
+				f = nullptr;
+				last_disp = disp;
+				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Armando configuracion de display [%s]", jsMAC->valuestring);
+				sprintf(display_path, "%s/download/touch/%s", www_root, jsMAC->valuestring);
+				sprintf(cmd, "mkdir -p %s", display_path);
+				rc = system(cmd);
+				if(rc)
+				{
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
+				}
+
+			}
+			if(pant != last_pant)
+			{
+				if(f) fclose(f);
+				f = nullptr;
+				last_pant = pant;
+				sprintf(file_name, "%s/screen%i.csv", display_path, pant);
+				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Generando archivo [%s]", file_name);
+				f = fopen(file_name, "w");
+				if(f == nullptr)
+				{
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR al abrir el archivo [%s]", file_name);
+					break;
+				}
+				fprintf(f, "## Archivo: screen%i.csv\n", pant);
+				fprintf(f, "# FONDO,[color]\n");
+				fprintf(f, "# BOTON_CUADRADO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]\n");
+				fprintf(f, "# BOTON_REDONDO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]\n");
+				fprintf(f, "#\n");
+				fprintf(f, "# etiqueta: Texto que aparece en el botón (opcopnal)\n");
+				fprintf(f, "# comando: SWITCH, PULSE, CONFIG, HOME, NEXT, PREV\n");
+				fprintf(f, "# objeto: \n");
+				fprintf(f, "# x: posición X de la esquina superior derecha del botón\n");
+				fprintf(f, "# y: posición Y de la esquina superior derecha del botón\n");
+				fprintf(f, "# w: Ancho del botón\n");
+				fprintf(f, "# h: altura del botón\n");
+				fprintf(f, "# color fondo: 0 a 65535\n");
+				fprintf(f, "# color borde: 0 a 65535\n");
+				fprintf(f, "# color etiqueta: 0 a 65535\n");
+				fprintf(f, "# icono: archivo BMP de 48x48 pixel (opcopnal)\n");
+				fprintf(f, "# orientacion: 0 = Horizontal, 1 = Vertical\n");
+				fprintf(f, "#\n");
+				fprintf(f, "FONDO,%s\n", jsColor_pantalla->valuestring);
+				fprintf(f, "#\n");
+			}
+			switch(atoi(jsEvento->valuestring))
+			{
+				case 0: /* Nada */
+					evento[0] = 0;
+					break;
+				case 1: /* On */
+					strcpy(evento, "ON");
+					break;
+				case 2: /* Off */
+					strcpy(evento, "OFF");
+					break;
+				case 3: /* Switch */
+					strcpy(evento, "SWITCH");
+					break;
+				case 4: /* Pulsp */
+					strcpy(evento, "PULSE");
+					break;
+				case 10: /* Config */
+					strcpy(evento, "CONFIG");
+					break;
+				case 11: /* Home */
+					strcpy(evento, "HOME");
+					break;
+				case 12: /* Prev */
+					strcpy(evento, "PREV");
+					break;
+				case 13: /* Next */
+					strcpy(evento, "NEXT");
+					break;
+				default:
+					evento[0] = 0;
+					break;
+			}
+			/*
+			# BOTON_CUADRADO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]
+			# BOTON_REDONDO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]
+			*/
+			if( !strcmp(jsTexto->valuestring, "NULL"))
+			{
+				texto[0] = 0;
+			}
+			else
+			{
+				strcpy(texto, jsTexto->valuestring);
+			}
+
+			if(atoi(jsObjeto->valuestring))
+			{
+				strcpy(objeto, ":");
+				strcat(objeto, jsDestino->valuestring); 
+			}
+			else
+			{
+				objeto[0] = 0;
+			}
+
+			if( !strcmp(jsIcono->valuestring, "NULL"))
+			{
+				icono[0] = 0;
+			}
+			else
+			{
+				strcpy(icono, jsIcono->valuestring);
+			}
+
+			m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Agregando boton [%s %s%s]", texto, evento, objeto);
+			fprintf(f, "BOTON_%s,%s,%s%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+				(atoi(jsRedondo->valuestring))?"REDONDO":"CUADRADO",
+				texto, evento, objeto,
+				jsX->valuestring, jsY->valuestring, jsW->valuestring, jsH->valuestring,
+				jsColor_fondo->valuestring, jsColor_borde->valuestring, jsColor_texto->valuestring,
+				icono, jsOrientacion->valuestring);
+
+		}
+		if(f) fclose(f);
+	}
+
+	cJSON_Delete(jsQueryRes);
+
+	m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Fin");
 }

@@ -203,18 +203,18 @@ body {
 	border: 3px solid pink;
 	}
 
-#btn-config-touch {
+#btn-config-dummy3 {
 	left: 95px; 
 	top: 265px; 
 	background: black;
 	border: 3px solid green;
 	}
 
-#btn-config-dummy3 {
+#btn-config-touch {
 	left: 255px; 
 	top: 265px; 
-	background: black;
-	border: 3px solid gray;
+	background: green;
+	border: 3px solid lightgreen;
 	}
 	
 #btn-config-alarm {

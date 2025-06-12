@@ -645,7 +645,7 @@ int GEvent::CheckEvent(int hw_id, const char* port, int estado)
                 cJSON_Delete(json_AssignArray);
                 return (-1);
             }
-            m_pServer->m_pLog->Add(20, "[CheckEvent] Assign: Ass: %s Typ: %s", Assign_Nombre->valuestring, Assign_Tipo->valuestring);
+            m_pServer->m_pLog->Add(20, "[CheckEvent] Evento: Ass: %s Typ: %s Estado: %i", Assign_Nombre->valuestring, Assign_Tipo->valuestring, estado);
 
             if( atoi(Assign_Tipo->valuestring) == 3 || atoi(Assign_Tipo->valuestring) == 4 )
             {
