@@ -805,7 +805,7 @@ void BuildTouchConfig( void )
 	cJSON* jsColor_texto;
 	cJSON* jsOrientacion;
 
-	m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Inicio");
+	m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Inicio");
 
 	jsQueryRes = cJSON_CreateArray();
 	sprintf(query, "SELECT T.*, P.MAC, A.Objeto AS Destino "
@@ -846,9 +846,10 @@ void BuildTouchConfig( void )
 				if(f) fclose(f);
 				f = nullptr;
 				last_disp = disp;
-				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Armando configuracion de display [%s]", jsMAC->valuestring);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Armando archivos de pantalla para [%s]", jsMAC->valuestring);
 				sprintf(display_path, "%s/download/touch/%s", www_root, jsMAC->valuestring);
 				sprintf(cmd, "mkdir -p %s", display_path);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
 				rc = system(cmd);
 				if(rc)
 				{
@@ -858,7 +859,7 @@ void BuildTouchConfig( void )
 				/* Abro el listado de patallas */
 				if(f_list) fclose(f_list);
 				sprintf(file_name, "%s/screen.lst", display_path);
-				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Generando listado de pantallas [%s]", file_name);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando listado de pantallas [%s]", file_name);
 				f_list = fopen(file_name, "w");
 				if(f_list == nullptr)
 				{
@@ -877,7 +878,7 @@ void BuildTouchConfig( void )
 				strcpy(file_name, display_path);
 				strcat(file_name, "/");
 				strcat(file_name, screen_name);
-				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Generando archivo [%s]", file_name);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando archivo de pantalla [%s]", file_name);
 				f = fopen(file_name, "w");
 				if(f == nullptr)
 				{
@@ -885,6 +886,7 @@ void BuildTouchConfig( void )
 					break;
 				}
 				/* Agrego la pantalla al listado */
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Agregando pantalla [%s] a listado", screen_name);
 				fprintf(f_list, "%s\n", screen_name);
 				/* Agrego la cabecera a la pantalla */
 				fprintf(f, "## Archivo: screen%i.csv\n", pant);
@@ -971,6 +973,21 @@ void BuildTouchConfig( void )
 			else
 			{
 				strcpy(icono, jsIcono->valuestring);
+			}
+
+			if(strlen(icono))
+			{
+				/* Agrego el icono al listado */
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Agregando icono [%s] a listado", icono);
+				fprintf(f_list, "%s\n", icono);
+				/* copio el icono al directorio del display */
+				sprintf(cmd, "cp %s/download/touch/%s %s/download/touch/%s/", www_root, icono, www_root, jsMAC->valuestring);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
+				rc = system(cmd);
+				if(rc)
+				{
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
+				}
 			}
 
 			m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Agregando boton [%s %s%s]", texto, evento, objeto);
