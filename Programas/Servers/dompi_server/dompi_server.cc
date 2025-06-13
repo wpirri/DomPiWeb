@@ -1725,7 +1725,7 @@ void AssignTask( void )
 									json_Objeto->valuestring, json_Estado->valuestring);
 			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 			/* Me fijo si es estado o pulso */
-			if( strcmp(json_Tipo_ASS->valuestring, "5"))
+			if( !strcmp(json_Tipo_ASS->valuestring, "5"))
 			{	/* Pulso */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
 				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
