@@ -357,7 +357,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						{
 							/* TODO: Hacer algún mantenimiento si es necesario */
 							BuildTouchConfig();
-
+							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"BuildTouchConfig ejecutado\"}}");
 						}
 						else if( !strcmp(comando, "sms") )
 						{
@@ -771,7 +771,9 @@ void BuildTouchConfig( void )
 	char query[4096];
 	int disp, pant, last_disp = (-1), last_pant = (-1);
 	FILE* f = nullptr;
+	FILE* f_list = nullptr;
 	char display_path[FILENAME_MAX+1];
+	char screen_name[FILENAME_MAX+1];
 	char file_name[FILENAME_MAX+1];
 	char cmd[FILENAME_MAX+1];
 	char evento[256];
@@ -853,13 +855,28 @@ void BuildTouchConfig( void )
 					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
 				}
 
+				/* Abro el listado de patallas */
+				if(f_list) fclose(f_list);
+				sprintf(file_name, "%s/screen.lst", display_path);
+				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Generando listado de pantallas [%s]", file_name);
+				f_list = fopen(file_name, "w");
+				if(f_list == nullptr)
+				{
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR al abrir el listado de pantallas [%s]", file_name);
+					break;
+				}
+
 			}
 			if(pant != last_pant)
 			{
+				/* Abro el archivo de pantalla */
 				if(f) fclose(f);
 				f = nullptr;
 				last_pant = pant;
-				sprintf(file_name, "%s/screen%i.csv", display_path, pant);
+				sprintf(screen_name, "screen%i.csv", pant);
+				strcpy(file_name, display_path);
+				strcat(file_name, "/");
+				strcat(file_name, screen_name);
 				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] Generando archivo [%s]", file_name);
 				f = fopen(file_name, "w");
 				if(f == nullptr)
@@ -867,6 +884,9 @@ void BuildTouchConfig( void )
 					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR al abrir el archivo [%s]", file_name);
 					break;
 				}
+				/* Agrego la pantalla al listado */
+				fprintf(f_list, "%s\n", screen_name);
+				/* Agrego la cabecera a la pantalla */
 				fprintf(f, "## Archivo: screen%i.csv\n", pant);
 				fprintf(f, "# FONDO,[color]\n");
 				fprintf(f, "# BOTON_CUADRADO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]\n");
@@ -963,6 +983,7 @@ void BuildTouchConfig( void )
 
 		}
 		if(f) fclose(f);
+		if(f_list) fclose(f_list);
 	}
 
 	cJSON_Delete(jsQueryRes);
