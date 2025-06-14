@@ -22,7 +22,6 @@ INSERT INTO TB_DOM_CONFIG (id, Creacion, System_Key, Cloud_Host_1_Address, Cloud
 INSERT INTO TB_DOM_AUTO (Id, Objeto, Tipo) VALUES(0,'Ninguno',1);
 INSERT INTO TB_DOM_AT (Id, Agenda, Objeto_Destino, Grupo_Destino, Variable_Destino) VALUES (0,'Ninguna', 0, 0, 0);
 INSERT INTO TB_DOM_CAMARA (Id, Nombre) VALUES (0, 'Ninguna');
-INSERT INTO TB_DOM_TOUCH(Dispositivo, Pantalla, Boton) VALUES (0, 0, 0);
 
 CREATE USER 'dompi_web'@'%' IDENTIFIED BY 'dompi_web'; 
 GRANT SELECT, INSERT, UPDATE, DELETE ON DB_DOMPIWEB.* TO 'dompi_web'@'%' WITH GRANT OPTION;

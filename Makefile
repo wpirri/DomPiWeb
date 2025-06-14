@@ -32,20 +32,7 @@ installer:
 
 	cp -av Programas/Html/* $(RUN_HOME)/html/
 	rm $(RUN_HOME)/html/Makefile
-	cp Programas/Clientes/abmalarma.cgi/$(PROG)/abmalarma.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmassign.cgi/$(PROG)/abmassign.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmat.cgi/$(PROG)/abmat.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmauto.cgi/$(PROG)/abmauto.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmcamara.cgi/$(PROG)/abmcamara.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmev.cgi/$(PROG)/abmev.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmgroup.cgi/$(PROG)/abmgroup.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmhw.cgi/$(PROG)/abmhw.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmsys.cgi/$(PROG)/abmsys.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/abmuser.cgi/$(PROG)/abmuser.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/infoio.cgi/$(PROG)/infoio.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/statusio.cgi/$(PROG)/statusio.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/gmonitor_get_saf.cgi/$(PROG)/gmonitor_get_saf.cgi $(RUN_HOME)/cgi/
-	cp Programas/Clientes/dompi_mobile.cgi/$(PROG)/dompi_mobile.cgi $(RUN_HOME)/cgi/
+	cp Programas/Clientes/*.cgi/$(PROG)/*.cgi $(RUN_HOME)/cgi/
 
 	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/ioconfig.cgi/$(PROG)/ioconfig.cgi $(RUN_HOME)/cgi/ )
 	$(if $(findstring arm,$(ARQ)) , cp Programas/Clientes/iostatus.cgi/$(PROG)/iostatus.cgi $(RUN_HOME)/cgi/ )
