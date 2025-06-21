@@ -437,6 +437,8 @@ int main(/*int argc, char** argv, char** env*/void)
 								objeto: nombre de un periferico
 								parametro: nombre de archivo 
 							 */
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+
 							json_arr_Perif = cJSON_CreateArray();
 							sprintf(query, "SELECT * "
 											"FROM TB_DOM_PERIF "
@@ -476,6 +478,7 @@ int main(/*int argc, char** argv, char** env*/void)
 											m_pServer->Notify("dompi_hw_send_command", message, strlen(message));
 										}
 										cJSON_Delete(json_Command);
+										strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 									}
 								}
 							}
@@ -487,7 +490,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								objeto: nombre de un periferico
 								parametro: parametro=valor 
 							 */
-							json_arr_Perif = cJSON_CreateArray();
+							strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+
+						 	json_arr_Perif = cJSON_CreateArray();
 							sprintf(query, "SELECT * "
 											"FROM TB_DOM_PERIF "
 											"WHERE Dispositivo = \'%s\'; ", objeto);
@@ -526,6 +531,7 @@ int main(/*int argc, char** argv, char** env*/void)
 											m_pServer->Notify("dompi_hw_send_config", message, strlen(message));
 										}
 										cJSON_Delete(json_Command);
+										strcpy(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"Ok\"}}");
 									}
 								}
 							}
@@ -644,6 +650,10 @@ int main(/*int argc, char** argv, char** env*/void)
 									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 								}
 							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+							}
 						}
 						else if( !strcmp(comando, "desactivar") )
 						{
@@ -658,6 +668,10 @@ int main(/*int argc, char** argv, char** env*/void)
 									strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
 								}
 							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+							}
 						}
 						else if( !strcmp(comando, "estado") )
 						{
@@ -665,6 +679,16 @@ int main(/*int argc, char** argv, char** env*/void)
 							{
 								pEV->Estado_Alarma(parametro, message, GM_COMM_MSG_LEN);
 							}
+							else
+							{
+								strcpy(message, "{\"response\":{\"resp_code\":\"1\", \"resp_msg\":\"Error\"}}");
+							}
+						}
+
+
+						else
+						{
+							strcpy(message, "{\"response\":{\"resp_code\":\"2\", \"resp_msg\":\"Comando desconocido\"}}");
 						}
 					}
 				}
@@ -785,7 +809,8 @@ void BuildTouchConfig( void )
 	char texto[256];
 	char objeto[256];
 	char icono[256];
-
+	time_t t;
+	struct tm *p_tm;
 
 	cJSON* jsQueryRes;
 	cJSON* jsQueryRow;
@@ -812,6 +837,8 @@ void BuildTouchConfig( void )
 
 	m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Inicio");
 
+	t = time(&t);
+	p_tm = localtime(&t);
 	jsQueryRes = cJSON_CreateArray();
 	sprintf(query, "SELECT T.*, P.MAC, A.Objeto AS Destino "
 					"FROM TB_DOM_TOUCH AS T, TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
@@ -861,6 +888,14 @@ void BuildTouchConfig( void )
 					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
 				}
 
+				sprintf(cmd, "chmod 0777 %s", display_path);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
+				rc = system(cmd);
+				if(rc)
+				{
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
+				}
+
 				/* Abro el listado de patallas */
 				if(f_list) fclose(f_list);
 				sprintf(file_name, "%s/screen.lst", display_path);
@@ -895,6 +930,9 @@ void BuildTouchConfig( void )
 				fprintf(f_list, "%s\n", screen_name);
 				/* Agrego la cabecera a la pantalla */
 				fprintf(f, "## Archivo: screen%i.csv\n", pant);
+				fprintf(f, "## Creado: %04d/%02d/%02d %02d:%02d:%02d\n", 
+					p_tm->tm_year+1900, p_tm->tm_mon+1, p_tm->tm_mday, p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec);
+				fprintf(f, "#\n");
 				fprintf(f, "# FONDO,[color]\n");
 				fprintf(f, "# BOTON_CUADRADO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]\n");
 				fprintf(f, "# BOTON_REDONDO,[etiqueta],[comando:objeto],[x],[y],[w],[h],[color fondo],[color borde],[color etiqueta],[icono],[orientacion]\n");
