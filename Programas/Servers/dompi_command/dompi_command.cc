@@ -803,6 +803,8 @@ void BuildTouchConfig( void )
 	FILE* f_list = nullptr;
 	char display_path[FILENAME_MAX+1];
 	char screen_name[FILENAME_MAX+1];
+	char tmp_file_name[FILENAME_MAX+1];
+	char list_file_name[FILENAME_MAX+1];
 	char file_name[FILENAME_MAX+1];
 	char cmd[FILENAME_MAX+1];
 	char evento[256];
@@ -837,12 +839,15 @@ void BuildTouchConfig( void )
 
 	m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Inicio");
 
+	tmp_file_name[0] = 0;
+	list_file_name[0] = 0;
 	t = time(&t);
 	p_tm = localtime(&t);
 	jsQueryRes = cJSON_CreateArray();
 	sprintf(query, "SELECT T.*, P.MAC, A.Objeto AS Destino "
 					"FROM TB_DOM_TOUCH AS T, TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-					"WHERE T.Dispositivo > 0 AND T.Dispositivo = P.Id AND T.Objeto = A.Id;");
+					"WHERE T.Dispositivo > 0 AND T.Dispositivo = P.Id AND T.Objeto = A.Id "
+					"ORDER BY T.Dispositivo;");
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 	rc = pDB->Query(jsQueryRes, query);
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -875,10 +880,9 @@ void BuildTouchConfig( void )
 			pant = atoi(jsPantalla->valuestring);
 			if(disp != last_disp)
 			{
-				if(f) fclose(f);
-				f = nullptr;
 				last_disp = disp;
 				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Armando archivos de pantalla para [%s]", jsMAC->valuestring);
+				/* Creando directorio */
 				sprintf(display_path, "%s/download/touch/%s", www_root, jsMAC->valuestring);
 				sprintf(cmd, "mkdir -p %s", display_path);
 				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
@@ -887,7 +891,6 @@ void BuildTouchConfig( void )
 				{
 					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
 				}
-
 				sprintf(cmd, "chmod 0777 %s", display_path);
 				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
 				rc = system(cmd);
@@ -895,19 +898,40 @@ void BuildTouchConfig( void )
 				{
 					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
 				}
+				
+				/* Si quedó un screen abierto lo cierro */
+				if(f) fclose(f);
+				f = nullptr;
 
+				/* Cierro el listado anterior si lo hay */
+				if(f_list)
+				{
+					fclose(f_list);
+					f_list = nullptr;
+					/* ordeno y elimino duplicados */
+					m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando listado ordenado [%s]", list_file_name);
+					sprintf(cmd, "sort %s | uniq > %s", tmp_file_name, list_file_name);
+					m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
+					rc = system(cmd);
+					if(rc)
+					{
+						m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
+					}
+
+				}
 				/* Abro el listado de patallas */
-				if(f_list) fclose(f_list);
-				sprintf(file_name, "%s/screen.lst", display_path);
-				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando listado de pantallas [%s]", file_name);
-				f_list = fopen(file_name, "w");
+				sprintf(tmp_file_name, "%s/screen.tmp", display_path);
+				sprintf(list_file_name, "%s/screen.lst", display_path);
+				m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando listado de pantallas [%s]", tmp_file_name);
+				f_list = fopen(tmp_file_name, "w");
 				if(f_list == nullptr)
 				{
-					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR al abrir el listado de pantallas [%s]", file_name);
+					m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR al abrir el listado de pantallas [%s]", tmp_file_name);
 					break;
 				}
 
 			}
+
 			if(pant != last_pant)
 			{
 				/* Abro el archivo de pantalla */
@@ -1042,8 +1066,24 @@ void BuildTouchConfig( void )
 				icono, jsOrientacion->valuestring);
 
 		}
+		/* cierro el último screenN.csv */
 		if(f) fclose(f);
-		if(f_list) fclose(f_list);
+		/* Cierro el listado anterior si lo hay */
+		if(f_list)
+		{
+			fclose(f_list);
+			f_list = nullptr;
+			/* ordeno y elimino duplicados */
+			m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Generando listado ordenado [%s]", list_file_name);
+			sprintf(cmd, "sort %s | uniq > %s", tmp_file_name, list_file_name);
+			m_pServer->m_pLog->Add(20, "[BuildTouchConfig] Ejecutando [%s]", cmd);
+			rc = system(cmd);
+			if(rc)
+			{
+				m_pServer->m_pLog->Add(1, "[BuildTouchConfig] ERROR [%i] al ejecutar [%s]", rc, cmd);
+			}
+
+		}
 	}
 
 	cJSON_Delete(jsQueryRes);
