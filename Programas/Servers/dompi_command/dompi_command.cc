@@ -264,10 +264,9 @@ int main(/*int argc, char** argv, char** env*/void)
 						}
 						else if( !strcmp(comando, "listar") || !strcmp(comando, "list"))
 						{
-							/* TODO: Completar comando listar (grupo y eventos) */
+							listado[0] = 0;
 							if( !memcmp(objeto, "dis", 3))
 							{
-								listado[0] = 0;
 								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP, Estado "
 												"FROM TB_DOM_PERIF "
 												"ORDER BY Dispositivo ASC;");
@@ -280,7 +279,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								{	/*                         11111111112222222222333333333344444444445555555555 */
 									/*               012345678901234567890123456789012345678901234567890123456789  */
 									/*WiFi-01-4a61af                 c8c9a34a61af 192.168.10.174  **/
-					 strcpy(listado, "> Nombre                       MAC          IP          En Linea\n"); 
+					                strcpy(listado, "> Nombre                       MAC          IP          En Linea\n"); 
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 									{
@@ -345,11 +344,17 @@ int main(/*int argc, char** argv, char** env*/void)
 							}
 							else if( !memcmp(objeto, "gru", 3))
 							{
-								
+								/* TODO: Completar comando listar grupo */
+								strcat(listado, "WARNING: Objeto GRUPO sin programar");
 							}
 							else if( !memcmp(objeto, "eve", 3))
 							{
-								
+								/* TODO: Completar comando listar eventos */
+								strcat(listado, "WARNING: Objeto EVENTO sin programar");
+							}
+							else
+							{
+								sprintf(listado, "ERROR: Objeto [%s] desconocido", objeto);
 							}
 							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", listado);
 						}
