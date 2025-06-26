@@ -12,7 +12,6 @@
 <meta name="system-build" content="2021">
 <?php head_link("css/index.css"); ?>
 <?php head_script("js/ajax.js"); ?>
-<?php head_script("js/weather.js"); ?>
 </head>
 
 <?php
@@ -72,27 +71,39 @@ else
 <script type="text/javascript">
 
 /* Clima */
-function setCurrentWeather( current ) {
-    //document.getElementById('temp_actual').innerHTML = 'Temperatura actual ' + Weather.kelvinToCelsius(current.temperature()).toFixed(1) + ' °C';
-    document.getElementById('clima_exterior').innerHTML =
-        '<br /><img class "weather-icon" src="images/w/' + current.data.weather[0].icon + '.png" />' +
-        '<br />T ' + Weather.kelvinToCelsius(current.data.main.temp).toFixed(1) + ' °C' + 
-        '<br />Hr ' + current.data.main.humidity + ' %' +
-        '<br />P ' + current.data.main.pressure + ' hPA' + 
-        '<br /><br />' + current.data.weather[0].description;
-    
-    
-}
+function updateExternStatus(msg) {
+  var Nom = 'Sin respuesta';
+  var Temp = '0.00';
+  var Hum = '0.00';
+  var Pres = '0';
+  var Text = '';
 
-function setForecasttWeather( forecast ) {
-    //document.getElementById('temp_max').innerHTML = 'Temperatura Maxima ' + Weather.kelvinToCelsius(forecast.high()).toFixed(1) + ' °C';
-    //document.getElementById('temp_min').innerHTML = 'Temperatura Minima ' + Weather.kelvinToCelsius(forecast.low()).toFixed(1) + ' °C';
+	jsonData = JSON.parse(msg);
+
+	for (var i = 0; i < jsonData.length; i++) { 
+    if(jsonData[i].name == 'El Palomar') {
+      Nom = jsonData[i].name;
+      Temp = jsonData[i].weather.temp;
+      Hum = jsonData[i].weather.humidity;
+      Pres = jsonData[i].weather.pressure;
+      Text = jsonData[i].weather.description;
+    }
+  }
+
+  document.getElementById('clima_exterior').innerHTML =
+        '<br /><img class "weather-icon" src="images/smn.png" />' +
+        '<br />' + Nom + 
+        '<br />T ' + Temp +' °C' + 
+        '<br />Hr ' + Hum +' %' +
+        '<br />' + Text;
 }
 
 function updateLocalStatus(msg) {
   var Temp = '0.00';
   var Hum = '0.00';
+
 	jsonData = JSON.parse(msg).response;
+
 	for (var i = 0; i < jsonData.length; i++) { 
 		//jsonData[i].Objeto
 		//jsonData[i].Port
@@ -156,24 +167,13 @@ function setCurrentTime( ) {
       timer_counter = 0;
       // Get Local data
       newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=1', updateLocalStatus, false);
+      newAJAXCommand('https://ws.smn.gob.ar//map_items/weather', updateExternStatus, false);
     }
 
     setTimeout("setCurrentTime()", 500);
   }
 
 var timer_counter = 118;
-// API Key methods
-var apiKey = '0b39d49d1a75d80d40e7f32edf2cc7c1';
-Weather.setApiKey( apiKey );
-var tempApiKey = Weather.getApiKey();
-// Language methods
-var langugage = "es";
-Weather.setLanguage( langugage );
-var tempLanguage = Weather.getLanguage();
-// Get current weather for a given city
-Weather.getCurrent( 'Buenos Aires', setCurrentWeather );
-// Get the forecast for a given city
-Weather.getForecast( 'Buenos Aires', setForecasttWeather );
 
 setCurrentTime();
 
