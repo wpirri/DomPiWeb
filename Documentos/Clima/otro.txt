@@ -1,0 +1,2 @@
+Open-Meteo:
+Ofrece una API meteorológica de código abierto con acceso gratuito para uso no comercial. No requiere clave API y proporciona datos meteorológicos actuales, históricos y de pronóstico. 

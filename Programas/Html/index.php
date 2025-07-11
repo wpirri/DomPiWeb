@@ -59,13 +59,33 @@ else
 // Mostrar contenido para general
 ?>
 <body>
-<div id="reloj">reloj</div>
-<div id="info_container">
-<table width="100%" border="0"><tr>
-  <td align="center"><div id="calendario" class="calendario">calendario</div></td>
-  <td align="center"><div id="clima_exterior" class="clima">exterior</div></td>
-  <td align="center"><div id="clima_interior" class="clima">interior</div></td>
-</tr></table>
+<div id="reloj">&nbsp;</div>
+<div id="sombra-reloj">&nbsp;</div>
+<div id="clima-descripcion-sombra" class="clima">&nbsp;</div>
+<div id="clima-descripcion" class="clima">
+  <table><tr>
+  <td>
+    <div class="clima-descripcion-image">
+      &nbsp;&nbsp;&nbsp;&nbsp;<img class="weather-icon" src="images/sun.png" />
+    </div>
+  </td><td>
+    <div class="clima-descripcion-text">
+      &nbsp;&nbsp;&nbsp;&nbsp;Soleado
+    </div>
+  </td>
+  </tr></table>
+</div>
+<div id="clima-interior" class="clima">
+  <br />
+  <div class="clima-interior">
+    <img class="zone-icon" src="images/house.png" />
+  </div>
+</div>
+<div id="clima-exterior" class="clima">
+  <br />
+  <div class="clima-interior">
+    <img class="zone-icon" src="images/park.png" />
+  </div>
 </div>
 
 <script type="text/javascript">
@@ -90,12 +110,10 @@ function updateExternStatus(msg) {
     }
   }
 
-  document.getElementById('clima_exterior').innerHTML =
-        '<br /><img class "weather-icon" src="images/smn.png" />' +
-        '<br />' + Nom + 
-        '<br />T ' + Temp +' °C' + 
-        '<br />Hr ' + Hum +' %' +
-        '<br />' + Text;
+  document.getElementById('clima-exterior').innerHTML = '<br />' +
+        '<div class="clima-interior"><img class="zone-icon" src="images/park.png" /></div>' +
+        '<div class="clima-interior">T '+ Temp +' °C</div>' + 
+        '<div class="clima-interior"">Hr '+ Hum +' %</div>';
 }
 
 function updateLocalStatus(msg) {
@@ -120,10 +138,10 @@ function updateLocalStatus(msg) {
 			}
     }
 	}
-  document.getElementById('clima_interior').innerHTML =
-        '<br /><img class "weather-icon" src="images/home.png" />' +
-        '<br />T '+ Temp +' °C' + 
-        '<br />Hr '+ Hum +' %';
+  document.getElementById('clima-interior').innerHTML = '<br />' +
+        '<div class="clima-interior"><img class="zone-icon" src="images/house.png" /></div>' +
+        '<div class="clima-interior">T '+ Temp +' °C</div>' + 
+        '<div class="clima-interior"">Hr '+ Hum +' %</div>';
 }
 
 /* Reloj */
@@ -146,30 +164,22 @@ function setCurrentTime( ) {
     var dd = today.getDate();
     var dw = today.getDay();
     // add a zero in front of numbers<10
+    h = twoDigits(h);
     m = twoDigits(m);
     s = twoDigits(s);
-    if(s & 1)
-    {
-      document.getElementById('reloj').innerHTML = h + ":" + m;// + ":" + s;
-    }
-    else
-    {
-      document.getElementById('reloj').innerHTML = h + " " + m;// + ":" + s;
-    }
-
-    document.getElementById('calendario').innerHTML = 
-              '<div id="dia_semana">' + day_of_week[dw] + '</div>' +
-              '<br /><div id="fecha">' + dd + '</div>' +
-              '<br /><div id="mes">' + months[mm] + '</div>';
-
+    document.getElementById('reloj').innerHTML = 
+              '<div id="div-hora">' + h + '</div>' +
+              '<div id="div-minuto">' + m + '</div>' +
+              '<div id="div-dia-semana">' + day_of_week[dw] + '</div>' +
+              '<div id="div-dia">' + dd + ' de</div>' +
+              '<div id="div-mes">' + months[mm] + '</div>';
     if(++timer_counter > 120)
     {
       timer_counter = 0;
       // Get Local data
       newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=1', updateLocalStatus, false);
-      newAJAXCommand('https://ws.smn.gob.ar//map_items/weather', updateExternStatus, false);
+      newAJAXCommand('https://ws.smn.gob.ar/map_items/weather', updateExternStatus, false);
     }
-
     setTimeout("setCurrentTime()", 500);
   }
 

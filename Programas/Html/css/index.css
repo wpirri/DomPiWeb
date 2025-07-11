@@ -1,8 +1,8 @@
 /* https://www.w3schools.com/css/default.asp */
 
 body {
-    color: white; 
-    background-color: black; 
+    color: white;
+    background-color: #BDB2B2; 
     /*background-image: url("/images/power.gif");*/ 
     background-repeat: no-repeat;
     background-attachment: fixed; 
@@ -15,91 +15,161 @@ body {
 }
 
 #reloj {
-	z-index: 10;
-	margin:auto;
-	margin-top: 10px;
+	z-index: 15;
+	margin: auto;
+	position: absolute;
+    left: calc( 50% - 380px );
+	top: 10px;
+	width: 230px;
+	height: 400px;
 	text-align: center;
-	width: 600px;
-	/*height: 50%;*/
 	padding: 10px;
-	border-radius: 10px 10px 0px 0px;
-	border: 1px dotted white;
-	background: darkslateblue;
-	color: white;
+	border-radius: 25px 25px 25px 25px;
+	/*border: 1px dotted white;*/
+	background: white;
+	color: black;
 	font-family: 'Courier New', monospace;
 	font-weight: bold;
     font-size: 100px;
 }
 
-#info_container {
+#sombra-reloj {
 	z-index: 10;
-	margin:auto;
-	margin-top: 20px;
-	width: 600px;
-	/*height: 50%;*/
-	padding: 10px;
-	border-radius: 0px 0px 10px 10px;
-	border: 1px dotted white;
-	background: darkslateblue;
-}
-
-#calendario {
-	z-index: 10;
-	width: 175px;
-	height: 250px;
-	border: 1px dotted green;
-	background: black;
-	color: white;
-	cursor: pointer;
-	font-size: 18px;
+	margin: auto;
+	position: absolute;
+    left: calc( 50% - 370px );
+	top: 20px;
+	width: 230px;
+	height: 400px;
 	text-align: center;
-	border-radius: 10px 10px 10px 10px;
+	padding: 10px;
+	border-radius: 25px 25px 25px 25px;
+	/*border: 1px dotted white;*/
+	background: #FFC581;
+	color: white;
 }
 
-.clima {
-	z-index: 10;
-	width: 175px;
-	height: 250px;
-	border: 1px dotted green;
-	background: black;
-	color: white;
+#clima-descripcion {
+	z-index: 15;
+	position: absolute;
+    left: calc( 50% - 90px );
+	top: 25px;
+	width: 440px;
+	height: 100px;
+	/*border: 1px dotted green;*/
+	background: white;
+	color: black;
     font-size: 24px;
     text-align: center;
-	border-radius: 10px 10px 10px 10px;
+	padding: 10px;
+	border-radius: 25px 25px 25px 25px;
 }
 
-/*
-#clima_interior {
-
-}
-
-#clima_exterior {
-
-}
-*/
-
-#dia_semana {
-	color:darkorange;
+#clima-descripcion-sombra {
+	z-index: 10;
+	position: absolute;
+    left: calc( 50% - 100px );
+	top: 20px;
+	width: 480px;
+	height: 130px;
+	/*border: 1px dotted green;*/
+	background: #FFC581;
+	color: black;
+    font-size: 24px;
     text-align: center;
-    font-size: 40px;
+	border-radius: 25px 25px 25px 25px;
 }
 
-#fecha {
-	color: white;
-	text-align: center;
-	font-family: 'Courier New', monospace;
+#clima-interior {
+	z-index: 10;
+	position: absolute;
+    left: calc( 50% - 100px );
+	top: 160px;
+	width: 230px;
+	height: 280px;
+	/*border: 1px dotted green;*/
+	background: #FFC581;
+	color: black;
+    font-size: 24px;
+    text-align: center;
+	border-radius: 25px 25px 25px 25px;
+}
+
+#clima-exterior {
+	z-index: 10;
+	position: absolute;
+    left: calc( 50% + 150px );
+	top: 160px;
+	width: 230px;
+	height: 280px;
+	/*border: 1px dotted green;*/
+	background: #FFC581;
+	color: black;
+    font-size: 24px;
+    text-align: center;
+	border-radius: 25px 25px 25px 25px;
+}
+
+#div-hora {
+	font-family: 'Binggo wood';
 	font-weight: bold;
-    font-size: 80px;
+    font-size: 90px;
 }
 
-#mes {
-	color:skyblue;
-    text-align: center;
-    font-size: 40px;
+#div-minuto {
+	font-family: 'Binggo wood';
+	font-weight: bold;
+    font-size: 90px;
+}
+
+#div-dia-semana {
+	color:#B48042;
+	font-family: 'Binggo wood';
+	font-weight: bold;
+    font-size: 60px;
+}
+
+#div-dia {
+	font-family: 'Binggo wood';
+	font-weight: bold;
+    font-size: 50px;
+}
+
+#div-mes {
+	font-family: 'Binggo wood';
+	font-weight: bold;
+    font-size: 50px;
+}
+
+.clima-descripcion-image {
+}
+
+.clima-descripcion-text {
+	font-family: 'Binggo wood';
+	font-weight: bold;
+    font-size: 50px;
+}
+
+.clima-interior {
+	font-family: 'Flatori slab semicondensed';
+	font-weight: bold;
+    font-size: 30px;
+}
+
+.clima-exterior {
+	font-family: 'Flatori slab semicondensed';
+	font-weight: bold;
+    font-size: 30px;
 }
 
 .weather-icon {
 	border: 0px;
-	width: 64px;
-	height: 64px;
+	width: 96px;
+	height: 96px;
+	}
+
+.zone-icon {
+	border: 0px;
+	width: 128px;
+	height: 128px;
 	}

@@ -47,7 +47,8 @@ DPConfig::~DPConfig()
 int DPConfig::Load(const char* filename)
 {
   Clean(m_data);
-  strncpy(m_config_file, filename, FILENAME_MAX);
+  m_data = NULL;
+  if(filename) strncpy(m_config_file, filename, FILENAME_MAX);
   return Load();
 }
 
@@ -62,6 +63,7 @@ int DPConfig::Load()
   FILE *f;
 
   Clean(m_data);
+  m_data = NULL;
 
   p = &line[0];
   len = sizeof(line);
