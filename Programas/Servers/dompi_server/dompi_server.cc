@@ -562,6 +562,11 @@ int main(/*int argc, char** argv, char** env*/void)
 								}
 								cJSON_AddStringToObject(json_Response, "resp_code", "0");
 								cJSON_AddStringToObject(json_Response, "resp_msg", "Ok");
+								/* Agrego la hora a la respuesta */
+								sprintf(alt_message, "%04i/%02i/%02i %02i:%02i:%02i", 
+									s_tm->tm_year+1900, s_tm->tm_mon+1, s_tm->tm_mday,
+									s_tm->tm_hour, s_tm->tm_min, s_tm->tm_sec );
+								cJSON_AddStringToObject(json_Response, "TIME", alt_message);
 							}
 						}
 						else if(rc < 0)
