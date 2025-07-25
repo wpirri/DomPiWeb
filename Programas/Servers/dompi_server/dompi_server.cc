@@ -110,7 +110,7 @@ int internal_timeout;
 CDB *pDB;
 GEvent *pEV;
 cJSON *json_System_Config;
-int i;
+int wait_time;
 
 time_t last_daily;
 
@@ -166,7 +166,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	char query[4096];
 //	char listado[4096];
 	unsigned long message_len;
-	time_t t;
+	time_t entry_time, exit_time;
 	struct tm *s_tm;
 	char s[16];
 	STRFunc sf;
@@ -312,14 +312,14 @@ int main(/*int argc, char** argv, char** env*/void)
 
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
-	t = time(&t);
-	
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 100 )) >= 0)
+	wait_time = 1;
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (wait_time*100) )) >= 0)
 	{
 		if(rc > 0)
 		{
-			t = time(&t);
-			s_tm = localtime(&t);
+			wait_time = 1;
+			entry_time = time(&entry_time);
+			s_tm = localtime(&entry_time);
 			message[message_len] = 0;
 			m_pServer->m_pLog->Add(90, "%s:(Q)[%s]", fn, message);
 			/* ****************************************************************
@@ -544,7 +544,7 @@ int main(/*int argc, char** argv, char** env*/void)
 													"Informacion  = \'%s\', "
 													"Estado = 1 "
 													"WHERE UPPER(MAC) = UPPER(\'%s\');",
-													t,
+													entry_time,
 													json_Direccion_IP->valuestring,
 													extra_info,
 													json_MAC->valuestring);
@@ -1600,8 +1600,19 @@ int main(/*int argc, char** argv, char** env*/void)
 				m_pServer->m_pLog->Add(90, "[%s][R][GME_SVC_NOTFOUND]", fn);
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
+			exit_time = time(&exit_time);
+			if( (exit_time - entry_time) > 1)
+			{
+				m_pServer->m_pLog->Add(10, "WARNING: %d segundos para procesar [%s]", (exit_time - entry_time), fn);
+			}
+		}
+		else
+		{
+			/* Salida por time-out */
+			if(wait_time < 10) wait_time++;
 		}
 
+		entry_time = time(&entry_time);
 		/* ********************************************************************
 		 *   Actualizaciones de estados
 		 *
@@ -1635,6 +1646,12 @@ int main(/*int argc, char** argv, char** env*/void)
 		CheckNewHWList(NULL);
 		/*  */
 		CheckNewCardList(NULL);
+
+		exit_time = time(&exit_time);
+		if( (exit_time - entry_time) > 1)
+		{
+			m_pServer->m_pLog->Add(10, "WARNING: %d segundos de post procesamiento", (exit_time - entry_time));
+		}
 	}
 	m_pServer->m_pLog->Add(1, "ERROR en la espera de mensajes");
 	OnClose(0);
