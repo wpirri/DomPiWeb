@@ -216,7 +216,7 @@ int main(/*int argc, char** argv, char** env*/void)
 //    cJSON *json_Update_Firmware;
 	
 	last_daily = 0;
-	
+
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGKILL, OnClose);
 	signal(SIGTERM, OnClose);
@@ -313,8 +313,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
 	t = time(&t);
-
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 10000 )) >= 0)
+	
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, 100 )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -383,21 +383,35 @@ int main(/*int argc, char** argv, char** env*/void)
 									/* Armo la respuesta */
 									cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
 									/* Borro el flag de update de los que ya aviso */
-									sprintf(query, "UPDATE TB_DOM_ASSIGN "
-														"SET Actualizar = 0, Estado_HW = Estado "
-														"WHERE Id = %s;", json_Id->valuestring);
-									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-									rc = pDB->Query(NULL, query);
-									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-									if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-									/* Notifico a la nube todo menos los pulsos */
 									if( !strcmp(json_Tipo_ASS->valuestring, "5"))
 									{
+										/* Salidas de pulso */
+										sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0, Estado_HW = 0, Estado = 0 "
+															"WHERE Id = %s;", json_Id->valuestring);
+										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+										rc = pDB->Query(NULL, query);
+										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+									}
+									else
+									{
+										/* Salidas que no son de pulso */
+										sprintf(query, "UPDATE TB_DOM_ASSIGN "
+															"SET Actualizar = 0, Estado_HW = Estado "
+															"WHERE Id = %s;", json_Id->valuestring);
+										m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+										rc = pDB->Query(NULL, query);
+										m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+										if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+
+										/* Notifico los cambios */
 										m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
 																json_Objeto->valuestring, json_Estado->valuestring);
 										cJSON_PrintPreallocated(json_Query_Row, alt_message, GM_COMM_MSG_LEN, 0);
 										m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", alt_message);
 										m_pServer->Post("dompi_assign_change", alt_message, strlen(alt_message));
+
 									}
 								}
 							}
@@ -1726,18 +1740,22 @@ void AssignTask( void )
 			json_ASS_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "ASS_Id");
 			json_Estado = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
 			json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Tipo_ASS");
-			m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] Estado: %s",
+			m_pServer->m_pLog->Add(20, "Enviar estado de Assign [%s] Estado: %s al HW",
 									json_Objeto->valuestring, json_Estado->valuestring);
 			cJSON_PrintPreallocated(json_QueryRow, message, GM_COMM_MSG_LEN, 0);
 			/* Me fijo si es estado o pulso */
 			if( !strcmp(json_Tipo_ASS->valuestring, "5"))
-			{	/* Pulso */
+			{
+				/* Salidas de pulso */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
 				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
 				iEstado = 0;
 			}
 			else
-			{	/* El resto de las salidas */
+			{
+				/* Salidas que no son de pulso */
+				m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
+										json_Objeto->valuestring, json_Estado->valuestring);
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
 				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				/* Notifico a la nube */
