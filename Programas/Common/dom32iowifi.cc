@@ -770,6 +770,11 @@ void Dom32IoWifi::Task( void )
                 rc = RequestDequeue(m_queue_list[i].addr, p, m_queue_list[i].retry);
                 if(rc >= 0)
                 {
+                    if(m_pLog && m_queue_list[i].retry > 0)
+                    {
+                        m_pLog->Add(20, "[Dom32IoWifi::Task] Mensaje para [%s] enviado %d veces",
+                                            m_queue_list[i].addr, m_queue_list[i].retry);
+                    }
                     QueueDel(m_queue_list[i].id);
                     m_queue_list[i].retry = 0;
                     m_queue_list[i].delay = 2;
@@ -778,6 +783,8 @@ void Dom32IoWifi::Task( void )
                 {
                     if(++m_queue_list[i].retry == 100)
                     {
+                        if(m_pLog) m_pLog->Add(1, "[Dom32IoWifi::Task] Descartando mensaje para [%s] luego de %d reintendos",
+                                                m_queue_list[i].addr, m_queue_list[i].retry);
                         QueueDel(m_queue_list[i].id);
                         m_queue_list[i].retry = 0;
                         m_queue_list[i].delay = 0;
