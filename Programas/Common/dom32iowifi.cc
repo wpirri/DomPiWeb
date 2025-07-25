@@ -840,7 +840,7 @@ int Dom32IoWifi::RequestDequeue(const char* dest, queue_data* qdata, unsigned in
     cJSON *json_request;
 
     if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Send [%s] retry: %u", qdata->buffer, retry);
-    if(q.Query(dest, m_port, qdata->buffer, buffer, WIFI_MSG_MAX_LEN, 1500) > 0)
+    if(q.Query(dest, m_port, qdata->buffer, buffer, WIFI_MSG_MAX_LEN, 3000) > 0)
     {
         if(m_pLog) m_pLog->Add(100, "[Dom32IoWifi] Receive [%s]", buffer);
         rc = HttpRespCode(buffer);
