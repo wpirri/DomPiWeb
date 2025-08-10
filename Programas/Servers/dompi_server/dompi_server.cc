@@ -1776,8 +1776,8 @@ void AssignTask( void )
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
 				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				/* Notifico a la nube */
-				m_pServer->m_pLog->Add(90, "Notify [dompi_assign_change][%s]", message);
-				m_pServer->Notify("dompi_assign_change", message, strlen(message));
+				m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
+				m_pServer->Post("dompi_assign_change", message, strlen(message));
 				iEstado = atoi(json_Estado->valuestring);
 				if(iEstado != 1) iEstado = 0;
 			}
