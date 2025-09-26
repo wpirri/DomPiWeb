@@ -128,7 +128,8 @@ int main(/*int argc, char** argv, char** env*/void)
 	char listado[4096];
 	unsigned long message_len;
 	//time_t t;
-	char s[16];
+	char s[256];
+	char s1[1024];
 	STRFunc sf;
 
 	char comando[1024];
@@ -156,6 +157,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Command;
     cJSON *json_arr_Perif;
     cJSON *json_Perif;
+    cJSON *json_Informacion;
 	
 	last_daily = 0;
 	
@@ -267,7 +269,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							listado[0] = 0;
 							if( !memcmp(objeto, "dis", 3))
 							{
-								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP, Estado "
+								sprintf(query, "SELECT Id, Dispositivo, MAC, Direccion_IP, Estado, Informacion "
 												"FROM TB_DOM_PERIF "
 												"ORDER BY Dispositivo ASC;");
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -279,7 +281,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								{	/*                         11111111112222222222333333333344444444445555555555 */
 									/*               012345678901234567890123456789012345678901234567890123456789  */
 									/*WiFi-01-4a61af                 c8c9a34a61af 192.168.10.174  **/
-					                strcpy(listado, "> Nombre                       MAC          IP          En Linea\n"); 
+					                strcpy(listado, "> Nombre                    MAC          IP              Version       En Linea\n"); 
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 									{
@@ -290,13 +292,51 @@ int main(/*int argc, char** argv, char** env*/void)
 											json_MAC = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "MAC");
 											json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Direccion_IP");
 											json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
-											if(json_Dispositivo && json_MAC && json_Direccion_IP && json_Estado)
+											json_Informacion = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Informacion");
+											if(json_Dispositivo && json_MAC && json_Direccion_IP && json_Estado && json_Informacion)
 											{
 												if(atoi(json_Id->valuestring))
 												{
-													sprintf(&listado[strlen(listado)], "%-30.30s %12.12s %-15.15s %c\n", 
+													strcpy(s1, json_Informacion->valuestring);
+													if(s1[0])
+													{
+														/* 20250101000000 */
+														s[0] = s1[11];
+														s[1] = s1[12];
+														s[2] = s1[13];
+														s[3] = s1[14];
+														if( !memcmp(&s1[4], "Jan", 3))      { s[4] = '0'; s[5] = '1'; }
+														else if( !memcmp(&s1[4], "Feb", 3)) { s[4] = '0'; s[5] = '2'; }
+														else if( !memcmp(&s1[4], "Mar", 3)) { s[4] = '0'; s[5] = '3'; }
+														else if( !memcmp(&s1[4], "Apr", 3)) { s[4] = '0'; s[5] = '4'; }
+														else if( !memcmp(&s1[4], "May", 3)) { s[4] = '0'; s[5] = '5'; }
+														else if( !memcmp(&s1[4], "Jun", 3)) { s[4] = '0'; s[5] = '6'; }
+														else if( !memcmp(&s1[4], "Jul", 3)) { s[4] = '0'; s[5] = '7'; }
+														else if( !memcmp(&s1[4], "Aug", 3)) { s[4] = '0'; s[5] = '8'; }
+														else if( !memcmp(&s1[4], "Sep", 3)) { s[4] = '0'; s[5] = '9'; }
+														else if( !memcmp(&s1[4], "Oct", 3)) { s[4] = '1'; s[5] = '0'; }
+														else if( !memcmp(&s1[4], "Nov", 3)) { s[4] = '1'; s[5] = '1'; }
+														else if( !memcmp(&s1[4], "Dec", 3)) { s[4] = '1'; s[5] = '2'; }
+														s[6] = s1[8];
+														if(s[6] == 32) s[6] = '0';
+														s[7] = s1[9];
+														s[8] = s1[16];
+														s[9] = s1[17];
+														s[10] = s1[19];
+														s[11] = s1[20];
+														s[12] = s1[22];
+														s[13] = s1[23];
+														s[14] = 0;
+
+													}
+													else
+													{
+														s[0] = ' ';
+														s[1] = 0;
+													}
+													sprintf(&listado[strlen(listado)], "%-27.27s %12.12s %-15.15s %14.14s   %c\n", 
 														json_Dispositivo->valuestring, json_MAC->valuestring,
-														json_Direccion_IP->valuestring, (atoi(json_Estado->valuestring)?'*':' '));
+														json_Direccion_IP->valuestring, s, (atoi(json_Estado->valuestring)?'*':' '));
 												}
 											}
 										}

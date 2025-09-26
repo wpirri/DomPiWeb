@@ -158,29 +158,18 @@ int main(/*int argc, char** argv, char** env*/void)
 	char typ[1];
 	char message[GM_COMM_MSG_LEN+1];
 	char alt_message[GM_COMM_MSG_LEN+1];
-//	char cmdline[1024];
 	char db_host[32];
 	char db_name[32];
 	char db_user[32];
 	char db_password[32];
 	char query[4096];
-//	char listado[4096];
 	unsigned long message_len;
 	time_t entry_time, exit_time;
 	struct tm *s_tm;
 	char s[16];
 	STRFunc sf;
-
-//	char comando[1024];
-//	char objeto[1024];
-//	char parametro[1024];
-
 	char extra_info[1024];
-
-//	bool soporta_respuesta_con_datos;
-	
 	STRFunc Strf;
-	//CGMServerBase::GMIOS call_resp;
 
     cJSON *json_Request;
     cJSON *json_Response;
@@ -188,10 +177,6 @@ int main(/*int argc, char** argv, char** env*/void)
     cJSON *json_un_obj;
     cJSON *json_Query_Result = NULL;
 	cJSON *json_Query_Row;
-//    cJSON *json_query;
-//    cJSON *json_cmdline;
-
-//    cJSON *json_HW_Id;
 	cJSON *json_Objeto;
 	cJSON *json_Tipo_ASS;
 	cJSON *json_Tipo_HW;
@@ -205,15 +190,10 @@ int main(/*int argc, char** argv, char** env*/void)
 	cJSON *json_Part;
 	cJSON *json_Zona;
 	cJSON *json_Salida;
-//	cJSON *json_FW;
-//	cJSON *json_Dispositivo;
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
-//	cJSON *json_Command;
     cJSON *json_arr_Perif;
     cJSON *json_Perif;
-//    cJSON *json_Actualizar;
-//    cJSON *json_Update_Firmware;
 	
 	last_daily = 0;
 

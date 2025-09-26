@@ -137,13 +137,14 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_obj;
     cJSON *json_QueryArray;
     cJSON *json_QueryRow;
-    cJSON *json_hw_id;
+    cJSON *json_hw_id = NULL;
     cJSON *json_hw_mac;
     cJSON *json_raddr;
     cJSON *json_chg;
     cJSON *json_status;
     cJSON *json_un_obj;
     cJSON *json_tmp;
+    cJSON *json_OnLine;
     STRFunc str;
     char extra_info[1024];
 
@@ -171,12 +172,24 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 {
                     json_hw_id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
                     json_status = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
-                    if(json_raddr)
+                    if(json_hw_id && json_raddr)
                     {
+                        /* Desde el punto de vista de la central */
                         if(atoi(json_status->valuestring) == 0)
                         {
                             m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
                         }
+
+                        /* Desde el punto de vista del dispositivo */
+                        json_OnLine = cJSON_GetObjectItemCaseSensitive(json_obj, "ONLINE");
+                        if(json_OnLine)
+                        {
+                            if( !strcmp(json_OnLine->valuestring, "0"))
+                            {
+                                m_pServer->m_pLog->Add(10, "[HW] %s %s OFF LINE -> ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                            }
+                        }
+
                         /* Me fijo si tiene info de FW, HW, etc. */
                         extra_info[0] = 0;
                         json_tmp = cJSON_GetObjectItemCaseSensitive(json_obj, "HW");
@@ -239,42 +252,31 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     }
                 }
                 /* Actualizo los assign que vengan  en el mensaje */
-                json_un_obj = json_obj;
-                while( json_un_obj )
+                if(json_hw_id)
                 {
-                    /* Voy hasta el elemento con datos */
-                    if(json_un_obj->type == cJSON_Object)
+                    json_un_obj = json_obj;
+                    while( json_un_obj )
                     {
-                        json_un_obj = json_un_obj->child;
-                    }
-                    else
-                    {
-                        if(json_un_obj->type == cJSON_String)
+                        /* Voy hasta el elemento con datos */
+                        if(json_un_obj->type == cJSON_Object)
                         {
-                            if(json_un_obj->string && json_un_obj->valuestring)
+                            json_un_obj = json_un_obj->child;
+                        }
+                        else
+                        {
+                            if(json_un_obj->type == cJSON_String)
                             {
-                                if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
+                                if(json_un_obj->string && json_un_obj->valuestring)
                                 {
-                                    if( !memcmp(json_un_obj->string, "IO", 2) || !memcmp(json_un_obj->string, "OUT", 3) )
+                                    if(strlen(json_un_obj->string) && strlen(json_un_obj->valuestring))
                                     {
-                                        ival = atoi(json_un_obj->valuestring);
-
-                                        /* Actualizo el estado del HW */
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado_HW = %i "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'%s\';",
-                                                        ival,
-                                                        json_hw_id->valuestring,
-                                                        json_un_obj->string);
-                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                        /* En las entradas actualizo también el estado a mostrar */
-                                        if(!memcmp(json_un_obj->string, "IO", 2))
+                                        if( !memcmp(json_un_obj->string, "IO", 2) || !memcmp(json_un_obj->string, "OUT", 3) )
                                         {
-                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
-                                                            "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
-                                                            "(Tipo = 1 OR Tipo = 4);",
+                                            ival = atoi(json_un_obj->valuestring);
+
+                                            /* Actualizo el estado del HW */
+                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado_HW = %i "
+                                                            "WHERE Dispositivo = \'%s\' AND Port = \'%s\';",
                                                             ival,
                                                             json_hw_id->valuestring,
                                                             json_un_obj->string);
@@ -282,75 +284,89 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                             rc = m_pDB->Query(NULL, query);
                                             m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                            /* Si es entrada analogica completo el dato en perifdata */
-                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i, Perif_Data = \'%i\' "
-                                                            "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND Tipo = 2;",
-                                                            ival, ival,
-                                                            json_hw_id->valuestring,
-                                                            json_un_obj->string);
+                                            /* En las entradas actualizo también el estado a mostrar */
+                                            if(!memcmp(json_un_obj->string, "IO", 2))
+                                            {
+                                                sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i "
+                                                                "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND "
+                                                                "(Tipo = 1 OR Tipo = 4);",
+                                                                ival,
+                                                                json_hw_id->valuestring,
+                                                                json_un_obj->string);
+                                                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                                rc = m_pDB->Query(NULL, query);
+                                                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                                                if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                                                /* Si es entrada analogica completo el dato en perifdata */
+                                                sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Estado = %i, Perif_Data = \'%i\' "
+                                                                "WHERE Dispositivo = \'%s\' AND Port = \'%s\' AND Tipo = 2;",
+                                                                ival, ival,
+                                                                json_hw_id->valuestring,
+                                                                json_un_obj->string);
+                                                m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                                rc = m_pDB->Query(NULL, query);
+                                                m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                                                if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                                                /* Si existe un assign me fijo si hay alguna automatización */
+                                                if(rc > 0)
+                                                {
+                                                    CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
+                                                }
+                                            }
+                                        }
+                                        else if( !memcmp(json_un_obj->string, "CARD", 4))
+                                        {
+                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
+                                                            "WHERE Dispositivo = \'%s\' AND Port = \'CARD\' AND "
+                                                            "Tipo = 6;",
+                                                            json_un_obj->valuestring,
+                                                            json_hw_id->valuestring);
                                             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
                                             rc = m_pDB->Query(NULL, query);
                                             m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                                             if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                            /* Si existe un assign me fijo si hay alguna automatización */
+                                        }
+                                        else if( !memcmp(json_un_obj->string, "TEMP", 4))
+                                        {
+                                            ival = atoi(numcpy(s, json_un_obj->valuestring));
+
+                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
+                                                            "WHERE Dispositivo = \'%s\' AND Port = \'TEMP\' AND "
+                                                            "Tipo = 6;",
+                                                            json_un_obj->valuestring, ival,
+                                                            json_hw_id->valuestring);
+                                            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                            rc = m_pDB->Query(NULL, query);
+                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                                            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+                                            if(rc > 0)
+                                            {
+                                                CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
+                                            }
+                                        }
+                                        else if( !memcmp(json_un_obj->string, "HUM", 3))
+                                        {
+                                            ival = atoi(numcpy(s, json_un_obj->valuestring));
+
+                                            sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
+                                                            "WHERE Dispositivo = \'%s\' AND Port = \'HUM\' AND "
+                                                            "Tipo = 6;",
+                                                            json_un_obj->valuestring, ival,
+                                                            json_hw_id->valuestring);
+                                            m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+                                            rc = m_pDB->Query(NULL, query);
+                                            m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
+                                            if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
                                             if(rc > 0)
                                             {
                                                 CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
                                             }
                                         }
                                     }
-                                    else if( !memcmp(json_un_obj->string, "CARD", 4))
-                                    {
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\' "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'CARD\' AND "
-                                                        "Tipo = 6;",
-                                                        json_un_obj->valuestring,
-                                                        json_hw_id->valuestring);
-                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                    }
-                                    else if( !memcmp(json_un_obj->string, "TEMP", 4))
-                                    {
-                                        ival = atoi(numcpy(s, json_un_obj->valuestring));
-
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'TEMP\' AND "
-                                                        "Tipo = 6;",
-                                                        json_un_obj->valuestring, ival,
-                                                        json_hw_id->valuestring);
-                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                        if(rc > 0)
-                                        {
-                                            CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
-                                        }
-                                    }
-                                    else if( !memcmp(json_un_obj->string, "HUM", 3))
-                                    {
-                                        ival = atoi(numcpy(s, json_un_obj->valuestring));
-
-                                        sprintf(query,  "UPDATE TB_DOM_ASSIGN SET Perif_Data = \'%s\', Estado = %i "
-                                                        "WHERE Dispositivo = \'%s\' AND Port = \'HUM\' AND "
-                                                        "Tipo = 6;",
-                                                        json_un_obj->valuestring, ival,
-                                                        json_hw_id->valuestring);
-                                        m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-                                        rc = m_pDB->Query(NULL, query);
-                                        m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
-                                        if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
-                                        if(rc > 0)
-                                        {
-                                            CheckAuto(atoi(json_hw_id->valuestring), json_un_obj->string, ival);
-                                        }
-                                    }
                                 }
                             }
+                            json_un_obj = json_un_obj->next;
                         }
-                        json_un_obj = json_un_obj->next;
                     }
                 }
 

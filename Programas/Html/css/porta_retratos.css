@@ -1,0 +1,27 @@
+/* https://www.w3schools.com/css/default.asp */
+
+body {
+    color: white;
+    background-color: black; 
+    /*background-image: url("/images/power.gif");*/ 
+    background-repeat: no-repeat;
+    background-attachment: fixed; 
+    background-position: center; 
+    height: 100%; 
+    width: 100%; 
+    overflow: hidden;
+    padding: 0; 
+    margin: 0;
+}
+
+.digital-photo-frame {
+	z-index: 15;
+	margin: auto;
+	position: absolute;
+    left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background: black;
+	color: black;
+}
