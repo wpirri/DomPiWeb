@@ -57,7 +57,6 @@ void SwitchIO_CallBack(const char* id, const char* data);
 void PulseIO_CallBack(const char* id, const char* data);
 void GetWifiConfig_CallBack(const char* id, const char* data);
 void SetWifiConfig_CallBack(const char* id, const char* data);
-void Pulse_GetConfig(const char* id, const char* data);
 void GetConfig_CallBack(const char* id, const char* data);
 void SetConfig_CallBack(const char* id, const char* data);
 void GetIO_CallBack(const char* id, const char* data);
@@ -789,15 +788,6 @@ void SetWifiConfig_CallBack(const char* id, const char* data)
 {
 	m_pServer->m_pLog->Add(20, "[SetWifiConfig_CallBack] ID: %s", id);
 	m_pServer->m_pLog->Add(100, "[SetWifiConfig_CallBack] Data: [%s]", data);
-	Update_Last_Connection(id,data);
-
-}
-
-/* Callback para GetConfig */
-void Pulse_GetConfig(const char* id, const char* data)
-{
-	m_pServer->m_pLog->Add(20, "[Pulse_GetConfig] ID: %s", id);
-	m_pServer->m_pLog->Add(100, "[Pulse_GetConfig] Data: [%s]", data);
 	Update_Last_Connection(id,data);
 
 }

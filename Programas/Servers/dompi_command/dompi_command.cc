@@ -148,6 +148,7 @@ int main(/*int argc, char** argv, char** env*/void)
 
     cJSON *json_HW_Id;
 	cJSON *json_Objeto;
+	cJSON *json_Port;
 	cJSON *json_Tipo;
 	cJSON *json_Estado;
 	cJSON *json_Id;
@@ -347,8 +348,9 @@ int main(/*int argc, char** argv, char** env*/void)
 							else if( !memcmp(objeto, "obj", 3))
 							{
 								listado[0] = 0;
-								sprintf(query, "SELECT Id, Objeto, Tipo, Estado "
-												"FROM TB_DOM_ASSIGN "
+								sprintf(query, "SELECT A.Id, A.Objeto, P.Dispositivo, A.Port, A.Tipo, A.Estado "
+												"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
+												"WHERE A.Dispositivo = P.Id "
 												"ORDER BY Objeto ASC;");
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								json_Query_Result = cJSON_CreateArray();
@@ -356,9 +358,9 @@ int main(/*int argc, char** argv, char** env*/void)
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 								if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 								if(rc >= 0)
-								{	/*                         11111111112222222222333333333344444444445555555555 */
-									/*               012345678901234567890123456789012345678901234567890123456789  */
-									strcpy(listado, "> Nombre                                  Tipo  Estado\n"); 
+								{	/*                         1111111111222222222233333333334444444444555555555566666666667777777777 */
+									/*               01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
+									strcpy(listado, "> Nombre                  Dispositivo          Port  Tipo Estado\n"); 
 									/* Obtengo el primero del array del resultado del query */
 									cJSON_ArrayForEach(json_Query_Row, json_Query_Result)
 									{
@@ -366,14 +368,17 @@ int main(/*int argc, char** argv, char** env*/void)
 										{
 											json_Id = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Id");
 											json_Objeto = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Objeto");
+											json_Dispositivo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Dispositivo");
+											json_Port = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Port");
 											json_Tipo = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo");
 											json_Estado = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Estado");
 											if(json_Objeto && json_Tipo && json_Estado)
 											{
 												if(atoi(json_Id->valuestring))
 												{
-													sprintf(&listado[strlen(listado)], "%-40.40s %3s  %5s\n", 
-														json_Objeto->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
+													sprintf(&listado[strlen(listado)], "%-25.25s %-20.20s %-5.5s  %1s    %-5s\n", 
+														json_Objeto->valuestring, json_Dispositivo->valuestring,
+														json_Port->valuestring, json_Tipo->valuestring, json_Estado->valuestring);
 												}
 											}
 												

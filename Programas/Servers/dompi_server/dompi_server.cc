@@ -293,7 +293,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
 	wait_time = 1;
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (wait_time*100) )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (wait_time*10) )) >= 0)
 	{
 		if(rc > 0)
 		{
@@ -1589,10 +1589,9 @@ int main(/*int argc, char** argv, char** env*/void)
 		else
 		{
 			/* Salida por time-out */
-			if(wait_time < 10) wait_time++;
+			if(wait_time < 100) wait_time++;
 		}
 
-		entry_time = time(&entry_time);
 		/* ********************************************************************
 		 *   Actualizaciones de estados
 		 *
