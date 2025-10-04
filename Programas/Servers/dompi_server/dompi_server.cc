@@ -1057,8 +1057,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
-				m_pServer->Notify("dompi_auto_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_auto_change]");
+				m_pServer->Post("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_auto_disable
@@ -1098,8 +1098,8 @@ int main(/*int argc, char** argv, char** env*/void)
 					m_pServer->m_pLog->Add(1, "ERROR al responder mensaje [%s]", fn);
 				}
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
-				m_pServer->Notify("dompi_auto_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_auto_change]");
+				m_pServer->Post("dompi_auto_change", nullptr, 0);
 			}
 			/* ****************************************************************
 			*		dompi_alarm_part_info
@@ -1580,6 +1580,7 @@ int main(/*int argc, char** argv, char** env*/void)
 				m_pServer->m_pLog->Add(90, "[%s][R][GME_SVC_NOTFOUND]", fn);
 				m_pServer->Resp(NULL, 0, GME_SVC_NOTFOUND);
 			}
+			
 			exit_time = time(&exit_time);
 			if( (exit_time - entry_time) > 1)
 			{
@@ -1592,6 +1593,7 @@ int main(/*int argc, char** argv, char** env*/void)
 			if(wait_time < 100) wait_time++;
 		}
 
+		entry_time = time(&entry_time);
 		/* ********************************************************************
 		 *   Actualizaciones de estados
 		 *
@@ -2072,6 +2074,7 @@ void CheckHWOffline( void )
 	cJSON *json_MAC;
 	cJSON *json_Direccion_IP;
 	cJSON *json_Last_Config;
+	cJSON *json_Dispositivo;
 	cJSON *Wifi_Report;
 
 	m_pServer->m_pLog->Add(50, "[CheckHWOffline]");
@@ -2093,7 +2096,7 @@ void CheckHWOffline( void )
 	/* Dispositivos offline */
 	t = time(&t);
 	json_QueryArray = cJSON_CreateArray();
-	sprintf(query, "SELECT Id, MAC, Direccion_IP "
+	sprintf(query, "SELECT Id, MAC, Direccion_IP, Dispositivo "
 					"FROM TB_DOM_PERIF "
 					"WHERE Estado <> 0 AND Ultimo_Ok < %lu;", t-tolerancia);
 	m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -2109,8 +2112,10 @@ void CheckHWOffline( void )
 			json_HW_Id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
 			json_MAC = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "MAC");
 			json_Direccion_IP = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Direccion_IP");
+			json_Dispositivo = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Dispositivo");
 
-			m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: OFF LINE", json_MAC->valuestring,json_Direccion_IP->valuestring );
+			m_pServer->m_pLog->Add(10, "[HW] %s - %s - %s Estado: OFF LINE", 
+				json_Dispositivo->valuestring,json_MAC->valuestring,json_Direccion_IP->valuestring );
 
 			sprintf(query, "UPDATE TB_DOM_PERIF "
 							"SET Estado = 0 "

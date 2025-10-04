@@ -139,6 +139,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_QueryRow;
     cJSON *json_hw_id = NULL;
     cJSON *json_hw_mac;
+    cJSON *json_hw_name;
     cJSON *json_raddr;
     cJSON *json_chg;
     cJSON *json_status;
@@ -160,7 +161,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_QueryArray = cJSON_CreateArray();
             rc = m_pDB->Query(json_QueryArray, query);
@@ -172,12 +173,14 @@ int GEvent::ExtIOEvent(const char* json_evt)
                 {
                     json_hw_id = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Id");
                     json_status = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Estado");
-                    if(json_hw_id && json_raddr)
+                    json_hw_name = cJSON_GetObjectItemCaseSensitive(json_QueryRow, "Dispositivo");
+                    if(json_hw_id && json_raddr && json_hw_name)
                     {
                         /* Desde el punto de vista de la central */
                         if(atoi(json_status->valuestring) == 0)
                         {
-                            m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                            m_pServer->m_pLog->Add(10, "[HW] %s - %s - %s Estado: ON LINE", 
+                                json_hw_name->valuestring, json_hw_mac->valuestring, json_raddr->valuestring);
                         }
 
                         /* Desde el punto de vista del dispositivo */
@@ -186,7 +189,8 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         {
                             if( !strcmp(json_OnLine->valuestring, "0"))
                             {
-                                m_pServer->m_pLog->Add(10, "[HW] %s %s OFF LINE -> ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                                m_pServer->m_pLog->Add(10, "[HW] %s - %s - %s OFF LINE -> ON LINE", 
+                                    json_hw_name->valuestring, json_hw_mac->valuestring, json_raddr->valuestring);
                             }
                         }
 
@@ -435,6 +439,7 @@ int GEvent::SyncIO(const char* json_evt)
     cJSON *json_QueryArray;
     cJSON *json_hw_id;
     cJSON *json_hw_mac;
+    cJSON *json_hw_name;
     cJSON *json_raddr;
     cJSON *json_status;
     cJSON *json_un_obj;
@@ -452,7 +457,7 @@ int GEvent::SyncIO(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_QueryArray = cJSON_CreateArray();
             rc = m_pDB->Query(json_QueryArray, query);
@@ -462,11 +467,13 @@ int GEvent::SyncIO(const char* json_evt)
             {
                 json_hw_id = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Id");
                 json_status = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Estado");
+                json_hw_name = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Dispositivo");
                 if(json_raddr)
                 {
                     if(atoi(json_status->valuestring) == 0)
                     {
-                        m_pServer->m_pLog->Add(10, "[HW] %s %s Estado: ON LINE", json_hw_mac->valuestring, json_raddr->valuestring);
+                        m_pServer->m_pLog->Add(10, "[HW] %s - %s - %s Estado: ON LINE", 
+                            json_hw_name->valuestring, json_hw_mac->valuestring, json_raddr->valuestring);
                     }
                     /* Actualizo la tabla de Dispositivos */
                     sprintf(query, "UPDATE TB_DOM_PERIF "
