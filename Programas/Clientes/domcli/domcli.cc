@@ -32,6 +32,35 @@
 
 #define MAX_INPUT_BUFFER_LEN 1024
 
+#define PROMPT "DOMCLI > "
+
+void Clear( void )
+{
+  char version[255];
+  char clear[12];
+
+  clear[0] = 0x1b;
+  clear[1] = 0x5b;
+  clear[2] = 0x48;
+  clear[3] = 0x1b;
+  clear[4] = 0x5b;
+  clear[5] = 0x32;
+  clear[6] = 0x4a;
+  clear[7] = 0x1b;
+  clear[8] = 0x5b;
+  clear[9] = 0x33;
+  clear[10] = 0x4a;
+  clear[11] = 0x00;
+
+  fputs(clear, stdout);
+
+  strcpy(version, "          << Intercafe de linea de comandos de sistema de domotica >>\r\n"
+                  "                              ..:: DOMCLI 0.1 ::..\r\n");
+  fputs(clear, stdout);
+  fputs(version, stdout);
+}
+
+
 int main(int /*argc*/, char** /*argv*/, char** env)
 {
   CGMInitData gminit;
@@ -46,9 +75,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   cJSON *json_response;
   cJSON *json_return_message;
   char input_buffer[MAX_INPUT_BUFFER_LEN+1];
-  char prompt[20];
-  char version[255];
-  char clear[12];
 
   int i;
   char server_address[16];
@@ -56,22 +82,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   signal(SIGALRM, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
-
-  strcpy(prompt, "DOMCLI > ");
-  strcpy(version, "          << Intercafe de linea de comandos de sistema de domotica >>\r\n"
-                  "                              ..:: DOMCLI 0.1 ::..\r\n");
-  clear[0] = 0x1b;
-  clear[1] = 0x5b;
-  clear[2] = 0x48;
-  clear[3] = 0x1b;
-  clear[4] = 0x5b;
-  clear[5] = 0x32;
-  clear[6] = 0x4a;
-  clear[7] = 0x1b;
-  clear[8] = 0x5b;
-  clear[9] = 0x33;
-  clear[10] = 0x4a;
-  clear[11] = 0x00;
 
   for(i = 0; env[i]; i++)
   {
@@ -91,16 +101,18 @@ int main(int /*argc*/, char** /*argv*/, char** env)
 
   pClient = new CGMClient(&gminit);
 
-  fprintf(stdout, "%s\r\n%s\r\n%s", clear, version, prompt);
+  Clear();
+  fputs(PROMPT, stdout);
+
   while( fgets(input_buffer, MAX_INPUT_BUFFER_LEN, stdin) )
   {
     if(strchr(input_buffer, '\r')) *(strchr(input_buffer, '\r')) = 0;
     if(strchr(input_buffer, '\n')) *(strchr(input_buffer, '\n')) = 0;
 
     if( !strcmp(input_buffer, "exit")) break;
-    if( !strcmp(input_buffer, "clear") )
+    if( !strcmp(input_buffer, "clear") || !strcmp(input_buffer, "cls") )
     {
-      fputs(clear, stdout);
+      Clear();
     }
     else if(strlen(input_buffer))
     {
@@ -164,7 +176,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
       }
     }
     input_buffer[0] = 0;
-    fprintf(stdout, "%s", prompt);
+    fputs(PROMPT, stdout);
   }
 
   delete pClient;

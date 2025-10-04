@@ -82,17 +82,133 @@ char cli_help[] = 	"------------------------------------------------------------
 					"  desactivar alarma, <particion>\r\n"
 					"  estado alarma, <particion>\r\n"
 					"  configurar <dispositivo>, <parametro=valor>\r\n"
-					"  help\r\n"
+					"  help <comando - Para mas informacion>\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+
+char cli_help_listar[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  listar <tipo>\r\n"
+					"  \r\n"
 					"  * tipo: dispositivos, objetos, grupos, eventos.\r\n"
-					"    objeto: Nombre de un objeto existente.\r\n"
-					"    dispositivo: Nombre de un dispositivo existente.\r\n"
-					"    modulo: wifi, config, firmware.\r\n"
-					"    segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
-					"    numero: Numero de telefono destino del mensaje.\r\n"
-					"    mensaje: Mensaje a enviar.\r\n"
-					"    particion: Nombre de la particion.\r\n"
-					"    archivo: Debe estar en el directorio download de la central.\r\n"
-                    "    parametros:\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_encender[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  encender <objeto>\r\n"
+					"  apagar <objeto>\r\n"
+					"  cambiar <objeto>\r\n"
+					"  pulso <objeto>, [segundos]\r\n"
+					"  estado <objeto>\r\n"
+					"  \r\n"
+					"  * objeto: Nombre de un objeto existente.\r\n"
+					"  * segundos: duracion en segundos. Si no se especifica el default es 1.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_actualizar[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  actualizar <dispositivo>, <modulo>\r\n"
+					"  \r\n"
+					"  * dispositivo: Nombre de un dispositivo existente.\r\n"
+					"  * modulo: wifi, config, firmware.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_download[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  download <dispositivo>, <archivo>\r\n"
+					"  \r\n"
+					"  * dispositivo: Nombre de un dispositivo existente.\r\n"
+					"  * archivo: Debe estar en el directorio download de la central.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_sms[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  sms <numero>, <mensaje>\r\n"
+					"  \r\n"
+					"  * numero: Numero de telefono destino del mensaje.\r\n"
+					"  * mensaje: Mensaje a enviar.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_habilitar[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  habilitar <zona>, <particion>\r\n"
+					"  deshabilitar <zona>, <particion>\r\n"
+					"  \r\n"
+					"  * zona: Nombre de la zona de alarma.\r\n"
+					"  * particion: Nombre de la particion de alarma.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_activar[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  activar alarma, <particion>\r\n"
+					"  desactivar alarma, <particion>\r\n"
+					"  estado alarma, <particion>\r\n"
+					"  \r\n"
+					"  * particion: Nombre de la particion de alarma.\r\n"
+                    "\r\n"
+					"-------------------------------------------------------------------------------\r\n"
+                    "\r\n";
+
+char cli_help_configurar[] = 	
+					"-------------------------------------------------------------------------------\r\n"
+                    "Sistema de Domotica - Consola de comandos\r\n"
+                    "\r\n"
+                    "DomPiWeb Server V 0.1\r\n"
+                    "\r\n"
+					"Comando:\r\n"
+					"  configurar <dispositivo>, <parametro=valor>[,<parametro=valor>]\r\n"
+					"  \r\n"
+					"  * dispositivo: Nombre de un dispositivo existente.\r\n"
+                    "  * parametros:\r\n"
 					"        ap1: Access point WiFi 1.\r\n"
 					"        ap1p: Clave de Access point WiFi 1.\r\n"
 					"        ap2: Access point WiFi 2.\r\n"
@@ -109,9 +225,12 @@ char cli_help[] = 	"------------------------------------------------------------
 					"        screen-saver: Tiempo de inactividad para apagado (0 = desactivado).\r\n"
 					"        debug: 0 = no, 1 = si (necesita restart).\r\n"
 					"        display: 0 = MCU 1 = SPI (necesita restart).\r\n"
+					"        update: firmware, screen.\r\n"
+					"        reset: segundos.\r\n"
                     "\r\n"
 					"-------------------------------------------------------------------------------\r\n"
                     "\r\n";
+
 
 int main(/*int argc, char** argv, char** env*/void)
 {
@@ -263,7 +382,46 @@ int main(/*int argc, char** argv, char** env*/void)
 
 						if( !strcmp(comando, "help") || !strcmp(comando, "?"))
 						{
-							sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
+							if( !strcmp(objeto, "listar") || !strcmp(objeto, "list"))
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_listar);
+							}
+							else if( 	!strcmp(objeto, "encender") || 
+										!strcmp(objeto, "apagar") ||
+										!strcmp(objeto, "cambiar") ||
+										!strcmp(objeto, "pulso") ||
+										!strcmp(objeto, "estado")  )
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_encender);
+							}
+							else if( !strcmp(objeto, "actualizar"))
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_actualizar);
+							}
+							else if( !strcmp(objeto, "download"))
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_download);
+							}
+							else if( !strcmp(objeto, "sms"))
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_sms);
+							}
+							else if( !strcmp(objeto, "habilitar") || !strcmp(objeto, "deshabilitar") )
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_habilitar);
+							}
+							else if( !strcmp(objeto, "activar") || !strcmp(objeto, "desactivar") || !strcmp(objeto, "estado") )
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_activar);
+							}
+							else if( !strcmp(objeto, "configurar") )
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help_configurar);
+							}
+							else
+							{
+								sprintf(message, "{\"response\":{\"resp_code\":\"0\", \"resp_msg\":\"%s\"}}", cli_help);
+							}
 						}
 						else if( !strcmp(comando, "listar") || !strcmp(comando, "list"))
 						{
