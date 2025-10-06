@@ -1092,8 +1092,8 @@ int GEvent::CheckAuto(int hw_id, const char* port, int estado_sensor)
                 m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                 if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
 
-				m_pServer->m_pLog->Add(90, "Notify [dompi_auto_change]");
-				m_pServer->Notify("dompi_auto_change", nullptr, 0);
+				m_pServer->m_pLog->Add(90, "Post [dompi_auto_change]");
+				m_pServer->Post("dompi_auto_change", nullptr, 0);
             }
         }
     }
