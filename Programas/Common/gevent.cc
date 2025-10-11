@@ -146,7 +146,6 @@ int GEvent::ExtIOEvent(const char* json_evt)
     cJSON *json_un_obj;
     cJSON *json_tmp;
     cJSON *json_OnLine;
-    STRFunc str;
     char extra_info[1024];
 
     m_pServer->m_pLog->Add(100, "[GEvent::ExtIOEvent] json_evt: %s", json_evt);
@@ -161,7 +160,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE MAC = UPPER(\'%s\');", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_QueryArray = cJSON_CreateArray();
             rc = m_pDB->Query(json_QueryArray, query);
@@ -244,7 +243,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                                             "Direccion_IP = \'%s\', "
                                             "Informacion  = \'%s\', "
                                             "Estado = 1 "
-                                            "WHERE UPPER(MAC) = UPPER(\'%s\');",
+                                            "WHERE MAC = UPPER(\'%s\');",
                                             t,
                                             json_raddr->valuestring,
                                             extra_info,
@@ -382,7 +381,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                     m_pServer->m_pLog->Add(50, "[ExtIOEvent] El mensaje informa cabios de estado.");
                     /* json_chg->valuestring: lista separada por comas de cambios  */
                     i = 0;
-                    while(str.Section(json_chg->valuestring, ',', i, s))
+                    while(Section(json_chg->valuestring, ',', i, s))
                     {
                         /* Me fijo el estado actual de ese puerto */
                         json_status = cJSON_GetObjectItemCaseSensitive(json_obj, s);
@@ -443,7 +442,6 @@ int GEvent::SyncIO(const char* json_evt)
     cJSON *json_raddr;
     cJSON *json_status;
     cJSON *json_un_obj;
-    STRFunc str;
 
     m_pServer->m_pLog->Add(100, "[GEvent::SyncIO] json_evt: %s", json_evt);
 
@@ -457,7 +455,7 @@ int GEvent::SyncIO(const char* json_evt)
             t = time(&t);
 
             /* Busco el ID para relacionar con la tabla de assigns */
-            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_hw_mac->valuestring);
+            sprintf(query, "SELECT Id, Dispositivo, Estado FROM TB_DOM_PERIF WHERE MAC = UPPER(\'%s\');", json_hw_mac->valuestring);
             m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
             json_QueryArray = cJSON_CreateArray();
             rc = m_pDB->Query(json_QueryArray, query);
@@ -480,7 +478,7 @@ int GEvent::SyncIO(const char* json_evt)
                                         "SET Ultimo_Ok = %lu, "
                                         "Direccion_IP = \'%s\', "
                                         "Estado = 1 "
-                                        "WHERE UPPER(MAC) = UPPER(\'%s\');",
+                                        "WHERE MAC = UPPER(\'%s\');",
                                         t,
                                         json_raddr->valuestring,
                                         json_hw_mac->valuestring);

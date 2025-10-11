@@ -101,7 +101,6 @@ void HTTPNotificarStatus( void )
 	int rc;
 	char *p;
 	int i;
-	STRFunc str;
 
 	timer_count_keep_alive = 0;
 
@@ -239,7 +238,7 @@ void HTTPNotificarStatus( void )
 			{
 				/* Salteo CR/LF CR/LF */
 				p += 4;
-				for(i = 0; str.ParseDataIdx(p, label, value, i); i++)
+				for(i = 0; ParseDataIdx(p, label, value, i); i++)
 				{
 					/* Proceso la respuesta */
 

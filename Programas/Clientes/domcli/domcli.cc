@@ -69,7 +69,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer query;
   CGMBuffer response;
   DPConfig *pConfig;
-  STRFunc Str;
   cJSON *json_obj;
   cJSON *json_query;
   cJSON *json_response;

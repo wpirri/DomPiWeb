@@ -108,7 +108,6 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config, void
     char buffer[BUFFER_LEN+1], tmp[16];
     char *p;
     CTcp q;
-    STRFunc Str;
     int rc;
 
     sprintf(buffer, http_post, url_get_wifi, raddr, 0, " ");
@@ -124,25 +123,25 @@ int Dom32IoWifi::GetWifiConfig(const char *raddr, wifi_config_data *config, void
         {
             /* Salteo CR/LF CR/LF */
             p += 4;
-            Str.ParseData(p, "ap1", config->wifi_ap1);
-            Str.ParseData(p, "ap1p", config->wifi_ap1_pass);
-            Str.ParseData(p, "ap2", config->wifi_ap2);
-            Str.ParseData(p, "ap2p", config->wifi_ap2_pass);
-            Str.ParseData(p, "ce1", config->wifi_host1);
-            Str.ParseData(p, "ce2", config->wifi_host2);
-            if(Str.ParseData(p, "ce1p", tmp))
+            ParseData(p, "ap1", config->wifi_ap1);
+            ParseData(p, "ap1p", config->wifi_ap1_pass);
+            ParseData(p, "ap2", config->wifi_ap2);
+            ParseData(p, "ap2p", config->wifi_ap2_pass);
+            ParseData(p, "ce1", config->wifi_host1);
+            ParseData(p, "ce2", config->wifi_host2);
+            if(ParseData(p, "ce1p", tmp))
             {
                 config->wifi_host1_port = atoi(tmp);
             }
-            if(Str.ParseData(p, "ce2p", tmp))
+            if(ParseData(p, "ce2p", tmp))
             {
                 config->wifi_host2_port = atoi(tmp);
             }
-            if(Str.ParseData(p, "report", tmp))
+            if(ParseData(p, "report", tmp))
             {
                 config->report = atoi(tmp);
             }
-            Str.ParseData(p, "rqst", config->rqst_path);
+            ParseData(p, "rqst", config->rqst_path);
 
             if(fcn)
             {
@@ -296,7 +295,6 @@ int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
     CTcp q;
     int rc;
     int i;
-    STRFunc Str;
     char label[256];
     char value[256];
 
@@ -314,7 +312,7 @@ int Dom32IoWifi::GetConfig(const char *raddr, cJSON *json_obj, void(*fcn)(const 
         {
             /* Salteo CR/LF CR/LF */
             p += 4;
-            for(i = 0; Str.ParseDataIdx(p, label, value, i); i++)
+            for(i = 0; ParseDataIdx(p, label, value, i); i++)
             {
                 cJSON_AddStringToObject(json_obj, label, value);                    
             }
@@ -443,7 +441,6 @@ int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char
     CTcp q;
     int rc;
     int i;
-    STRFunc Str;
     char label[256];
     char value[256];
 
@@ -460,7 +457,7 @@ int Dom32IoWifi::GetIO(const char *raddr, cJSON *json_obj, void(*fcn)(const char
         {
             /* Salteo CR/LF CR/LF */
             p += 4;
-            for(i = 0; Str.ParseDataIdx(p, label, value, i); i++)
+            for(i = 0; ParseDataIdx(p, label, value, i); i++)
             {
                 cJSON_AddStringToObject(json_obj, label, value);                    
             }
@@ -732,9 +729,8 @@ int Dom32IoWifi::SendConfig(const char *raddr, cJSON *json)
 int Dom32IoWifi::HttpRespCode(const char* http)
 {
     char tmp[16];
-    STRFunc Str;
 
-    Str.Section(http, ' ', 1, tmp);
+    Section(http, ' ', 1, tmp);
 
     return atoi(tmp);
 }
@@ -841,7 +837,6 @@ int Dom32IoWifi::RequestDequeue(const char* dest, queue_data* qdata, unsigned in
     char msg[WIFI_MSG_MAX_LEN];
     int rc;
     int i;
-    STRFunc Str;
     char label[256];
     char value[256];
     cJSON *json_request;
@@ -863,7 +858,7 @@ int Dom32IoWifi::RequestDequeue(const char* dest, queue_data* qdata, unsigned in
                 
                 */
                 json_request = cJSON_CreateObject();
-                for(i = 0; Str.ParseDataIdx(msg, label, value, i); i++)
+                for(i = 0; ParseDataIdx(msg, label, value, i); i++)
                 {
                     cJSON_AddStringToObject(json_request, label, value);                    
                 }

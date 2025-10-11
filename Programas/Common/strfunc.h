@@ -15,12 +15,6 @@
 #ifndef _STRFUNC_H_
 #define _STRFUNC_H_
 
-class STRFunc
-{
-public:
-	STRFunc();
-	virtual ~STRFunc();
-
   /*  Separa en campos segun el separador y devuelve el número de campo solicitado
     en count. El primer campo es el 1.
     Si count e 0 devuelve lo que hay antes del separador
@@ -51,10 +45,5 @@ public:
 
   unsigned long Fecha2Timestamp(const char* fecha);
   
-
-
-private:
-
-};
-#endif /* _STRFUNC_H_ */
-
+  #endif
+  

@@ -42,7 +42,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer query;
   CGMBuffer response;
   DPConfig *pConfig;
-  STRFunc Str;
   cJSON *json_request;
   cJSON *json_response;
   cJSON *json_obj;
@@ -152,10 +151,10 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
   }
 
-  Str.EscapeHttp(request_uri, request_uri);
-  Str.EscapeHttp(post_data, post_data);
+  EscapeHttp(request_uri, request_uri);
+  EscapeHttp(post_data, post_data);
 
-  for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
+  for(i = 0; ParseDataIdx(post_data, label, value, i); i++)
   {
     cJSON_AddStringToObject(json_request, label, value);                    
   }

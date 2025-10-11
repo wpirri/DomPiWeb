@@ -42,7 +42,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer query;
   CGMBuffer response;
   DPConfig *pConfig;
-  STRFunc Str;
   cJSON *json_request;
   cJSON *json_response;
   cJSON *json_obj;
@@ -144,8 +143,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     syslog(LOG_DEBUG, "DOMPIWEB_SERVER: [%s]",server_address);
   }
 
-  Str.EscapeHttp(request_uri, request_uri);
-  Str.EscapeHttp(post_data, post_data);
+  EscapeHttp(request_uri, request_uri);
+  EscapeHttp(post_data, post_data);
 
   gminit.m_host = server_address;
   gminit.m_port = 5533;
@@ -157,7 +156,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     strcpy(buffer, strchr(request_uri, '?')+1);
     if(trace) syslog(LOG_DEBUG, "GET DATA: [%s]", buffer);
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
+    for(i = 0; ParseDataIdx(buffer, label, value, i); i++)
     {
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "funcion"))
@@ -174,7 +173,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(content_length > 0)
   {
     /* Recorro los datos del POST */
-    for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
+    for(i = 0; ParseDataIdx(post_data, label, value, i); i++)
     {
       /* lo agrego al JSon */
       cJSON_AddStringToObject(json_request, label, value);

@@ -27,17 +27,8 @@ using namespace std;
 #include <string.h>
 #include <ctype.h>
 
-STRFunc::STRFunc()
-{
 
-}
-
-STRFunc::~STRFunc()
-{
-
-}
-
-int STRFunc::Section(const char *in, char sep, unsigned int count, char *out)
+int Section(const char *in, char sep, unsigned int count, char *out)
 {
     const char *p;
     int len = 0;
@@ -63,7 +54,7 @@ int STRFunc::Section(const char *in, char sep, unsigned int count, char *out)
     return len;
 }
 
-int STRFunc::ParseData(const char *buffer, const char *label, char *value)
+int ParseData(const char *buffer, const char *label, char *value)
 {
     const char *p;
     int len = 0;
@@ -93,7 +84,7 @@ int STRFunc::ParseData(const char *buffer, const char *label, char *value)
     return len;
 }
 
-int STRFunc::ParseDataIdx(const char *buffer, char *label, char *value, int idx)
+int ParseDataIdx(const char *buffer, char *label, char *value, int idx)
 {
     const char *p;
     int found = 0;
@@ -130,7 +121,7 @@ int STRFunc::ParseDataIdx(const char *buffer, char *label, char *value, int idx)
     return found;
 }
 
-int STRFunc::EscapeHttp(const char* in, char* out)
+int EscapeHttp(const char* in, char* out)
 {
     int len = 0;
 
@@ -155,7 +146,7 @@ int STRFunc::EscapeHttp(const char* in, char* out)
     return len;
 }
 
-int STRFunc::StrHex2Int(const char *str_hex)
+int StrHex2Int(const char *str_hex)
 {
     int rc = 0;
 
@@ -180,7 +171,7 @@ int STRFunc::StrHex2Int(const char *str_hex)
     return rc;
 }
 
-int STRFunc::ParseCommand(const char *buffer, char *comando, char *objeto, char *parametro)
+int ParseCommand(const char *buffer, char *comando, char *objeto, char *parametro)
 {
    
     if(!buffer) return (-1);
@@ -217,7 +208,7 @@ int STRFunc::ParseCommand(const char *buffer, char *comando, char *objeto, char 
     return 0;
 }
 
-void STRFunc::ToUpper(const char* in, char* out)
+void ToUpper(const char* in, char* out)
 {
     while(*in)
     {
@@ -228,7 +219,7 @@ void STRFunc::ToUpper(const char* in, char* out)
     *out = 0;
 }
 
-void STRFunc::ToLower(const char* in, char* out)
+void ToLower(const char* in, char* out)
 {
     while(*in)
     {
@@ -243,7 +234,7 @@ void STRFunc::ToLower(const char* in, char* out)
     Convierte "Feb 14 2023 19:48:17" en unix time
     
 */
-unsigned long STRFunc::Fecha2Timestamp(const char* fecha)
+unsigned long Fecha2Timestamp(const char* fecha)
 {
     struct tm stm;
     char s[8];

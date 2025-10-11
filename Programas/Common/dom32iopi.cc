@@ -266,11 +266,10 @@ void Dom32IoPi::SetIOStatus()
 
 int Dom32IoPi::SetIO(const char* io, const char* sval)
 {
-    STRFunc str;
     char IO[1024];
     int val;
 
-    str.ToUpper(io, IO);
+    ToUpper(io, IO);
 
     if( !strcmp(sval, "on") || !strcmp(sval, "ON"))
     {
@@ -394,14 +393,13 @@ int Dom32IoPi::GetConfig(int /*port*/, int */*ioconfig*/)
 
 int Dom32IoPi::ConfigIO(const char* io, const char* mode)
 {
-    STRFunc str;
     char IO[1024];
     char MODE[1024];
     int i_mode;
     int change = 0;
 
-    str.ToUpper(io, IO);
-    str.ToUpper(mode, MODE);
+    ToUpper(io, IO);
+    ToUpper(mode, MODE);
     if( !strcmp(MODE, "IN"))
     {
         i_mode = INPUT;
@@ -576,9 +574,8 @@ void Dom32IoPi::SetConfig( void )
 int Dom32IoPi::HttpRespCode(const char* http)
 {
     char tmp[16];
-    STRFunc Str;
 
-    Str.Section(http, ' ', 1, tmp);
+    Section(http, ' ', 1, tmp);
 
     return atoi(tmp);
 }

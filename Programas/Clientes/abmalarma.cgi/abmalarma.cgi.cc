@@ -42,7 +42,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer query;
   CGMBuffer response;
   DPConfig *pConfig;
-  STRFunc Str;
   int i;
   cJSON *json_obj;
   
@@ -128,8 +127,8 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  Str.EscapeHttp(request_uri, request_uri);
-  Str.EscapeHttp(post_data, post_data);
+  EscapeHttp(request_uri, request_uri);
+  EscapeHttp(post_data, post_data);
 
   if(trace)
   {
@@ -148,7 +147,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     strcpy(buffer, strchr(request_uri, '?')+1);
     if(trace) syslog(LOG_DEBUG, "GET DATA: [%s]", buffer);
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
+    for(i = 0; ParseDataIdx(buffer, label, value, i); i++)
     {
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "funcion"))
@@ -165,7 +164,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   if(content_length > 0)
   {
     /* Recorro los datos del POST */
-    for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
+    for(i = 0; ParseDataIdx(post_data, label, value, i); i++)
     {
       /* lo agrego al JSon */
       cJSON_AddStringToObject(json_obj, label, value);

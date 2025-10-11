@@ -167,9 +167,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	time_t entry_time, exit_time;
 	struct tm *s_tm;
 	char s[16];
-	STRFunc sf;
 	char extra_info[1024];
-	STRFunc Strf;
 
     cJSON *json_Request;
     cJSON *json_Response;
@@ -341,7 +339,7 @@ int main(/*int argc, char** argv, char** env*/void)
 							json_Query_Result = cJSON_CreateArray();
 							sprintf(query, "SELECT Objeto, A.Id AS ASS_Id, Port, A.Estado, A.Tipo AS Tipo_ASS "
 											"FROM TB_DOM_PERIF AS P, TB_DOM_ASSIGN AS A "
-											"WHERE A.Dispositivo = P.Id AND UPPER(P.MAC) = UPPER(\'%s\') "
+											"WHERE A.Dispositivo = P.Id AND P.MAC = UPPER(\'%s\') "
 												"AND ( A.Estado <> A.Estado_HW OR A.Actualizar > 0 ) "
 												"AND ( A.Tipo = 0 OR A.Tipo = 3 OR A.Tipo = 5 );", json_MAC->valuestring);
 							m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
@@ -400,7 +398,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Si no hay estados para responder me fijo si hay update de firmware pendiente */
 								sprintf(query, "SELECT Update_firmware "
 										"FROM TB_DOM_PERIF "
-										"WHERE Update_firmware > 0 AND UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+										"WHERE Update_firmware > 0 AND MAC = UPPER(\'%s\');", json_MAC->valuestring);
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								rc = pDB->Query(nullptr, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -411,7 +409,7 @@ int main(/*int argc, char** argv, char** env*/void)
 									/* Borro el flag de update de firmware */
 									sprintf(query, "UPDATE TB_DOM_PERIF "
 										"SET Update_firmware = 0 "
-										"WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+										"WHERE MAC = UPPER(\'%s\');", json_MAC->valuestring);
 									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 									rc = pDB->Query(nullptr, query);
 									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -436,7 +434,7 @@ int main(/*int argc, char** argv, char** env*/void)
 									m_pServer->m_pLog->Add(50, "[HW] %s Solicita configuracion", json_MAC->valuestring);
 									sprintf(query, "UPDATE TB_DOM_PERIF "
 														"SET Update_Config = 1 "
-														"WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+														"WHERE MAC = UPPER(\'%s\');", json_MAC->valuestring);
 									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 									rc = pDB->Query(NULL, query);
 									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -462,7 +460,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					else if( !strcmp(json_Tipo_HW->valuestring, "TOUCH") )
 					{
 						/* Busco el ID para relacionar con la tabla de assigns */
-						sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+						sprintf(query, "SELECT Id, Estado FROM TB_DOM_PERIF WHERE MAC = UPPER(\'%s\');", json_MAC->valuestring);
 						m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 						json_arr_Perif = cJSON_CreateArray();
 						rc = pDB->Query(json_arr_Perif, query);
@@ -523,7 +521,7 @@ int main(/*int argc, char** argv, char** env*/void)
 													"Direccion_IP = \'%s\', "
 													"Informacion  = \'%s\', "
 													"Estado = 1 "
-													"WHERE UPPER(MAC) = UPPER(\'%s\');",
+													"WHERE MAC = UPPER(\'%s\');",
 													entry_time,
 													json_Direccion_IP->valuestring,
 													extra_info,
@@ -536,7 +534,7 @@ int main(/*int argc, char** argv, char** env*/void)
 								/* Me fijo si hay update de firmware pendiente */
 								sprintf(query, "SELECT Update_firmware "
 									"FROM TB_DOM_PERIF "
-									"WHERE Update_firmware > 0 AND UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+									"WHERE Update_firmware > 0 AND MAC = UPPER(\'%s\');", json_MAC->valuestring);
 								m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 								rc = pDB->Query(nullptr, query);
 								m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -548,7 +546,7 @@ int main(/*int argc, char** argv, char** env*/void)
 									/* Borro el flag de update de firmware */
 									sprintf(query, "UPDATE TB_DOM_PERIF "
 										"SET Update_firmware = 0 "
-										"WHERE UPPER(MAC) = UPPER(\'%s\');", json_MAC->valuestring);
+										"WHERE MAC = UPPER(\'%s\');", json_MAC->valuestring);
 									m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
 									rc = pDB->Query(nullptr, query);
 									m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
@@ -1978,28 +1976,29 @@ void CheckNewHWList(const char* mac)
 {
 	int i;
 	time_t t = time(&t);
+	char upper_mac[16];
 
+	if( !mac) return;
+
+	ToUpper(mac, upper_mac);
 	/* Busco para actualizar */
 	for(i = 0; i < MAX_HW_LIST_NEW; i++)
 	{
-		if(mac)
+		if( !strcmp(upper_mac, g_dompi_server_new_hw_list[i].mac) )
 		{
-			if( !strcmp(mac, g_dompi_server_new_hw_list[i].mac) )
-			{
-				g_dompi_server_new_hw_list[i].last_info = t;
-				break;
-			}
+			g_dompi_server_new_hw_list[i].last_info = t;
+			break;
 		}
 	}
 
 	/* Si no existe la agrego */
-	if(mac && i == MAX_HW_LIST_NEW)
+	if(i == MAX_HW_LIST_NEW)
 	{
 		for(i = 0; i < MAX_HW_LIST_NEW; i++)
 		{
 			if(g_dompi_server_new_hw_list[i].mac[0] == 0)
 			{
-				strcpy(g_dompi_server_new_hw_list[i].mac, mac);
+				strcpy(g_dompi_server_new_hw_list[i].mac, upper_mac);
 				g_dompi_server_new_hw_list[i].last_info = t;
 				break;
 			}

@@ -249,13 +249,11 @@ int main(/*int argc, char** argv, char** env*/void)
 	//time_t t;
 	char s[256];
 	char s1[1024];
-	STRFunc sf;
 
 	char comando[1024];
 	char objeto[1024];
 	char parametro[1024];
 
-	STRFunc Strf;
 	//CGMServerBase::GMIOS call_resp;
 
     cJSON *json_Request;
@@ -373,7 +371,7 @@ int main(/*int argc, char** argv, char** env*/void)
 					{
 						strcpy(cmdline, json_cmdline->valuestring);
 
-						Strf.ParseCommand(cmdline, comando, objeto, parametro);
+						ParseCommand(cmdline, comando, objeto, parametro);
 
 						m_pServer->m_pLog->Add(80, "[dompi_cmdline] Comando: %s - Objeto: %s - Parametro: %s", 
 											(comando[0])?comando:"NULL", 

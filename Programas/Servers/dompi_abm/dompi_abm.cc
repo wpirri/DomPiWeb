@@ -17,6 +17,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ***************************************************************************/
 
+ /*
+	Ejecutar: UPDATE TB_DOM_PERIF SET MAC = UPPER(MAC);
+ */
+
 #include <gmonitor/gmerror.h>
 #include <gmonitor/gmontdb.h>
 /*#include <gmonitor/gmstring.h>*/
@@ -72,8 +76,6 @@ int main(/*int argc, char** argv, char** env*/void)
 	char temp_s[64];
 	char s[16];
 	int load_system_config;
-
-	STRFunc Strf;
 
     cJSON *json_Message;
     cJSON *json_Response;

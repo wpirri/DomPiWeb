@@ -46,7 +46,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMBuffer response;
   char buffer[4096];
   DPConfig *pConfig;
-  STRFunc Str;
   cJSON *json_obj;
 
   char server_address[16];
@@ -144,7 +143,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
         syslog(LOG_DEBUG, "GET DATA: [%s]", get_data);
     }
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(get_data, label, value, i); i++)
+    for(i = 0; ParseDataIdx(get_data, label, value, i); i++)
     {
       cJSON_AddStringToObject(json_obj, label, value);
     }
@@ -155,7 +154,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     if(trace) syslog(LOG_DEBUG, "POST_DATA: [%s]",post_data);
 
     /* Recorro los parametros del POST */
-    for(i = 0; Str.ParseDataIdx(post_data, label, value, i); i++)
+    for(i = 0; ParseDataIdx(post_data, label, value, i); i++)
     {
       cJSON_AddStringToObject(json_obj, label, value);
     }

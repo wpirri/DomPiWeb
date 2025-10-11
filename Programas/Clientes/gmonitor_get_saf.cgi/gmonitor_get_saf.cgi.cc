@@ -40,7 +40,6 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   CGMClient *pClient;
   CGMClient::GMIOS resp;
   CGMError gmerror;
-  STRFunc Str;
   DPConfig *pConfig;
   int i;
   
@@ -103,7 +102,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
   fputs("Content-Type: text/html\r\n", stdout);
   fputs("Cache-Control: no-cache\r\n\r\n", stdout);
 
-  Str.EscapeHttp(request_uri, request_uri);
+  EscapeHttp(request_uri, request_uri);
 
   if(trace)
   {
@@ -122,7 +121,7 @@ int main(int /*argc*/, char** /*argv*/, char** env)
     strcpy(buffer, strchr(request_uri, '?')+1);
     if(trace) syslog(LOG_DEBUG, "GET DATA: [%s]", buffer);
     /* Recorro los parametros del GET */
-    for(i = 0; Str.ParseDataIdx(buffer, label, value, i); i++)
+    for(i = 0; ParseDataIdx(buffer, label, value, i); i++)
     {
       /* El parametro funcion lo uso para el mensaje */
       if( !strcmp(label, "saf"))
