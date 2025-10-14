@@ -291,7 +291,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	m_pServer->m_pLog->Add(1, "Servicios de Domotica inicializados.");
 
 	wait_time = 1;
-	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, (wait_time*10) )) >= 0)
+	while((rc = m_pServer->Wait(fn, typ, message, 4096, &message_len, wait_time )) >= 0)
 	{
 		if(rc > 0)
 		{
