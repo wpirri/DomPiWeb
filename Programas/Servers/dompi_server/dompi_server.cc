@@ -295,7 +295,7 @@ int main(/*int argc, char** argv, char** env*/void)
 	{
 		if(rc > 0)
 		{
-			wait_time = 1;
+			//wait_time = 1;
 			entry_time = time(&entry_time);
 			s_tm = localtime(&entry_time);
 			message[message_len] = 0;
@@ -332,6 +332,7 @@ int main(/*int argc, char** argv, char** env*/void)
 						rc = pEV->ExtIOEvent(message);
 						if(rc > 0)
 						{
+							wait_time = 1;
 							GroupTask();
 
 							/* Me traigo los estados de las salidas del dispositivo
@@ -1588,7 +1589,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		else
 		{
 			/* Salida por time-out */
-			if(wait_time < 100) wait_time++;
+			if(wait_time < 1000) wait_time += 10;
 		}
 
 		entry_time = time(&entry_time);
