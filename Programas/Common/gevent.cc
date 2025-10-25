@@ -237,6 +237,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                             strcat(extra_info, json_tmp->valuestring);
                             strcat(extra_info, "\n");
                         }
+#ifdef __EXCLUIR__
                         /* Actualizo la tabla de Dispositivos */
                         sprintf(query, "UPDATE TB_DOM_PERIF "
                                             "SET Ultimo_Ok = %lu, "
@@ -252,6 +253,7 @@ int GEvent::ExtIOEvent(const char* json_evt)
                         rc = m_pDB->Query(NULL, query);
                         m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                         if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+#endif /* __EXCLUIR__ */
                     }
                     break;
                 }
@@ -468,6 +470,7 @@ int GEvent::SyncIO(const char* json_evt)
                 json_hw_name = cJSON_GetObjectItemCaseSensitive(json_QueryArray->child, "Dispositivo");
                 if(json_raddr)
                 {
+#ifdef __EXCLUIR__
                     if(atoi(json_status->valuestring) == 0)
                     {
                         m_pServer->m_pLog->Add(10, "[HW] %s - %s - %s Estado: ON LINE", 
@@ -486,6 +489,7 @@ int GEvent::SyncIO(const char* json_evt)
                     rc = m_pDB->Query(NULL, query);
                     m_pServer->m_pLog->Add((m_pDB->LastQueryTime()>1)?1:100, "[QUERY] rc= %i, time= %li [%s]", rc, m_pDB->LastQueryTime(), query);
                     if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", m_pDB->m_last_error_text, query);
+#endif /* __EXCLUIR__ */
                 }
                 /* Actualizo los assign que vengan  en el mensaje */
                 json_un_obj = json_obj;
