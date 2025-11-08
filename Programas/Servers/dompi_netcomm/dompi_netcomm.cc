@@ -728,7 +728,6 @@ void OnClose(int sig)
 
 void Update_Last_Connection(const char* id, const char* data)
 {
-#ifdef __EXCLUIR__
 	int rc;
 	char query[4096];
     time_t t;
@@ -745,7 +744,6 @@ void Update_Last_Connection(const char* id, const char* data)
 	if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
 
 	m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?1:100, "[Update_Last_Connection] Id: %s Data: [%s]", id, data);
-#endif /* __EXCLUIR__ */
 }
 
 /* Callback para SetIO */
