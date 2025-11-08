@@ -1859,6 +1859,9 @@ void GroupMaint( void )
 	bool todos_encendidos;
 	bool todos_apagados;
 	bool group_update;
+	time_t t;
+	static time_t last_check = 0;
+
 	cJSON *json_QueryResult_Group;
 	cJSON *json_QueryResult_Assign;
 	cJSON *json_QueryRow_Group;
@@ -1869,6 +1872,11 @@ void GroupMaint( void )
 	cJSON *json_Estado;
 	cJSON *json_ASS_Objeto;
 	cJSON *json_ASS_Estado;
+
+	t = time(&t);
+
+	if( (last_check != 0) && (t - last_check < 11) ) return;
+	last_check = t;
 
 	m_pServer->m_pLog->Add(50, "[GroupMaint]");
 
@@ -2073,6 +2081,7 @@ void CheckHWOffline( void )
 	int rc;
 	unsigned long tolerancia = 0;
 	time_t t;
+	static time_t last_check = 0;
 	cJSON *json_QueryArray;
 	cJSON *json_QueryRow;
 	cJSON *json_HW_Id;
@@ -2081,6 +2090,11 @@ void CheckHWOffline( void )
 	cJSON *json_Last_Config;
 	cJSON *json_Dispositivo;
 	cJSON *Wifi_Report;
+
+	t = time(&t);
+
+	if( (last_check != 0) && (t - last_check < 59) ) return;
+	last_check = t;
 
 	m_pServer->m_pLog->Add(50, "[CheckHWOffline]");
 
@@ -2099,7 +2113,6 @@ void CheckHWOffline( void )
 	}
 	if(tolerancia == 0)	tolerancia = 180;
 	/* Dispositivos offline */
-	t = time(&t);
 	json_QueryArray = cJSON_CreateArray();
 	sprintf(query, "SELECT Id, MAC, Direccion_IP, Dispositivo "
 					"FROM TB_DOM_PERIF "
@@ -2140,9 +2153,10 @@ void CheckTask()
 {
 	int rc;
 	char query[4096];
-	time_t t;
-	struct tm *now;
 	char dia_semana[3];
+	time_t t;
+	static time_t last_check = 0;
+	struct tm *now;
 
     cJSON *json_QueryArray;
     cJSON *json_QueryRow;
@@ -2158,9 +2172,12 @@ void CheckTask()
 	cJSON *json_Condicion_Igualdad;
 	cJSON *json_Condicion_Valor;
 	
-	m_pServer->m_pLog->Add(50, "[CheckTask]");
-
 	t = time(&t);
+
+	if( (last_check != 0) && (t - last_check < 53) ) return;
+	last_check = t;
+
+	m_pServer->m_pLog->Add(50, "[CheckTask]");
 	now = localtime(&t);
 
 	switch(now->tm_wday)
@@ -2289,6 +2306,8 @@ void CheckUpdateHWConfig()
 	int rc;
 	char query[4096];
 	char message[4096];
+	time_t t;
+	static time_t last_check = 0;
 
     cJSON *json_obj;
     cJSON *json_Config;
@@ -2304,6 +2323,11 @@ void CheckUpdateHWConfig()
 	cJSON *json_Habilitar_Wiegand;
 	cJSON *json_Update_Config;
 	cJSON *json_Update_WiFi;
+
+	t = time(&t);
+
+	if( (last_check != 0) && (t - last_check < 13) ) return;
+	last_check = t;
 
 	m_pServer->m_pLog->Add(50, "[CheckUpdateHWConfig]");
 
