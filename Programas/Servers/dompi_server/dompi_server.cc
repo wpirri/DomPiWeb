@@ -1594,7 +1594,7 @@ int main(/*int argc, char** argv, char** env*/void)
 		else
 		{
 			/* Salida por time-out */
-			if(wait_time < 1000) wait_time += 10;
+			if(wait_time < 150) wait_time += 10;
 		}
 
 		entry_time = time(&entry_time);
