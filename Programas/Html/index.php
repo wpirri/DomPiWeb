@@ -65,12 +65,12 @@ else
 <div id="clima-descripcion" class="clima">
   <table><tr>
   <td>
-    <div class="clima-descripcion-image">
-      &nbsp;&nbsp;&nbsp;&nbsp;<img class="weather-icon" src="images/sun.png" />
+    <div id="clima-descripcion-image" class="clima-descripcion-image">
+      &nbsp;
     </div>
   </td><td>
-    <div class="clima-descripcion-text">
-      &nbsp;&nbsp;&nbsp;&nbsp;Soleado
+    <div id="clima-descripcion-text" class="clima-descripcion-text">
+      &nbsp;
     </div>
   </td>
   </tr></table>
@@ -89,31 +89,21 @@ else
 </div>
 
 <script type="text/javascript">
+  var t = new Date();
 
 /* Clima */
 function updateExternStatus(msg) {
-  var Nom = 'Sin respuesta';
-  var Temp = '0.00';
-  var Hum = '0.00';
-  var Pres = '0';
-  var Text = '';
+	jsonData = JSON.parse(msg).response;
 
-	jsonData = JSON.parse(msg);
-
-	for (var i = 0; i < jsonData.length; i++) { 
-    if(jsonData[i].name == 'El Palomar') {
-      Nom = jsonData[i].name;
-      Temp = jsonData[i].weather.temp;
-      Hum = jsonData[i].weather.humidity;
-      Pres = jsonData[i].weather.pressure;
-      Text = jsonData[i].weather.description;
-    }
+  if(jsonData) {
+    document.getElementById('clima-exterior').innerHTML = '<br />' +
+          '<div class="clima-interior"><img class="zone-icon" src="images/park.png" /></div>' +
+          '<div class="clima-interior">T '+ jsonData.temp +'</div>' + 
+          '<div class="clima-interior">Hr '+ jsonData.hum +'</div>' + 
+          '<div class="clima-interior"">Pa '+ jsonData.pres +'</div>';
+    document.getElementById('clima-descripcion-image').innerHTML = '&nbsp;&nbsp;<img class="weather-icon" src="images/' + jsonData.icon + '" />';
+    document.getElementById('clima-descripcion-text').innerHTML = '&nbsp;&nbsp;' + jsonData.text;
   }
-
-  document.getElementById('clima-exterior').innerHTML = '<br />' +
-        '<div class="clima-interior"><img class="zone-icon" src="images/park.png" /></div>' +
-        '<div class="clima-interior">T '+ Temp +' °C</div>' + 
-        '<div class="clima-interior"">Hr '+ Hum +' %</div>';
 }
 
 function updateLocalStatus(msg) {
@@ -178,7 +168,7 @@ function setCurrentTime( ) {
       timer_counter = 0;
       // Get Local data
       newAJAXCommand('/cgi-bin/abmassign.cgi?funcion=status&Planta=1', updateLocalStatus, false);
-      newAJAXCommand('https://ws.smn.gob.ar/map_items/weather', updateExternStatus, false);
+      newAJAXCommand('/data/weather.json?t=' + t.getSeconds(), updateExternStatus, false);
     }
     setTimeout("setCurrentTime()", 500);
   }

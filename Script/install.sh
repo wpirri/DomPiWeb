@@ -18,44 +18,63 @@ CGI_ROOT=/usr/lib/cgi-bin/
 
 if [ ! -x $SQL ]; then
     echo "No se encuentra mysql"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/anacron ]; then
     echo "No se encuentra anacron"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/xinetd ]; then
     echo "No se encuentra xinetd"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
 
 if [ ! -x /usr/sbin/apache2 ]; then
     echo "No se encuentra apache2"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
 
 if [ ! -x /usr/bin/php ]; then
     echo "No se encuentra php"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
 
 if [ ! -x /usr/share/doc/libapache2-mod-php ]; then
     echo "No se encuentra libapache2-mod-php"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     exit 1
 fi
+
+if [ ! -x /usr/bin/php ]; then
+    echo "No se encuentra php"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
+    exit 1
+fi
+
+if [ ! -x /usr/bin/jq ]; then
+    echo "No se encuentra jq"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
+    exit 1
+fi
+
+if [ ! -x /usr/bin/curl ]; then
+    echo "No se encuentra curl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
+    exit 1
+fi
+
 
 x=`find /usr/lib -name libcjson.so`
 if [ "X${x}" = "X" ]; then
     echo "No se encuentra libcjson.so"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
     echo "Si libcjson ya está instalada buscar el path de instalaciòn y hacer un link a /usr/lib"
     echo "    find /usr/lib -name libcjson.so*"
     echo "    ln -s <path a libreria> /usr/lib/libcjson.so"
@@ -65,7 +84,10 @@ fi
 x=`find /usr/lib -name libssl.so`
 if [ "X${x}" = "X" ]; then
     echo "No se encuentra libssl.so"
-    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl"
+    echo "Se debe instalar anacron xinetd apache2 php libapache2-mod-php default-mysql-server libcjson1 curl openssl jq curl"
+    echo "Si libssl ya está instalada buscar el path de instalaciòn y hacer un link a /usr/lib"
+    echo "    find /usr/lib -name libssl.so*"
+    echo "    ln -s <path a libreria> /usr/lib/libssl.so"
     exit 1
 fi
 
