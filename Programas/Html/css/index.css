@@ -142,12 +142,16 @@ body {
 }
 
 .clima-descripcion-image {
+	width: 110px;
+	height: 95px;
 }
 
 .clima-descripcion-text {
+	width: 320px;
 	font-family: 'Binggo wood';
 	font-weight: bold;
     font-size: 50px;
+	text-align: center;
 }
 
 .clima-interior {
