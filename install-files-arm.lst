@@ -49,12 +49,14 @@
 
 /etc/gmonitor/gmonitor
 /etc/xinetd.d/gmonitor
-/etc/cron.daily/clean-gmonitor-logs
-/usr/local/sbin/clean-gmonitor-old-logs.sh
-/etc/cron.monthly/make-db-backup
-/etc/cron.monthly/restart-60-seg
-/etc/cron.hourly/update-weather
-/usr/local/sbin/make-dompidb-backup.sh
-/usr/local/sbin/drop_ipc.sh
 /usr/local/bin/make_dump.sh
 /usr/local/bin/make_dump.sql
+/usr/local/sbin/clean-gmonitor-old-logs.sh
+/usr/local/sbin/make-dompidb-backup.sh
+/usr/local/sbin/drop_ipc.sh
+/usr/local/sbin/get_weather_data_open-meteo.sh
+/usr/local/sbin/get_weather_data.sh
+/etc/cron.monthly/make-db-backup
+/etc/cron.monthly/restart-60-seg
+/etc/cron.daily/clean-gmonitor-logs
+/etc/cron.hourly/update-weather
