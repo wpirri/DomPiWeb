@@ -280,8 +280,8 @@ int main(/*int argc, char** argv, char** env*/void)
     m_pServer->Suscribe("dompi_alarm_zona_switch", GM_MSG_TYPE_CR);
     m_pServer->Suscribe("dompi_alarm_salida_pulse", GM_MSG_TYPE_CR);
 
-	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos */
-	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre */
+	m_pServer->Suscribe("dompi_reload_config", GM_MSG_TYPE_MSG);		/* Sin respuesta, llega a todos (Post) */
+	m_pServer->Suscribe("dompi_cloud_notification", GM_MSG_TYPE_NOT);	/* Sin respuesta, lo atiende el mas libre (Notify) */
 
 	m_pServer->Suscribe("dompi_mobile_list_objects", GM_MSG_TYPE_CR);
 	m_pServer->Suscribe("dompi_mobile_touch_object", GM_MSG_TYPE_CR);
