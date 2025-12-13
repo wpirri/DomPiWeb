@@ -15,12 +15,12 @@ clean:
 	make -C Programas clean
 
 install:
-	make -C Database install
+	make -C DataBase install
 	make -C Script install
 	make -C Programas install
 
 uninstall:
-	make -C Database uninstall
+	make -C DataBase uninstall
 	make -C Script uninstall
 	make -C Programas uninstall
 
@@ -41,8 +41,8 @@ installer:
 
 	$(if $(findstring arm,$(ARQ)) , tar cvzf $(UPDATE_FILE_ARM) --files-from=update-files-arm.lst , tar cvzf $(UPDATE_FILE_I386) --files-from=update-files-i386.lst )
 
-	cp Database/create.sql $(RUN_HOME)/
-	cp Database/init.sql $(RUN_HOME)/
+	cp DataBase/create.sql $(RUN_HOME)/
+	cp DataBase/init.sql $(RUN_HOME)/
 	cp Script/install.sh $(RUN_HOME)/
 	cp Config/dompiweb.config $(RUN_HOME)/
 	cp Config/funcion.tab $(RUN_HOME)/
@@ -89,7 +89,7 @@ test:
 	@echo "INST_LOGDIR:   "$(INST_LOGDIR)
 	@echo "INST_CGIDIR:   "$(INST_CGIDIR)
 	@echo "INST_HTMLDIR:  "$(INST_HTMLDIR)
-	@echo "DATABASE:      "$(DATABASE)
+	@echo "DataBase:      "$(DataBase)
 	@echo "SQL:           "$(SQL)
 	@echo "UPDATE_FILE:   "$(UPDATE_FILE)
 	@echo "INSTALL_FILE:  "$(INSTALL_FILE)
