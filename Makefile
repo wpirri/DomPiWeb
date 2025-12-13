@@ -9,6 +9,8 @@
 include configure.mk
 
 all:
+	chmod 0755 fixeol.sh
+	./fixeol.sh
 	make -C Programas
 
 clean:

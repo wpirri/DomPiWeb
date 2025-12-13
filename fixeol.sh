@@ -10,3 +10,5 @@ find Programas -name "*.c" -exec dos2unix {} \;
 find Programas -name "*.cc" -exec dos2unix {} \;
 find Programas -name "*.tab" -exec dos2unix {} \;
 
+find Script/ -exec chmod 0755 {} \;
+find Programas/ -name "*.sh" -exec chmod 0755 {} \;
