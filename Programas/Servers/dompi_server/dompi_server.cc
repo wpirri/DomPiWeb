@@ -374,6 +374,7 @@ int main(/*int argc, char** argv, char** env*/void)
 										json_Tipo_ASS = cJSON_GetObjectItemCaseSensitive(json_Query_Row, "Tipo_ASS");
 										/* Armo la respuesta */
 										cJSON_AddStringToObject(json_Response, json_Port->valuestring, json_Estado->valuestring);
+#ifdef __NO_BORRAR_FLAG_UPDATE__
 										/* Borro el flag de update de los que ya aviso */
 										if( !strcmp(json_Tipo_ASS->valuestring, "5"))
 										{
@@ -396,8 +397,8 @@ int main(/*int argc, char** argv, char** env*/void)
 											rc = pDB->Query(NULL, query);
 											m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?10:100, "WARNING: [QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
 											if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
-
-											/* Notifico los cambios */
+#ifdef __NO_NOTIFICO_AL_PEDIR_EL_CAMBIO__
+											/* Notifico a la nube */
 											m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
 																	json_Objeto->valuestring, json_Estado->valuestring);
 											cJSON_PrintPreallocated(json_Query_Row, alt_message, GM_COMM_MSG_LEN, 0);
@@ -409,7 +410,9 @@ int main(/*int argc, char** argv, char** env*/void)
 											{
 												m_pServer->m_pLog->Add(10, "WARNING: %li segundos en [dompi_infoio] Post( dompi_assign_change )", (t2 - t1));
 											}
+#endif /* __NO_NOTIFICO_AL_PEDIR_EL_CAMBIO__ */											
 										}
+#endif /* __NO_BORRAR_FLAG_UPDATE_ */
 									}
 								}
 								cJSON_Delete(json_Query_Result);
@@ -1845,7 +1848,7 @@ void AssignTask( void )
 			{
 				/* Salidas de pulso */
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_pulse_io][%s]", message);
-				m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
+				rc = m_pServer->Notify("dompi_hw_pulse_io", message, strlen(message));
 				iEstado = 0;
 			}
 			else
@@ -1854,22 +1857,26 @@ void AssignTask( void )
 				m_pServer->m_pLog->Add(20, "Actualizar estado de Assign [%s] en la nube (Estado: %s)",
 										json_Objeto->valuestring, json_Estado->valuestring);
 				m_pServer->m_pLog->Add(90, "Notify [dompi_hw_set_io][%s]", message);
-				m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
+				rc = m_pServer->Notify("dompi_hw_set_io", message, strlen(message));
 				/* Notifico a la nube */
 				m_pServer->m_pLog->Add(90, "Post [dompi_assign_change][%s]", message);
 				m_pServer->Post("dompi_assign_change", message, strlen(message));
+
 				iEstado = atoi(json_Estado->valuestring);
 				if(iEstado != 1) iEstado = 0;
 			}
 
-			/* Borro la diferencia */
-			sprintf(query, "UPDATE TB_DOM_ASSIGN "
-							"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
-							"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
-			m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
-			rc = pDB->Query(NULL, query);
-			m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?10:100, "WARNING: [QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
-			if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			if(rc == GME_OK)
+			{
+				/* Borro la diferencia */
+				sprintf(query, "UPDATE TB_DOM_ASSIGN "
+								"SET Estado = %i, Estado_HW = %i, Actualizar = 0 "
+								"WHERE Id = %s;", iEstado, iEstado, json_ASS_Id->valuestring);
+				m_pServer->m_pLog->Add(100, "[QUERY][%s]", query);
+				rc = pDB->Query(NULL, query);
+				m_pServer->m_pLog->Add((pDB->LastQueryTime()>1)?10:100, "WARNING: [QUERY] rc= %i, time= %li [%s]", rc, pDB->LastQueryTime(), query);
+				if(rc < 0) m_pServer->m_pLog->Add(1, "[QUERY] ERROR [%s] en [%s]", pDB->m_last_error_text, query);
+			}
 		}
 	}
 	cJSON_Delete(json_QueryArray);
